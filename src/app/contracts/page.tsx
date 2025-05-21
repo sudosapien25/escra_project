@@ -437,31 +437,33 @@ const ContractsPage: React.FC = () => {
           </div>
 
             {/* Stepper */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-2 w-full">
-                {[1, 2, 3].map((step, idx) => (
-                  <React.Fragment key={step}>
-                <button
-                      type="button"
-                      onClick={() => setModalStep(step)}
-                      className={`flex items-center gap-2 rounded-full font-semibold border transition-all duration-300 text-sm px-6 py-2
-                        ${modalStep === step
-                          ? 'bg-white text-gray-900 border-gray-300 ring-1 ring-inset ring-gray-200 shadow-sm'
-                          : 'text-gray-500 border-transparent hover:bg-gray-100'}
-                      `}
-                    >
-                      <span className={`inline-block transition-all duration-300 ${modalStep === step ? 'opacity-100 mr-2' : 'opacity-0 w-0 mr-0'}`} style={{width: modalStep === step ? 18 : 0}}>
-                        {modalStep === step && <Logo width={18} height={18} className="pointer-events-none" />}
-                      </span>
-                      {step === 1 && 'Step 1: Details'}
-                      {step === 2 && 'Step 2: Parties'}
-                      {step === 3 && 'Step 3: Documents'}
-                </button>
-                    {idx < 2 && <div className="flex-1 h-0.5 bg-gray-200 mx-2" />}
-                  </React.Fragment>
-              ))}
+            <div className="w-full overflow-x-auto">
+              <div className="flex items-center justify-between mb-6 min-w-[340px] sm:min-w-0">
+                <div className="flex items-center space-x-2 w-full flex-nowrap">
+                  {[1, 2, 3].map((step, idx) => (
+                    <React.Fragment key={step}>
+                      <button
+                        type="button"
+                        onClick={() => setModalStep(step)}
+                        className={`flex items-center gap-2 rounded-full font-semibold border transition-all duration-300 text-sm px-6 py-2 whitespace-nowrap
+                          ${modalStep === step
+                            ? 'bg-white text-gray-900 border-gray-300 ring-1 ring-inset ring-gray-200 shadow-sm'
+                            : 'text-gray-500 border-transparent hover:bg-gray-100'}
+                        `}
+                      >
+                        <span className={`inline-block transition-all duration-300 ${modalStep === step ? 'opacity-100 mr-2' : 'opacity-0 w-0 mr-0'}`} style={{width: modalStep === step ? 18 : 0}}>
+                          {modalStep === step && <Logo width={18} height={18} className="pointer-events-none" />}
+                        </span>
+                        {step === 1 && 'Step 1: Details'}
+                        {step === 2 && 'Step 2: Parties'}
+                        {step === 3 && 'Step 3: Documents'}
+                      </button>
+                      {idx < 2 && <div className="flex-1 h-0.5 bg-gray-200 mx-2 min-w-[20px]" />}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
 
             {/* Form Content */}
             <div className="space-y-6">
@@ -916,11 +918,11 @@ const ContractsPage: React.FC = () => {
         {/* Table Section with Tabs in Outlined Box */}
         <div className="bg-white border border-gray-300 rounded-xl p-6">
           {/* Tabs Row */}
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0 w-full">
             {/* Contracts/Documents Tabs */}
-            <div className="flex space-x-8">
+            <div className="flex space-x-8 overflow-x-auto w-full md:w-auto">
               <button
-                className={`pb-2 text-sm font-semibold ${
+                className={`pb-2 text-sm font-semibold whitespace-nowrap ${
                   activeContentTab === 'contractList'
                     ? 'text-primary border-b-2 border-primary'
                     : 'text-gray-500 hover:text-gray-700'
@@ -930,7 +932,7 @@ const ContractsPage: React.FC = () => {
                 Contracts
               </button>
               <button
-                className={`pb-2 text-sm font-semibold ${
+                className={`pb-2 text-sm font-semibold whitespace-nowrap ${
                   activeContentTab === 'documents'
                     ? 'text-primary border-b-2 border-primary'
                     : 'text-gray-500 hover:text-gray-700'
@@ -941,12 +943,12 @@ const ContractsPage: React.FC = () => {
               </button>
             </div>
             {/* Created by Me/Assigned to Me Tabs (styled like main tabs) */}
-            <div className="flex flex-col items-end">
-              <div className="flex space-x-8">
+            <div className="flex flex-col items-end w-full md:w-auto">
+              <div className="flex space-x-8 overflow-x-auto w-full md:w-auto">
                 {TABS.filter(tab => tab.key !== 'allContracts').map(tab => (
                   <button
                     key={tab.key}
-                    className={`pb-2 text-sm font-semibold ${
+                    className={`pb-2 text-sm font-semibold whitespace-nowrap ${
                       activeTab === tab.key
                         ? 'text-primary border-b-2 border-primary'
                         : 'text-gray-500 hover:text-gray-700'

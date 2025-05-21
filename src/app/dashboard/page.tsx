@@ -16,14 +16,14 @@ export default function DashboardPage() {
   return (
     <div className="space-y-4">
       {/* Dashboard Title and Subtitle Group */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0">
         {/* Group title and subtitle with controlled spacing */}
         <div className="pb-1">
-          <h1 className="text-[30px] font-bold text-black mb-0">Dashboard</h1>
-          <p className="text-gray-500 text-[16px] mt-0">Overview of your contract closing activities & metrics</p>
+          <h1 className="text-[24px] md:text-[30px] font-bold text-black mb-0">Dashboard</h1>
+          <p className="text-gray-500 text-[15px] md:text-[16px] mt-0">Overview of your contract closing activities & metrics</p>
         </div>
         <button
-          className="flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+          className="flex items-center justify-center w-full md:w-auto px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
           onClick={() => setShowNewContractModal(true)}
         >
           <FaPlus className="mr-2 text-base" />
@@ -41,7 +41,7 @@ export default function DashboardPage() {
       {/* Flex container for the first two metric cards */}
       <div className="flex flex-col md:flex-row gap-4">
         {/* Metric Card 1: Total Contracts */}
-        <Card className="flex flex-1 flex-col items-center text-center rounded-xl border border-gray-300 min-h-[120px]">
+        <Card className="flex flex-1 flex-col items-center text-center rounded-xl border border-gray-300 min-h-[120px] min-w-0">
           <div className="mb-2 p-3 rounded-full bg-purple-100 text-purple-800">
             {React.createElement(FaFileContract, { className: "text-2xl text-teal-600" } as IconBaseProps)}
           </div>
@@ -50,7 +50,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Metric Card 3: Total Contract Value */}
-        <Card className="flex flex-1 flex-col items-center text-center rounded-xl border border-gray-300 min-h-[120px]">
+        <Card className="flex flex-1 flex-col items-center text-center rounded-xl border border-gray-300 min-h-[120px] min-w-0">
           <div className="mb-2 p-3 rounded-full bg-purple-100 text-purple-800">
             {React.createElement(FaDollarSign, { className: "text-2xl text-teal-600" } as IconBaseProps)}
           </div>
@@ -64,7 +64,7 @@ export default function DashboardPage() {
       {/* Metric Cards Grid - Remaining Cards */}
       <div className="w-full mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Metric Card 2: Pending Signatures */}
-        <Card className="flex flex-col items-center text-center rounded-xl border border-gray-300 min-h-[120px]">
+        <Card className="flex flex-col items-center text-center rounded-xl border border-gray-300 min-h-[120px] min-w-0">
           <div className="mb-2 p-3 rounded-full bg-purple-100 text-purple-800">
             {React.createElement(LuPen, { className: "text-2xl text-teal-600" } as IconBaseProps)}
           </div>
@@ -74,7 +74,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Metric Card 4: Wire Transfers Pending */}
-        <Card className="flex flex-col items-center text-center rounded-xl border border-gray-300 min-h-[120px]">
+        <Card className="flex flex-col items-center text-center rounded-xl border border-gray-300 min-h-[120px] min-w-0">
           <div className="mb-2 p-3 rounded-full bg-purple-100 text-purple-800">
             {React.createElement(FaMoneyBillAlt, { className: "text-2xl text-teal-600" } as IconBaseProps)}
           </div>
@@ -83,7 +83,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Metric Card 5: Avg. Completion Time */}
-        <Card className="flex flex-col items-center text-center rounded-xl border border-gray-300 min-h-[120px]">
+        <Card className="flex flex-col items-center text-center rounded-xl border border-gray-300 min-h-[120px] min-w-0">
           <div className="mb-2 p-3 rounded-full bg-purple-100 text-purple-800">
             {React.createElement(FaClock, { className: "text-2xl text-teal-600" } as IconBaseProps)}
           </div>
@@ -95,17 +95,17 @@ export default function DashboardPage() {
       {/* Recent Activity Section */}
       <h2 className="text-[15px] font-bold text-gray-700 pt-6 mb-4">RECENT ACTIVITY</h2>
 
-      <Card className="p-6 rounded-xl border border-gray-300">
-        <div className="flex justify-between items-center mb-4">
+      <Card className="p-6 rounded-xl border border-gray-300 overflow-x-auto">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-4 md:gap-0 min-w-0">
           <h3 className="text-lg font-semibold text-primary">Activity Timeline</h3>
-          <button className="text-teal-600 hover:underline flex items-center text-sm px-3 py-1 border border-gray-300 rounded-md">
+          <button className="text-teal-600 hover:underline flex items-center text-sm px-3 py-1 border border-gray-300 rounded-md whitespace-nowrap">
             View All
             {/* Placeholder for arrow icon */}
             <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
           </button>
         </div>
         {/* Activity Timeline Entries */}
-        <div className="relative pl-6">
+        <div className="relative pl-6 min-w-0">
           {/* Vertical timeline line */}
           <div className="absolute left-[23px] top-0 bottom-0 w-px bg-gray-300 z-0"></div>
           <div className="space-y-4">
@@ -166,10 +166,10 @@ export default function DashboardPage() {
       {/* Contracts in Progress Section */}
       <h2 className="text-[15px] font-bold text-gray-700 pt-6">CONTRACTS IN PROGRESS</h2>
 
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-4 md:gap-0">
         <h3 className="text-lg font-semibold text-primary">Active Contracts</h3>
         {/* View All Contracts Button */}
-        <button className="text-teal-600 hover:underline flex items-center text-sm px-3 py-1 border border-gray-300 rounded-md">
+        <button className="text-teal-600 hover:underline flex items-center text-sm px-3 py-1 border border-gray-300 rounded-md whitespace-nowrap">
           View All Contracts
           {/* Placeholder for arrow icon */}
           <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
