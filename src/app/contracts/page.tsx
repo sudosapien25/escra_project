@@ -15,6 +15,9 @@ interface Contract {
   value?: string;
   documents?: number;
   type: string;
+  buyer?: string;
+  seller?: string;
+  agent?: string;
 }
 
 const ContractsPage: React.FC = () => {
@@ -39,8 +42,8 @@ const ContractsPage: React.FC = () => {
     propertyType: '',
     escrowNumber: '',
     buyerEmail: '',
-    sellerEmail: false,
-    agentEmail: false,
+    sellerEmail: '',
+    agentEmail: '',
     earnestMoney: '',
     downPayment: '',
     loanAmount: '',
@@ -400,21 +403,37 @@ const ContractsPage: React.FC = () => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editableTitle, setEditableTitle] = useState('');
   const [selectedType, setSelectedType] = useState('Property Sale');
+  const [isEditingBuyer, setIsEditingBuyer] = useState(false);
+  const [editableBuyer, setEditableBuyer] = useState('');
+  const [isEditingSeller, setIsEditingSeller] = useState(false);
+  const [editableSeller, setEditableSeller] = useState('');
+  const [isEditingAgent, setIsEditingAgent] = useState(false);
+  const [editableAgent, setEditableAgent] = useState('');
 
   // Update editableTitle and selectedType when a contract is selected
   useEffect(() => {
     if (selectedContract) {
       setEditableTitle(selectedContract.title);
       setSelectedType(selectedContract.type || 'Property Sale');
+      setEditableBuyer(selectedContract.buyer || '');
+      setEditableSeller(selectedContract.seller || '');
+      setEditableAgent(selectedContract.agent || '');
     }
   }, [selectedContract]);
 
+  // Helper function to generate contract hash
+  const getContractHash = (id: string) => `0x${id}${'0'.repeat(66 - 2 - id.length)}`;
+
+  // Add state for tooltip for contract details and table
+  const [copiedContractId, setCopiedContractId] = useState<string | null>(null);
+  const [hoveredContractId, setHoveredContractId] = useState<string | null>(null);
+
   return (
     <>
-    <div className="space-y-4">
-      {/* Header Section */}
+      <div className="space-y-4">
+        {/* Header Section */}
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0">
-        <div className="pb-1">
+          <div className="pb-1">
             <h1 className="text-[24px] md:text-[30px] font-bold text-black mb-0">Contracts</h1>
             <p className="text-gray-500 text-[15px] md:text-[16px] mt-0">
               Manage & monitor all your escrow contracts
@@ -1052,18 +1071,32 @@ const ContractsPage: React.FC = () => {
                           <span
                             className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
                             style={{ maxWidth: '120px' }}
-                            title={`0x${contract.id}0000000000000000000000000000000000000000000000000000000000000000`}
+                            title={getContractHash(contract.id)}
                           >
                             0x{contract.id}...{contract.id.slice(-4)}
                           </span>
-                          <button
-                            type="button"
-                            className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
-                            onClick={() => navigator.clipboard.writeText(`0x${contract.id}0000000000000000000000000000000000000000000000000000000000000000`)}
-                            aria-label="Copy contract hash"
-                          >
-                            <HiOutlineDuplicate className="w-4 h-4" />
-                          </button>
+                          <div className="relative">
+                            <button
+                              type="button"
+                              className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                              onClick={e => {
+                                e.stopPropagation();
+                                navigator.clipboard.writeText(getContractHash(contract.id));
+                                setCopiedContractId(contract.id);
+                                setTimeout(() => setCopiedContractId(null), 1500);
+                              }}
+                              onMouseEnter={() => setHoveredContractId(contract.id)}
+                              onMouseLeave={() => setHoveredContractId(null)}
+                              aria-label="Copy contract hash"
+                            >
+                              <HiOutlineDuplicate className="w-4 h-4" />
+                            </button>
+                            {(hoveredContractId === contract.id || copiedContractId === contract.id) && (
+                              <span className="absolute left-1/2 -translate-x-1/2 mt-2 px-2 py-1 rounded bg-gray-800 text-white text-xs whitespace-nowrap z-20 pointer-events-none">
+                                {copiedContractId === contract.id ? 'Copied' : 'Copy'}
+                              </span>
+                            )}
+                          </div>
                         </div>
                     </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center text-xs font-medium">
@@ -1138,23 +1171,13 @@ const ContractsPage: React.FC = () => {
           )}
         </div>
       </div>
-      <style jsx global>{`
-        .contract-type-select option {
-          background: #23B5B5;
-          color: #fff;
-        }
-      `}</style>
+      
 
       {/* Modal for contract details */}
       {selectedContract && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
           <div className="relative bg-white rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden">
-            {/* Close button (X) and Edit button */}
             <div className="absolute top-4 right-4 flex items-center gap-3 z-10">
-              <button className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold">
-                <HiOutlinePencilAlt className="text-base" />
-                Edit Contract
-              </button>
               <button
                 className="text-gray-400 hover:text-gray-600 p-2 rounded-full"
                 onClick={() => setSelectedContract(null)}
@@ -1165,7 +1188,6 @@ const ContractsPage: React.FC = () => {
                 </svg>
               </button>
             </div>
-
             {/* Modal Content (scrollable) */}
             <div className="overflow-y-auto p-6 flex-1">
               {/* Top Section */}
@@ -1218,115 +1240,311 @@ const ContractsPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Contract Details Section */}
-              <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6 max-w-[600px] ml-0">
-                <h3 className="text-sm font-semibold text-gray-900 mb-4">Contract Details</h3>
-                <div className="grid grid-cols-2 gap-x-12 gap-y-4">
-                  {/* Row 1: Contract ID and Hash */}
-                  <div>
-                    <div className="text-gray-500 text-xs mb-1">Contract ID</div>
-                    <div className="text-xs font-semibold text-primary">{selectedContract.id}</div>
-                  </div>
-                  <div>
-                    <div className="text-gray-500 text-xs mb-1">Contract Hash</div>
-                    <div className="flex items-center">
-                      <span
-                        className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
-                        style={{ maxWidth: '120px' }}
-                        title={`0x${selectedContract.id}0000000000000000000000000000000000000000000000000000000000000000`}
-                      >
-                        0x{selectedContract.id}...{selectedContract.id.slice(-4)}
-                      </span>
-                      <button
-                        type="button"
-                        className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
-                        onClick={() => navigator.clipboard.writeText(`0x${selectedContract.id}0000000000000000000000000000000000000000000000000000000000000000`)}
-                        aria-label="Copy contract hash"
-                      >
-                        <HiOutlineDuplicate className="w-4 h-4" />
-                      </button>
+              {/* Contract Details and Parties Involved Section */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                {/* Contract Details Box */}
+                <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-4">Contract Details</h3>
+                  <div className="grid grid-cols-2 gap-x-12 gap-y-4">
+                    {/* Row 1: Contract ID and Hash */}
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">Contract ID</div>
+                      <div className="text-xs font-semibold text-primary">{selectedContract.id}</div>
                     </div>
-                  </div>
-                  {/* Row 2: Contract Title and Type */}
-                  <div>
-                    <div className="text-gray-500 text-xs mb-1">Contract Title</div>
-                    {isEditingTitle ? (
-                      <input
-                        type="text"
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
-                        value={editableTitle}
-                        autoFocus
-                        onChange={e => setEditableTitle(e.target.value)}
-                        onBlur={() => {
-                          if (selectedContract) {
-                            selectedContract.title = editableTitle;
-                          }
-                          setIsEditingTitle(false);
-                        }}
-                        onKeyDown={e => {
-                          if (e.key === 'Enter') {
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">Contract Hash</div>
+                      <div className="flex items-center">
+                        <span
+                          className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
+                          style={{ maxWidth: '120px' }}
+                          title={getContractHash(selectedContract.id)}
+                        >
+                          0x{selectedContract.id}...{selectedContract.id.slice(-4)}
+                        </span>
+                        <div className="relative">
+                          <button
+                            type="button"
+                            className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                            onClick={() => {
+                              navigator.clipboard.writeText(getContractHash(selectedContract.id));
+                              setCopiedContractId(selectedContract.id);
+                              setTimeout(() => setCopiedContractId(null), 1500);
+                            }}
+                            onMouseEnter={() => setHoveredContractId(selectedContract.id)}
+                            onMouseLeave={() => setHoveredContractId(null)}
+                            aria-label="Copy contract hash"
+                          >
+                            <HiOutlineDuplicate className="w-4 h-4" />
+                          </button>
+                          {(hoveredContractId === selectedContract.id || copiedContractId === selectedContract.id) && (
+                            <span className="absolute left-1/2 -translate-x-1/2 mt-2 px-2 py-1 rounded bg-gray-800 text-white text-xs whitespace-nowrap z-20 pointer-events-none">
+                              {copiedContractId === selectedContract.id ? 'Copied' : 'Copy'}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    {/* Row 2: Contract Title and Type */}
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">Contract Title</div>
+                      {isEditingTitle ? (
+                        <input
+                          type="text"
+                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                          value={editableTitle}
+                          autoFocus
+                          onChange={e => setEditableTitle(e.target.value)}
+                          onBlur={() => {
                             if (selectedContract) {
                               selectedContract.title = editableTitle;
                             }
                             setIsEditingTitle(false);
-                          }
-                        }}
-                      />
-                    ) : (
-                      <div
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-gray-900 cursor-text hover:border-gray-300 transition-colors"
-                        onClick={() => setIsEditingTitle(true)}
-                        tabIndex={0}
-                        onKeyDown={e => { if (e.key === 'Enter') setIsEditingTitle(true); }}
-                      >
-                        {editableTitle || 'Click to edit title'}
+                          }}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              if (selectedContract) {
+                                selectedContract.title = editableTitle;
+                              }
+                              setIsEditingTitle(false);
+                            }
+                          }}
+                        />
+                      ) : (
+                        <div
+                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-gray-900 cursor-text hover:border-gray-300 transition-colors"
+                          onClick={() => setIsEditingTitle(true)}
+                          tabIndex={0}
+                          onKeyDown={e => { if (e.key === 'Enter') setIsEditingTitle(true); }}
+                        >
+                          {editableTitle || 'Click to edit title'}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">Contract Type</div>
+                      <div className="relative">
+                        <select
+                          className="contract-type-select w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs appearance-none bg-white bg-no-repeat bg-[length:20px] bg-[right_12px_center] bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236B7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')]"
+                          value={selectedType}
+                          onChange={e => setSelectedType(e.target.value)}
+                        >
+                          {CONTRACT_TYPES.map(type => (
+                            <option key={type} value={type}>{type}</option>
+                          ))}
+                        </select>
                       </div>
-                    )}
-                  </div>
-                  <div>
-                    <div className="text-gray-500 text-xs mb-1">Contract Type</div>
-                    <div className="relative">
-                      <select
-                        className="contract-type-select w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs appearance-none bg-white bg-no-repeat bg-[length:20px] bg-[right_12px_center] bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236B7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')]"
-                        value={selectedType}
-                        onChange={e => setSelectedType(e.target.value)}
-                      >
-                        {CONTRACT_TYPES.map(type => (
-                          <option key={type} value={type}>{type}</option>
-                        ))}
-                      </select>
                     </div>
-                  </div>
-                  {/* Status Row */}
-                  <div>
-                    <div className="text-gray-500 text-xs mb-1">Status</div>
-                    <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full text-xs ${getStatusBadgeStyle(selectedContract.status)}`}>{selectedContract.status}</span>
-                  </div>
-                  <div></div>
-                  {/* Row 3: Current Milestone and Next Step */}
-                  <div>
-                    <div className="text-gray-500 text-xs mb-1">Current Milestone</div>
-                    <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full text-xs ${getStatusBadgeStyle('Wire Details')}`}>Wire Details</span>
-                  </div>
-                  <div>
-                    <div className="text-gray-500 text-xs mb-1">Next Step</div>
-                    <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full text-xs ${getStatusBadgeStyle('In Review')}`}>Document Review</span>
-                  </div>
-                  {/* Row 4: Created Date and Last Updated */}
-                  <div className="col-span-2 grid grid-cols-2 gap-x-12">
+                    {/* Status Row */}
                     <div>
-                      <div className="text-gray-500 text-xs mb-1">Created Date</div>
-                      <div className="text-xs font-semibold text-gray-900">May 1, 2024</div>
+                      <div className="text-gray-500 text-xs mb-1">Status</div>
+                      <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full text-xs ${getStatusBadgeStyle(selectedContract.status)}`}>{selectedContract.status}</span>
+                    </div>
+                    <div></div>
+                    {/* Row 3: Current Milestone and Next Step */}
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">Current Milestone</div>
+                      <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full text-xs ${getStatusBadgeStyle('Wire Details')}`}>Wire Details</span>
                     </div>
                     <div>
-                      <div className="text-gray-500 text-xs mb-1">Last Updated</div>
-                      <div className="text-xs font-semibold text-gray-900">May 2, 2024</div>
+                      <div className="text-gray-500 text-xs mb-1">Next Step</div>
+                      <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full text-xs ${getStatusBadgeStyle('In Review')}`}>Document Review</span>
+                    </div>
+                    {/* Row 4: Created Date and Last Updated */}
+                    <div className="col-span-2 grid grid-cols-2 gap-x-12">
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Created Date</div>
+                        <div className="text-xs font-semibold text-gray-900">May 1, 2024</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Last Updated</div>
+                        <div className="text-xs font-semibold text-gray-900">May 2, 2024</div>
+                      </div>
+                    </div>
+                    {/* Row 5: Total Value */}
+                    <div className="col-span-2">
+                      <div className="text-gray-500 text-xs mb-1">Total Value</div>
+                      <div className="text-xs font-semibold text-primary">{selectedContract.value}</div>
                     </div>
                   </div>
-                  {/* Row 5: Total Value */}
-                  <div className="col-span-2">
-                    <div className="text-gray-500 text-xs mb-1">Total Value</div>
-                    <div className="text-xs font-semibold text-primary">{selectedContract.value}</div>
+                </div>
+                {/* Parties Involved Box */}
+                <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-4">Parties Involved</h3>
+                  <div className="grid grid-cols-1 gap-y-4">
+                    {/* Buyer */}
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">Buyer / Client</div>
+                      {isEditingBuyer ? (
+                        <input
+                          type="text"
+                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                          value={editableBuyer}
+                          autoFocus
+                          onChange={e => setEditableBuyer(e.target.value)}
+                          onBlur={() => {
+                            if (selectedContract) {
+                              selectedContract.buyer = editableBuyer;
+                            }
+                            setIsEditingBuyer(false);
+                          }}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              if (selectedContract) {
+                                selectedContract.buyer = editableBuyer;
+                              }
+                              setIsEditingBuyer(false);
+                            }
+                          }}
+                        />
+                      ) : (
+                        <div
+                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-gray-900 cursor-text hover:border-gray-300 transition-colors"
+                          onClick={() => setIsEditingBuyer(true)}
+                          tabIndex={0}
+                          onKeyDown={e => { if (e.key === 'Enter') setIsEditingBuyer(true); }}
+                        >
+                          {editableBuyer || selectedContract?.buyer || selectedContract?.parties?.split('&')[0]?.trim() || 'Robert Chen'}
+                        </div>
+                      )}
+                    </div>
+                    {/* Seller */}
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">Seller / Provider</div>
+                      {isEditingSeller ? (
+                        <input
+                          type="text"
+                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                          value={editableSeller}
+                          autoFocus
+                          onChange={e => setEditableSeller(e.target.value)}
+                          onBlur={() => {
+                            if (selectedContract) {
+                              selectedContract.seller = editableSeller;
+                            }
+                            setIsEditingSeller(false);
+                          }}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              if (selectedContract) {
+                                selectedContract.seller = editableSeller;
+                              }
+                              setIsEditingSeller(false);
+                            }
+                          }}
+                        />
+                      ) : (
+                        <div
+                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-gray-900 cursor-text hover:border-gray-300 transition-colors"
+                          onClick={() => setIsEditingSeller(true)}
+                          tabIndex={0}
+                          onKeyDown={e => { if (e.key === 'Enter') setIsEditingSeller(true); }}
+                        >
+                          {editableSeller || selectedContract?.seller || selectedContract?.parties?.split('&')[1]?.trim() || 'Eastside Properties'}
+                        </div>
+                      )}
+                    </div>
+                    {/* Agent */}
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">Agent / Escrow Officer</div>
+                      {isEditingAgent ? (
+                        <input
+                          type="text"
+                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                          value={editableAgent}
+                          autoFocus
+                          onChange={e => setEditableAgent(e.target.value)}
+                          onBlur={() => {
+                            if (selectedContract) {
+                              selectedContract.agent = editableAgent;
+                            }
+                            setIsEditingAgent(false);
+                          }}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              if (selectedContract) {
+                                selectedContract.agent = editableAgent;
+                              }
+                              setIsEditingAgent(false);
+                            }
+                          }}
+                        />
+                      ) : (
+                        <div
+                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-gray-900 cursor-text hover:border-gray-300 transition-colors"
+                          onClick={() => setIsEditingAgent(true)}
+                          tabIndex={0}
+                          onKeyDown={e => { if (e.key === 'Enter') setIsEditingAgent(true); }}
+                        >
+                          {editableAgent || selectedContract?.agent || 'N/A'}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                {/* Wire Details Box */}
+                <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-4">Wire Details</h3>
+                  <div className="grid grid-cols-1 gap-y-4">
+                    {/* Routing Number */}
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">Routing Number</div>
+                      <input
+                        type="text"
+                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                        placeholder="Enter routing number"
+                      />
+                    </div>
+                    {/* Account Number */}
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">Account Number</div>
+                      <input
+                        type="text"
+                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                        placeholder="Enter account number"
+                      />
+                    </div>
+                    {/* Bank Name */}
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">Bank Name</div>
+                      <input
+                        type="text"
+                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                        placeholder="Enter bank name"
+                      />
+                    </div>
+                  </div>
+                </div>
+                {/* Signature Status Box */}
+                <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-4">Signature Status</h3>
+                  <div className="flex flex-col gap-3">
+                    {/* Use contract parties for signature status */}
+                    {[
+                      { name: selectedContract?.buyer || selectedContract?.parties?.split('&')[0]?.trim() || 'Robert Chen', role: 'Client', status: 'Signed', date: 'May 18, 2025' },
+                      { name: selectedContract?.seller || selectedContract?.parties?.split('&')[1]?.trim() || 'Eastside Properties', role: 'Seller', status: 'Signed', date: 'May 17, 2025' },
+                      { name: selectedContract?.agent || 'N/A', role: 'Escrow Officer', status: 'Pending', date: null },
+                    ].map((sig) => (
+                      <div key={sig.name} className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
+                        <div>
+                          <div className="font-semibold text-gray-900 text-sm">{sig.name}</div>
+                          <div className="text-xs text-gray-500">{sig.role}</div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          {sig.status === 'Signed' ? (
+                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
+                              <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                              Signed
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-semibold">
+                              <svg className="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3" /></svg>
+                              Pending
+                            </span>
+                          )}
+                          <span className="text-xs text-gray-400 font-medium min-w-[90px] text-right">{sig.date || ''}</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -1336,6 +1554,6 @@ const ContractsPage: React.FC = () => {
       )}
     </>
   );
-};
+}
 
-export default ContractsPage; 
+export default ContractsPage;
