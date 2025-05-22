@@ -143,13 +143,13 @@ export default function BlockchainPage() {
   return (
     <div className="space-y-4">
       {/* Header Section */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0">
         <div className="pb-1">
-          <h1 className="text-[30px] font-bold text-black mb-0">Blockchain</h1>
-          <p className="text-gray-500 text-[16px] mt-0">View smart contracts, on-chain activity, & explorer integrations</p>
+          <h1 className="text-[24px] md:text-[30px] font-bold text-black mb-0">Blockchain</h1>
+          <p className="text-gray-500 text-[15px] md:text-[16px] mt-0">View smart contracts, on-chain activity, & explorer integrations</p>
         </div>
         <button
-          className="flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+          className="flex items-center justify-center w-full md:w-auto px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
           onClick={() => setShowNewContractModal(true)}
         >
           <FaPlus className="mr-2 text-base" />
@@ -161,28 +161,35 @@ export default function BlockchainPage() {
       <hr className="my-6 border-gray-300" />
 
       {/* Toggle Bar */}
-      <div className="flex items-center space-x-2 mb-6">
-        {[
-          { key: 'smart-contracts', label: 'Smart Contracts' },
-          { key: 'on-chain-activity', label: 'On-Chain Activity' },
-          { key: 'explorers', label: 'Explorers' },
-          { key: 'tokens', label: 'Tokens' },
-        ].map((tab) => (
-          <button
-            key={tab.key}
-            className={`flex items-center gap-2 rounded-full font-semibold border transition-all duration-300 text-sm
-              ${activeTab === tab.key
-                ? 'bg-white text-gray-900 border-gray-300 ring-1 ring-inset ring-gray-200 px-5 py-2 shadow-sm'
-                : 'text-gray-500 border-transparent hover:bg-gray-100 px-4 py-2'}
-            `}
-            onClick={() => setActiveTab(tab.key)}
-          >
-            <span className={`inline-block transition-all duration-300 ${activeTab === tab.key ? 'opacity-100 mr-2' : 'opacity-0 w-0 mr-0'}`} style={{width: activeTab === tab.key ? 18 : 0}}>
-              {activeTab === tab.key && <Logo width={18} height={18} className="pointer-events-none" />}
-            </span>
-            {tab.label}
-          </button>
-        ))}
+      <div className="relative w-full overflow-x-auto mb-6">
+        <div className="flex min-w-[340px] sm:min-w-0">
+          {[
+            { key: 'smart-contracts', label: 'Smart Contracts' },
+            { key: 'on-chain-activity', label: 'On-Chain Activity' },
+            { key: 'explorers', label: 'Explorers' },
+            { key: 'tokens', label: 'Tokens' },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              className={`relative flex items-center gap-2 font-semibold transition-all duration-300 text-sm px-6 py-2 whitespace-nowrap
+                ${activeTab === tab.key
+                  ? 'text-primary'
+                  : 'text-gray-500 hover:text-gray-700'}
+              `}
+              style={{ zIndex: 1 }}
+              onClick={() => setActiveTab(tab.key)}
+            >
+              <span className={`inline-block transition-all duration-300 ${activeTab === tab.key ? 'opacity-100 mr-2' : 'opacity-0 w-0 mr-0'}`} style={{width: activeTab === tab.key ? 18 : 0}}>
+                {activeTab === tab.key && <Logo width={18} height={18} className="pointer-events-none" />}
+              </span>
+              {tab.label}
+              {/* Sliding underline */}
+              {activeTab === tab.key && (
+                <span className="absolute left-0 right-0 -bottom-1 h-1 rounded bg-primary transition-all duration-300" style={{zIndex: 2}} />
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Tab Content */}
