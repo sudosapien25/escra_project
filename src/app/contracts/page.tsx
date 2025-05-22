@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaSearch, FaFilter, FaFileAlt, FaCheckCircle, FaClock, FaCalendarAlt, FaSort, FaPlus, FaArrowUp, FaDollarSign, FaDownload, FaRegFileAlt } from 'react-icons/fa';
 import { FaArrowUpFromBracket } from 'react-icons/fa6';
-import { HiOutlineDocumentText, HiOutlineEye, HiOutlineDownload, HiOutlineTrash, HiOutlinePencilAlt, HiOutlineDocument, HiOutlineDocumentDownload, HiOutlineUpload } from 'react-icons/hi';
+import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutlineTrash, HiOutlinePencilAlt, HiOutlineDocument, HiOutlineDocumentDownload, HiOutlineUpload } from 'react-icons/hi';
 import { Logo } from '@/components/common/Logo';
 
 interface Contract {
@@ -14,6 +14,7 @@ interface Contract {
   updated: string;
   value?: string;
   documents?: number;
+  type: string;
 }
 
 const ContractsPage: React.FC = () => {
@@ -135,6 +136,7 @@ const ContractsPage: React.FC = () => {
       updated: '1 hour ago',
       value: '$680,000',
       documents: 2,
+      type: 'Property Sale',
     },
     {
       id: '9550',
@@ -144,6 +146,7 @@ const ContractsPage: React.FC = () => {
       updated: '3 hours ago',
       value: '$1,250,000',
       documents: 1,
+      type: 'Property Sale',
     },
     {
       id: '9145',
@@ -153,6 +156,7 @@ const ContractsPage: React.FC = () => {
       updated: '1 day ago',
       value: '$780,000',
       documents: 4,
+      type: 'Construction Escrow',
     },
     {
       id: '8784',
@@ -162,6 +166,7 @@ const ContractsPage: React.FC = () => {
       updated: '5 hours ago',
       value: '$325,000',
       documents: 4,
+      type: 'Commercial Lease',
     },
     {
       id: '8423',
@@ -171,6 +176,7 @@ const ContractsPage: React.FC = () => {
       updated: '2 hours ago',
       value: '$450,000',
       documents: 4,
+      type: 'Property Sale',
     },
     {
       id: '7804',
@@ -180,6 +186,7 @@ const ContractsPage: React.FC = () => {
       updated: '1 day ago',
       value: '$1,750,000',
       documents: 3,
+      type: 'Property Sale',
     },
     {
       id: '7234',
@@ -189,6 +196,7 @@ const ContractsPage: React.FC = () => {
       updated: '4 hours ago',
       value: '$525,000',
       documents: 3,
+      type: 'Property Sale',
     },
     {
       id: '9102',
@@ -198,6 +206,7 @@ const ContractsPage: React.FC = () => {
       updated: '5 hours ago',
       value: '$325,000',
       documents: 1,
+      type: 'Commercial Lease',
     },
     {
       id: '6891',
@@ -207,6 +216,7 @@ const ContractsPage: React.FC = () => {
       updated: '3 days ago',
       value: '$3,200,000',
       documents: 4,
+      type: 'Property Sale',
     },
     {
       id: '6453',
@@ -216,6 +226,7 @@ const ContractsPage: React.FC = () => {
       updated: '1 week ago',
       value: '$275,000',
       documents: 2,
+      type: 'Commercial Lease',
     },
     // Additional sample contracts
     {
@@ -226,6 +237,7 @@ const ContractsPage: React.FC = () => {
       updated: '2 days ago',
       value: '$900,000',
       documents: 2,
+      type: 'Property Sale',
     },
     {
       id: '10002',
@@ -235,6 +247,7 @@ const ContractsPage: React.FC = () => {
       updated: '6 hours ago',
       value: '$1,100,000',
       documents: 3,
+      type: 'Commercial Lease',
     },
     {
       id: '10003',
@@ -244,6 +257,7 @@ const ContractsPage: React.FC = () => {
       updated: '3 days ago',
       value: '$2,500,000',
       documents: 5,
+      type: 'Property Sale',
     },
     {
       id: '10004',
@@ -253,6 +267,7 @@ const ContractsPage: React.FC = () => {
       updated: '1 week ago',
       value: '$5,000,000',
       documents: 6,
+      type: 'Property Sale',
     },
     {
       id: '10005',
@@ -262,6 +277,7 @@ const ContractsPage: React.FC = () => {
       updated: '2 weeks ago',
       value: '$3,800,000',
       documents: 4,
+      type: 'Property Sale',
     },
   ];
 
@@ -380,6 +396,19 @@ const ContractsPage: React.FC = () => {
     },
   ];
 
+  const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editableTitle, setEditableTitle] = useState('');
+  const [selectedType, setSelectedType] = useState('Property Sale');
+
+  // Update editableTitle and selectedType when a contract is selected
+  useEffect(() => {
+    if (selectedContract) {
+      setEditableTitle(selectedContract.title);
+      setSelectedType(selectedContract.type || 'Property Sale');
+    }
+  }, [selectedContract]);
+
   return (
     <>
     <div className="space-y-4">
@@ -425,7 +454,7 @@ const ContractsPage: React.FC = () => {
                   <h2 className="text-xl font-bold text-black leading-tight">Create New Contract</h2>
                   <p className="text-gray-500 text-sm leading-tight">Fill in the contract details to get started</p>
                 </div>
-              </div>
+            </div>
               <button 
                 onClick={() => { setShowNewContractForm(false); setModalStep(1); }} 
                 className="text-gray-400 hover:text-gray-600 p-2 rounded-full"
@@ -442,7 +471,7 @@ const ContractsPage: React.FC = () => {
                 <div className="flex items-center space-x-2 w-full flex-nowrap">
                   {[1, 2, 3].map((step, idx) => (
                     <React.Fragment key={step}>
-                      <button
+                <button
                         type="button"
                         onClick={() => setModalStep(step)}
                         className={`flex items-center gap-2 rounded-full font-semibold border transition-all duration-300 text-sm px-6 py-2 whitespace-nowrap
@@ -457,13 +486,13 @@ const ContractsPage: React.FC = () => {
                         {step === 1 && 'Step 1: Details'}
                         {step === 2 && 'Step 2: Parties'}
                         {step === 3 && 'Step 3: Documents'}
-                      </button>
+                </button>
                       {idx < 2 && <div className="flex-1 h-0.5 bg-gray-200 mx-2 min-w-[20px]" />}
                     </React.Fragment>
-                  ))}
-                </div>
-              </div>
+              ))}
             </div>
+          </div>
+        </div>
 
             {/* Form Content */}
             <div className="space-y-6">
@@ -889,11 +918,11 @@ const ContractsPage: React.FC = () => {
         <div className="bg-white border border-gray-300 rounded-xl px-4 py-4 mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2 min-w-0">
             <FaSearch className="text-gray-400 mr-2 text-lg" />
-            <input
-              type="text"
-              placeholder="Search contracts or parties"
-              value={searchTerm}
-              onChange={handleSearchChange}
+              <input
+                type="text"
+                placeholder="Search contracts or parties"
+                value={searchTerm}
+                onChange={handleSearchChange}
               className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 placeholder-gray-400 font-medium min-w-0"
               style={{ fontFamily: 'Avenir, sans-serif' }}
             />
@@ -913,7 +942,7 @@ const ContractsPage: React.FC = () => {
             <span>Recently Updated</span>
             <span className="ml-1 text-gray-400">&#9662;</span>
           </button>
-        </div>
+            </div>
 
         {/* Table Section with Tabs in Outlined Box */}
         <div className="bg-white border border-gray-300 rounded-xl p-6">
@@ -946,18 +975,18 @@ const ContractsPage: React.FC = () => {
             <div className="flex flex-col items-end w-full md:w-auto">
               <div className="flex space-x-8 overflow-x-auto w-full md:w-auto">
                 {TABS.filter(tab => tab.key !== 'allContracts').map(tab => (
-                  <button
-                    key={tab.key}
+                <button
+                  key={tab.key}
                     className={`pb-2 text-sm font-semibold whitespace-nowrap ${
                       activeTab === tab.key
-                        ? 'text-primary border-b-2 border-primary'
-                        : 'text-gray-500 hover:text-gray-700'
-                    }`}
+                      ? 'text-primary border-b-2 border-primary'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
                     onClick={() => setActiveTab(tab.key)}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
+                >
+                  {tab.label}
+                </button>
+              ))}
               </div>
               {activeContentTab === 'documents' && (
                 <button className="flex items-center justify-center mt-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold w-full sm:w-auto">
@@ -985,17 +1014,23 @@ const ContractsPage: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredContracts.map((contract) => (
-                  <tr key={contract.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-xs">
-                        <a
-                          href={`#${contract.id}`}
-                          className="text-primary underline font-semibold cursor-pointer"
-                        >
-                          {contract.id}
-                        </a>
-                      </td>
+                  <tr
+                    key={contract.id}
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={() => setSelectedContract(contract)}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-xs">
+                      <span
+                        className="text-primary underline font-semibold cursor-pointer"
+                        onClick={e => { e.stopPropagation(); setSelectedContract(contract); }}
+                      >
+                        {contract.id}
+                      </span>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <div className="font-medium text-gray-900">{contract.title}</div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {contract.title}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-xs">
                       <div className="text-gray-900">{contract.parties}</div>
@@ -1007,32 +1042,48 @@ const ContractsPage: React.FC = () => {
                       </span>
                     </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center text-xs text-gray-500">
-                        {contract.updated}
-                      </td>
+                      {contract.updated}
+                    </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center text-xs text-primary">
-                        {contract.value}
-                      </td>
+                      {contract.value}
+                    </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center text-xs">
-                        <div className="text-gray-900 font-mono">0x{contract.id}...{contract.id.slice(-4)}</div>
-                      </td>
+                        <div className="flex items-center justify-center">
+                          <span
+                            className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
+                            style={{ maxWidth: '120px' }}
+                            title={`0x${contract.id}0000000000000000000000000000000000000000000000000000000000000000`}
+                          >
+                            0x{contract.id}...{contract.id.slice(-4)}
+                          </span>
+                          <button
+                            type="button"
+                            className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                            onClick={() => navigator.clipboard.writeText(`0x${contract.id}0000000000000000000000000000000000000000000000000000000000000000`)}
+                            aria-label="Copy contract hash"
+                          >
+                            <HiOutlineDuplicate className="w-4 h-4" />
+                          </button>
+                        </div>
+                    </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center text-xs font-medium">
                         <div className="flex items-center justify-center space-x-1">
                           <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Edit">
                             <HiOutlinePencilAlt className="h-4 w-4" />
-                          </button>
+                        </button>
                           <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Upload">
                             <HiOutlineUpload className="h-4 w-4" />
-                          </button>
+                        </button>
                           <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Delete">
                             <HiOutlineTrash className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           )}
           {/* Documents tab/table remains unchanged for now */}
           {activeContentTab === 'documents' && (
@@ -1093,6 +1144,196 @@ const ContractsPage: React.FC = () => {
           color: #fff;
         }
       `}</style>
+
+      {/* Modal for contract details */}
+      {selectedContract && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="relative bg-white rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden">
+            {/* Close button (X) and Edit button */}
+            <div className="absolute top-4 right-4 flex items-center gap-3 z-10">
+              <button className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold">
+                <HiOutlinePencilAlt className="text-base" />
+                Edit Contract
+              </button>
+              <button
+                className="text-gray-400 hover:text-gray-600 p-2 rounded-full"
+                onClick={() => setSelectedContract(null)}
+                aria-label="Close"
+              >
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Content (scrollable) */}
+            <div className="overflow-y-auto p-6 flex-1">
+              {/* Top Section */}
+              <div className="mb-6">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-primary/10">
+                    <span className="text-xs font-semibold text-primary">#{selectedContract.id}</span>
+                  </div>
+                  <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full text-xs ${getStatusBadgeStyle(selectedContract.status)}`}> 
+                    {selectedContract.status}
+                  </span>
+                </div>
+              </div>
+
+              {/* Status Bar */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center space-x-2 w-full flex-nowrap">
+                    {[
+                      { key: 'initiation', label: 'Initiation', number: 1 },
+                      { key: 'preparation', label: 'Preparation', number: 2 },
+                      { key: 'wire-details', label: 'Wire Details', number: 3 },
+                      { key: 'in-review', label: 'In Review', number: 4 },
+                      { key: 'signatures', label: 'Signatures', number: 5 },
+                      { key: 'funds-disbursed', label: 'Funds Disbursed', number: 6 },
+                      { key: 'complete', label: 'Complete', number: 7 }
+                    ].map((step, idx, arr) => {
+                      const isActive = selectedContract.status.toLowerCase() === step.key;
+                      const isPast = arr.findIndex(s => s.key === selectedContract.status.toLowerCase()) > idx;
+                      return (
+                        <React.Fragment key={step.key}>
+                          <div
+                            className={`flex items-center gap-2 rounded-full font-medium text-xs px-3 py-1.5 whitespace-nowrap
+                              ${isActive 
+                                ? 'bg-primary text-white' 
+                                : isPast 
+                                  ? 'bg-gray-100 text-gray-600'
+                                  : 'bg-gray-50 text-gray-400'
+                              }`}
+                          >
+                            <span className="font-semibold">{step.number}.</span> {step.label}
+                          </div>
+                          {idx < arr.length - 1 && (
+                            <div className={`flex-1 h-0.5 ${isPast ? 'bg-primary' : 'bg-gray-200'} mx-2 min-w-[20px]`} />
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Contract Details Section */}
+              <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6 max-w-[600px] ml-0">
+                <h3 className="text-sm font-semibold text-gray-900 mb-4">Contract Details</h3>
+                <div className="grid grid-cols-2 gap-x-12 gap-y-4">
+                  {/* Row 1: Contract ID and Hash */}
+                  <div>
+                    <div className="text-gray-500 text-xs mb-1">Contract ID</div>
+                    <div className="text-xs font-semibold text-primary">{selectedContract.id}</div>
+                  </div>
+                  <div>
+                    <div className="text-gray-500 text-xs mb-1">Contract Hash</div>
+                    <div className="flex items-center">
+                      <span
+                        className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
+                        style={{ maxWidth: '120px' }}
+                        title={`0x${selectedContract.id}0000000000000000000000000000000000000000000000000000000000000000`}
+                      >
+                        0x{selectedContract.id}...{selectedContract.id.slice(-4)}
+                      </span>
+                      <button
+                        type="button"
+                        className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                        onClick={() => navigator.clipboard.writeText(`0x${selectedContract.id}0000000000000000000000000000000000000000000000000000000000000000`)}
+                        aria-label="Copy contract hash"
+                      >
+                        <HiOutlineDuplicate className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  {/* Row 2: Contract Title and Type */}
+                  <div>
+                    <div className="text-gray-500 text-xs mb-1">Contract Title</div>
+                    {isEditingTitle ? (
+                      <input
+                        type="text"
+                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                        value={editableTitle}
+                        autoFocus
+                        onChange={e => setEditableTitle(e.target.value)}
+                        onBlur={() => {
+                          if (selectedContract) {
+                            selectedContract.title = editableTitle;
+                          }
+                          setIsEditingTitle(false);
+                        }}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') {
+                            if (selectedContract) {
+                              selectedContract.title = editableTitle;
+                            }
+                            setIsEditingTitle(false);
+                          }
+                        }}
+                      />
+                    ) : (
+                      <div
+                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-gray-900 cursor-text hover:border-gray-300 transition-colors"
+                        onClick={() => setIsEditingTitle(true)}
+                        tabIndex={0}
+                        onKeyDown={e => { if (e.key === 'Enter') setIsEditingTitle(true); }}
+                      >
+                        {editableTitle || 'Click to edit title'}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <div className="text-gray-500 text-xs mb-1">Contract Type</div>
+                    <div className="relative">
+                      <select
+                        className="contract-type-select w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs appearance-none bg-white bg-no-repeat bg-[length:20px] bg-[right_12px_center] bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236B7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')]"
+                        value={selectedType}
+                        onChange={e => setSelectedType(e.target.value)}
+                      >
+                        {CONTRACT_TYPES.map(type => (
+                          <option key={type} value={type}>{type}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  {/* Status Row */}
+                  <div>
+                    <div className="text-gray-500 text-xs mb-1">Status</div>
+                    <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full text-xs ${getStatusBadgeStyle(selectedContract.status)}`}>{selectedContract.status}</span>
+                  </div>
+                  <div></div>
+                  {/* Row 3: Current Milestone and Next Step */}
+                  <div>
+                    <div className="text-gray-500 text-xs mb-1">Current Milestone</div>
+                    <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full text-xs ${getStatusBadgeStyle('Wire Details')}`}>Wire Details</span>
+                  </div>
+                  <div>
+                    <div className="text-gray-500 text-xs mb-1">Next Step</div>
+                    <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full text-xs ${getStatusBadgeStyle('In Review')}`}>Document Review</span>
+                  </div>
+                  {/* Row 4: Created Date and Last Updated */}
+                  <div className="col-span-2 grid grid-cols-2 gap-x-12">
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">Created Date</div>
+                      <div className="text-xs font-semibold text-gray-900">May 1, 2024</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">Last Updated</div>
+                      <div className="text-xs font-semibold text-gray-900">May 2, 2024</div>
+                    </div>
+                  </div>
+                  {/* Row 5: Total Value */}
+                  <div className="col-span-2">
+                    <div className="text-gray-500 text-xs mb-1">Total Value</div>
+                    <div className="text-xs font-semibold text-primary">{selectedContract.value}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
