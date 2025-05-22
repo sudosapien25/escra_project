@@ -1177,71 +1177,67 @@ const ContractsPage: React.FC = () => {
       {selectedContract && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
           <div className="relative bg-white rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden">
-            <div className="absolute top-4 right-4 flex items-center gap-3 z-10">
-              <button
-                className="text-gray-400 hover:text-gray-600 p-2 rounded-full"
-                onClick={() => setSelectedContract(null)}
-                aria-label="Close"
-              >
-                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+            {/* Sticky Header with Download Summary and Close buttons */}
+            <div className="sticky top-0 z-40 bg-white px-6 py-4">
+              <div className="flex items-start justify-between">
+                {/* Left: Contract ID and Status */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-primary/10">
+                      <span className="text-xs font-semibold text-primary">#{selectedContract.id}</span>
+                    </div>
+                    <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full text-xs ${getStatusBadgeStyle(selectedContract.status)}`}> 
+                      {selectedContract.status}
+                    </span>
+                  </div>
+                </div>
+                {/* Right: Close Button (original, now sticky) */}
+                <button
+                  className="text-gray-400 hover:text-gray-600 p-2 rounded-full ml-4 mt-1"
+                  onClick={() => setSelectedContract(null)}
+                  aria-label="Close"
+                >
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              {/* Centered Status Bar */}
+              <div className="flex justify-center w-full max-w-full">
+                <div className="flex items-center justify-center w-full max-w-3xl mx-auto px-8">
+                  {[
+                    { key: 'initiation', label: 'Initiation', number: 1 },
+                    { key: 'preparation', label: 'Preparation', number: 2 },
+                    { key: 'wire-details', label: 'Wire Details', number: 3 },
+                    { key: 'in-review', label: 'In Review', number: 4 },
+                    { key: 'signatures', label: 'Signatures', number: 5 },
+                    { key: 'funds-disbursed', label: 'Funds Disbursed', number: 6 },
+                    { key: 'complete', label: 'Complete', number: 7 }
+                  ].map((step, idx, arr) => (
+                    <div key={step.key} className="flex items-center">
+                      <div
+                        className={`flex items-center gap-1 rounded-full font-semibold text-xs px-2 py-1 whitespace-nowrap transition-all
+                          ${selectedContract.status.toLowerCase() === step.key 
+                            ? 'bg-primary text-white' 
+                            : arr.findIndex(s => s.key === selectedContract.status.toLowerCase()) > idx
+                              ? 'bg-gray-100 text-gray-600'
+                              : 'bg-gray-50 text-gray-400'
+                          }`}
+                      >
+                        <span className="font-semibold">{step.number}.</span> {step.label}
+                      </div>
+                      {idx < arr.length - 1 && (
+                        <div className="w-8 h-0.5 mx-1 bg-gray-200" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
             {/* Modal Content (scrollable) */}
             <div className="overflow-y-auto p-6 flex-1">
-              {/* Top Section */}
-              <div className="mb-6">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-primary/10">
-                    <span className="text-xs font-semibold text-primary">#{selectedContract.id}</span>
-                  </div>
-                  <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full text-xs ${getStatusBadgeStyle(selectedContract.status)}`}> 
-                    {selectedContract.status}
-                  </span>
-                </div>
-              </div>
-
-              {/* Status Bar */}
-              <div className="mb-6">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-2 w-full flex-nowrap">
-                    {[
-                      { key: 'initiation', label: 'Initiation', number: 1 },
-                      { key: 'preparation', label: 'Preparation', number: 2 },
-                      { key: 'wire-details', label: 'Wire Details', number: 3 },
-                      { key: 'in-review', label: 'In Review', number: 4 },
-                      { key: 'signatures', label: 'Signatures', number: 5 },
-                      { key: 'funds-disbursed', label: 'Funds Disbursed', number: 6 },
-                      { key: 'complete', label: 'Complete', number: 7 }
-                    ].map((step, idx, arr) => {
-                      const isActive = selectedContract.status.toLowerCase() === step.key;
-                      const isPast = arr.findIndex(s => s.key === selectedContract.status.toLowerCase()) > idx;
-                      return (
-                        <React.Fragment key={step.key}>
-                          <div
-                            className={`flex items-center gap-2 rounded-full font-medium text-xs px-3 py-1.5 whitespace-nowrap
-                              ${isActive 
-                                ? 'bg-primary text-white' 
-                                : isPast 
-                                  ? 'bg-gray-100 text-gray-600'
-                                  : 'bg-gray-50 text-gray-400'
-                              }`}
-                          >
-                            <span className="font-semibold">{step.number}.</span> {step.label}
-                          </div>
-                          {idx < arr.length - 1 && (
-                            <div className={`flex-1 h-0.5 ${isPast ? 'bg-primary' : 'bg-gray-200'} mx-2 min-w-[20px]`} />
-                          )}
-                        </React.Fragment>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-
               {/* Contract Details and Parties Involved Section */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full -mt-2">
                 {/* Contract Details Box */}
                 <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
                   <h3 className="text-sm font-semibold text-gray-900 mb-4">Contract Details</h3>
@@ -1548,6 +1544,20 @@ const ContractsPage: React.FC = () => {
                   </div>
                 </div>
               </div>
+            </div>
+            <div className="sticky bottom-0 left-0 w-full bg-white border-t border-gray-200 z-30 px-6 py-4 flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+              <button
+                className="flex items-center gap-2 px-5 py-2 rounded-lg bg-gray-100 text-gray-700 font-semibold text-sm hover:bg-gray-200 transition-colors"
+              >
+                <HiOutlineDocumentText className="w-5 h-5 text-primary" />
+                Download Summary
+              </button>
+              <button
+                className="flex items-center justify-center px-5 py-2 rounded-lg bg-primary text-white font-semibold text-sm hover:bg-primary-dark transition-colors"
+                onClick={() => setSelectedContract(null)}
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
