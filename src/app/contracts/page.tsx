@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FaSearch, FaFilter, FaFileAlt, FaCheckCircle, FaClock, FaCalendarAlt, FaSort, FaPlus, FaArrowUp, FaDollarSign, FaDownload, FaRegFileAlt } from 'react-icons/fa';
 import { FaArrowUpFromBracket } from 'react-icons/fa6';
-import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutlineTrash, HiOutlinePencilAlt, HiOutlineDocument, HiOutlineDocumentDownload, HiOutlineUpload } from 'react-icons/hi';
+import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutlineTrash, HiOutlinePencilAlt, HiOutlineDocument, HiOutlineDocumentDownload, HiOutlineUpload, HiOutlineEye, HiOutlineClipboardList } from 'react-icons/hi';
 import { Logo } from '@/components/common/Logo';
 
 interface Contract {
@@ -409,6 +409,28 @@ const ContractsPage: React.FC = () => {
   const [editableSeller, setEditableSeller] = useState('');
   const [isEditingAgent, setIsEditingAgent] = useState(false);
   const [editableAgent, setEditableAgent] = useState('');
+
+  const [documentsBoxHeight, setDocumentsBoxHeight] = useState<number | undefined>(undefined);
+  const documentsBoxRef = useRef<HTMLDivElement>(null);
+  const TASKS_BOX_VERTICAL_PADDING = 48; // p-6 top + bottom = 24px + 24px = 48px
+  const TASKS_HEADER_MARGIN_BOTTOM = 16; // mb-4 = 16px
+
+  useEffect(() => {
+    if (!documentsBoxRef.current) return;
+    const updateHeight = () => {
+      if (documentsBoxRef.current) {
+        setDocumentsBoxHeight(documentsBoxRef.current.offsetHeight);
+      }
+    };
+    updateHeight();
+    const resizeObserver = new window.ResizeObserver(updateHeight);
+    resizeObserver.observe(documentsBoxRef.current);
+    window.addEventListener('resize', updateHeight);
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateHeight);
+    };
+  }, []);
 
   // Update editableTitle and selectedType when a contract is selected
   useEffect(() => {
@@ -1008,10 +1030,7 @@ const ContractsPage: React.FC = () => {
               ))}
               </div>
               {activeContentTab === 'documents' && (
-                <button className="flex items-center justify-center mt-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold w-full sm:w-auto">
-                  <HiOutlineUpload className="mr-2 text-base" />
-                  Upload Document
-                </button>
+                <></>
               )}
             </div>
           </div>
@@ -1137,7 +1156,7 @@ const ContractsPage: React.FC = () => {
                     <tr key={doc.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <div className="font-medium text-gray-900">{doc.name}</div>
-                        <div className="text-xs text-gray-500">{doc.type} - {doc.size}</div>
+                        <div className="text-xs text-gray-500">{doc.dateUploaded} • {doc.size}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-xs">{doc.uploadedBy}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500">{doc.dateUploaded}</td>
@@ -1152,11 +1171,11 @@ const ContractsPage: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center text-xs font-medium">
                         <div className="flex items-center justify-center space-x-1">
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Edit">
-                            <HiOutlinePencilAlt className="h-4 w-4" />
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="View">
+                            <HiOutlineEye className="h-4 w-4" />
                           </button>
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Upload">
-                            <HiOutlineUpload className="h-4 w-4" />
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Download">
+                            <HiOutlineDownload className="h-4 w-4" />
                           </button>
                           <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Delete">
                             <HiOutlineTrash className="h-4 w-4" />
@@ -1203,344 +1222,422 @@ const ContractsPage: React.FC = () => {
                 </button>
               </div>
               {/* Centered Status Bar */}
-              <div className="flex justify-center w-full max-w-full">
-                <div className="flex items-center justify-center w-full max-w-3xl mx-auto px-8">
-                  {[
-                    { key: 'initiation', label: 'Initiation', number: 1 },
-                    { key: 'preparation', label: 'Preparation', number: 2 },
-                    { key: 'wire-details', label: 'Wire Details', number: 3 },
-                    { key: 'in-review', label: 'In Review', number: 4 },
-                    { key: 'signatures', label: 'Signatures', number: 5 },
-                    { key: 'funds-disbursed', label: 'Funds Disbursed', number: 6 },
-                    { key: 'complete', label: 'Complete', number: 7 }
-                  ].map((step, idx, arr) => (
-                    <div key={step.key} className="flex items-center">
-                      <div
-                        className={`flex items-center gap-1 rounded-full font-semibold text-xs px-2 py-1 whitespace-nowrap transition-all
-                          ${selectedContract.status.toLowerCase() === step.key 
-                            ? 'bg-primary text-white' 
-                            : arr.findIndex(s => s.key === selectedContract.status.toLowerCase()) > idx
-                              ? 'bg-gray-100 text-gray-600'
-                              : 'bg-gray-50 text-gray-400'
-                          }`}
-                      >
-                        <span className="font-semibold">{step.number}.</span> {step.label}
+              <div className="w-full overflow-x-auto">
+                <div className="flex justify-center w-full max-w-full">
+                  <div className="flex items-center gap-x-4 max-w-3xl -ml-32">
+                    {[
+                      { key: 'initiation', label: 'Initiation', number: 1 },
+                      { key: 'preparation', label: 'Preparation', number: 2 },
+                      { key: 'wire-details', label: 'Wire Details', number: 3 },
+                      { key: 'in-review', label: 'In Review', number: 4 },
+                      { key: 'signatures', label: 'Signatures', number: 5 },
+                      { key: 'funds-disbursed', label: 'Funds Disbursed', number: 6 },
+                      { key: 'complete', label: 'Complete', number: 7 }
+                    ].map((step, idx, arr) => (
+                      <div key={step.key} className="flex items-center">
+                        <div
+                          className={`flex-shrink-0 flex items-center gap-1 rounded-full font-semibold text-xs px-2 py-1 whitespace-nowrap transition-all
+                            ${selectedContract.status.toLowerCase() === step.key 
+                              ? 'bg-primary text-white' 
+                              : arr.findIndex(s => s.key === selectedContract.status.toLowerCase()) > idx
+                                ? 'bg-gray-100 text-gray-600'
+                                : 'bg-gray-50 text-gray-400'
+                            }`}
+                        >
+                          <span className="font-semibold">{step.number}.</span> {step.label}
+                        </div>
+                        {idx < arr.length - 1 && (
+                          <div className="w-8 h-0.5 mx-1 bg-gray-200" />
+                        )}
                       </div>
-                      {idx < arr.length - 1 && (
-                        <div className="w-8 h-0.5 mx-1 bg-gray-200" />
-                      )}
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
             {/* Modal Content (scrollable) */}
             <div className="overflow-y-auto p-6 flex-1">
-              {/* Contract Details and Parties Involved Section */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full -mt-2">
-                {/* Contract Details Box */}
-                <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-4">Contract Details</h3>
-                  <div className="grid grid-cols-2 gap-x-12 gap-y-4">
-                    {/* Row 1: Contract ID and Hash */}
-                    <div>
-                      <div className="text-gray-500 text-xs mb-1">Contract ID</div>
-                      <div className="text-xs font-semibold text-primary">{selectedContract.id}</div>
-                    </div>
-                    <div>
-                      <div className="text-gray-500 text-xs mb-1">Contract Hash</div>
-                      <div className="flex items-center">
-                        <span
-                          className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
-                          style={{ maxWidth: '120px' }}
-                          title={getContractHash(selectedContract.id)}
-                        >
-                          0x{selectedContract.id}...{selectedContract.id.slice(-4)}
-                        </span>
-                        <div className="relative">
-                          <button
-                            type="button"
-                            className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
-                            onClick={() => {
-                              navigator.clipboard.writeText(getContractHash(selectedContract.id));
-                              setCopiedContractId(selectedContract.id);
-                              setTimeout(() => setCopiedContractId(null), 1500);
-                            }}
-                            onMouseEnter={() => setHoveredContractId(selectedContract.id)}
-                            onMouseLeave={() => setHoveredContractId(null)}
-                            aria-label="Copy contract hash"
+              {/* Modal Content Grid: 2 columns */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full h-full min-h-0 -mt-2">
+                {/* LEFT COLUMN: Contract Details, Wire Details, Documents */}
+                <div className="flex flex-col gap-6 w-full h-full min-h-0">
+                  {/* Contract Details Box */}
+                  <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-4">Contract Details</h3>
+                    <div className="grid grid-cols-2 gap-x-12 gap-y-4">
+                      {/* Row 1: Contract ID and Hash */}
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Contract ID</div>
+                        <div className="text-xs font-semibold text-primary">{selectedContract.id}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Contract Hash</div>
+                        <div className="flex items-center">
+                          <span
+                            className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
+                            style={{ maxWidth: '120px' }}
+                            title={getContractHash(selectedContract.id)}
                           >
-                            <HiOutlineDuplicate className="w-4 h-4" />
-                          </button>
-                          {(hoveredContractId === selectedContract.id || copiedContractId === selectedContract.id) && (
-                            <span className="absolute left-1/2 -translate-x-1/2 mt-2 px-2 py-1 rounded bg-gray-800 text-white text-xs whitespace-nowrap z-20 pointer-events-none">
-                              {copiedContractId === selectedContract.id ? 'Copied' : 'Copy'}
-                            </span>
-                          )}
+                            0x{selectedContract.id}...{selectedContract.id.slice(-4)}
+                          </span>
+                          <div className="relative">
+                            <button
+                              type="button"
+                              className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                              onClick={() => {
+                                navigator.clipboard.writeText(getContractHash(selectedContract.id));
+                                setCopiedContractId(selectedContract.id);
+                                setTimeout(() => setCopiedContractId(null), 1500);
+                              }}
+                              onMouseEnter={() => setHoveredContractId(selectedContract.id)}
+                              onMouseLeave={() => setHoveredContractId(null)}
+                              aria-label="Copy contract hash"
+                            >
+                              <HiOutlineDuplicate className="w-4 h-4" />
+                            </button>
+                            {(hoveredContractId === selectedContract.id || copiedContractId === selectedContract.id) && (
+                              <span className="absolute left-1/2 -translate-x-1/2 mt-2 px-2 py-1 rounded bg-gray-800 text-white text-xs whitespace-nowrap z-20 pointer-events-none">
+                                {copiedContractId === selectedContract.id ? 'Copied' : 'Copy'}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    {/* Row 2: Contract Title and Type */}
-                    <div>
-                      <div className="text-gray-500 text-xs mb-1">Contract Title</div>
-                      {isEditingTitle ? (
-                        <input
-                          type="text"
-                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
-                          value={editableTitle}
-                          autoFocus
-                          onChange={e => setEditableTitle(e.target.value)}
-                          onBlur={() => {
-                            if (selectedContract) {
-                              selectedContract.title = editableTitle;
-                            }
-                            setIsEditingTitle(false);
-                          }}
-                          onKeyDown={e => {
-                            if (e.key === 'Enter') {
+                      {/* Row 2: Contract Title and Type */}
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Contract Title</div>
+                        {isEditingTitle ? (
+                          <input
+                            type="text"
+                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                            value={editableTitle}
+                            autoFocus
+                            onChange={e => setEditableTitle(e.target.value)}
+                            onBlur={() => {
                               if (selectedContract) {
                                 selectedContract.title = editableTitle;
                               }
                               setIsEditingTitle(false);
-                            }
-                          }}
-                        />
-                      ) : (
-                        <div
-                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-gray-900 cursor-text hover:border-gray-300 transition-colors"
-                          onClick={() => setIsEditingTitle(true)}
-                          tabIndex={0}
-                          onKeyDown={e => { if (e.key === 'Enter') setIsEditingTitle(true); }}
-                        >
-                          {editableTitle || 'Click to edit title'}
+                            }}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') {
+                                if (selectedContract) {
+                                  selectedContract.title = editableTitle;
+                                }
+                                setIsEditingTitle(false);
+                              }
+                            }}
+                          />
+                        ) : (
+                          <div
+                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-gray-900 cursor-text hover:border-gray-300 transition-colors"
+                            onClick={() => setIsEditingTitle(true)}
+                            tabIndex={0}
+                            onKeyDown={e => { if (e.key === 'Enter') setIsEditingTitle(true); }}
+                          >
+                            {editableTitle || 'Click to edit title'}
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Contract Type</div>
+                        <div className="relative">
+                          <select
+                            className="contract-type-select w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs appearance-none bg-white bg-no-repeat bg-[length:20px] bg-[right_12px_center] bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236B7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')]"
+                            value={selectedType}
+                            onChange={e => setSelectedType(e.target.value)}
+                          >
+                            {CONTRACT_TYPES.map(type => (
+                              <option key={type} value={type}>{type}</option>
+                            ))}
+                          </select>
                         </div>
-                      )}
-                    </div>
-                    <div>
-                      <div className="text-gray-500 text-xs mb-1">Contract Type</div>
-                      <div className="relative">
-                        <select
-                          className="contract-type-select w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs appearance-none bg-white bg-no-repeat bg-[length:20px] bg-[right_12px_center] bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236B7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')]"
-                          value={selectedType}
-                          onChange={e => setSelectedType(e.target.value)}
-                        >
-                          {CONTRACT_TYPES.map(type => (
-                            <option key={type} value={type}>{type}</option>
-                          ))}
-                        </select>
                       </div>
-                    </div>
-                    {/* Status Row */}
-                    <div>
-                      <div className="text-gray-500 text-xs mb-1">Status</div>
-                      <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full text-xs ${getStatusBadgeStyle(selectedContract.status)}`}>{selectedContract.status}</span>
-                    </div>
-                    <div></div>
-                    {/* Row 3: Current Milestone and Next Step */}
-                    <div>
-                      <div className="text-gray-500 text-xs mb-1">Current Milestone</div>
-                      <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full text-xs ${getStatusBadgeStyle('Wire Details')}`}>Wire Details</span>
-                    </div>
-                    <div>
-                      <div className="text-gray-500 text-xs mb-1">Next Step</div>
-                      <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full text-xs ${getStatusBadgeStyle('In Review')}`}>Document Review</span>
-                    </div>
-                    {/* Row 4: Created Date and Last Updated */}
-                    <div className="col-span-2 grid grid-cols-2 gap-x-12">
+                      {/* Status Row */}
                       <div>
-                        <div className="text-gray-500 text-xs mb-1">Created Date</div>
-                        <div className="text-xs font-semibold text-gray-900">May 1, 2024</div>
+                        <div className="text-gray-500 text-xs mb-1">Status</div>
+                        <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full text-xs ${getStatusBadgeStyle(selectedContract.status)}`}>{selectedContract.status}</span>
+                      </div>
+                      <div></div>
+                      {/* Row 3: Current Milestone and Next Step */}
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Current Milestone</div>
+                        <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full text-xs ${getStatusBadgeStyle('Wire Details')}`}>Wire Details</span>
                       </div>
                       <div>
-                        <div className="text-gray-500 text-xs mb-1">Last Updated</div>
-                        <div className="text-xs font-semibold text-gray-900">May 2, 2024</div>
+                        <div className="text-gray-500 text-xs mb-1">Next Step</div>
+                        <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full text-xs ${getStatusBadgeStyle('In Review')}`}>Document Review</span>
                       </div>
-                    </div>
-                    {/* Row 5: Total Value */}
-                    <div className="col-span-2">
-                      <div className="text-gray-500 text-xs mb-1">Total Value</div>
-                      <div className="text-xs font-semibold text-primary">{selectedContract.value}</div>
+                      {/* Row 4: Created Date and Last Updated */}
+                      <div className="col-span-2 grid grid-cols-2 gap-x-12">
+                        <div>
+                          <div className="text-gray-500 text-xs mb-1">Created Date</div>
+                          <div className="text-xs font-semibold text-gray-900">May 1, 2024</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500 text-xs mb-1">Last Updated</div>
+                          <div className="text-xs font-semibold text-gray-900">May 2, 2024</div>
+                        </div>
+                      </div>
+                      {/* Row 5: Total Value */}
+                      <div className="col-span-2">
+                        <div className="text-gray-500 text-xs mb-1">Total Value</div>
+                        <div className="text-xs font-semibold text-primary">{selectedContract.value}</div>
+                      </div>
                     </div>
                   </div>
-                </div>
-                {/* Parties Involved Box */}
-                <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-4">Parties Involved</h3>
-                  <div className="grid grid-cols-1 gap-y-4">
-                    {/* Buyer */}
-                    <div>
-                      <div className="text-gray-500 text-xs mb-1">Buyer / Client</div>
-                      {isEditingBuyer ? (
+                  {/* Wire Details Box */}
+                  <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-4">Wire Details</h3>
+                    <div className="grid grid-cols-1 gap-y-4">
+                      {/* Routing Number */}
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Routing Number</div>
                         <input
                           type="text"
                           className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
-                          value={editableBuyer}
-                          autoFocus
-                          onChange={e => setEditableBuyer(e.target.value)}
-                          onBlur={() => {
-                            if (selectedContract) {
-                              selectedContract.buyer = editableBuyer;
-                            }
-                            setIsEditingBuyer(false);
-                          }}
-                          onKeyDown={e => {
-                            if (e.key === 'Enter') {
+                          placeholder="Enter routing number"
+                        />
+                      </div>
+                      {/* Account Number */}
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Account Number</div>
+                        <input
+                          type="text"
+                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                          placeholder="Enter account number"
+                        />
+                      </div>
+                      {/* Bank Name */}
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Bank Name</div>
+                        <input
+                          type="text"
+                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                          placeholder="Enter bank name"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  {/* Documents Box */}
+                  <div ref={documentsBoxRef} className="bg-white border border-gray-200 rounded-lg p-6 w-full box-border">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm font-semibold text-gray-900">Documents</h3>
+                      <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors">
+                        <HiOutlineUpload className="w-4 h-4 text-primary" />
+                        <span>Upload</span>
+                      </button>
+                    </div>
+                    <div className="flex flex-col gap-3 overflow-y-auto" style={{ maxHeight: '340px' }}>
+                      {/* Mock document list (7 items) */}
+                      {[{ name: 'Wire_Authorization.pdf', date: 'May 18, 2025', size: '1.2 MB' },
+                        { name: 'Closing_Disclosure.pdf', date: 'May 15, 2025', size: '0.9 MB' },
+                        { name: 'Purchase_Agreement.pdf', date: 'May 12, 2025', size: '2.1 MB' },
+                        { name: 'Inspection_Report.pdf', date: 'May 10, 2025', size: '1.5 MB' },
+                        { name: 'Appraisal.pdf', date: 'May 8, 2025', size: '1.0 MB' },
+                        { name: 'Title_Insurance.pdf', date: 'May 5, 2025', size: '1.3 MB' },
+                        { name: 'Loan_Estimate.pdf', date: 'May 2, 2025', size: '0.8 MB' },
+                      ].map((doc, idx) => (
+                        <div key={doc.name} className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
+                          <div className="flex items-center gap-3">
+                            <HiOutlineDocumentText className="w-5 h-5 text-primary" />
+                            <div>
+                              <div className="font-semibold text-xs text-black cursor-pointer hover:underline">{doc.name}</div>
+                              <div className="text-xs text-gray-500">{doc.date} &bull; {doc.size}</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="View">
+                              <HiOutlineEye className="h-4 w-4" />
+                            </button>
+                            <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Download">
+                              <HiOutlineDownload className="h-4 w-4" />
+                            </button>
+                            <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Delete">
+                              <HiOutlineTrash className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                {/* RIGHT COLUMN: Parties Involved, Signature Status, Tasks */}
+                <div className="flex flex-col gap-6 w-full h-full min-h-0">
+                  {/* Parties Involved Box */}
+                  <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-4">Parties Involved</h3>
+                    <div className="grid grid-cols-1 gap-y-4">
+                      {/* Buyer */}
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Buyer / Client</div>
+                        {isEditingBuyer ? (
+                          <input
+                            type="text"
+                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                            value={editableBuyer}
+                            autoFocus
+                            onChange={e => setEditableBuyer(e.target.value)}
+                            onBlur={() => {
                               if (selectedContract) {
                                 selectedContract.buyer = editableBuyer;
                               }
                               setIsEditingBuyer(false);
-                            }
-                          }}
-                        />
-                      ) : (
-                        <div
-                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-gray-900 cursor-text hover:border-gray-300 transition-colors"
-                          onClick={() => setIsEditingBuyer(true)}
-                          tabIndex={0}
-                          onKeyDown={e => { if (e.key === 'Enter') setIsEditingBuyer(true); }}
-                        >
-                          {editableBuyer || selectedContract?.buyer || selectedContract?.parties?.split('&')[0]?.trim() || 'Robert Chen'}
-                        </div>
-                      )}
-                    </div>
-                    {/* Seller */}
-                    <div>
-                      <div className="text-gray-500 text-xs mb-1">Seller / Provider</div>
-                      {isEditingSeller ? (
-                        <input
-                          type="text"
-                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
-                          value={editableSeller}
-                          autoFocus
-                          onChange={e => setEditableSeller(e.target.value)}
-                          onBlur={() => {
-                            if (selectedContract) {
-                              selectedContract.seller = editableSeller;
-                            }
-                            setIsEditingSeller(false);
-                          }}
-                          onKeyDown={e => {
-                            if (e.key === 'Enter') {
+                            }}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') {
+                                if (selectedContract) {
+                                  selectedContract.buyer = editableBuyer;
+                                }
+                                setIsEditingBuyer(false);
+                              }
+                            }}
+                          />
+                        ) : (
+                          <div
+                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-gray-900 cursor-text hover:border-gray-300 transition-colors"
+                            onClick={() => setIsEditingBuyer(true)}
+                            tabIndex={0}
+                            onKeyDown={e => { if (e.key === 'Enter') setIsEditingBuyer(true); }}
+                          >
+                            {editableBuyer || selectedContract?.buyer || selectedContract?.parties?.split('&')[0]?.trim() || 'Robert Chen'}
+                          </div>
+                        )}
+                      </div>
+                      {/* Seller */}
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Seller / Provider</div>
+                        {isEditingSeller ? (
+                          <input
+                            type="text"
+                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                            value={editableSeller}
+                            autoFocus
+                            onChange={e => setEditableSeller(e.target.value)}
+                            onBlur={() => {
                               if (selectedContract) {
                                 selectedContract.seller = editableSeller;
                               }
                               setIsEditingSeller(false);
-                            }
-                          }}
-                        />
-                      ) : (
-                        <div
-                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-gray-900 cursor-text hover:border-gray-300 transition-colors"
-                          onClick={() => setIsEditingSeller(true)}
-                          tabIndex={0}
-                          onKeyDown={e => { if (e.key === 'Enter') setIsEditingSeller(true); }}
-                        >
-                          {editableSeller || selectedContract?.seller || selectedContract?.parties?.split('&')[1]?.trim() || 'Eastside Properties'}
-                        </div>
-                      )}
-                    </div>
-                    {/* Agent */}
-                    <div>
-                      <div className="text-gray-500 text-xs mb-1">Agent / Escrow Officer</div>
-                      {isEditingAgent ? (
-                        <input
-                          type="text"
-                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
-                          value={editableAgent}
-                          autoFocus
-                          onChange={e => setEditableAgent(e.target.value)}
-                          onBlur={() => {
-                            if (selectedContract) {
-                              selectedContract.agent = editableAgent;
-                            }
-                            setIsEditingAgent(false);
-                          }}
-                          onKeyDown={e => {
-                            if (e.key === 'Enter') {
+                            }}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') {
+                                if (selectedContract) {
+                                  selectedContract.seller = editableSeller;
+                                }
+                                setIsEditingSeller(false);
+                              }
+                            }}
+                          />
+                        ) : (
+                          <div
+                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-gray-900 cursor-text hover:border-gray-300 transition-colors"
+                            onClick={() => setIsEditingSeller(true)}
+                            tabIndex={0}
+                            onKeyDown={e => { if (e.key === 'Enter') setIsEditingSeller(true); }}
+                          >
+                            {editableSeller || selectedContract?.seller || selectedContract?.parties?.split('&')[1]?.trim() || 'Eastside Properties'}
+                          </div>
+                        )}
+                      </div>
+                      {/* Agent */}
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Agent / Escrow Officer</div>
+                        {isEditingAgent ? (
+                          <input
+                            type="text"
+                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                            value={editableAgent}
+                            autoFocus
+                            onChange={e => setEditableAgent(e.target.value)}
+                            onBlur={() => {
                               if (selectedContract) {
                                 selectedContract.agent = editableAgent;
                               }
                               setIsEditingAgent(false);
-                            }
-                          }}
-                        />
-                      ) : (
-                        <div
-                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-gray-900 cursor-text hover:border-gray-300 transition-colors"
-                          onClick={() => setIsEditingAgent(true)}
-                          tabIndex={0}
-                          onKeyDown={e => { if (e.key === 'Enter') setIsEditingAgent(true); }}
-                        >
-                          {editableAgent || selectedContract?.agent || 'N/A'}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                {/* Wire Details Box */}
-                <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-4">Wire Details</h3>
-                  <div className="grid grid-cols-1 gap-y-4">
-                    {/* Routing Number */}
-                    <div>
-                      <div className="text-gray-500 text-xs mb-1">Routing Number</div>
-                      <input
-                        type="text"
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
-                        placeholder="Enter routing number"
-                      />
-                    </div>
-                    {/* Account Number */}
-                    <div>
-                      <div className="text-gray-500 text-xs mb-1">Account Number</div>
-                      <input
-                        type="text"
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
-                        placeholder="Enter account number"
-                      />
-                    </div>
-                    {/* Bank Name */}
-                    <div>
-                      <div className="text-gray-500 text-xs mb-1">Bank Name</div>
-                      <input
-                        type="text"
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
-                        placeholder="Enter bank name"
-                      />
-                    </div>
-                  </div>
-                </div>
-                {/* Signature Status Box */}
-                <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-4">Signature Status</h3>
-                  <div className="flex flex-col gap-3">
-                    {/* Use contract parties for signature status */}
-                    {[
-                      { name: selectedContract?.buyer || selectedContract?.parties?.split('&')[0]?.trim() || 'Robert Chen', role: 'Client', status: 'Signed', date: 'May 18, 2025' },
-                      { name: selectedContract?.seller || selectedContract?.parties?.split('&')[1]?.trim() || 'Eastside Properties', role: 'Seller', status: 'Signed', date: 'May 17, 2025' },
-                      { name: selectedContract?.agent || 'N/A', role: 'Escrow Officer', status: 'Pending', date: null },
-                    ].map((sig) => (
-                      <div key={sig.name} className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
-                        <div>
-                          <div className="font-semibold text-gray-900 text-sm">{sig.name}</div>
-                          <div className="text-xs text-gray-500">{sig.role}</div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          {sig.status === 'Signed' ? (
-                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
-                              <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                              Signed
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-semibold">
-                              <svg className="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3" /></svg>
-                              Pending
-                            </span>
-                          )}
-                          <span className="text-xs text-gray-400 font-medium min-w-[90px] text-right">{sig.date || ''}</span>
-                        </div>
+                            }}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') {
+                                if (selectedContract) {
+                                  selectedContract.agent = editableAgent;
+                                }
+                                setIsEditingAgent(false);
+                              }
+                            }}
+                          />
+                        ) : (
+                          <div
+                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-gray-900 cursor-text hover:border-gray-300 transition-colors"
+                            onClick={() => setIsEditingAgent(true)}
+                            tabIndex={0}
+                            onKeyDown={e => { if (e.key === 'Enter') setIsEditingAgent(true); }}
+                          >
+                            {editableAgent || selectedContract?.agent || 'N/A'}
+                          </div>
+                        )}
                       </div>
-                    ))}
+                    </div>
+                  </div>
+                  {/* Signature Status Box */}
+                  <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-4">Signature Status</h3>
+                    <div className="flex flex-col gap-3">
+                      {/* Use contract parties for signature status */}
+                      {[
+                        { name: selectedContract?.buyer || selectedContract?.parties?.split('&')[0]?.trim() || 'Robert Chen', role: 'Client', status: 'Signed', date: 'May 18, 2025' },
+                        { name: selectedContract?.seller || selectedContract?.parties?.split('&')[1]?.trim() || 'Eastside Properties', role: 'Seller', status: 'Signed', date: 'May 17, 2025' },
+                        { name: selectedContract?.agent || 'N/A', role: 'Escrow Officer', status: 'Pending', date: null },
+                      ].map((sig) => (
+                        <div key={sig.name} className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
+                          <div>
+                            <div className="font-semibold text-gray-900 text-sm">{sig.name}</div>
+                            <div className="text-xs text-gray-500">{sig.role}</div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            {sig.status === 'Signed' ? (
+                              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
+                                <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                Signed
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-semibold">
+                                <svg className="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3" /></svg>
+                                Pending
+                              </span>
+                            )}
+                            <span className="text-xs text-gray-400 font-medium min-w-[90px] text-right">{sig.date || ''}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Tasks Box */}
+                  <div className="bg-white border border-gray-200 rounded-lg p-6 w-full flex flex-col min-h-0 box-border overflow-hidden" style={documentsBoxHeight ? { height: documentsBoxHeight } : {}}>
+                    <h3 className="text-sm font-semibold text-gray-900 mb-4">Tasks</h3>
+                    <div
+                      className="flex flex-col gap-3 overflow-y-auto"
+                      style={{ maxHeight: 495 }}
+                    >
+                      {[{ name: 'Review Title Report', due: 'May 20, 2025', desc: 'Ensure there are no liens or encumbrances on the property.', contract: '9548' },
+                        { name: 'Schedule Inspection', due: 'May 21, 2025', desc: 'Arrange for a home inspection with a certified inspector.', contract: '9548' },
+                        { name: 'Order Appraisal', due: 'May 22, 2025', desc: 'Request an appraisal to confirm property value.', contract: '9548' },
+                        { name: 'Submit Loan Documents', due: 'May 23, 2025', desc: 'Provide all required documents to the lender.', contract: '9548' },
+                        { name: 'Review Closing Disclosure', due: 'May 24, 2025', desc: 'Verify all fees and terms in the closing disclosure.', contract: '9548' },
+                        { name: 'Schedule Final Walkthrough', due: 'May 25, 2025', desc: 'Conduct a final walkthrough of the property.', contract: '9548' },
+                        { name: 'Sign Closing Documents', due: 'May 26, 2025', desc: 'Attend closing and sign all necessary documents.', contract: '9548' },
+                        { name: 'Extra Task 1', due: 'May 27, 2025', desc: 'Additional task for testing.', contract: '9548' },
+                        { name: 'Extra Task 2', due: 'May 28, 2025', desc: 'Another extra task.', contract: '9548' },
+                      ].map((task, idx) => (
+                        <div key={task.name} className="flex items-start justify-between bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
+                          <div>
+                            <div className="font-semibold text-xs text-black mb-1">{task.name}</div>
+                            <div className="text-xs text-gray-500 mb-1">Due: {task.due}</div>
+                            <div className="text-xs text-gray-500 mb-1">{task.desc}</div>
+                            <div className="inline-block px-2 py-0.5 rounded bg-primary/10 text-primary text-xs font-semibold">ID #{task.contract}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1549,7 +1646,7 @@ const ContractsPage: React.FC = () => {
               <button
                 className="flex items-center gap-2 px-5 py-2 rounded-lg bg-gray-100 text-gray-700 font-semibold text-sm hover:bg-gray-200 transition-colors"
               >
-                <HiOutlineDocumentText className="w-5 h-5 text-primary" />
+                <HiOutlineClipboardList className="w-5 h-5 text-primary-dark" />
                 Download Summary
               </button>
               <button
