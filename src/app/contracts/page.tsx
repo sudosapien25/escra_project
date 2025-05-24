@@ -1630,20 +1630,20 @@ const ContractsPage: React.FC = () => {
                     </div>
                     <div className="flex flex-col gap-3 overflow-y-auto" style={{ maxHeight: '340px' }}>
                       {/* Mock document list (7 items) */}
-                      {[{ name: 'Wire_Authorization.pdf', date: 'May 18, 2025', size: '1.2 MB' },
-                        { name: 'Closing_Disclosure.pdf', date: 'May 15, 2025', size: '0.9 MB' },
-                        { name: 'Purchase_Agreement.pdf', date: 'May 12, 2025', size: '2.1 MB' },
-                        { name: 'Inspection_Report.pdf', date: 'May 10, 2025', size: '1.5 MB' },
-                        { name: 'Appraisal.pdf', date: 'May 8, 2025', size: '1.0 MB' },
-                        { name: 'Title_Insurance.pdf', date: 'May 5, 2025', size: '1.3 MB' },
-                        { name: 'Loan_Estimate.pdf', date: 'May 2, 2025', size: '0.8 MB' },
-                      ].map((doc, idx) => (
+                      {[{ name: 'Wire_Authorization', date: '2025-05-18', size: '1.2 MB', type: 'PDF' },
+                        { name: 'Closing_Disclosure', date: '2025-05-15', size: '0.9 MB', type: 'PDF' },
+                        { name: 'Purchase_Agreement', date: '2025-05-12', size: '2.1 MB', type: 'PDF' },
+                        { name: 'Inspection_Report', date: '2025-05-10', size: '1.5 MB', type: 'PDF' },
+                        { name: 'Appraisal', date: '2025-05-08', size: '1.0 MB', type: 'PDF' },
+                        { name: 'Title_Insurance', date: '2025-05-05', size: '1.3 MB', type: 'PDF' },
+                        { name: 'Loan_Estimate', date: '2025-05-02', size: '0.8 MB', type: 'PDF' },
+                      ].map((doc) => (
                         <div key={doc.name} className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
                           <div className="flex items-center gap-3">
                             <HiOutlineDocumentText className="w-5 h-5 text-primary" />
                             <div>
                               <div className="font-semibold text-xs text-black cursor-pointer hover:underline">{doc.name}</div>
-                              <div className="text-xs text-gray-500">{doc.date} &bull; {doc.size}</div>
+                              <div className="text-xs text-gray-500">{doc.date} &bull; {doc.type} &bull; {doc.size}</div>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
