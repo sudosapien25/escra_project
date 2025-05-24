@@ -415,6 +415,13 @@ const ContractsPage: React.FC = () => {
   const TASKS_BOX_VERTICAL_PADDING = 48; // p-6 top + bottom = 24px + 24px = 48px
   const TASKS_HEADER_MARGIN_BOTTOM = 16; // mb-4 = 16px
 
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadContractId, setUploadContractId] = useState<string | null>(null);
+  const [uploadModalFiles, setUploadModalFiles] = useState<File[]>([]);
+
+  const [showPdfViewer, setShowPdfViewer] = useState(false);
+  const [selectedPdf, setSelectedPdf] = useState<{ name: string; url: string } | null>(null);
+
   useEffect(() => {
     if (!documentsBoxRef.current) return;
     const updateHeight = () => {
@@ -449,6 +456,16 @@ const ContractsPage: React.FC = () => {
   // Add state for tooltip for contract details and table
   const [copiedContractId, setCopiedContractId] = useState<string | null>(null);
   const [hoveredContractId, setHoveredContractId] = useState<string | null>(null);
+
+  const handleUploadModalFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const files = Array.from(e.target.files);
+    // Only allow PDF, DOC, DOCX, JPG and max 10MB each
+    const validFiles = files.filter(file =>
+      ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "image/jpeg"].includes(file.type) && file.size <= 10 * 1024 * 1024
+    );
+    setUploadModalFiles(validFiles);
+  };
 
   return (
     <>
@@ -1123,10 +1140,21 @@ const ContractsPage: React.FC = () => {
                           <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Edit">
                             <HiOutlinePencilAlt className="h-4 w-4" />
                         </button>
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Upload">
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Upload"
+                            onClick={e => {
+                              e.stopPropagation();
+                              setShowUploadModal(true);
+                              setUploadContractId(contract.id);
+                            }}
+                          >
                             <HiOutlineUpload className="h-4 w-4" />
                         </button>
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Delete">
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Delete"
+                            onClick={e => {
+                              e.stopPropagation();
+                              // Add your delete logic or confirmation modal here
+                            }}
+                          >
                             <HiOutlineTrash className="h-4 w-4" />
                         </button>
                       </div>
@@ -1156,7 +1184,13 @@ const ContractsPage: React.FC = () => {
                     <tr key={doc.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <div className="font-medium text-gray-900">{doc.name}</div>
-                        <div className="text-xs text-gray-500">{doc.dateUploaded} • {doc.size}</div>
+                        <div className="text-xs text-gray-500 flex items-center gap-2">
+                          <span>{doc.dateUploaded}</span>
+                          <span>&bull;</span>
+                          <span>{doc.type}</span>
+                          <span>&bull;</span>
+                          <span>{doc.size}</span>
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-xs">{doc.uploadedBy}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500">{doc.dateUploaded}</td>
@@ -1171,7 +1205,12 @@ const ContractsPage: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center text-xs font-medium">
                         <div className="flex items-center justify-center space-x-1">
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="View">
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="View"
+                            onClick={() => {
+                              setSelectedPdf({ name: doc.name, url: `/documents/${doc.name}` });
+                              setShowPdfViewer(true);
+                            }}
+                          >
                             <HiOutlineEye className="h-4 w-4" />
                           </button>
                           <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Download">
@@ -1655,6 +1694,91 @@ const ContractsPage: React.FC = () => {
               >
                 Close
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showUploadModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold text-gray-900">Upload Documents</h2>
+              <button
+                className="text-gray-400 hover:text-gray-600"
+                onClick={() => { setShowUploadModal(false); setUploadModalFiles([]); }}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="mb-2 text-sm text-gray-500">
+              {uploadContractId && (
+                <span>
+                  For contract: <span className="font-semibold text-primary">#{uploadContractId}</span>
+                </span>
+              )}
+            </div>
+            <form
+              className="p-0"
+              onSubmit={e => {
+                e.preventDefault();
+                setShowUploadModal(false);
+                setUploadModalFiles([]);
+              }}
+            >
+              <label className="block text-sm font-medium text-gray-700 mb-2">Upload Documents (Optional)</label>
+              <label htmlFor="upload-modal-file-upload" className="block cursor-pointer">
+                <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 py-8 px-4 text-center transition hover:border-primary">
+                  <HiOutlineUpload className="text-3xl text-gray-400 mb-2" />
+                  <div className="text-gray-700 font-medium">Click to upload or drag and drop</div>
+                  <div className="text-xs text-gray-400 mt-1">PDF, DOC, DOCX, or JPG (max. 10MB each)</div>
+                  <input
+                    id="upload-modal-file-upload"
+                    name="upload-modal-file-upload"
+                    type="file"
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg"
+                    className="hidden"
+                    multiple
+                    onChange={handleUploadModalFileChange}
+                  />
+                </div>
+              </label>
+              {uploadModalFiles.length > 0 && (
+                <ul className="mt-3 text-sm text-gray-600">
+                  {uploadModalFiles.map((file, idx) => (
+                    <li key={idx} className="truncate">{file.name}</li>
+                  ))}
+                </ul>
+              )}
+              <button type="submit" className="w-full mt-6 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold">
+                Upload
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showPdfViewer && selectedPdf && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <h2 className="text-lg font-bold text-gray-900">{selectedPdf.name}</h2>
+                <button
+                  className="text-gray-400 hover:text-gray-600"
+                  onClick={() => setShowPdfViewer(false)}
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 p-6 overflow-auto flex items-center justify-center bg-gray-50">
+              {/* Blank area for PDF viewer */}
+              <span className="text-gray-400 text-lg">No document available</span>
             </div>
           </div>
         </div>
