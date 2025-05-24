@@ -80,23 +80,7 @@ export default function RootLayout({
             </div>
             {/* Main Content Area */}
             <div className="flex flex-col flex-grow overflow-hidden flex-basis-0 min-w-0">
-              <header className="p-4 border-b border-gray-200 flex items-center justify-end space-x-4">
-                <div className="relative">
-                  <FaBell {...{ className: "text-gray-600 text-xl" } as IconBaseProps} />
-                  <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
-                </div>
-                <div className="relative flex items-center">
-                  <FaSearch {...{ className: "absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" } as IconBaseProps} />
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  />
-                </div>
-                <div className="w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center text-white text-sm">
-                  JD
-                </div>
-              </header>
+              <header className="p-4 border-b border-gray-200 flex items-center justify-end space-x-4 bg-white"></header>
               <main className="py-4 px-8 flex-grow">
                 <div>
                   <PageContentWrapper>

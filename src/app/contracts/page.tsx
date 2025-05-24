@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { FaSearch, FaFilter, FaFileAlt, FaCheckCircle, FaClock, FaCalendarAlt, FaSort, FaPlus, FaArrowUp, FaDollarSign, FaDownload, FaRegFileAlt } from 'react-icons/fa';
+import { FaSearch, FaFilter, FaFileAlt, FaCheckCircle, FaClock, FaCalendarAlt, FaSort, FaPlus, FaArrowUp, FaDollarSign, FaDownload, FaRegFileAlt, FaTimes } from 'react-icons/fa';
 import { FaArrowUpFromBracket } from 'react-icons/fa6';
-import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutlineTrash, HiOutlinePencilAlt, HiOutlineDocument, HiOutlineDocumentDownload, HiOutlineUpload, HiOutlineEye, HiOutlineClipboardList } from 'react-icons/hi';
+import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutlineTrash, HiOutlinePencilAlt, HiOutlineDocument, HiOutlineDocumentDownload, HiOutlineUpload, HiOutlineEye, HiOutlineClipboardList, HiOutlineExclamation } from 'react-icons/hi';
 import { Logo } from '@/components/common/Logo';
 
 interface Contract {
@@ -23,6 +23,7 @@ interface Contract {
 const ContractsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('allContracts');
   const [activeContentTab, setActiveContentTab] = useState('contractList');
+  const [activeRole, setActiveRole] = useState('creator');
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [showNewContractForm, setShowNewContractForm] = useState(false);
@@ -397,6 +398,136 @@ const ContractsPage: React.FC = () => {
       contractTitle: 'Beachfront Property Sale',
       contractId: '10005',
     },
+    {
+      id: 'd8',
+      name: 'Inspection Photos',
+      type: 'JPG',
+      size: '3.2 MB',
+      uploadedBy: 'Bob Martin',
+      dateUploaded: '2024-05-08',
+      contractTitle: 'Land Development Contract',
+      contractId: '9550',
+    },
+    {
+      id: 'd9',
+      name: 'Environmental Report',
+      type: 'PDF',
+      size: '1.8 MB',
+      uploadedBy: 'Samantha Fox',
+      dateUploaded: '2024-05-09',
+      contractTitle: 'Commercial Lease Amendment',
+      contractId: '8784',
+    },
+    {
+      id: 'd10',
+      name: 'HOA Documents',
+      type: 'PDF',
+      size: '2.0 MB',
+      uploadedBy: 'David Miller',
+      dateUploaded: '2024-05-10',
+      contractTitle: 'Property Sale Contract',
+      contractId: '8423',
+    },
+    {
+      id: 'd11',
+      name: 'Final Walkthrough Checklist',
+      type: 'DOCX',
+      size: '0.7 MB',
+      uploadedBy: 'Emma Johnson',
+      dateUploaded: '2024-05-11',
+      contractTitle: 'Office Building Purchase',
+      contractId: '6891',
+    },
+    {
+      id: 'd12',
+      name: 'Loan Approval Letter',
+      type: 'PDF',
+      size: '1.1 MB',
+      uploadedBy: 'Sarah Thompson',
+      dateUploaded: '2024-05-12',
+      contractTitle: 'Luxury Villa Purchase',
+      contractId: '10003',
+    },
+    {
+      id: 'd13',
+      name: 'Title Commitment',
+      type: 'PDF',
+      size: '1.5 MB',
+      uploadedBy: 'Robert Chen',
+      dateUploaded: '2024-05-13',
+      contractTitle: 'Beachfront Property Sale',
+      contractId: '10005',
+    },
+    {
+      id: 'd14',
+      name: 'Survey',
+      type: 'PDF',
+      size: '2.2 MB',
+      uploadedBy: 'Alice Lee',
+      dateUploaded: '2024-05-14',
+      contractTitle: 'New Property Acquisition',
+      contractId: '9548',
+    },
+    {
+      id: 'd15',
+      name: 'Closing Statement',
+      type: 'PDF',
+      size: '1.9 MB',
+      uploadedBy: 'Bob Martin',
+      dateUploaded: '2024-05-15',
+      contractTitle: 'Land Development Contract',
+      contractId: '9550',
+    },
+    {
+      id: 'd16',
+      name: 'Warranty Deed',
+      type: 'PDF',
+      size: '1.3 MB',
+      uploadedBy: 'Samantha Fox',
+      dateUploaded: '2024-05-16',
+      contractTitle: 'Commercial Lease Amendment',
+      contractId: '8784',
+    },
+    {
+      id: 'd17',
+      name: 'Escrow Instructions',
+      type: 'PDF',
+      size: '2.6 MB',
+      uploadedBy: 'David Miller',
+      dateUploaded: '2024-05-17',
+      contractTitle: 'Property Sale Contract',
+      contractId: '8423',
+    },
+    {
+      id: 'd18',
+      name: 'Appraisal Report',
+      type: 'PDF',
+      size: '2.1 MB',
+      uploadedBy: 'Emma Johnson',
+      dateUploaded: '2024-05-18',
+      contractTitle: 'Office Building Purchase',
+      contractId: '6891',
+    },
+    {
+      id: 'd19',
+      name: 'Flood Certificate',
+      type: 'PDF',
+      size: '0.8 MB',
+      uploadedBy: 'Sarah Thompson',
+      dateUploaded: '2024-05-19',
+      contractTitle: 'Luxury Villa Purchase',
+      contractId: '10003',
+    },
+    {
+      id: 'd20',
+      name: 'Power of Attorney',
+      type: 'PDF',
+      size: '1.0 MB',
+      uploadedBy: 'Robert Chen',
+      dateUploaded: '2024-05-20',
+      contractTitle: 'Beachfront Property Sale',
+      contractId: '10005',
+    },
   ];
 
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
@@ -421,6 +552,8 @@ const ContractsPage: React.FC = () => {
 
   const [showPdfViewer, setShowPdfViewer] = useState(false);
   const [selectedPdf, setSelectedPdf] = useState<{ name: string; url: string } | null>(null);
+
+  const [isNewContractModalOpen, setIsNewContractModalOpen] = useState(false);
 
   useEffect(() => {
     if (!documentsBoxRef.current) return;
@@ -482,11 +615,26 @@ const ContractsPage: React.FC = () => {
             <div className="inline-block rounded-full bg-teal-50 px-2 py-0.5 text-teal-500 font-semibold text-xs border border-teal-100 self-start sm:self-center">
               Logged in as: Creator
             </div>
-            <div className="inline-flex rounded-md border border-gray-200 bg-white px-1 py-0.5 self-start sm:self-center">
-              <button className="px-2 py-2 text-xs font-medium text-gray-700 bg-white rounded-l-md hover:bg-gray-50 focus:z-10 focus:outline-none focus:border-primary">Admin</button>
-              <button className="px-2 py-2 text-xs font-medium text-white bg-primary z-10 hover:bg-primary-dark focus:outline-none focus:border-primary">Creator</button>
-              <button className="px-2 py-2 text-xs font-medium text-gray-700 bg-white hover:bg-gray-50 focus:z-10 focus:outline-none focus:border-primary">Editor</button>
-              <button className="px-2 py-2 text-xs font-medium text-gray-700 bg-white rounded-r-md hover:bg-gray-50 focus:z-10 focus:outline-none focus:border-primary">Viewer</button>
+            <div className="inline-flex self-start sm:self-center border border-gray-200 rounded-lg overflow-hidden">
+              {['admin', 'creator', 'editor', 'viewer'].map((role, idx, arr) => (
+                <button
+                  key={role}
+                  className={`px-3 py-1.5 text-xs font-medium transition-colors border-0 ${
+                    idx !== 0 ? 'border-l border-gray-200' : ''
+                  } ${
+                    idx === 0 ? 'rounded-l-lg' : ''
+                  } ${
+                    idx === arr.length - 1 ? 'rounded-r-lg' : ''
+                  } ${
+                    activeRole === role
+                      ? 'bg-teal-50 text-teal-500'
+                      : 'bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                  onClick={() => setActiveRole(role)}
+                >
+                  {role.charAt(0).toUpperCase() + role.slice(1)}
+                </button>
+              ))}
             </div>
             <button 
               onClick={() => setShowNewContractForm(!showNewContractForm)}
@@ -500,507 +648,566 @@ const ContractsPage: React.FC = () => {
 
       <hr className="my-6 border-gray-300" />
 
-        {/* Expandable Contract Creation Form */}
-        {showNewContractForm && (
-          <div className="bg-white rounded-xl border border-gray-300 px-6 py-4 mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-4">
-                <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-primary/10">
-                  <HiOutlineDocumentText className="text-primary text-2xl" />
-                </span>
-                <div>
-                  <h2 className="text-xl font-bold text-black leading-tight">Create New Contract</h2>
-                  <p className="text-gray-500 text-sm leading-tight">Fill in the contract details to get started</p>
-                </div>
+      {/* Stat Boxes or New Contract Modal */}
+      {showNewContractForm ? (
+        <div className="bg-white rounded-xl border border-gray-300 px-6 py-4 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-4">
+              <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-primary/10">
+                <HiOutlineDocumentText className="text-primary text-2xl" />
+              </span>
+              <div>
+                <h2 className="text-xl font-bold text-black leading-tight">Create New Contract</h2>
+                <p className="text-gray-500 text-sm leading-tight">Fill in the contract details to get started</p>
+              </div>
             </div>
-              <button 
-                onClick={() => { setShowNewContractForm(false); setModalStep(1); }} 
-                className="text-gray-400 hover:text-gray-600 p-2 rounded-full"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+            <button 
+              onClick={() => { setShowNewContractForm(false); setModalStep(1); }} 
+              className="text-gray-400 hover:text-gray-600 p-2 rounded-full"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
 
-            {/* Stepper */}
-            <div className="w-full overflow-x-auto">
-              <div className="flex items-center justify-between mb-6 min-w-[340px] sm:min-w-0">
-                <div className="flex items-center space-x-2 w-full flex-nowrap">
-                  {[1, 2, 3].map((step, idx) => (
-                    <React.Fragment key={step}>
-                <button
-                        type="button"
-                        onClick={() => setModalStep(step)}
-                        className={`flex items-center gap-2 rounded-full font-semibold border transition-all duration-300 text-sm px-6 py-2 whitespace-nowrap
-                          ${modalStep === step
-                            ? 'bg-white text-gray-900 border-gray-300 ring-1 ring-inset ring-gray-200 shadow-sm'
-                            : 'text-gray-500 border-transparent hover:bg-gray-100'}
-                        `}
-                      >
-                        <span className={`inline-block transition-all duration-300 ${modalStep === step ? 'opacity-100 mr-2' : 'opacity-0 w-0 mr-0'}`} style={{width: modalStep === step ? 18 : 0}}>
-                          {modalStep === step && <Logo width={18} height={18} className="pointer-events-none" />}
-                        </span>
-                        {step === 1 && 'Step 1: Details'}
-                        {step === 2 && 'Step 2: Parties'}
-                        {step === 3 && 'Step 3: Documents'}
-                </button>
-                      {idx < 2 && <div className="flex-1 h-0.5 bg-gray-200 mx-2 min-w-[20px]" />}
-                    </React.Fragment>
-              ))}
+          {/* Stepper */}
+          <div className="w-full overflow-x-auto">
+            <div className="flex items-center justify-between mb-6 min-w-[340px] sm:min-w-0">
+              <div className="flex items-center space-x-2 w-full flex-nowrap">
+                {[1, 2, 3].map((step, idx) => (
+                  <React.Fragment key={step}>
+                    <button
+                      type="button"
+                      onClick={() => setModalStep(step)}
+                      className={`flex items-center gap-2 rounded-full font-semibold border transition-all duration-300 text-sm px-6 py-2 whitespace-nowrap
+                        ${modalStep === step
+                          ? 'bg-white text-gray-900 border-gray-300 ring-1 ring-inset ring-gray-200 shadow-sm'
+                          : 'text-gray-500 border-transparent hover:bg-gray-100'
+                        }`}
+                    >
+                      <span className={`inline-block transition-all duration-300 ${modalStep === step ? 'opacity-100 mr-2' : 'opacity-0 w-0 mr-0'}`} style={{width: modalStep === step ? 18 : 0}}>
+                        {modalStep === step && <Logo width={18} height={18} className="pointer-events-none" />}
+                      </span>
+                      {step === 1 && 'Step 1: Details'}
+                      {step === 2 && 'Step 2: Parties'}
+                      {step === 3 && 'Step 3: Documents'}
+                    </button>
+                    {idx < 2 && <div className="flex-1 h-0.5 bg-gray-200 mx-2 min-w-[20px]" />}
+                  </React.Fragment>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
 
-            {/* Form Content */}
-            <div className="space-y-6">
-              {modalStep === 1 && (
-                <form onSubmit={e => { e.preventDefault(); setModalStep(2); }}>
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Contract Title</label>
-                      <input
-                        type="text"
-                        id="title"
-                        name="title"
-                        value={modalForm.title}
-                        onChange={handleModalChange}
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
-                        placeholder="Enter contract title"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="escrowNumber" className="block text-sm font-medium text-gray-700 mb-1">Escrow Number</label>
-                      <input
-                        type="text"
-                        id="escrowNumber"
-                        name="escrowNumber"
-                        value={modalForm.escrowNumber}
-                        onChange={handleModalChange}
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
-                        placeholder="Enter escrow number"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">Contract Type</label>
-                      <select
-                        id="type"
-                        name="type"
-                        value={modalForm.type}
-                        onChange={handleModalChange}
-                        className="contract-type-select w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs appearance-none bg-white bg-no-repeat bg-[length:20px] bg-[right_12px_center] bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236B7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')]"
-                        required
-                      >
-                        <option value="" disabled>Select a contract type</option>
-                        {CONTRACT_TYPES.map(type => (
-                          <option key={type} value={type}>{type}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label htmlFor="propertyType" className="block text-sm font-medium text-gray-700 mb-1">Property Type</label>
-                      <select
-                        id="propertyType"
-                        name="propertyType"
-                        value={modalForm.propertyType}
-                        onChange={handleModalChange}
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs appearance-none bg-white bg-no-repeat bg-[length:20px] bg-[right_12px_center] bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236B7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')]"
-                        required
-                      >
-                        <option value="" disabled>Select property type</option>
-                        {PROPERTY_TYPES.map(type => (
-                          <option key={type} value={type}>{type}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label htmlFor="milestone" className="block text-sm font-medium text-gray-700 mb-1">Milestone Template</label>
-                      <select
-                        id="milestone"
-                        name="milestone"
-                        value={modalForm.milestone}
-                        onChange={handleModalChange}
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs appearance-none bg-white bg-no-repeat bg-[length:20px] bg-[right_12px_center] bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236B7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')]"
-                        required
-                      >
-                        <option value="" disabled>Select a milestone template</option>
-                        {MILESTONE_TEMPLATES.map(template => (
-                          <option key={template} value={template}>{template}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label htmlFor="value" className="block text-sm font-medium text-gray-700 mb-1">Contract Value</label>
-                      <input
-                        type="text"
-                        id="value"
-                        name="value"
-                        value={modalForm.value}
-                        onChange={handleModalChange}
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
-                        placeholder="Enter contract value"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
-                      <input
-                        type="date"
-                        id="dueDate"
-                        name="dueDate"
-                        value={modalForm.dueDate}
-                        onChange={handleModalChange}
-                        className="w-full px-4 py-2 pr-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs text-gray-500 bg-white"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="mt-6">
-                    <label htmlFor="propertyAddress" className="block text-sm font-medium text-gray-700 mb-1">Property Address</label>
+          {/* Form Content */}
+          <div className="space-y-6">
+            {modalStep === 1 && (
+              <form onSubmit={e => { e.preventDefault(); setModalStep(2); }}>
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Contract Title</label>
                     <input
                       type="text"
-                      id="propertyAddress"
-                      name="propertyAddress"
-                      value={modalForm.propertyAddress}
+                      id="title"
+                      name="title"
+                      value={modalForm.title}
                       onChange={handleModalChange}
                       className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
-                      placeholder="Enter property address"
+                      placeholder="Enter contract title"
                       required
                     />
                   </div>
-                  <div className="mt-6">
-                    <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">Notes (Optional)</label>
-                    <textarea
-                      id="notes"
-                      name="notes"
-                      value={modalForm.notes}
+                  <div>
+                    <label htmlFor="escrowNumber" className="block text-sm font-medium text-gray-700 mb-1">Escrow Number</label>
+                    <input
+                      type="text"
+                      id="escrowNumber"
+                      name="escrowNumber"
+                      value={modalForm.escrowNumber}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs min-h-[120px]"
-                      placeholder="Enter any additional notes for this contract"
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                      placeholder="Enter escrow number"
+                      required
                     />
                   </div>
-                  <div className="flex justify-end mt-6">
-                    <button type="submit" className="px-6 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-base">Next</button>
+                  <div>
+                    <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">Contract Type</label>
+                    <select
+                      id="type"
+                      name="type"
+                      value={modalForm.type}
+                      onChange={handleModalChange}
+                      className="contract-type-select w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs appearance-none bg-white bg-no-repeat bg-[length:20px] bg-[right_12px_center] bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236B7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')]"
+                      required
+                    >
+                      <option value="" disabled>Select a contract type</option>
+                      {CONTRACT_TYPES.map(type => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="propertyType" className="block text-sm font-medium text-gray-700 mb-1">Property Type</label>
+                    <select
+                      id="propertyType"
+                      name="propertyType"
+                      value={modalForm.propertyType}
+                      onChange={handleModalChange}
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs appearance-none bg-white bg-no-repeat bg-[length:20px] bg-[right_12px_center] bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236B7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')]"
+                      required
+                    >
+                      <option value="" disabled>Select property type</option>
+                      {PROPERTY_TYPES.map(type => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="milestone" className="block text-sm font-medium text-gray-700 mb-1">Milestone Template</label>
+                    <select
+                      id="milestone"
+                      name="milestone"
+                      value={modalForm.milestone}
+                      onChange={handleModalChange}
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs appearance-none bg-white bg-no-repeat bg-[length:20px] bg-[right_12px_center] bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236B7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')]"
+                      required
+                    >
+                      <option value="" disabled>Select a milestone template</option>
+                      {MILESTONE_TEMPLATES.map(template => (
+                        <option key={template} value={template}>{template}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="value" className="block text-sm font-medium text-gray-700 mb-1">Contract Value</label>
+                    <input
+                      type="text"
+                      id="value"
+                      name="value"
+                      value={modalForm.value}
+                      onChange={handleModalChange}
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                      placeholder="Enter contract value"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                    <input
+                      type="date"
+                      id="dueDate"
+                      name="dueDate"
+                      value={modalForm.dueDate}
+                      onChange={handleModalChange}
+                      className="w-full px-4 py-2 pr-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs text-gray-500 bg-white"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="mt-6">
+                  <label htmlFor="propertyAddress" className="block text-sm font-medium text-gray-700 mb-1">Property Address</label>
+                  <input
+                    type="text"
+                    id="propertyAddress"
+                    name="propertyAddress"
+                    value={modalForm.propertyAddress}
+                    onChange={handleModalChange}
+                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                    placeholder="Enter property address"
+                    required
+                  />
+                </div>
+                <div className="mt-6">
+                  <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">Notes (Optional)</label>
+                  <textarea
+                    id="notes"
+                    name="notes"
+                    value={modalForm.notes}
+                    onChange={handleModalChange}
+                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs min-h-[120px]"
+                    placeholder="Enter any additional notes for this contract"
+                  />
+                </div>
+                <div className="flex justify-end mt-6">
+                  <button type="submit" className="px-6 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-base">Next</button>
         </div>
-                </form>
-              )}
+              </form>
+            )}
 
-              {modalStep === 2 && (
-                <form onSubmit={e => { e.preventDefault(); setModalStep(3); }}>
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <label htmlFor="buyer" className="block text-sm font-medium text-gray-700 mb-1">Buyer / Client</label>
-                      <input
-                        type="text"
-                        id="buyer"
-                        name="buyer"
-                        value={modalForm.buyer}
-                        onChange={handleModalChange}
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
-                        placeholder="Enter buyer or client name"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="buyerEmail" className="block text-sm font-medium text-gray-700 mb-1">Buyer Email</label>
-                      <input
-                        type="email"
-                        id="buyerEmail"
-                        name="buyerEmail"
-                        value={modalForm.buyerEmail}
-                        onChange={handleModalChange}
-                        className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs ${
-                          emailErrors.buyerEmail ? 'border-red-300' : 'border-gray-200'
-                        }`}
-                        placeholder="Enter buyer email"
-                        required
-                      />
-                      {emailErrors.buyerEmail && (
-                        <p className="mt-1 text-sm text-red-600">Please enter a valid email address</p>
-                      )}
-                    </div>
-                    <div>
-                      <label htmlFor="seller" className="block text-sm font-medium text-gray-700 mb-1">Seller / Provider</label>
-                      <input
-                        type="text"
-                        id="seller"
-                        name="seller"
-                        value={modalForm.seller}
-                        onChange={handleModalChange}
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
-                        placeholder="Enter seller or provider name"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="sellerEmail" className="block text-sm font-medium text-gray-700 mb-1">Seller Email</label>
-                      <input
-                        type="email"
-                        id="sellerEmail"
-                        name="sellerEmail"
-                        value={modalForm.sellerEmail}
-                        onChange={handleModalChange}
-                        className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs ${
-                          emailErrors.sellerEmail ? 'border-red-300' : 'border-gray-200'
-                        }`}
-                        placeholder="Enter seller email"
-                        required
-                      />
-                      {emailErrors.sellerEmail && (
-                        <p className="mt-1 text-sm text-red-600">Please enter a valid email address</p>
-                      )}
-                    </div>
-                    <div>
-                      <label htmlFor="agent" className="block text-sm font-medium text-gray-700 mb-1">Agent / Escrow Officer (Optional)</label>
-                      <input
-                        type="text"
-                        id="agent"
-                        name="agent"
-                        value={modalForm.agent}
-                        onChange={handleModalChange}
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
-                        placeholder="Enter agent or escrow officer name"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="agentEmail" className="block text-sm font-medium text-gray-700 mb-1">Agent Email (Optional)</label>
-                      <input
-                        type="email"
-                        id="agentEmail"
-                        name="agentEmail"
-                        value={modalForm.agentEmail}
-                        onChange={handleModalChange}
-                        className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs ${
-                          emailErrors.agentEmail ? 'border-red-300' : 'border-gray-200'
-                        }`}
-                        placeholder="Enter agent email"
-                      />
-                      {emailErrors.agentEmail && (
-                        <p className="mt-1 text-sm text-red-600">Please enter a valid email address</p>
-                      )}
-                    </div>
-                    <div>
-                      <label htmlFor="lenderName" className="block text-sm font-medium text-gray-700 mb-1">Lender Name</label>
-                      <input
-                        type="text"
-                        id="lenderName"
-                        name="lenderName"
-                        value={modalForm.lenderName}
-                        onChange={handleModalChange}
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
-                        placeholder="Enter lender name"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="titleCompany" className="block text-sm font-medium text-gray-700 mb-1">Title Company</label>
-                      <input
-                        type="text"
-                        id="titleCompany"
-                        name="titleCompany"
-                        value={modalForm.titleCompany}
-                        onChange={handleModalChange}
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
-                        placeholder="Enter title company name"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="insuranceCompany" className="block text-sm font-medium text-gray-700 mb-1">Insurance Company</label>
-                      <input
-                        type="text"
-                        id="insuranceCompany"
-                        name="insuranceCompany"
-                        value={modalForm.insuranceCompany}
-                        onChange={handleModalChange}
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
-                        placeholder="Enter insurance company name"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="closingDate" className="block text-sm font-medium text-gray-700 mb-1">Expected Closing Date</label>
-                      <input
-                        type="date"
-                        id="closingDate"
-                        name="closingDate"
-                        value={modalForm.closingDate}
-                        onChange={handleModalChange}
-                        className="w-full px-4 py-2 pr-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs text-gray-500 bg-white"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-6 mt-6">
-                    <div>
-                      <label htmlFor="earnestMoney" className="block text-sm font-medium text-gray-700 mb-1">Earnest Money</label>
-                      <input
-                        type="text"
-                        id="earnestMoney"
-                        name="earnestMoney"
-                        value={modalForm.earnestMoney}
-                        onChange={handleModalChange}
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
-                        placeholder="Enter earnest money amount"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="downPayment" className="block text-sm font-medium text-gray-700 mb-1">Down Payment</label>
-                      <input
-                        type="text"
-                        id="downPayment"
-                        name="downPayment"
-                        value={modalForm.downPayment}
-                        onChange={handleModalChange}
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
-                        placeholder="Enter down payment amount"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="loanAmount" className="block text-sm font-medium text-gray-700 mb-1">Loan Amount</label>
-                      <input
-                        type="text"
-                        id="loanAmount"
-                        name="loanAmount"
-                        value={modalForm.loanAmount}
-                        onChange={handleModalChange}
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
-                        placeholder="Enter loan amount"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="interestRate" className="block text-sm font-medium text-gray-700 mb-1">Interest Rate (%)</label>
-                      <input
-                        type="text"
-                        id="interestRate"
-                        name="interestRate"
-                        value={modalForm.interestRate}
-                        onChange={handleModalChange}
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
-                        placeholder="Enter interest rate"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="loanTerm" className="block text-sm font-medium text-gray-700 mb-1">Loan Term (Years)</label>
-                      <input
-                        type="text"
-                        id="loanTerm"
-                        name="loanTerm"
-                        value={modalForm.loanTerm}
-                        onChange={handleModalChange}
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
-                        placeholder="Enter loan term"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="inspectionPeriod" className="block text-sm font-medium text-gray-700 mb-1">Inspection Period (Days)</label>
-              <input
-                type="text"
-                        id="inspectionPeriod"
-                        name="inspectionPeriod"
-                        value={modalForm.inspectionPeriod}
-                        onChange={handleModalChange}
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
-                        placeholder="Enter inspection period"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="mt-6">
-                    <label htmlFor="contingencies" className="block text-sm font-medium text-gray-700 mb-1">Contingencies</label>
-                    <textarea
-                      id="contingencies"
-                      name="contingencies"
-                      value={modalForm.contingencies}
+            {modalStep === 2 && (
+              <form onSubmit={e => { e.preventDefault(); setModalStep(3); }}>
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label htmlFor="buyer" className="block text-sm font-medium text-gray-700 mb-1">Buyer / Client</label>
+                    <input
+                      type="text"
+                      id="buyer"
+                      name="buyer"
+                      value={modalForm.buyer}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs min-h-[80px]"
-                      placeholder="Enter any contingencies for this contract"
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                      placeholder="Enter buyer or client name"
                       required
                     />
                   </div>
-                  <div className="flex justify-between mt-6">
-                    <button type="button" onClick={() => setModalStep(1)} className="px-6 py-2 rounded-lg border border-gray-300 bg-white text-gray-900 font-semibold hover:bg-gray-50 transition-colors text-base">Previous</button>
-                    <button type="submit" className="px-6 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-base">Next</button>
+                  <div>
+                    <label htmlFor="buyerEmail" className="block text-sm font-medium text-gray-700 mb-1">Buyer Email</label>
+                    <input
+                      type="email"
+                      id="buyerEmail"
+                      name="buyerEmail"
+                      value={modalForm.buyerEmail}
+                      onChange={handleModalChange}
+                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs ${
+                        emailErrors.buyerEmail ? 'border-red-300' : 'border-gray-200'
+                      }`}
+                      placeholder="Enter buyer email"
+                      required
+                    />
+                    {emailErrors.buyerEmail && (
+                      <p className="mt-1 text-sm text-red-600">Please enter a valid email address</p>
+                    )}
                   </div>
-                </form>
-              )}
+                  <div>
+                    <label htmlFor="seller" className="block text-sm font-medium text-gray-700 mb-1">Seller / Provider</label>
+                    <input
+                      type="text"
+                      id="seller"
+                      name="seller"
+                      value={modalForm.seller}
+                      onChange={handleModalChange}
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                      placeholder="Enter seller or provider name"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="sellerEmail" className="block text-sm font-medium text-gray-700 mb-1">Seller Email</label>
+                    <input
+                      type="email"
+                      id="sellerEmail"
+                      name="sellerEmail"
+                      value={modalForm.sellerEmail}
+                      onChange={handleModalChange}
+                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs ${
+                        emailErrors.sellerEmail ? 'border-red-300' : 'border-gray-200'
+                      }`}
+                      placeholder="Enter seller email"
+                      required
+                    />
+                    {emailErrors.sellerEmail && (
+                      <p className="mt-1 text-sm text-red-600">Please enter a valid email address</p>
+                    )}
+                  </div>
+                  <div>
+                    <label htmlFor="agent" className="block text-sm font-medium text-gray-700 mb-1">Agent / Escrow Officer (Optional)</label>
+                    <input
+                      type="text"
+                      id="agent"
+                      name="agent"
+                      value={modalForm.agent}
+                      onChange={handleModalChange}
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                      placeholder="Enter agent or escrow officer name"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="agentEmail" className="block text-sm font-medium text-gray-700 mb-1">Agent Email (Optional)</label>
+                    <input
+                      type="email"
+                      id="agentEmail"
+                      name="agentEmail"
+                      value={modalForm.agentEmail}
+                      onChange={handleModalChange}
+                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs ${
+                        emailErrors.agentEmail ? 'border-red-300' : 'border-gray-200'
+                      }`}
+                      placeholder="Enter agent email"
+                    />
+                    {emailErrors.agentEmail && (
+                      <p className="mt-1 text-sm text-red-600">Please enter a valid email address</p>
+                    )}
+                  </div>
+                  <div>
+                    <label htmlFor="lenderName" className="block text-sm font-medium text-gray-700 mb-1">Lender Name</label>
+                    <input
+                      type="text"
+                      id="lenderName"
+                      name="lenderName"
+                      value={modalForm.lenderName}
+                      onChange={handleModalChange}
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                      placeholder="Enter lender name"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="titleCompany" className="block text-sm font-medium text-gray-700 mb-1">Title Company</label>
+                    <input
+                      type="text"
+                      id="titleCompany"
+                      name="titleCompany"
+                      value={modalForm.titleCompany}
+                      onChange={handleModalChange}
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                      placeholder="Enter title company name"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="insuranceCompany" className="block text-sm font-medium text-gray-700 mb-1">Insurance Company</label>
+                    <input
+                      type="text"
+                      id="insuranceCompany"
+                      name="insuranceCompany"
+                      value={modalForm.insuranceCompany}
+                      onChange={handleModalChange}
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                      placeholder="Enter insurance company name"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="closingDate" className="block text-sm font-medium text-gray-700 mb-1">Expected Closing Date</label>
+                    <input
+                      type="date"
+                      id="closingDate"
+                      name="closingDate"
+                      value={modalForm.closingDate}
+                      onChange={handleModalChange}
+                      className="w-full px-4 py-2 pr-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs text-gray-500 bg-white"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-6 mt-6">
+                  <div>
+                    <label htmlFor="earnestMoney" className="block text-sm font-medium text-gray-700 mb-1">Earnest Money</label>
+                    <input
+                      type="text"
+                      id="earnestMoney"
+                      name="earnestMoney"
+                      value={modalForm.earnestMoney}
+                      onChange={handleModalChange}
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                      placeholder="Enter earnest money amount"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="downPayment" className="block text-sm font-medium text-gray-700 mb-1">Down Payment</label>
+                    <input
+                      type="text"
+                      id="downPayment"
+                      name="downPayment"
+                      value={modalForm.downPayment}
+                      onChange={handleModalChange}
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                      placeholder="Enter down payment amount"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="loanAmount" className="block text-sm font-medium text-gray-700 mb-1">Loan Amount</label>
+                    <input
+                      type="text"
+                      id="loanAmount"
+                      name="loanAmount"
+                      value={modalForm.loanAmount}
+                      onChange={handleModalChange}
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                      placeholder="Enter loan amount"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="interestRate" className="block text-sm font-medium text-gray-700 mb-1">Interest Rate (%)</label>
+                    <input
+                      type="text"
+                      id="interestRate"
+                      name="interestRate"
+                      value={modalForm.interestRate}
+                      onChange={handleModalChange}
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                      placeholder="Enter interest rate"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="loanTerm" className="block text-sm font-medium text-gray-700 mb-1">Loan Term (Years)</label>
+                    <input
+                      type="text"
+                      id="loanTerm"
+                      name="loanTerm"
+                      value={modalForm.loanTerm}
+                      onChange={handleModalChange}
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                      placeholder="Enter loan term"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="inspectionPeriod" className="block text-sm font-medium text-gray-700 mb-1">Inspection Period (Days)</label>
+            <input
+              type="text"
+                      id="inspectionPeriod"
+                      name="inspectionPeriod"
+                      value={modalForm.inspectionPeriod}
+                      onChange={handleModalChange}
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                      placeholder="Enter inspection period"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="mt-6">
+                  <label htmlFor="contingencies" className="block text-sm font-medium text-gray-700 mb-1">Contingencies</label>
+                  <textarea
+                    id="contingencies"
+                    name="contingencies"
+                    value={modalForm.contingencies}
+                    onChange={handleModalChange}
+                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs min-h-[80px]"
+                    placeholder="Enter any contingencies for this contract"
+                    required
+                  />
+                </div>
+                <div className="flex justify-between mt-6">
+                  <button type="button" onClick={() => setModalStep(1)} className="px-6 py-2 rounded-lg border border-gray-300 bg-white text-gray-900 font-semibold hover:bg-gray-50 transition-colors text-base">Previous</button>
+                  <button type="submit" className="px-6 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-base">Next</button>
+                </div>
+              </form>
+            )}
 
-              {modalStep === 3 && (
-                <form onSubmit={e => { e.preventDefault(); setShowNewContractForm(false); setModalStep(1); }}>
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Upload Documents (Optional)</label>
-                      <label htmlFor="file-upload" className="block cursor-pointer">
-                        <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 py-8 px-4 text-center transition hover:border-primary">
-                          <HiOutlineUpload className="text-3xl text-gray-400 mb-2" />
-                          <div className="text-gray-700 font-medium">Click to upload or drag and drop</div>
-                          <div className="text-xs text-gray-400 mt-1">PDF, DOC, DOCX, or JPG (max. 10MB each)</div>
-                          <input
-                            id="file-upload"
-                            name="file-upload"
-                            type="file"
-                            accept=".pdf,.doc,.docx,.jpg,.jpeg"
-                            className="hidden"
-                            multiple
-                            onChange={handleFileChange}
-                          />
-                        </div>
-                      </label>
-                      {uploadedFiles.length > 0 && (
-                        <ul className="mt-3 text-sm text-gray-600">
-                          {uploadedFiles.map((file, idx) => (
-                            <li key={idx} className="truncate">{file.name}</li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                    <div className="flex justify-between">
-                      <button type="button" onClick={() => setModalStep(2)} className="px-6 py-2 rounded-lg border border-gray-300 bg-white text-gray-900 font-semibold hover:bg-gray-50 transition-colors text-base">Previous</button>
-                      <button type="submit" className="px-6 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-base">Create Contract</button>
-                    </div>
+            {modalStep === 3 && (
+              <form onSubmit={e => { e.preventDefault(); setShowNewContractForm(false); setModalStep(1); }}>
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Upload Documents (Optional)</label>
+                    <label htmlFor="file-upload" className="block cursor-pointer">
+                      <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 py-8 px-4 text-center transition hover:border-primary">
+                        <HiOutlineUpload className="text-3xl text-gray-400 mb-2" />
+                        <div className="text-gray-700 font-medium">Click to upload or drag and drop</div>
+                        <div className="text-xs text-gray-400 mt-1">PDF, DOC, DOCX, or JPG (max. 10MB each)</div>
+                        <input
+                          id="file-upload"
+                          name="file-upload"
+                          type="file"
+                          accept=".pdf,.doc,.docx,.jpg,.jpeg"
+                          className="hidden"
+                          multiple
+                          onChange={handleFileChange}
+                        />
+                      </div>
+                    </label>
+                    {uploadedFiles.length > 0 && (
+                      <ul className="mt-3 text-sm text-gray-600">
+                        {uploadedFiles.map((file, idx) => (
+                          <li key={idx} className="truncate">{file.name}</li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
-                </form>
-              )}
+                  <div className="flex justify-between">
+                    <button type="button" onClick={() => setModalStep(2)} className="px-6 py-2 rounded-lg border border-gray-300 bg-white text-gray-900 font-semibold hover:bg-gray-50 transition-colors text-base">Previous</button>
+                    <button type="submit" className="px-6 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-base">Create Contract</button>
+                  </div>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {/* Total Contracts */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-3 shadow-sm">
+              <div className="h-9 w-9 rounded-lg bg-teal-50 flex items-center justify-center">
+                <HiOutlineDocumentText size={18} color="#06b6d4" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-gray-500 mb-0.5">Total Contracts</p>
+                <p className="text-xl font-bold text-gray-900">10</p>
+              </div>
+            </div>
+            {/* Pending Signatures */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-3 shadow-sm">
+              <div className="h-9 w-9 rounded-lg bg-purple-100 flex items-center justify-center">
+                <HiOutlinePencilAlt size={18} color="#7c3aed" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-gray-500 mb-0.5">Pending Signatures</p>
+                <p className="text-xl font-bold text-gray-900">2</p>
+                <p className="text-xs text-gray-400">Requires action</p>
+              </div>
+            </div>
+            {/* Awaiting Wire Instructions */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-3 shadow-sm">
+              <div className="h-9 w-9 rounded-lg bg-yellow-100 flex items-center justify-center">
+                <HiOutlineExclamation size={18} color="#f59e42" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-gray-500 mb-0.5">Awaiting Wire Instructions</p>
+                <p className="text-xl font-bold text-gray-900">2</p>
+                <p className="text-xs text-gray-400">Needs attention</p>
+              </div>
+            </div>
+            {/* Avg. Completion Time */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-3 shadow-sm">
+              <div className="h-9 w-9 rounded-lg bg-blue-50 flex items-center justify-center">
+                <FaClock size={18} color="#3b82f6" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-gray-500 mb-0.5">Avg. Completion Time</p>
+                <p className="text-xl font-bold text-gray-900">9.2 days</p>
+                <p className="text-xs text-green-600 font-semibold">↓ 1.3 days faster</p>
+              </div>
             </div>
           </div>
-        )}
-
-        {/* Place the search/filter bar above the contracts/documents tab and table outlined box */}
-        <div className="bg-white border border-gray-300 rounded-xl px-4 py-4 mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="flex items-center flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2 min-w-0">
-            <FaSearch className="text-gray-400 mr-2 text-lg" />
-              <input
-                type="text"
-                placeholder="Search contracts or parties"
-                value={searchTerm}
-                onChange={handleSearchChange}
-              className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 placeholder-gray-400 font-medium min-w-0"
-              style={{ fontFamily: 'Avenir, sans-serif' }}
-            />
-          </div>
-          <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px]" style={{ fontFamily: 'Avenir, sans-serif' }}>
-            <FaFilter className="text-gray-400 text-lg" />
-            <span>All Statuses</span>
-            <span className="ml-1 text-gray-400">&#9662;</span>
-          </button>
-          <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px]" style={{ fontFamily: 'Avenir, sans-serif' }}>
-            <FaCalendarAlt className="text-gray-400 text-lg" />
-            <span>Last 30 days</span>
-            <span className="ml-1 text-gray-400">&#9662;</span>
-          </button>
-          <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[150px]" style={{ fontFamily: 'Avenir, sans-serif' }}>
-            <FaSort className="text-gray-400 text-lg" />
-            <span>Recently Updated</span>
-            <span className="ml-1 text-gray-400">&#9662;</span>
-          </button>
+          {/* Total Contract Value Box */}
+          <div className="mb-6 bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-3 w-full shadow-sm">
+            <div className="h-9 w-9 rounded-lg bg-teal-50 flex items-center justify-center">
+              <FaDollarSign size={18} color="#06b6d4" />
             </div>
+            <div>
+              <p className="text-xs font-medium text-gray-500 mb-0.5">Total Contract Value</p>
+              <p className="text-xl font-bold text-primary">$8,255,000</p>
+              <p className="text-xs text-green-600 font-semibold">↑ 12% from last month</p>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Search/Filter Bar */}
+      <div className="bg-white border border-gray-300 rounded-xl px-4 py-4 mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex items-center flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2 min-w-0">
+          <FaSearch className="text-gray-400 mr-2 text-lg" />
+            <input
+              type="text"
+              placeholder="Search contracts or parties"
+              value={searchTerm}
+              onChange={handleSearchChange}
+            className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 placeholder-gray-400 font-medium min-w-0"
+            style={{ fontFamily: 'Avenir, sans-serif' }}
+          />
+        </div>
+        <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px]" style={{ fontFamily: 'Avenir, sans-serif' }}>
+          <FaFilter className="text-gray-400 text-lg" />
+          <span>All Statuses</span>
+          <span className="ml-1 text-gray-400">&#9662;</span>
+        </button>
+        <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px]" style={{ fontFamily: 'Avenir, sans-serif' }}>
+          <FaCalendarAlt className="text-gray-400 text-lg" />
+          <span>Last 30 days</span>
+          <span className="ml-1 text-gray-400">&#9662;</span>
+        </button>
+        <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[150px]" style={{ fontFamily: 'Avenir, sans-serif' }}>
+          <FaSort className="text-gray-400 text-lg" />
+          <span>Recently Updated</span>
+          <span className="ml-1 text-gray-400">&#9662;</span>
+        </button>
+          </div>
 
         {/* Table Section with Tabs in Outlined Box */}
         <div className="bg-white border border-gray-300 rounded-xl p-6">
@@ -1053,78 +1260,51 @@ const ContractsPage: React.FC = () => {
           </div>
           {/* Table */}
           {activeContentTab === 'contractList' && (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contract</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parties</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Updated</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Contract Hash</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredContracts.map((contract) => (
-                  <tr
-                    key={contract.id}
-                    className="hover:bg-gray-50 cursor-pointer"
-                    onClick={() => setSelectedContract(contract)}
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap text-center text-xs">
-                      <span
-                        className="text-primary underline font-semibold cursor-pointer"
-                        onClick={e => { e.stopPropagation(); setSelectedContract(contract); }}
-                      >
-                        {contract.id}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div className="text-sm font-medium text-gray-900">
-                        {contract.title}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-xs">
-                      <div className="text-gray-900">{contract.parties}</div>
-                    </td>
+            <div style={{ maxHeight: 'calc(100vh - 400px)', overflowY: 'auto' }} className="relative overflow-x-auto mt-4">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead>
+                  <tr>
+                    <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                    <th className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Contract</th>
+                    <th className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Parties</th>
+                    <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Created Date</th>
+                    <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Last Updated</th>
+                    <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
+                    <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Contract Hash</th>
+                    <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredContracts.map((contract) => (
+                    <tr
+                      key={contract.id}
+                      className="hover:bg-gray-50 cursor-pointer"
+                      onClick={() => setSelectedContract(contract)}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-xs">
+                        <span className="text-primary underline font-semibold cursor-pointer" onClick={e => { e.stopPropagation(); setSelectedContract(contract); }}>{contract.id}</span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <div className="text-sm font-medium text-gray-900">{contract.title}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-xs">
+                        <div className="text-gray-900">{contract.parties}</div>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center text-xs">
                         <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full ${getStatusBadgeStyle(contract.status)}`}
-                          style={{ minWidth: '7rem', display: 'inline-flex' }}>
-                        {contract.status}
-                      </span>
-                    </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-xs text-gray-500">
-                      {contract.updated}
-                    </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-xs text-primary">
-                      {contract.value}
-                    </td>
+                          style={{ minWidth: '7rem', display: 'inline-flex' }}>{contract.status}</span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-xs text-gray-500">2024-05-01</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-xs text-gray-500">{contract.updated}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-xs text-primary">{contract.value}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-center text-xs">
                         <div className="flex items-center justify-center">
-                          <span
-                            className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
-                            style={{ maxWidth: '120px' }}
-                            title={getContractHash(contract.id)}
-                          >
+                          <span className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer" style={{ maxWidth: '120px' }} title={getContractHash(contract.id)}>
                             0x{contract.id}...{contract.id.slice(-4)}
                           </span>
                           <div className="relative">
-                            <button
-                              type="button"
-                              className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
-                              onClick={e => {
-                                e.stopPropagation();
-                                navigator.clipboard.writeText(getContractHash(contract.id));
-                                setCopiedContractId(contract.id);
-                                setTimeout(() => setCopiedContractId(null), 1500);
-                              }}
-                              onMouseEnter={() => setHoveredContractId(contract.id)}
-                              onMouseLeave={() => setHoveredContractId(null)}
-                              aria-label="Copy contract hash"
-                            >
+                            <button type="button" className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none" onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(getContractHash(contract.id)); setCopiedContractId(contract.id); setTimeout(() => setCopiedContractId(null), 1500); }} onMouseEnter={() => setHoveredContractId(contract.id)} onMouseLeave={() => setHoveredContractId(null)} aria-label="Copy contract hash">
                               <HiOutlineDuplicate className="w-4 h-4" />
                             </button>
                             {(hoveredContractId === contract.id || copiedContractId === contract.id) && (
@@ -1134,49 +1314,38 @@ const ContractsPage: React.FC = () => {
                             )}
                           </div>
                         </div>
-                    </td>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center text-xs font-medium">
                         <div className="flex items-center justify-center space-x-1">
                           <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Edit">
                             <HiOutlinePencilAlt className="h-4 w-4" />
-                        </button>
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Upload"
-                            onClick={e => {
-                              e.stopPropagation();
-                              setShowUploadModal(true);
-                              setUploadContractId(contract.id);
-                            }}
-                          >
+                          </button>
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Upload" onClick={e => { e.stopPropagation(); setShowUploadModal(true); setUploadContractId(contract.id); }}>
                             <HiOutlineUpload className="h-4 w-4" />
-                        </button>
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Delete"
-                            onClick={e => {
-                              e.stopPropagation();
-                              // Add your delete logic or confirmation modal here
-                            }}
-                          >
+                          </button>
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Delete" onClick={e => { e.stopPropagation(); /* Add your delete logic or confirmation modal here */ }}>
                             <HiOutlineTrash className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
           {/* Documents tab/table remains unchanged for now */}
           {activeContentTab === 'documents' && (
-            <div className="overflow-x-auto">
+            <div style={{ maxHeight: 'calc(100vh - 400px)', overflowY: 'auto' }} className="relative overflow-x-auto mt-4">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+                <thead>
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">File Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UPLOADED BY</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">DATE UPLOADED</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contract</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">CONTRACT ID</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">File Name</th>
+                    <th className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">UPLOADED BY</th>
+                    <th className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">DATE UPLOADED</th>
+                    <th className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Contract</th>
+                    <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">CONTRACT ID</th>
+                    <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -1185,8 +1354,6 @@ const ContractsPage: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <div className="font-medium text-gray-900">{doc.name}</div>
                         <div className="text-xs text-gray-500 flex items-center gap-2">
-                          <span>{doc.dateUploaded}</span>
-                          <span>&bull;</span>
                           <span>{doc.type}</span>
                           <span>&bull;</span>
                           <span>{doc.size}</span>
@@ -1196,21 +1363,11 @@ const ContractsPage: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500">{doc.dateUploaded}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{doc.contractTitle}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-center text-xs">
-                        <a
-                          href={`#${doc.contractId}`}
-                          className="text-primary underline font-semibold cursor-pointer"
-                        >
-                          {doc.contractId}
-                        </a>
+                        <a href={`#${doc.contractId}`} className="text-primary underline font-semibold cursor-pointer">{doc.contractId}</a>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center text-xs font-medium">
                         <div className="flex items-center justify-center space-x-1">
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="View"
-                            onClick={() => {
-                              setSelectedPdf({ name: doc.name, url: `/documents/${doc.name}` });
-                              setShowPdfViewer(true);
-                            }}
-                          >
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="View" onClick={() => { setSelectedPdf({ name: doc.name, url: `/documents/${doc.name}` }); setShowPdfViewer(true); }}>
                             <HiOutlineEye className="h-4 w-4" />
                           </button>
                           <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Download">
@@ -1779,6 +1936,26 @@ const ContractsPage: React.FC = () => {
             <div className="flex-1 p-6 overflow-auto flex items-center justify-center bg-gray-50">
               {/* Blank area for PDF viewer */}
               <span className="text-gray-400 text-lg">No document available</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* New Contract Modal */}
+      {isNewContractModalOpen && (
+        <div className="fixed inset-x-0 top-[120px] bg-white z-50 shadow-lg">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="py-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-semibold text-gray-900">New Contract</h2>
+                <button
+                  onClick={() => setIsNewContractModalOpen(false)}
+                  className="text-gray-400 hover:text-gray-500"
+                >
+                  <FaTimes className="w-6 h-6" />
+                </button>
+              </div>
+              {/* Modal content */}
             </div>
           </div>
         </div>

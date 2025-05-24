@@ -21,8 +21,7 @@ export default function WorkflowsPage() {
         </button>
       </div>
 
-      {/* Horizontal line below subtitle */}
-      {/* <hr className="my-6 border-gray-300" /> */}
+      <hr className="my-6 border-gray-300" />
 
       {/* Kanban Board Section */}
       <div className="flex flex-grow overflow-x-auto space-x-6 p-4 bg-gray-100 rounded-lg">
