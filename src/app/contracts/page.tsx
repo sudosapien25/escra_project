@@ -1,3 +1,4 @@
+// RENDER-TEST-789
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -294,20 +295,19 @@ const ContractsPage: React.FC = () => {
     return matchesSearch;
   });
 
-  const getStatusBadgeStyle = (status: string, outlined: boolean = false) => {
-    const baseStyle = outlined ? 'border border-gray-300' : '';
+  const getStatusBadgeStyle = (status: string) => {
     switch (status) {
-      case 'Initiation': return `${baseStyle} bg-blue-100 text-blue-800`;
-      case 'Preparation': return `${baseStyle} bg-gray-100 text-gray-800`;
-      case 'In Review': return `${baseStyle} bg-yellow-100 text-yellow-800`;
-      case 'Wire Details': return `${baseStyle} bg-orange-100 text-orange-800`;
-      case 'Signatures': return `${baseStyle} bg-purple-100 text-purple-800`;
-      case 'Funds Disbursed': return `${baseStyle} bg-teal-100 text-teal-800`;
-      case 'Completed': return `${baseStyle} bg-green-100 text-green-800`;
-      case 'Verified': return `${baseStyle} bg-green-100 text-green-800`;
-      case 'Pending': return `${baseStyle} bg-yellow-100 text-yellow-800`;
-      case 'Rejected': return `${baseStyle} bg-red-100 text-red-800`;
-      default: return `${baseStyle} bg-gray-100 text-gray-800`;
+      case 'Initiation': return 'bg-blue-100 text-blue-800 border border-blue-500';
+      case 'Preparation': return 'bg-gray-100 text-gray-800 border border-gray-400';
+      case 'In Review': return 'bg-yellow-100 text-yellow-800 border border-yellow-500';
+      case 'Wire Details': return 'bg-orange-100 text-orange-800 border border-orange-400';
+      case 'Signatures': return 'bg-purple-100 text-purple-800 border border-purple-500';
+      case 'Funds Disbursed': return 'bg-teal-100 text-teal-800 border border-teal-500';
+      case 'Completed': return 'bg-green-100 text-green-800 border border-green-500';
+      case 'Verified': return 'bg-green-100 text-green-800 border border-green-500';
+      case 'Pending': return 'bg-yellow-100 text-yellow-800 border border-yellow-500';
+      case 'Rejected': return 'bg-red-100 text-red-800 border border-red-500';
+      default: return 'bg-gray-100 text-gray-800 border border-gray-400';
     }
   };
 
@@ -1122,56 +1122,57 @@ const ContractsPage: React.FC = () => {
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {/* Total Contracts */}
-            <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-3 shadow-sm">
-              <div className="h-9 w-9 rounded-lg bg-teal-50 flex items-center justify-center">
+            <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
+              <div className="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center">
                 <HiOutlineDocumentText size={18} color="#06b6d4" />
               </div>
-              <div>
-                <p className="text-xs font-medium text-gray-500 mb-0.5">Total Contracts</p>
-                <p className="text-xl font-bold text-gray-900">10</p>
+              <div className="flex flex-col items-start h-full">
+                <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contracts</p>
+                <p className="text-2xl font-bold text-gray-900">10</p>
+                <p className="text-xs invisible">placeholder</p>
               </div>
             </div>
             {/* Pending Signatures */}
-            <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-3 shadow-sm">
-              <div className="h-9 w-9 rounded-lg bg-purple-100 flex items-center justify-center">
+            <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
+              <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center">
                 <HiOutlinePencilAlt size={18} color="#7c3aed" />
               </div>
-              <div>
-                <p className="text-xs font-medium text-gray-500 mb-0.5">Pending Signatures</p>
-                <p className="text-xl font-bold text-gray-900">2</p>
+              <div className="flex flex-col items-start h-full">
+                <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Pending Signatures</p>
+                <p className="text-2xl font-bold text-gray-900">2</p>
                 <p className="text-xs text-gray-400">Requires action</p>
               </div>
             </div>
             {/* Awaiting Wire Instructions */}
-            <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-3 shadow-sm">
-              <div className="h-9 w-9 rounded-lg bg-yellow-100 flex items-center justify-center">
-                <HiOutlineExclamation size={18} color="#f59e42" />
+            <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
+              <div className="h-10 w-10 rounded-lg bg-yellow-100 flex items-center justify-center">
+                <HiOutlineExclamation size={20} color="#f59e42" />
               </div>
-              <div>
-                <p className="text-xs font-medium text-gray-500 mb-0.5">Awaiting Wire Instructions</p>
-                <p className="text-xl font-bold text-gray-900">2</p>
+              <div className="flex flex-col items-start h-full">
+                <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Awaiting Wire Details</p>
+                <p className="text-2xl font-bold text-gray-900">2</p>
                 <p className="text-xs text-gray-400">Needs attention</p>
               </div>
             </div>
             {/* Avg. Completion Time */}
-            <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-3 shadow-sm">
-              <div className="h-9 w-9 rounded-lg bg-blue-50 flex items-center justify-center">
+            <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
+              <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center">
                 <FaClock size={18} color="#3b82f6" />
               </div>
-              <div>
-                <p className="text-xs font-medium text-gray-500 mb-0.5">Avg. Completion Time</p>
-                <p className="text-xl font-bold text-gray-900">9.2 days</p>
+              <div className="flex flex-col items-start h-full">
+                <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Avg. Completion Time</p>
+                <p className="text-2xl font-bold text-gray-900">9.2 days</p>
                 <p className="text-xs text-green-600 font-semibold">↓ 1.3 days faster</p>
               </div>
             </div>
           </div>
           {/* Total Contract Value Box */}
-          <div className="mb-6 bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-3 w-full shadow-sm">
-            <div className="h-9 w-9 rounded-lg bg-teal-50 flex items-center justify-center">
+          <div className="mb-6 bg-white rounded-xl border border-gray-200 p-6 flex items-start gap-4 w-full shadow-sm">
+            <div className="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center">
               <FaDollarSign size={18} color="#06b6d4" />
             </div>
             <div>
-              <p className="text-xs font-medium text-gray-500 mb-0.5">Total Contract Value</p>
+              <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contract Value</p>
               <p className="text-xl font-bold text-primary">$8,255,000</p>
               <p className="text-xs text-green-600 font-semibold">↑ 12% from last month</p>
             </div>
@@ -1293,7 +1294,7 @@ const ContractsPage: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center text-xs">
                         <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full ${getStatusBadgeStyle(contract.status)}`}
-                          style={{ minWidth: '7rem', display: 'inline-flex' }}>{contract.status}</span>
+                          style={{ minWidth: '7rem', display: 'inline-flex', borderWidth: '1px' }}>{contract.status}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center text-xs text-gray-500">2024-05-01</td>
                       <td className="px-6 py-4 whitespace-nowrap text-center text-xs text-gray-500">{contract.updated}</td>
@@ -1619,7 +1620,10 @@ const ContractsPage: React.FC = () => {
                   <div ref={documentsBoxRef} className="bg-white border border-gray-200 rounded-lg p-6 w-full box-border">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-sm font-semibold text-gray-900">Documents</h3>
-                      <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors">
+                      <button 
+                        onClick={() => { setShowUploadModal(true); setUploadContractId(selectedContract?.id || null); }}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors"
+                      >
                         <HiOutlineUpload className="w-4 h-4 text-primary" />
                         <span>Upload</span>
                       </button>
@@ -1643,7 +1647,7 @@ const ContractsPage: React.FC = () => {
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="View">
+                            <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="View" onClick={() => { setSelectedPdf({ name: doc.name, url: `/documents/${doc.name}` }); setShowPdfViewer(true); }}>
                               <HiOutlineEye className="h-4 w-4" />
                             </button>
                             <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Download">
