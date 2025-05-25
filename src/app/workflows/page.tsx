@@ -81,7 +81,7 @@ export default function WorkflowsPage() {
         <div className="flex gap-6 mb-8">
           {/* Tasks in Progress */}
           <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full flex-1 min-w-[200px]">
-            <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center border-2 border-blue-200">
               <FaRetweet size={18} color="#3b82f6" />
             </div>
             <div className="flex flex-col items-start h-full">
@@ -92,7 +92,7 @@ export default function WorkflowsPage() {
           </div>
           {/* Due Within 7 Days */}
           <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full flex-1 min-w-[200px]">
-            <div className="h-10 w-10 rounded-lg bg-yellow-100 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-lg bg-yellow-100 flex items-center justify-center border-2 border-yellow-200">
               <LuCalendarClock size={18} color="#f59e42" />
             </div>
             <div className="flex flex-col items-start h-full">
@@ -103,7 +103,7 @@ export default function WorkflowsPage() {
           </div>
           {/* Blocked Tasks */}
           <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full flex-1 min-w-[200px]">
-            <div className="h-10 w-10 rounded-lg bg-red-100 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-lg bg-red-100 flex items-center justify-center border-2 border-red-200">
               <CgPlayStopR size={18} color="#ef4444" />
             </div>
             <div className="flex flex-col items-start h-full">
@@ -440,7 +440,7 @@ export default function WorkflowsPage() {
                       <Card key={task.code} className="p-4 rounded-xl border border-gray-300">
                         <div className="mb-2">
                           <div className="flex w-full items-start justify-between">
-                            <span className="h-5 px-1.5 flex items-center justify-center rounded-lg bg-blue-100 text-blue-500 text-[11px] font-semibold" style={{ minWidth: 24 }}>
+                            <span className="h-5 px-1.5 flex items-center justify-center rounded-lg bg-blue-100 text-blue-500 text-[11px] font-semibold border border-blue-200" style={{ minWidth: 24 }}>
                               Task #{task.taskNumber}
                             </span>
                             <button
@@ -464,7 +464,7 @@ export default function WorkflowsPage() {
                               const contractName = (task.contract || '').trim().toLowerCase();
                               const found = sampleContracts.find(c => c.title.trim().toLowerCase() === contractName);
                               return found ? (
-                                <span className="h-5 px-1.5 flex items-center justify-center rounded-lg bg-primary/10 text-primary text-[11px] font-semibold ml-2" style={{ minWidth: 24 }}>
+                                <span className="h-5 px-1.5 flex items-center justify-center rounded-lg bg-primary/10 text-primary text-[11px] font-semibold border border-primary/20 ml-2" style={{ minWidth: 24 }}>
                                   {found.id}
                                 </span>
                               ) : null;

@@ -5,6 +5,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { FaSearch, FaFilter, FaFileAlt, FaCheckCircle, FaClock, FaCalendarAlt, FaSort, FaPlus, FaArrowUp, FaDollarSign, FaDownload, FaRegFileAlt, FaTimes } from 'react-icons/fa';
 import { FaArrowUpFromBracket } from 'react-icons/fa6';
 import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutlineTrash, HiOutlinePencilAlt, HiOutlineDocument, HiOutlineDocumentDownload, HiOutlineUpload, HiOutlineEye, HiOutlineClipboardList, HiOutlineExclamation } from 'react-icons/hi';
+import { HiOutlineViewBoards } from 'react-icons/hi';
+import { LuCalendarClock } from 'react-icons/lu';
 import { Logo } from '@/components/common/Logo';
 
 interface Contract {
@@ -613,8 +615,8 @@ const ContractsPage: React.FC = () => {
           <div className="pb-1">
             <h1 className="text-[24px] md:text-[30px] font-bold text-black mb-0">Contracts</h1>
             <p className="text-gray-500 text-[15px] md:text-[16px] mt-0">
-              Manage & monitor all your escrow contracts
-          </p>
+              Manage & monitor all your contracts
+            </p>
         </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 w-full md:w-auto">
             <div className="inline-block rounded-full bg-teal-50 px-2 py-0.5 text-teal-500 font-semibold text-xs border border-teal-100 self-start sm:self-center">
@@ -1128,7 +1130,7 @@ const ContractsPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {/* Total Contracts */}
             <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
-              <div className="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center border-2 border-teal-200">
                 <HiOutlineDocumentText size={18} color="#06b6d4" />
               </div>
               <div className="flex flex-col items-start h-full">
@@ -1139,7 +1141,7 @@ const ContractsPage: React.FC = () => {
             </div>
             {/* Pending Signatures */}
             <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
-              <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center border-2 border-purple-200">
                 <HiOutlinePencilAlt size={18} color="#7c3aed" />
               </div>
               <div className="flex flex-col items-start h-full">
@@ -1150,7 +1152,7 @@ const ContractsPage: React.FC = () => {
             </div>
             {/* Awaiting Wire Instructions */}
             <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
-              <div className="h-10 w-10 rounded-lg bg-yellow-100 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-lg bg-yellow-100 flex items-center justify-center border-2 border-yellow-200">
                 <HiOutlineExclamation size={20} color="#f59e42" />
               </div>
               <div className="flex flex-col items-start h-full">
@@ -1161,7 +1163,7 @@ const ContractsPage: React.FC = () => {
             </div>
             {/* Avg. Completion Time */}
             <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
-              <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center border-2 border-blue-200">
                 <FaClock size={18} color="#3b82f6" />
               </div>
               <div className="flex flex-col items-start h-full">
@@ -1173,7 +1175,7 @@ const ContractsPage: React.FC = () => {
           </div>
           {/* Total Contract Value Box */}
           <div className="mb-6 bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
-            <div className="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center border-2 border-teal-200">
               <FaDollarSign size={18} color="#06b6d4" />
             </div>
             <div className="flex flex-col items-start h-full">
@@ -1185,312 +1187,311 @@ const ContractsPage: React.FC = () => {
         </>
       )}
 
+      <hr className="mb-6 border-gray-300" />
+
       {/* Search/Filter Bar */}
-      <div className="bg-white border border-gray-300 rounded-xl px-4 py-4 mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="flex w-full items-center justify-between">
-          <div className="flex items-center flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2 min-w-0">
-            <FaSearch className="text-gray-400 mr-2 text-lg" />
-            <input
-              type="text"
-              placeholder="Search contracts or parties"
-              value={searchTerm}
-              onChange={handleSearchChange}
-              className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 placeholder-gray-400 font-medium min-w-0"
-              style={{ fontFamily: 'Avenir, sans-serif' }}
-            />
-          </div>
-          <div className="flex gap-1">
-            <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
-              <FaFilter className="text-gray-400 text-lg" />
-              <span>All Statuses</span>
-              <span className="ml-1 text-gray-400">&#9662;</span>
-            </button>
-            <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px]" style={{ fontFamily: 'Avenir, sans-serif' }}>
-              <FaCalendarAlt className="text-gray-400 text-lg" />
-              <span>Last 30 days</span>
-              <span className="ml-1 text-gray-400">&#9662;</span>
-            </button>
-            <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[150px]" style={{ fontFamily: 'Avenir, sans-serif' }}>
-              <FaSort className="text-gray-400 text-lg" />
-              <span>Recently Updated</span>
-              <span className="ml-1 text-gray-400">&#9662;</span>
-            </button>
-          </div>
+      <div className="bg-white border border-gray-200 rounded-xl px-4 py-4 mb-6 flex items-center w-full mt-2">
+        <div className="flex items-center flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2 min-w-0">
+          <FaSearch className="text-gray-400 mr-2" size={18} />
+          <input
+            type="text"
+            placeholder="Search contracts or parties"
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 placeholder-gray-400 font-medium min-w-0"
+            style={{ fontFamily: 'Avenir, sans-serif' }}
+          />
         </div>
-          </div>
-
-        {/* Table Section with Tabs in Outlined Box */}
-        <div className="bg-white border border-gray-300 rounded-xl p-6">
-          {/* Tabs Row */}
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0 w-full">
-            {/* Contracts/Documents Tabs */}
-            <div className="flex space-x-8 overflow-x-auto w-full md:w-auto">
-              <button
-                className={`pb-2 text-sm font-semibold whitespace-nowrap ${
-                  activeContentTab === 'contractList'
-                    ? 'text-primary border-b-2 border-primary'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-                onClick={() => setActiveContentTab('contractList')}
-              >
-                Contracts
-              </button>
-              <button
-                className={`pb-2 text-sm font-semibold whitespace-nowrap ${
-                  activeContentTab === 'documents'
-                    ? 'text-primary border-b-2 border-primary'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-                onClick={() => setActiveContentTab('documents')}
-              >
-                Documents
-              </button>
-            </div>
-            {/* Created by Me/Assigned to Me Tabs (styled like main tabs) */}
-            <div className="flex flex-col items-end w-full md:w-auto">
-              <div className="flex space-x-8 overflow-x-auto w-full md:w-auto">
-                {TABS.filter(tab => tab.key !== 'allContracts').map(tab => (
-                <button
-                  key={tab.key}
-                    className={`pb-2 text-sm font-semibold whitespace-nowrap ${
-                      activeTab === tab.key
-                      ? 'text-primary border-b-2 border-primary'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                    onClick={() => setActiveTab(tab.key)}
-                >
-                  {tab.label}
-                </button>
-              ))}
-              </div>
-              {activeContentTab === 'documents' && (
-                <></>
-              )}
-            </div>
-          </div>
-          {/* Table */}
-          {activeContentTab === 'contractList' && (
-            <div style={{ maxHeight: 'calc(100vh - 400px)', overflowY: 'auto' }} className="relative overflow-x-auto mt-4">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead>
-                  <tr>
-                    <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                    <th className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Contract</th>
-                    <th className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Parties</th>
-                    <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Created Date</th>
-                    <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Last Updated</th>
-                    <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
-                    <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Contract Hash</th>
-                    <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredContracts.map((contract) => (
-                    <tr
-                      key={contract.id}
-                      className="hover:bg-gray-50 cursor-pointer"
-                      onClick={() => setSelectedContract(contract)}
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-xs">
-                        <span className="text-primary underline font-semibold cursor-pointer" onClick={e => { e.stopPropagation(); setSelectedContract(contract); }}>{contract.id}</span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <div className="text-sm font-medium text-gray-900">{contract.title}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-xs">
-                        <div className="text-gray-900">{contract.parties}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-xs">
-                        <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full ${getStatusBadgeStyle(contract.status)}`}
-                          style={{ minWidth: '7rem', display: 'inline-flex', borderWidth: '1px' }}>{contract.status}</span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-xs text-gray-500">2024-05-01</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-xs text-gray-500">{contract.updated}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-xs text-primary">{contract.value}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-xs">
-                        <div className="flex items-center justify-center">
-                          <span className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer" style={{ maxWidth: '120px' }} title={getContractHash(contract.id)}>
-                            0x{contract.id}...{contract.id.slice(-4)}
-                          </span>
-                          <div className="relative">
-                            <button type="button" className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none" onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(getContractHash(contract.id)); setCopiedContractId(contract.id); setTimeout(() => setCopiedContractId(null), 1500); }} onMouseEnter={() => setHoveredContractId(contract.id)} onMouseLeave={() => setHoveredContractId(null)} aria-label="Copy contract hash">
-                              <HiOutlineDuplicate className="w-4 h-4" />
-                            </button>
-                            {(hoveredContractId === contract.id || copiedContractId === contract.id) && (
-                              <span className="absolute left-1/2 -translate-x-1/2 mt-2 px-2 py-1 rounded bg-gray-800 text-white text-xs whitespace-nowrap z-20 pointer-events-none">
-                                {copiedContractId === contract.id ? 'Copied' : 'Copy'}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-xs font-medium">
-                        <div className="flex items-center justify-center space-x-1">
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Edit">
-                            <HiOutlinePencilAlt className="h-4 w-4" />
-                          </button>
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Upload" onClick={e => { e.stopPropagation(); setShowUploadModal(true); setUploadContractId(contract.id); }}>
-                            <HiOutlineUpload className="h-4 w-4" />
-                          </button>
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Delete" onClick={e => { e.stopPropagation(); /* Add your delete logic or confirmation modal here */ }}>
-                            <HiOutlineTrash className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-          {/* Documents tab/table remains unchanged for now */}
-          {activeContentTab === 'documents' && (
-            <div style={{ maxHeight: 'calc(100vh - 400px)', overflowY: 'auto' }} className="relative overflow-x-auto mt-4">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead>
-                  <tr>
-                    <th className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">File Name</th>
-                    <th className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">UPLOADED BY</th>
-                    <th className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">DATE UPLOADED</th>
-                    <th className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Contract</th>
-                    <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">CONTRACT ID</th>
-                    <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {sampleDocuments.map((doc) => (
-                    <tr key={doc.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <div className="font-medium text-gray-900">{doc.name}</div>
-                        <div className="text-xs text-gray-500 flex items-center gap-2">
-                          <span>{doc.type}</span>
-                          <span>&bull;</span>
-                          <span>{doc.size}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-xs">{doc.uploadedBy}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500">{doc.dateUploaded}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{doc.contractTitle}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-xs">
-                        <a href={`#${doc.contractId}`} className="text-primary underline font-semibold cursor-pointer">{doc.contractId}</a>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-xs font-medium">
-                        <div className="flex items-center justify-center space-x-1">
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="View" onClick={() => { setSelectedPdf({ name: doc.name, url: `/documents/${doc.name}` }); setShowPdfViewer(true); }}>
-                            <HiOutlineEye className="h-4 w-4" />
-                          </button>
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Download">
-                            <HiOutlineDownload className="h-4 w-4" />
-                          </button>
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Delete">
-                            <HiOutlineTrash className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+        <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+          <HiOutlineViewBoards className="text-gray-400" size={18} />
+          <span>All Statuses</span>
+          <span className="ml-1 text-gray-400">&#9662;</span>
+        </button>
+        <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+          <LuCalendarClock className="text-gray-400" size={18} />
+          <span>Last 30 days</span>
+          <span className="ml-1 text-gray-400">&#9662;</span>
+        </button>
+        <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[150px] ml-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+          <FaSort className="text-gray-400" size={18} />
+          <span>Recently Updated</span>
+          <span className="ml-1 text-gray-400">&#9662;</span>
+        </button>
       </div>
-      
 
-      {/* Modal for contract details */}
-      {selectedContract && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="relative bg-white rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden">
-            {/* Sticky Header with Download Summary and Close buttons */}
-            <div className="sticky top-0 z-40 bg-white px-6 py-4">
-              <div className="flex items-start justify-between">
-                {/* Left: Contract ID and Status */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-primary/10">
-                      <span className="text-xs font-semibold text-primary">#{selectedContract.id}</span>
-                    </div>
+      {/* Table Section with Tabs in Outlined Box */}
+      <div className="bg-white border border-gray-200 rounded-xl p-6">
+        {/* Tabs Row */}
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0 w-full">
+          {/* Contracts/Documents Tabs */}
+          <div className="flex space-x-8 overflow-x-auto w-full md:w-auto">
+            <button
+              className={`pb-2 text-sm font-semibold whitespace-nowrap ${
+                activeContentTab === 'contractList'
+                  ? 'text-primary border-b-2 border-primary'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+              onClick={() => setActiveContentTab('contractList')}
+            >
+              Contracts
+            </button>
+            <button
+              className={`pb-2 text-sm font-semibold whitespace-nowrap ${
+                activeContentTab === 'documents'
+                  ? 'text-primary border-b-2 border-primary'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+              onClick={() => setActiveContentTab('documents')}
+            >
+              Documents
+            </button>
+          </div>
+          {/* Created by Me/Assigned to Me Tabs (styled like main tabs) */}
+          <div className="flex flex-col items-end w-full md:w-auto">
+            <div className="flex space-x-8 overflow-x-auto w-full md:w-auto">
+              {TABS.filter(tab => tab.key !== 'allContracts').map(tab => (
+              <button
+                key={tab.key}
+                  className={`pb-2 text-sm font-semibold whitespace-nowrap ${
+                    activeTab === tab.key
+                    ? 'text-primary border-b-2 border-primary'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+                  onClick={() => setActiveTab(tab.key)}
+              >
+                {tab.label}
+              </button>
+            ))}
+            </div>
+            {activeContentTab === 'documents' && (
+              <></>
+            )}
+          </div>
+        </div>
+        {/* Table */}
+        {activeContentTab === 'contractList' && (
+          <div style={{ maxHeight: 'calc(100vh - 400px)', overflowY: 'auto' }} className="relative overflow-x-auto mt-4">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead>
+                <tr>
+                  <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                  <th className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Contract</th>
+                  <th className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Parties</th>
+                  <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Created Date</th>
+                  <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Last Updated</th>
+                  <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
+                  <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Contract Hash</th>
+                  <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredContracts.map((contract) => (
+                  <tr
+                    key={contract.id}
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={() => setSelectedContract(contract)}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-xs">
+                      <span className="text-primary underline font-semibold cursor-pointer" onClick={e => { e.stopPropagation(); setSelectedContract(contract); }}>{contract.id}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <div className="text-sm font-medium text-gray-900">{contract.title}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-xs">
+                      <div className="text-gray-900">{contract.parties}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-xs">
+                      <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full ${getStatusBadgeStyle(contract.status)}`}
+                        style={{ minWidth: '7rem', display: 'inline-flex', borderWidth: '1px' }}>{contract.status}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-xs text-gray-500">2024-05-01</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-xs text-gray-500">{contract.updated}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-xs text-primary">{contract.value}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-xs">
+                      <div className="flex items-center justify-center">
+                        <span className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer" style={{ maxWidth: '120px' }} title={getContractHash(contract.id)}>
+                          0x{contract.id}...{contract.id.slice(-4)}
+                        </span>
+                        <div className="relative">
+                          <button type="button" className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none" onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(getContractHash(contract.id)); setCopiedContractId(contract.id); setTimeout(() => setCopiedContractId(null), 1500); }} onMouseEnter={() => setHoveredContractId(contract.id)} onMouseLeave={() => setHoveredContractId(null)} aria-label="Copy contract hash">
+                            <HiOutlineDuplicate className="w-4 h-4" />
+                          </button>
+                          {(hoveredContractId === contract.id || copiedContractId === contract.id) && (
+                            <span className="absolute left-1/2 -translate-x-1/2 mt-2 px-2 py-1 rounded bg-gray-800 text-white text-xs whitespace-nowrap z-20 pointer-events-none">
+                              {copiedContractId === contract.id ? 'Copied' : 'Copy'}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-xs font-medium">
+                      <div className="flex items-center justify-center space-x-1">
+                        <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Edit">
+                          <HiOutlinePencilAlt className="h-4 w-4" />
+                        </button>
+                        <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Upload" onClick={e => { e.stopPropagation(); setShowUploadModal(true); setUploadContractId(contract.id); }}>
+                          <HiOutlineUpload className="h-4 w-4" />
+                        </button>
+                        <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Delete" onClick={e => { e.stopPropagation(); /* Add your delete logic or confirmation modal here */ }}>
+                          <HiOutlineTrash className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        {/* Documents tab/table remains unchanged for now */}
+        {activeContentTab === 'documents' && (
+          <div style={{ maxHeight: 'calc(100vh - 400px)', overflowY: 'auto' }} className="relative overflow-x-auto mt-4">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead>
+                <tr>
+                  <th className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">File Name</th>
+                  <th className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">UPLOADED BY</th>
+                  <th className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">DATE UPLOADED</th>
+                  <th className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Contract</th>
+                  <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">CONTRACT ID</th>
+                  <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {sampleDocuments.map((doc) => (
+                  <tr key={doc.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <div className="font-medium text-gray-900">{doc.name}</div>
+                      <div className="text-xs text-gray-500 flex items-center gap-2">
+                        <span>{doc.type}</span>
+                        <span>&bull;</span>
+                        <span>{doc.size}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-xs">{doc.uploadedBy}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500">{doc.dateUploaded}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{doc.contractTitle}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-xs">
+                      <a href={`#${doc.contractId}`} className="text-primary underline font-semibold cursor-pointer">{doc.contractId}</a>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-xs font-medium">
+                      <div className="flex items-center justify-center space-x-1">
+                        <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="View" onClick={() => { setSelectedPdf({ name: doc.name, url: `/documents/${doc.name}` }); setShowPdfViewer(true); }}>
+                          <HiOutlineEye className="h-4 w-4" />
+                        </button>
+                        <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Download">
+                          <HiOutlineDownload className="h-4 w-4" />
+                        </button>
+                        <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Delete">
+                          <HiOutlineTrash className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+    
+
+    {/* Modal for contract details */}
+    {selectedContract && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+        <div className="relative bg-white rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden">
+          {/* Sticky Header with Download Summary and Close buttons */}
+          <div className="sticky top-0 z-40 bg-white px-6 py-4">
+            <div className="flex items-start justify-between">
+              {/* Left: Contract ID and Status */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-primary/10">
+                    <span className="text-xs font-semibold text-primary">#{selectedContract.id}</span>
                   </div>
                 </div>
-                {/* Right: Close Button (original, now sticky) */}
-                <button
-                  className="text-gray-400 hover:text-gray-600 p-2 rounded-full ml-4 mt-1"
-                  onClick={() => setSelectedContract(null)}
-                  aria-label="Close"
-                >
-                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
               </div>
-              {/* Centered Status Bar */}
-              <div className="w-full overflow-x-auto">
-                <div className="flex flex-col items-center w-full max-w-full">
-                  {/* Progress Bar */}
-                  <div className="relative w-full max-w-[1100px] h-2 mb-6 bg-gray-200 rounded-full">
-                    {(() => {
-                      const steps = [
-                        { key: 'initiation', label: 'Initiation', number: 1 },
-                        { key: 'preparation', label: 'Preparation', number: 2 },
-                        { key: 'wire details', label: 'Wire Details', number: 3 },
-                        { key: 'in review', label: 'In Review', number: 4 },
-                        { key: 'signatures', label: 'Signatures', number: 5 },
-                        { key: 'funds disbursed', label: 'Funds Disbursed', number: 6 },
-                        { key: 'complete', label: 'Complete', number: 7 }
-                      ];
-                      const currentIdx = steps.findIndex(s => s.label.toLowerCase() === selectedContract.status.toLowerCase());
-                      const percent = currentIdx <= 0 ? 0 : (currentIdx) / (steps.length - 1) * 100;
+              {/* Right: Close Button (original, now sticky) */}
+              <button
+                className="text-gray-400 hover:text-gray-600 p-2 rounded-full ml-4 mt-1"
+                onClick={() => setSelectedContract(null)}
+                aria-label="Close"
+              >
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            {/* Centered Status Bar */}
+            <div className="w-full overflow-x-auto">
+              <div className="flex flex-col items-center w-full max-w-full">
+                {/* Progress Bar */}
+                <div className="relative w-full max-w-[1100px] h-2 mb-6 bg-gray-200 rounded-full">
+                  {(() => {
+                    const steps = [
+                      { key: 'initiation', label: 'Initiation', number: 1 },
+                      { key: 'preparation', label: 'Preparation', number: 2 },
+                      { key: 'wire details', label: 'Wire Details', number: 3 },
+                      { key: 'in review', label: 'In Review', number: 4 },
+                      { key: 'signatures', label: 'Signatures', number: 5 },
+                      { key: 'funds disbursed', label: 'Funds Disbursed', number: 6 },
+                      { key: 'complete', label: 'Complete', number: 7 }
+                    ];
+                    const currentIdx = steps.findIndex(s => s.label.toLowerCase() === selectedContract.status.toLowerCase());
+                    const percent = currentIdx <= 0 ? 0 : (currentIdx) / (steps.length - 1) * 100;
+                    return (
+                      <div className="absolute top-0 left-0 h-2 bg-primary rounded-full transition-all duration-500" style={{ width: `${percent}%` }} />
+                    );
+                  })()}
+                </div>
+                {/* Steps */}
+                <div className="flex items-center justify-center gap-x-0 w-full max-w-[1100px]">
+                  {(() => {
+                    const steps = [
+                      { key: 'initiation', label: 'Initiation', number: 1 },
+                      { key: 'preparation', label: 'Preparation', number: 2 },
+                      { key: 'wire details', label: 'Wire Details', number: 3 },
+                      { key: 'in review', label: 'In Review', number: 4 },
+                      { key: 'signatures', label: 'Signatures', number: 5 },
+                      { key: 'funds disbursed', label: 'Funds Disbursed', number: 6 },
+                      { key: 'complete', label: 'Complete', number: 7 }
+                    ];
+                    const currentIdx = steps.findIndex(s => s.label.toLowerCase() === selectedContract.status.toLowerCase());
+                    // Calculate dynamic spacing for connectors
+                    const connectorWidth = `calc((100% - ${steps.length * 48}px) / ${steps.length - 1})`;
+                    return steps.map((step, idx) => {
+                      const isCompleted = idx < currentIdx;
+                      const isCurrent = idx === currentIdx;
                       return (
-                        <div className="absolute top-0 left-0 h-2 bg-primary rounded-full transition-all duration-500" style={{ width: `${percent}%` }} />
-                      );
-                    })()}
-                  </div>
-                  {/* Steps */}
-                  <div className="flex items-center justify-center gap-x-0 w-full max-w-[1100px]">
-                    {(() => {
-                      const steps = [
-                        { key: 'initiation', label: 'Initiation', number: 1 },
-                        { key: 'preparation', label: 'Preparation', number: 2 },
-                        { key: 'wire details', label: 'Wire Details', number: 3 },
-                        { key: 'in review', label: 'In Review', number: 4 },
-                        { key: 'signatures', label: 'Signatures', number: 5 },
-                        { key: 'funds disbursed', label: 'Funds Disbursed', number: 6 },
-                        { key: 'complete', label: 'Complete', number: 7 }
-                      ];
-                      const currentIdx = steps.findIndex(s => s.label.toLowerCase() === selectedContract.status.toLowerCase());
-                      // Calculate dynamic spacing for connectors
-                      const connectorWidth = `calc((100% - ${steps.length * 48}px) / ${steps.length - 1})`;
-                      return steps.map((step, idx) => {
-                        const isCompleted = idx < currentIdx;
-                        const isCurrent = idx === currentIdx;
-                        return (
-                          <div key={step.key} className="flex flex-col items-center" style={{ minWidth: 80, flex: 1 }}>
-                            <div className="relative flex items-center justify-center" style={{ width: 48 }}>
-                              <div className={`flex items-center justify-center rounded-full border-2 transition-all duration-300 w-8 h-8 text-sm font-bold
-                                ${isCompleted ? 'bg-primary border-primary text-white' : isCurrent ? 'bg-white border-primary text-primary' : 'bg-white border-gray-300 text-gray-400'}`}
-                              >
-                                {isCompleted ? (
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                                ) : (
-                                  step.number
-                                )}
-                              </div>
-                              {/* Connector line */}
-                              {idx < steps.length - 1 && (
-                                <div className="absolute top-1/2 left-full ml-0 h-1 -translate-y-1/2 z-0" style={{ width: connectorWidth, background: '#9ca3af' }} />
+                        <div key={step.key} className="flex flex-col items-center" style={{ minWidth: 80, flex: 1 }}>
+                          <div className="relative flex items-center justify-center" style={{ width: 48 }}>
+                            <div className={`flex items-center justify-center rounded-full border-2 transition-all duration-300 w-8 h-8 text-sm font-bold
+                              ${isCompleted ? 'bg-primary border-primary text-white' : isCurrent ? 'bg-white border-primary text-primary' : 'bg-white border-gray-300 text-gray-400'}`}
+                            >
+                              {isCompleted ? (
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                              ) : (
+                                step.number
                               )}
                             </div>
-                            <div className={`mt-2 text-xs font-medium text-center ${isCurrent ? 'text-primary' : isCompleted ? 'text-gray-700' : 'text-gray-400'}`}>{step.label}</div>
+                            {/* Connector line */}
+                            {idx < steps.length - 1 && (
+                              <div className="absolute top-1/2 left-full ml-0 h-1 -translate-y-1/2 z-0" style={{ width: connectorWidth, background: '#9ca3af' }} />
+                            )}
                           </div>
-                        );
-                      });
-                    })()}
-                  </div>
+                          <div className={`mt-2 text-xs font-medium text-center ${isCurrent ? 'text-primary' : isCompleted ? 'text-gray-700' : 'text-gray-400'}`}>{step.label}</div>
+                        </div>
+                      );
+                    });
+                  })()}
                 </div>
               </div>
             </div>
-            {/* Modal Content (scrollable) */}
+          </div>
+          {/* Modal Content (scrollable) and Sticky Footer as siblings */}
+          <div className="flex flex-col flex-1 min-h-0">
             <div className="overflow-y-auto p-6 flex-1">
               {/* Modal Content Grid: 2 columns */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full h-full min-h-0 -mt-2">
@@ -1919,7 +1920,7 @@ const ContractsPage: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="sticky bottom-0 left-0 w-full bg-white border-t border-gray-200 z-30 px-6 py-4 flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+            <div className="bg-white z-30 px-6 py-4 flex flex-col md:flex-row md:justify-between md:items-center gap-3">
               <button
                 className="flex items-center gap-2 px-5 py-2 rounded-lg bg-gray-100 text-gray-700 font-semibold text-sm hover:bg-gray-200 transition-colors"
               >
@@ -1935,112 +1936,113 @@ const ContractsPage: React.FC = () => {
             </div>
           </div>
         </div>
-      )}
+      </div>
+    )}
 
-      {showUploadModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-900">Upload Documents</h2>
+    {showUploadModal && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+        <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-bold text-gray-900">Upload Documents</h2>
+            <button
+              className="text-gray-400 hover:text-gray-600"
+              onClick={() => { setShowUploadModal(false); setUploadModalFiles([]); }}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div className="mb-2 text-sm text-gray-500">
+            {uploadContractId && (
+              <span>
+                For Contract: <span className="font-semibold text-primary">#{uploadContractId}</span>
+              </span>
+            )}
+          </div>
+          <form
+            className="p-0"
+            onSubmit={e => {
+              e.preventDefault();
+              setShowUploadModal(false);
+              setUploadModalFiles([]);
+            }}
+          >
+            <label className="block text-sm font-medium text-gray-700 mb-2">Upload Documents (Optional)</label>
+            <label htmlFor="upload-modal-file-upload" className="block cursor-pointer">
+              <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 py-8 px-4 text-center transition hover:border-primary">
+                <HiOutlineUpload className="text-3xl text-gray-400 mb-2" />
+                <div className="text-gray-700 font-medium">Click to upload or drag and drop</div>
+                <div className="text-xs text-gray-400 mt-1">PDF, DOC, DOCX, or JPG (max. 10MB each)</div>
+                <input
+                  id="upload-modal-file-upload"
+                  name="upload-modal-file-upload"
+                  type="file"
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg"
+                  className="hidden"
+                  multiple
+                  onChange={handleUploadModalFileChange}
+                />
+              </div>
+            </label>
+            {uploadModalFiles.length > 0 && (
+              <ul className="mt-3 text-sm text-gray-600">
+                {uploadModalFiles.map((file, idx) => (
+                  <li key={idx} className="truncate">{file.name}</li>
+                ))}
+              </ul>
+            )}
+            <button type="submit" className="w-full mt-6 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold">
+              Upload
+            </button>
+          </form>
+        </div>
+      </div>
+    )}
+
+    {showPdfViewer && selectedPdf && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+        <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-bold text-gray-900">{selectedPdf.name}</h2>
               <button
                 className="text-gray-400 hover:text-gray-600"
-                onClick={() => { setShowUploadModal(false); setUploadModalFiles([]); }}
+                onClick={() => setShowPdfViewer(false)}
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            <div className="mb-2 text-sm text-gray-500">
-              {uploadContractId && (
-                <span>
-                  For Contract: <span className="font-semibold text-primary">#{uploadContractId}</span>
-                </span>
-              )}
-            </div>
-            <form
-              className="p-0"
-              onSubmit={e => {
-                e.preventDefault();
-                setShowUploadModal(false);
-                setUploadModalFiles([]);
-              }}
-            >
-              <label className="block text-sm font-medium text-gray-700 mb-2">Upload Documents (Optional)</label>
-              <label htmlFor="upload-modal-file-upload" className="block cursor-pointer">
-                <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 py-8 px-4 text-center transition hover:border-primary">
-                  <HiOutlineUpload className="text-3xl text-gray-400 mb-2" />
-                  <div className="text-gray-700 font-medium">Click to upload or drag and drop</div>
-                  <div className="text-xs text-gray-400 mt-1">PDF, DOC, DOCX, or JPG (max. 10MB each)</div>
-                  <input
-                    id="upload-modal-file-upload"
-                    name="upload-modal-file-upload"
-                    type="file"
-                    accept=".pdf,.doc,.docx,.jpg,.jpeg"
-                    className="hidden"
-                    multiple
-                    onChange={handleUploadModalFileChange}
-                  />
-                </div>
-              </label>
-              {uploadModalFiles.length > 0 && (
-                <ul className="mt-3 text-sm text-gray-600">
-                  {uploadModalFiles.map((file, idx) => (
-                    <li key={idx} className="truncate">{file.name}</li>
-                  ))}
-                </ul>
-              )}
-              <button type="submit" className="w-full mt-6 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold">
-                Upload
+          </div>
+          <div className="flex-1 p-6 overflow-auto flex items-center justify-center bg-gray-50">
+            {/* Blank area for PDF viewer */}
+            <span className="text-gray-400 text-lg">No document available</span>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* New Contract Modal */}
+    {isNewContractModalOpen && (
+      <div className="fixed inset-x-0 top-[120px] bg-white z-50 shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="py-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-semibold text-gray-900">New Contract</h2>
+              <button
+                onClick={() => setIsNewContractModalOpen(false)}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <FaTimes className="w-6 h-6" />
               </button>
-            </form>
+            </div>
+            {/* Modal content */}
           </div>
         </div>
-      )}
-
-      {showPdfViewer && selectedPdf && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex justify-between items-center">
-                <h2 className="text-lg font-bold text-gray-900">{selectedPdf.name}</h2>
-                <button
-                  className="text-gray-400 hover:text-gray-600"
-                  onClick={() => setShowPdfViewer(false)}
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-            <div className="flex-1 p-6 overflow-auto flex items-center justify-center bg-gray-50">
-              {/* Blank area for PDF viewer */}
-              <span className="text-gray-400 text-lg">No document available</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* New Contract Modal */}
-      {isNewContractModalOpen && (
-        <div className="fixed inset-x-0 top-[120px] bg-white z-50 shadow-lg">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="py-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-semibold text-gray-900">New Contract</h2>
-                <button
-                  onClick={() => setIsNewContractModalOpen(false)}
-                  className="text-gray-400 hover:text-gray-500"
-                >
-                  <FaTimes className="w-6 h-6" />
-                </button>
-              </div>
-              {/* Modal content */}
-            </div>
-          </div>
-        </div>
-      )}
+      </div>
+    )}
     </>
   );
 }
