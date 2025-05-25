@@ -1,7 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
 
-type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {};
+type InputProps = React.InputHTMLAttributes<HTMLInputElement>;
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, ...props }, ref) => {

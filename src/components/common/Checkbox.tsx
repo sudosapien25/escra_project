@@ -1,7 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
 
-type CheckboxProps = React.InputHTMLAttributes<HTMLInputElement> & {};
+type CheckboxProps = React.InputHTMLAttributes<HTMLInputElement>;
 
 export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
   ({ className, children, ...props }, ref) => {

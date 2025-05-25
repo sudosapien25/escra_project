@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 import clsx from 'clsx';
 import { useDropzone } from 'react-dropzone';
 

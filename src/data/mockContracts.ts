@@ -1,0 +1,17 @@
+export const mockContracts = [
+  { id: '9548', title: 'New Property Acquisition' },
+  { id: '9550', title: 'Land Development Contract' },
+  { id: '9145', title: 'Construction Escrow' },
+  { id: '8784', title: 'Commercial Lease Amendment' },
+  { id: '8423', title: 'Property Sale Contract' },
+  { id: '7804', title: 'Investment Property Escrow' },
+  { id: '7234', title: 'Residential Sale Agreement' },
+  { id: '9102', title: 'Commercial Lease Escrow' },
+  { id: '6891', title: 'Office Building Purchase' },
+  { id: '6453', title: 'Retail Space Lease' },
+  { id: '10001', title: 'Downtown Condo Sale' },
+  { id: '10002', title: 'Warehouse Lease' },
+  { id: '10003', title: 'Luxury Villa Purchase' },
+  { id: '10004', title: 'Industrial Park Development' },
+  { id: '10005', title: 'Beachfront Property Sale' },
+]; 

@@ -15,6 +15,15 @@ export type NotificationType =
   | 'overdue_action'
   | 'security_alert';
 
+export interface NotificationMeta {
+  contractId?: string;
+  userId?: string;
+  role?: string;
+  deadline?: string;
+  amount?: number;
+  [key: string]: string | number | undefined;
+}
+
 export interface Notification {
   id: string;
   type: NotificationType;
@@ -24,5 +33,5 @@ export interface Notification {
   timestamp: string; // ISO string
   icon?: string; // icon name or type, to be mapped in UI
   link?: string; // optional link for 'View Details'
-  meta?: Record<string, any>; // for extensibility (contractId, etc.)
+  meta?: NotificationMeta; // for extensibility (contractId, etc.)
 } 

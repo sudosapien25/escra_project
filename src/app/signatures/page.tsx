@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FaSearch, FaPencilAlt, FaUser, FaCheckCircle, FaFilter, FaSort, FaCalendarAlt } from 'react-icons/fa';
+import { FaSearch, FaUser, FaCheckCircle, FaFilter, FaSort, FaCalendarAlt } from 'react-icons/fa';
 import { HiOutlineEye, HiOutlineDownload } from 'react-icons/hi';
 import { LuPen } from 'react-icons/lu';
 import { FaRegClock } from 'react-icons/fa';

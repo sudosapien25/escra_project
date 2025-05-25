@@ -15,7 +15,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
 }) => {
   return (
     <Popover className={clsx('relative', className)}>
-      <Popover.Button as={"div" as any}>
+      <Popover.Button as="div">
         {children}
       </Popover.Button>
 

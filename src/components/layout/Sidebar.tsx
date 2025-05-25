@@ -2,14 +2,11 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { HiOutlineHome, HiOutlineDocumentText, HiOutlineBell, HiOutlineCog, HiOutlineChartPie } from 'react-icons/hi';
-import { RiContractLine, RiFileTextLine, RiFlowChart, RiLayoutColumnLine, RiDashboardLine, RiBox3Line } from 'react-icons/ri';
-import { FaPencilAlt, FaSignature, FaColumns } from 'react-icons/fa';
-import { LuPen, LuKanban } from 'react-icons/lu';
+import { HiOutlineDocumentText, HiOutlineBell, HiOutlineCog } from 'react-icons/hi';
+import { RiLayoutColumnLine, RiDashboardLine, RiBox3Line } from 'react-icons/ri';
+import { FaSignature } from 'react-icons/fa';
 import { IconBaseProps } from 'react-icons';
-import { Logo } from '@/components/common/Logo';
 import clsx from 'clsx';
-import { HiOutlineChevronLeft, HiOutlineChevronRight } from 'react-icons/hi';
 import { HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight } from 'react-icons/hi';
 
 interface NavItem {

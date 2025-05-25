@@ -2,9 +2,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { FaSearch, FaFilter, FaFileAlt, FaCheckCircle, FaClock, FaCalendarAlt, FaSort, FaPlus, FaArrowUp, FaDollarSign, FaDownload, FaRegFileAlt, FaTimes } from 'react-icons/fa';
-import { FaArrowUpFromBracket } from 'react-icons/fa6';
-import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutlineTrash, HiOutlinePencilAlt, HiOutlineDocument, HiOutlineDocumentDownload, HiOutlineUpload, HiOutlineEye, HiOutlineClipboardList, HiOutlineExclamation } from 'react-icons/hi';
+import { FaSearch, FaClock, FaSort, FaPlus, FaDollarSign, FaTimes } from 'react-icons/fa';
+import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutlineTrash, HiOutlinePencilAlt, HiOutlineUpload, HiOutlineEye, HiOutlineClipboardList, HiOutlineExclamation } from 'react-icons/hi';
 import { HiOutlineViewBoards } from 'react-icons/hi';
 import { LuCalendarClock } from 'react-icons/lu';
 import { Logo } from '@/components/common/Logo';
@@ -28,7 +27,6 @@ const ContractsPage: React.FC = () => {
   const [activeContentTab, setActiveContentTab] = useState('contractList');
   const [activeRole, setActiveRole] = useState('creator');
   const [searchTerm, setSearchTerm] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
   const [showNewContractForm, setShowNewContractForm] = useState(false);
   const [modalStep, setModalStep] = useState(1);
   const [modalForm, setModalForm] = useState({
@@ -135,166 +133,60 @@ const ContractsPage: React.FC = () => {
 
   // Sample data
   const sampleContracts: Contract[] = [
-    {
-      id: '9548',
-      title: 'New Property Acquisition',
-      parties: 'Robert Chen & Eastside Properties',
-      status: 'Initiation',
-      updated: '1 hour ago',
-      value: '$680,000',
-      documents: 2,
-      type: 'Property Sale',
-    },
-    {
-      id: '9550',
-      title: 'Land Development Contract',
-      parties: 'GreenSpace Developers',
-      status: 'Initiation',
-      updated: '3 hours ago',
-      value: '$1,250,000',
-      documents: 1,
-      type: 'Property Sale',
-    },
-    {
-      id: '9145',
-      title: 'Construction Escrow',
-      parties: 'BuildRight & Horizon Developers',
-      status: 'Preparation',
-      updated: '1 day ago',
-      value: '$780,000',
-      documents: 4,
-      type: 'Construction Escrow',
-    },
-    {
-      id: '8784',
-      title: 'Commercial Lease Amendment',
-      parties: 'Pacific Properties',
-      status: 'Preparation',
-      updated: '5 hours ago',
-      value: '$325,000',
-      documents: 4,
-      type: 'Commercial Lease',
-    },
-    {
-      id: '8423',
-      title: 'Property Sale Contract',
-      parties: 'John Smith & Emma Johnson',
-      status: 'Preparation',
-      updated: '2 hours ago',
-      value: '$450,000',
-      documents: 4,
-      type: 'Property Sale',
-    },
-    {
-      id: '7804',
-      title: 'Investment Property Escrow',
-      parties: 'Global Investors Group',
-      status: 'Wire Details',
-      updated: '1 day ago',
-      value: '$1,750,000',
-      documents: 3,
-      type: 'Property Sale',
-    },
-    {
-      id: '7234',
-      title: 'Residential Sale Agreement',
-      parties: 'David Miller & Sarah Thompson',
-      status: 'Signatures',
-      updated: '4 hours ago',
-      value: '$525,000',
-      documents: 3,
-      type: 'Property Sale',
-    },
-    {
-      id: '9102',
-      title: 'Commercial Lease Escrow',
-      parties: 'TechStart Inc. & Pacific Properties',
-      status: 'Signatures',
-      updated: '5 hours ago',
-      value: '$325,000',
-      documents: 1,
-      type: 'Commercial Lease',
-    },
-    {
-      id: '6891',
-      title: 'Office Building Purchase',
-      parties: 'Riverfront Ventures',
-      status: 'Funds Disbursed',
-      updated: '3 days ago',
-      value: '$3,200,000',
-      documents: 4,
-      type: 'Property Sale',
-    },
-    {
-      id: '6453',
-      title: 'Retail Space Lease',
-      parties: 'Urban Outfitters Co.',
-      status: 'Completed',
-      updated: '1 week ago',
-      value: '$275,000',
-      documents: 2,
-      type: 'Commercial Lease',
-    },
-    // Additional sample contracts
-    {
-      id: '10001',
-      title: 'Downtown Condo Sale',
-      parties: 'Alice Lee & Bob Martin',
-      status: 'Initiation',
-      updated: '2 days ago',
-      value: '$900,000',
-      documents: 2,
-      type: 'Property Sale',
-    },
-    {
-      id: '10002',
-      title: 'Warehouse Lease',
-      parties: 'Logistics Corp & Storage Solutions',
-      status: 'In Review',
-      updated: '6 hours ago',
-      value: '$1,100,000',
-      documents: 3,
-      type: 'Commercial Lease',
-    },
-    {
-      id: '10003',
-      title: 'Luxury Villa Purchase',
-      parties: 'Samantha Fox & Elite Estates',
-      status: 'Wire Details',
-      updated: '3 days ago',
-      value: '$2,500,000',
-      documents: 5,
-      type: 'Property Sale',
-    },
-    {
-      id: '10004',
-      title: 'Industrial Park Development',
-      parties: 'MegaBuild Inc.',
-      status: 'Funds Disbursed',
-      updated: '1 week ago',
-      value: '$5,000,000',
-      documents: 6,
-      type: 'Property Sale',
-    },
-    {
-      id: '10005',
-      title: 'Beachfront Property Sale',
-      parties: 'Oceanic Realty & Sun Resorts',
-      status: 'Completed',
-      updated: '2 weeks ago',
-      value: '$3,800,000',
-      documents: 4,
-      type: 'Property Sale',
-    },
+    { id: '9548', title: 'New Property Acquisition', parties: 'Robert Chen & Eastside Properties', status: 'Initiation', updated: '1 hour ago', value: '$680,000', documents: 2, type: 'Property Sale' },
+    { id: '9550', title: 'Land Development Contract', parties: 'GreenSpace Developers', status: 'Initiation', updated: '3 hours ago', value: '$1,250,000', documents: 1, type: 'Property Sale' },
+    { id: '9145', title: 'Construction Escrow', parties: 'BuildRight & Horizon Developers', status: 'Preparation', updated: '1 day ago', value: '$780,000', documents: 4, type: 'Construction Escrow' },
+    { id: '8784', title: 'Commercial Lease Amendment', parties: 'Pacific Properties', status: 'Preparation', updated: '5 hours ago', value: '$325,000', documents: 4, type: 'Commercial Lease' },
+    { id: '8423', title: 'Property Sale Contract', parties: 'John Smith & Emma Johnson', status: 'Preparation', updated: '2 hours ago', value: '$450,000', documents: 4, type: 'Property Sale' },
+    { id: '7804', title: 'Investment Property Escrow', parties: 'Global Investors Group', status: 'Wire Details', updated: '1 day ago', value: '$1,750,000', documents: 3, type: 'Property Sale' },
+    { id: '7234', title: 'Residential Sale Agreement', parties: 'David Miller & Sarah Thompson', status: 'Signatures', updated: '4 hours ago', value: '$525,000', documents: 3, type: 'Property Sale' },
+    { id: '9102', title: 'Commercial Lease Escrow', parties: 'TechStart Inc. & Pacific Properties', status: 'Signatures', updated: '5 hours ago', value: '$325,000', documents: 1, type: 'Commercial Lease' },
+    { id: '6891', title: 'Office Building Purchase', parties: 'Riverfront Ventures', status: 'Funds Disbursed', updated: '3 days ago', value: '$3,200,000', documents: 4, type: 'Property Sale' },
+    { id: '6453', title: 'Retail Space Lease', parties: 'Urban Outfitters Co.', status: 'Completed', updated: '1 week ago', value: '$275,000', documents: 2, type: 'Commercial Lease' },
+    { id: '10001', title: 'Downtown Condo Sale', parties: 'Alice Lee & Bob Martin', status: 'Initiation', updated: '2 days ago', value: '$900,000', documents: 2, type: 'Property Sale' },
+    { id: '10002', title: 'Warehouse Lease', parties: 'Logistics Corp & Storage Solutions', status: 'In Review', updated: '6 hours ago', value: '$1,100,000', documents: 3, type: 'Commercial Lease' },
+    { id: '10003', title: 'Luxury Villa Purchase', parties: 'Samantha Fox & Elite Estates', status: 'Wire Details', updated: '3 days ago', value: '$2,500,000', documents: 5, type: 'Property Sale' },
+    { id: '10004', title: 'Industrial Park Development', parties: 'MegaBuild Inc.', status: 'Funds Disbursed', updated: '1 week ago', value: '$5,000,000', documents: 6, type: 'Property Sale' },
+    { id: '10005', title: 'Beachfront Property Sale', parties: 'Oceanic Realty & Sun Resorts', status: 'Completed', updated: '2 weeks ago', value: '$3,800,000', documents: 4, type: 'Property Sale' },
+    { id: '10006', title: 'Mountain Cabin Escrow', parties: 'Wilderness Realty & Jane Doe', status: 'Initiation', updated: '4 days ago', value: '$600,000', documents: 2, type: 'Property Sale' },
+    { id: '10007', title: 'City Apartment Lease', parties: 'Urban Living LLC & Mark Smith', status: 'Preparation', updated: '8 hours ago', value: '$1,200,000', documents: 3, type: 'Commercial Lease' },
+    { id: '10008', title: 'Farm Land Purchase', parties: 'AgriCorp & Green Farms', status: 'Completed', updated: '3 weeks ago', value: '$2,100,000', documents: 5, type: 'Property Sale' }
   ];
 
-  // Remove filtering by activeTab for table data
-  const filteredContracts = sampleContracts.filter((contract) => {
-    const matchesSearch = 
-      contract.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contract.parties.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contract.id.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
+  const sampleDocuments = [
+    { id: 'DOC-001', name: 'Purchase Agreement.pdf', type: 'PDF', size: '2.4 MB', uploadedBy: 'John Smith', dateUploaded: '2024-03-15', contractTitle: 'New Property Acquisition', contractId: '9548' },
+    { id: 'DOC-002', name: 'Property Survey.pdf', type: 'PDF', size: '1.8 MB', uploadedBy: 'Sarah Johnson', dateUploaded: '2024-03-14', contractTitle: 'Land Development Contract', contractId: '9550' },
+    { id: 'DOC-003', name: 'Inspection Report.pdf', type: 'PDF', size: '3.2 MB', uploadedBy: 'Michael Brown', dateUploaded: '2024-03-13', contractTitle: 'Construction Escrow', contractId: '9145' },
+    { id: 'DOC-004', name: 'Lease Agreement.docx', type: 'DOCX', size: '1.1 MB', uploadedBy: 'Emma Johnson', dateUploaded: '2024-03-12', contractTitle: 'Commercial Lease Amendment', contractId: '8784' },
+    { id: 'DOC-005', name: 'Title Insurance.pdf', type: 'PDF', size: '2.0 MB', uploadedBy: 'Robert Chen', dateUploaded: '2024-03-11', contractTitle: 'Property Sale Contract', contractId: '8423' },
+    { id: 'DOC-006', name: 'Wire Authorization.pdf', type: 'PDF', size: '1.2 MB', uploadedBy: 'Sarah Miller', dateUploaded: '2024-03-10', contractTitle: 'Investment Property Escrow', contractId: '7804' },
+    { id: 'DOC-007', name: 'Appraisal Report.pdf', type: 'PDF', size: '2.7 MB', uploadedBy: 'David Miller', dateUploaded: '2024-03-09', contractTitle: 'Residential Sale Agreement', contractId: '7234' },
+    { id: 'DOC-008', name: 'Closing Disclosure.pdf', type: 'PDF', size: '1.9 MB', uploadedBy: 'Emily Davis', dateUploaded: '2024-03-08', contractTitle: 'Office Building Purchase', contractId: '6891' },
+    { id: 'DOC-009', name: 'Loan Estimate.pdf', type: 'PDF', size: '1.5 MB', uploadedBy: 'Alex Johnson', dateUploaded: '2024-03-07', contractTitle: 'Retail Space Lease', contractId: '6453' },
+    { id: 'DOC-010', name: 'Deed Transfer.pdf', type: 'PDF', size: '2.2 MB', uploadedBy: 'Samantha Fox', dateUploaded: '2024-03-06', contractTitle: 'Luxury Villa Purchase', contractId: '10003' }
+  ];
+
+  // Filter contracts based on search term
+  const filteredContracts = sampleContracts.filter(contract => {
+    const search = searchTerm.toLowerCase();
+    return (
+      contract.title.toLowerCase().includes(search) ||
+      contract.parties.toLowerCase().includes(search) ||
+      contract.id.toLowerCase().includes(search) ||
+      contract.type.toLowerCase().includes(search)
+    );
+  });
+
+  // Filter documents based on search term
+  const filteredDocuments = sampleDocuments.filter(doc => {
+    const search = searchTerm.toLowerCase();
+    return (
+      doc.name.toLowerCase().includes(search) ||
+      doc.type.toLowerCase().includes(search) ||
+      doc.uploadedBy.toLowerCase().includes(search) ||
+      doc.contractTitle.toLowerCase().includes(search) ||
+      doc.contractId.toLowerCase().includes(search)
+    );
   });
 
   const getStatusBadgeStyle = (status: string) => {
@@ -313,225 +205,6 @@ const ContractsPage: React.FC = () => {
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'Initiation': return <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 4H7a2 2 0 01-2-2V6a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V20a2 2 0 01-2 2z" /></svg>;
-      case 'Preparation': return <svg className="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 01-8 0m8 0V5a2 2 0 00-2-2H8a2 2 0 00-2 2v2m10 0a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V9a2 2 0 012-2" /></svg>;
-      case 'Wire Details': return <svg className="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
-      case 'Signatures': return <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 01-8 0m8 0V5a2 2 0 00-2-2H8a2 2 0 00-2 2v2m10 0a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V9a2 2 0 012-2" /></svg>;
-      case 'Funds Disbursed': return <svg className="w-4 h-4 text-teal-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
-      case 'Completed': return <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
-      case 'Verified': return <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
-      case 'Pending': return <svg className="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
-      case 'Rejected': return <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
-      default: return null;
-    }
-  };
-
-  // Update sampleDocuments to include uploadedBy and date values
-  const sampleDocuments = [
-    {
-      id: 'd1',
-      name: 'Purchase Agreement',
-      type: 'PDF',
-      size: '2.4 MB',
-      uploadedBy: 'Alice Lee',
-      dateUploaded: '2024-05-01',
-      contractTitle: 'New Property Acquisition',
-      contractId: '9548',
-    },
-    {
-      id: 'd2',
-      name: 'Inspection Report',
-      type: 'PDF',
-      size: '1.1 MB',
-      uploadedBy: 'Bob Martin',
-      dateUploaded: '2024-05-02',
-      contractTitle: 'Land Development Contract',
-      contractId: '9550',
-    },
-    {
-      id: 'd3',
-      name: 'Lease Agreement',
-      type: 'DOCX',
-      size: '900 KB',
-      uploadedBy: 'Samantha Fox',
-      dateUploaded: '2024-05-03',
-      contractTitle: 'Commercial Lease Amendment',
-      contractId: '8784',
-    },
-    {
-      id: 'd4',
-      name: 'Title Insurance',
-      type: 'PDF',
-      size: '1.7 MB',
-      uploadedBy: 'David Miller',
-      dateUploaded: '2024-05-04',
-      contractTitle: 'Property Sale Contract',
-      contractId: '8423',
-    },
-    {
-      id: 'd5',
-      name: 'Appraisal',
-      type: 'PDF',
-      size: '2.0 MB',
-      uploadedBy: 'Emma Johnson',
-      dateUploaded: '2024-05-05',
-      contractTitle: 'Office Building Purchase',
-      contractId: '6891',
-    },
-    {
-      id: 'd6',
-      name: 'Closing Disclosure',
-      type: 'PDF',
-      size: '1.3 MB',
-      uploadedBy: 'Sarah Thompson',
-      dateUploaded: '2024-05-06',
-      contractTitle: 'Luxury Villa Purchase',
-      contractId: '10003',
-    },
-    {
-      id: 'd7',
-      name: 'Wire Instructions',
-      type: 'PDF',
-      size: '1.2 MB',
-      uploadedBy: 'Robert Chen',
-      dateUploaded: '2024-05-07',
-      contractTitle: 'Beachfront Property Sale',
-      contractId: '10005',
-    },
-    {
-      id: 'd8',
-      name: 'Inspection Photos',
-      type: 'JPG',
-      size: '3.2 MB',
-      uploadedBy: 'Bob Martin',
-      dateUploaded: '2024-05-08',
-      contractTitle: 'Land Development Contract',
-      contractId: '9550',
-    },
-    {
-      id: 'd9',
-      name: 'Environmental Report',
-      type: 'PDF',
-      size: '1.8 MB',
-      uploadedBy: 'Samantha Fox',
-      dateUploaded: '2024-05-09',
-      contractTitle: 'Commercial Lease Amendment',
-      contractId: '8784',
-    },
-    {
-      id: 'd10',
-      name: 'HOA Documents',
-      type: 'PDF',
-      size: '2.0 MB',
-      uploadedBy: 'David Miller',
-      dateUploaded: '2024-05-10',
-      contractTitle: 'Property Sale Contract',
-      contractId: '8423',
-    },
-    {
-      id: 'd11',
-      name: 'Final Walkthrough Checklist',
-      type: 'DOCX',
-      size: '0.7 MB',
-      uploadedBy: 'Emma Johnson',
-      dateUploaded: '2024-05-11',
-      contractTitle: 'Office Building Purchase',
-      contractId: '6891',
-    },
-    {
-      id: 'd12',
-      name: 'Loan Approval Letter',
-      type: 'PDF',
-      size: '1.1 MB',
-      uploadedBy: 'Sarah Thompson',
-      dateUploaded: '2024-05-12',
-      contractTitle: 'Luxury Villa Purchase',
-      contractId: '10003',
-    },
-    {
-      id: 'd13',
-      name: 'Title Commitment',
-      type: 'PDF',
-      size: '1.5 MB',
-      uploadedBy: 'Robert Chen',
-      dateUploaded: '2024-05-13',
-      contractTitle: 'Beachfront Property Sale',
-      contractId: '10005',
-    },
-    {
-      id: 'd14',
-      name: 'Survey',
-      type: 'PDF',
-      size: '2.2 MB',
-      uploadedBy: 'Alice Lee',
-      dateUploaded: '2024-05-14',
-      contractTitle: 'New Property Acquisition',
-      contractId: '9548',
-    },
-    {
-      id: 'd15',
-      name: 'Closing Statement',
-      type: 'PDF',
-      size: '1.9 MB',
-      uploadedBy: 'Bob Martin',
-      dateUploaded: '2024-05-15',
-      contractTitle: 'Land Development Contract',
-      contractId: '9550',
-    },
-    {
-      id: 'd16',
-      name: 'Warranty Deed',
-      type: 'PDF',
-      size: '1.3 MB',
-      uploadedBy: 'Samantha Fox',
-      dateUploaded: '2024-05-16',
-      contractTitle: 'Commercial Lease Amendment',
-      contractId: '8784',
-    },
-    {
-      id: 'd17',
-      name: 'Escrow Instructions',
-      type: 'PDF',
-      size: '2.6 MB',
-      uploadedBy: 'David Miller',
-      dateUploaded: '2024-05-17',
-      contractTitle: 'Property Sale Contract',
-      contractId: '8423',
-    },
-    {
-      id: 'd18',
-      name: 'Appraisal Report',
-      type: 'PDF',
-      size: '2.1 MB',
-      uploadedBy: 'Emma Johnson',
-      dateUploaded: '2024-05-18',
-      contractTitle: 'Office Building Purchase',
-      contractId: '6891',
-    },
-    {
-      id: 'd19',
-      name: 'Flood Certificate',
-      type: 'PDF',
-      size: '0.8 MB',
-      uploadedBy: 'Sarah Thompson',
-      dateUploaded: '2024-05-19',
-      contractTitle: 'Luxury Villa Purchase',
-      contractId: '10003',
-    },
-    {
-      id: 'd20',
-      name: 'Power of Attorney',
-      type: 'PDF',
-      size: '1.0 MB',
-      uploadedBy: 'Robert Chen',
-      dateUploaded: '2024-05-20',
-      contractTitle: 'Beachfront Property Sale',
-      contractId: '10005',
-    },
-  ];
-
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editableTitle, setEditableTitle] = useState('');
@@ -545,8 +218,6 @@ const ContractsPage: React.FC = () => {
 
   const [documentsBoxHeight, setDocumentsBoxHeight] = useState<number | undefined>(undefined);
   const documentsBoxRef = useRef<HTMLDivElement>(null);
-  const TASKS_BOX_VERTICAL_PADDING = 48; // p-6 top + bottom = 24px + 24px = 48px
-  const TASKS_HEADER_MARGIN_BOTTOM = 16; // mb-4 = 16px
 
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadContractId, setUploadContractId] = useState<string | null>(null);
@@ -1195,7 +866,7 @@ const ContractsPage: React.FC = () => {
           <FaSearch className="text-gray-400 mr-2" size={18} />
           <input
             type="text"
-            placeholder="Search contracts or parties"
+            placeholder="Search contracts, parties, or documents"
             value={searchTerm}
             onChange={handleSearchChange}
             className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 placeholder-gray-400 font-medium min-w-0"
@@ -1270,7 +941,7 @@ const ContractsPage: React.FC = () => {
         </div>
         {/* Table */}
         {activeContentTab === 'contractList' && (
-          <div style={{ maxHeight: 'calc(100vh - 400px)', overflowY: 'auto' }} className="relative overflow-x-auto mt-4">
+          <div style={{ maxHeight: 'calc(100vh - 400px)', overflowY: 'scroll' }} className="relative overflow-x-auto mt-4">
             <table className="min-w-full divide-y divide-gray-200">
               <thead>
                 <tr>
@@ -1346,7 +1017,7 @@ const ContractsPage: React.FC = () => {
         )}
         {/* Documents tab/table remains unchanged for now */}
         {activeContentTab === 'documents' && (
-          <div style={{ maxHeight: 'calc(100vh - 400px)', overflowY: 'auto' }} className="relative overflow-x-auto mt-4">
+          <div style={{ maxHeight: 'calc(100vh - 400px)', overflowY: 'scroll' }} className="relative overflow-x-auto mt-4">
             <table className="min-w-full divide-y divide-gray-200">
               <thead>
                 <tr>
@@ -1359,7 +1030,7 @@ const ContractsPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {sampleDocuments.map((doc) => (
+                {filteredDocuments.map((doc) => (
                   <tr key={doc.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <div className="font-medium text-gray-900">{doc.name}</div>

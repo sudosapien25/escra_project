@@ -1,13 +1,9 @@
 "use client";
 import React from 'react';
 import { Card } from '@/components/common/Card';
-import { FaFileContract, FaPencilAlt, FaMoneyBillAlt, FaClock, FaPlus, FaArrowUp, FaDollarSign, FaFilter, FaCalendarAlt, FaSort, FaSearch, FaPen } from 'react-icons/fa';
-import { HiOutlineDocumentText, HiOutlineEye, HiOutlineDownload, HiOutlineTrash, HiOutlinePlus } from 'react-icons/hi';
-import { RiContractLine, RiFileTextLine, RiFlowChart, RiKanbanView, RiPenNibLine } from 'react-icons/ri';
+import { FaFileContract, FaMoneyBillAlt, FaClock, FaPlus, FaArrowUp, FaDollarSign, FaCheckCircle, FaBox, FaChartLine } from 'react-icons/fa';
 import { IconBaseProps } from 'react-icons';
-import { FaCheckCircle, FaBox, FaChartLine } from 'react-icons/fa';
 import { LuPen } from 'react-icons/lu';
-import Link from 'next/link';
 import NewContractModal from '@/components/common/NewContractModal';
 
 export default function DashboardPage() {
