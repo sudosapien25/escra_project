@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { mockContracts } from '@/data/mockContracts';
 
@@ -10,9 +10,10 @@ import { CgPlayPauseR, CgPlayStopR } from 'react-icons/cg';
 import { BsPerson } from 'react-icons/bs';
 import { LuCalendarClock } from 'react-icons/lu';
 import { FaPlus, FaSearch, FaRetweet } from 'react-icons/fa';
-import { PiListMagnifyingGlassBold, PiListPlusBold } from 'react-icons/pi';
+import { PiListMagnifyingGlassBold, PiListPlusBold, PiDotsThreeOutline } from 'react-icons/pi';
 import { FaRegSquareCheck } from 'react-icons/fa6';
 import { BiDotsHorizontal } from 'react-icons/bi';
+import { MdCancelPresentation } from 'react-icons/md';
 
 interface Task {
   id?: string;
@@ -43,7 +44,7 @@ function formatDatePretty(dateStr: string): string {
 }
 
 export default function WorkflowsPage() {
-  const [kanbanTab, setKanbanTab] = React.useState('Active Tasks');
+  const [kanbanTab, setKanbanTab] = React.useState('All Tasks');
   const kanbanTabs = ['All Tasks', 'Active Tasks', 'Upcoming'];
   const [taskSearchTerm, setTaskSearchTerm] = React.useState('');
   const [openMenuTask, setOpenMenuTask] = React.useState<string | null>(null);
@@ -51,6 +52,7 @@ export default function WorkflowsPage() {
   const [selectedAssignee, setSelectedAssignee] = React.useState('All');
   const [selectedContract, setSelectedContract] = React.useState('All');
   const [selectedStatuses, setSelectedStatuses] = React.useState<string[]>([]);
+  const [selectedAssignees, setSelectedAssignees] = React.useState<string[]>([]);
   const [openAssigneeDropdown, setOpenAssigneeDropdown] = React.useState(false);
   const [openContractDropdown, setOpenContractDropdown] = React.useState(false);
   const [openStatusDropdown, setOpenStatusDropdown] = React.useState(false);
@@ -66,6 +68,14 @@ export default function WorkflowsPage() {
   );
   const [editedDueDate, setEditedDueDate] = React.useState(selectedTask?.due || '');
   const [editedAssignee, setEditedAssignee] = React.useState(selectedTask?.assignee || '');
+  const [contractSearch, setContractSearch] = useState('');
+  const [showContractDropdown, setShowContractDropdown] = useState(false);
+  const filteredContracts = mockContracts.filter(c => c.title.toLowerCase().includes(contractSearch.toLowerCase()));
+  const contractDropdownRef = useRef<HTMLDivElement>(null);
+  const assigneeDropdownRef = useRef<HTMLDivElement>(null);
+  const [showAssigneeDropdown, setShowAssigneeDropdown] = React.useState(false);
+  const [showStatusDropdown, setShowStatusDropdown] = React.useState(false);
+  const statusDropdownRef = useRef<HTMLDivElement>(null);
 
   // Define Kanban columns as a single source of truth
   const kanbanColumns = [
@@ -135,6 +145,13 @@ export default function WorkflowsPage() {
         { code: 'TSK-014', title: 'Send Completion Notice', contractId: '10002', type: 'Task', due: 'May 19, 2025', progress: '3 of 3', assignee: 'Robert Green', assigneeInitials: 'RG', assigneeColor: 'bg-green-200 text-green-700', taskNumber: 112 },
       ],
     },
+    {
+      key: 'canceled',
+      title: 'Canceled',
+      color: 'bg-purple-100',
+      icon: <MdCancelPresentation className="text-xl mr-2 text-purple-500" />,
+      tasks: [],
+    },
   ];
 
   // Kanban state for drag-and-drop
@@ -144,19 +161,25 @@ export default function WorkflowsPage() {
     function handleClickOutside(event: MouseEvent) {
       if (
         (openMenuTask && menuRef.current && !menuRef.current.contains(event.target as Node)) ||
-        (openAssigneeDropdown && assigneeButtonRef.current && !assigneeButtonRef.current.contains(event.target as Node)) ||
-        (openContractDropdown && contractButtonRef.current && !contractButtonRef.current.contains(event.target as Node)) ||
-        (openStatusDropdown && statusButtonRef.current && !statusButtonRef.current.contains(event.target as Node)) ||
-        (openColumnMenu && columnMenuRef.current && !columnMenuRef.current.contains(event.target as Node))
+        (openAssigneeDropdown && assigneeButtonRef.current && !assigneeButtonRef.current.contains(event.target as Node) && !(event.target as Element).closest('.assignee-dropdown')) ||
+        (openContractDropdown && contractButtonRef.current && !contractButtonRef.current.contains(event.target as Node) && !(event.target as Element).closest('.contract-dropdown')) ||
+        (openStatusDropdown && statusButtonRef.current && !statusButtonRef.current.contains(event.target as Node) && !(event.target as Element).closest('.status-dropdown')) ||
+        (openColumnMenu && columnMenuRef.current && !columnMenuRef.current.contains(event.target as Node)) ||
+        (showContractDropdown && contractDropdownRef.current && !contractDropdownRef.current.contains(event.target as Node)) ||
+        (showAssigneeDropdown && assigneeDropdownRef.current && !assigneeDropdownRef.current.contains(event.target as Node)) ||
+        (showStatusDropdown && statusDropdownRef.current && !statusDropdownRef.current.contains(event.target as Node))
       ) {
         setOpenMenuTask(null);
         setOpenAssigneeDropdown(false);
         setOpenContractDropdown(false);
         setOpenStatusDropdown(false);
         setOpenColumnMenu(null);
+        setShowContractDropdown(false);
+        setShowAssigneeDropdown(false);
+        setShowStatusDropdown(false);
       }
     }
-    if (openMenuTask || openAssigneeDropdown || openContractDropdown || openStatusDropdown || openColumnMenu) {
+    if (openMenuTask || openAssigneeDropdown || openContractDropdown || openStatusDropdown || openColumnMenu || showContractDropdown || showAssigneeDropdown || showStatusDropdown) {
       document.addEventListener('click', handleClickOutside);
     } else {
       document.removeEventListener('click', handleClickOutside);
@@ -164,7 +187,7 @@ export default function WorkflowsPage() {
     return () => {
       document.removeEventListener('click', handleClickOutside);
     };
-  }, [openMenuTask, openAssigneeDropdown, openContractDropdown, openStatusDropdown, openColumnMenu]);
+  }, [openMenuTask, openAssigneeDropdown, openContractDropdown, openStatusDropdown, openColumnMenu, showContractDropdown, showAssigneeDropdown, showStatusDropdown]);
 
   const allTasks = kanbanColumns.flatMap(col => col.tasks);
   const uniqueAssignees = Array.from(new Set(allTasks.map(t => t.assignee))).sort();
@@ -176,15 +199,16 @@ export default function WorkflowsPage() {
     { key: 'onhold', title: 'On Hold' },
     { key: 'inprogress', title: 'In Progress' },
     { key: 'inreview', title: 'In Review' },
-    { key: 'done', title: 'Done' }
+    { key: 'done', title: 'Done' },
+    { key: 'canceled', title: 'Canceled' }
   ];
 
   // Helper to filter tasks in a column according to current filters
   function filterTasks(tasks: Task[]) {
     return tasks.filter(task => {
       let matches = true;
-      if (selectedAssignee !== 'All') {
-        matches = matches && (task.assignee || '').trim().toLowerCase() === selectedAssignee.trim().toLowerCase();
+      if (selectedAssignees.length > 0) {
+        matches = matches && selectedAssignees.includes(task.assignee);
       }
       if (selectedContract !== 'All') {
         matches = matches && (String(task.contractId) === String(selectedContract));
@@ -231,6 +255,25 @@ export default function WorkflowsPage() {
     setEditedDueDate(formatDateToInput(selectedTask?.due || ''));
     setEditedAssignee(selectedTask?.assignee || '');
   }, [selectedTask]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        contractDropdownRef.current &&
+        !contractDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowContractDropdown(false);
+      }
+    }
+    if (showContractDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showContractDropdown]);
 
   return (
     <div className="space-y-4">
@@ -308,15 +351,58 @@ export default function WorkflowsPage() {
               style={{ fontFamily: 'Avenir, sans-serif' }}
               onClick={() => { setOpenAssigneeDropdown(v => !v); setOpenContractDropdown(false); }}
             >
-            <BsPerson className="text-gray-400 text-lg" />
-            <span>Assignee</span>
-            <span className="ml-1 text-gray-400">&#9662;</span>
-          </button>
+              <BsPerson className="text-gray-400 text-lg" />
+              <span>Assignee</span>
+              <span className="ml-1 text-gray-400">&#9662;</span>
+            </button>
             {openAssigneeDropdown && (
-              <div className="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
-                <button className={`w-full text-left px-4 py-2 text-xs font-medium ${selectedAssignee === 'All' ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`} onClick={() => { setSelectedAssignee('All'); setOpenAssigneeDropdown(false); }}>All Assignees</button>
+              <div className="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 assignee-dropdown" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
+                <button
+                  className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
+                    selectedAssignees.length === 0 ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
+                  }`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setSelectedAssignees([]);
+                  }}
+                >
+                  <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedAssignees.length === 0 ? 'bg-primary' : 'border border-gray-300'}`}>
+                    {selectedAssignees.length === 0 && (
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                  All Assignees
+                </button>
                 {uniqueAssignees.map(assignee => (
-                  <button key={assignee} className={`w-full text-left px-4 py-2 text-xs font-medium ${selectedAssignee === assignee ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`} onClick={() => { setSelectedAssignee(assignee); setOpenAssigneeDropdown(false); }}>{assignee}</button>
+                  <button
+                    key={assignee}
+                    className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
+                      selectedAssignees.includes(assignee) ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
+                    }`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setSelectedAssignees(prev => {
+                        if (prev.includes(assignee)) {
+                          return prev.filter(a => a !== assignee);
+                        } else {
+                          return [...prev, assignee];
+                        }
+                      });
+                    }}
+                  >
+                    <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedAssignees.includes(assignee) ? 'bg-primary' : 'border border-gray-300'}`}>
+                      {selectedAssignees.includes(assignee) && (
+                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                    {assignee}
+                  </button>
                 ))}
               </div>
             )}
@@ -328,24 +414,51 @@ export default function WorkflowsPage() {
               style={{ fontFamily: 'Avenir, sans-serif' }}
               onClick={() => { setOpenContractDropdown(v => !v); setOpenAssigneeDropdown(false); }}
             >
-            <HiOutlineDocumentText className="text-gray-400 text-lg" />
-            <span>Contract</span>
-            <span className="ml-1 text-gray-400">&#9662;</span>
-          </button>
+              <HiOutlineDocumentText className="text-gray-400 text-lg" />
+              <span>Contract</span>
+              <span className="ml-1 text-gray-400">&#9662;</span>
+            </button>
             {openContractDropdown && (
-              <div className="absolute left-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 min-w-[400px] w-96" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                <button className={`w-full text-left px-4 py-2 text-xs font-medium ${selectedContract === 'All' ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`} onClick={() => { setSelectedContract('All'); setOpenContractDropdown(false); }}>All Contracts</button>
+              <div className="absolute left-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 min-w-[400px] w-96 contract-dropdown" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                <button
+                  className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
+                    selectedContract === 'All' ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
+                  }`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setSelectedContract('All');
+                  }}
+                >
+                  <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedContract === 'All' ? 'bg-primary' : 'border border-gray-300'}`}>
+                    {selectedContract === 'All' && (
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                  All Contracts
+                </button>
                 {mockContracts.map(contract => (
                   <button
                     key={contract.id}
-                    className={`w-full text-left px-4 py-2 text-xs font-medium whitespace-nowrap truncate ${selectedContract === String(contract.id) ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`}
-                    onClick={() => {
-                      console.log('Setting selectedContract to:', contract.id);
+                    className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center whitespace-nowrap truncate ${
+                      selectedContract === String(contract.id) ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
+                    }`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
                       setSelectedContract(String(contract.id));
-                      setOpenContractDropdown(false);
                     }}
                     style={{ width: '100%' }}
                   >
+                    <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedContract === String(contract.id) ? 'bg-primary' : 'border border-gray-300'}`}>
+                      {selectedContract === String(contract.id) && (
+                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
                     {contract.id} - {contract.title}
                   </button>
                 ))}
@@ -364,14 +477,35 @@ export default function WorkflowsPage() {
               <span className="ml-1 text-gray-400">&#9662;</span>
             </button>
             {openStatusDropdown && (
-              <div className="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
+              <div className="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 status-dropdown" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
+                <button
+                  className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
+                    selectedStatuses.length === 0 ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
+                  }`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setSelectedStatuses([]);
+                  }}
+                >
+                  <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedStatuses.length === 0 ? 'bg-primary' : 'border border-gray-300'}`}>
+                    {selectedStatuses.length === 0 && (
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                  All
+                </button>
                 {statusOptions.map(status => (
                   <button
                     key={status.key}
                     className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
                       selectedStatuses.includes(status.key) ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
                     }`}
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
                       setSelectedStatuses(prev => {
                         if (prev.includes(status.key)) {
                           return prev.filter(s => s !== status.key);
@@ -383,8 +517,8 @@ export default function WorkflowsPage() {
                   >
                     <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedStatuses.includes(status.key) ? 'bg-primary' : 'border border-gray-300'}`}>
                       {selectedStatuses.includes(status.key) && (
-                        <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                         </svg>
                       )}
                     </div>
@@ -440,7 +574,7 @@ export default function WorkflowsPage() {
                                 setOpenColumnMenu(openColumnMenu === col.key ? null : col.key);
                               }}
                             >
-                              <BiDotsHorizontal size={18} />
+                              <FaPlus size={14} />
                             </button>
                             {openColumnMenu === col.key && (
                               <div
@@ -498,7 +632,7 @@ export default function WorkflowsPage() {
                                   </div>
 
                                   {/* Task Number - Top Left */}
-                                  <div className="mb-2">
+                                  <div className="mb-3">
                                     <span className="text-[10px] font-bold bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-200">
                                       Task #{task.taskNumber}
                                     </span>
@@ -508,22 +642,17 @@ export default function WorkflowsPage() {
                                   </div>
 
                                   {/* Task Title */}
-                                  <h3 className="text-sm font-medium text-gray-900 mb-2">{task.title}</h3>
+                                  <h3 className="text-xs font-bold text-gray-900 mb-2">{task.title}</h3>
 
                                   {/* Contract Info */}
-                                  <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center justify-between mb-1">
                                     <span className="text-xs font-bold text-primary">
                                       {mockContracts.find(c => c.id === task.contractId)?.title}
                                     </span>
-                                    <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20">
-                                      {task.contractId}
-                                    </span>
                                   </div>
-
-                                  {/* Due Date */}
                                   <div className="flex items-center gap-1 mb-3">
                                     <LuCalendarClock className="text-gray-400 text-sm" />
-                                    <span className="text-xs text-gray-500">{task.due}</span>
+                                    <span className="text-xs text-gray-500">{formatDatePretty(task.due)}</span>
                                   </div>
 
                                   {/* Progress Section */}
@@ -561,7 +690,7 @@ export default function WorkflowsPage() {
         <DragDropContext onDragEnd={onDragEnd}>
           <div className="flex flex-grow overflow-x-auto space-x-6 p-4 rounded-lg">
             {kanbanState
-              .filter(col => col.key !== 'done' && (selectedStatuses.length === 0 || selectedStatuses.includes(col.key)))
+              .filter(col => col.key !== 'done' && col.key !== 'canceled' && (selectedStatuses.length === 0 || selectedStatuses.includes(col.key)))
               .map((col) => (
                 <Droppable droppableId={col.key} key={col.key}>
                   {(provided) => (
@@ -587,7 +716,7 @@ export default function WorkflowsPage() {
                                 setOpenColumnMenu(openColumnMenu === col.key ? null : col.key);
                               }}
                             >
-                              <BiDotsHorizontal size={18} />
+                              <FaPlus size={14} />
                             </button>
                             {openColumnMenu === col.key && (
                               <div
@@ -614,9 +743,7 @@ export default function WorkflowsPage() {
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
-                                  className={`bg-white rounded-lg border border-gray-200 p-4 shadow-sm transition-shadow relative ${
-                                    snapshot.isDragging ? 'shadow-lg' : ''
-                                  }`}
+                                  className={`bg-white rounded-lg border border-gray-200 p-4 shadow-sm transition-shadow relative ${snapshot.isDragging ? 'shadow-lg' : ''}`}
                                   onClick={() => setSelectedTask(task)}
                                 >
                                   {/* Task Menu - Positioned at top right */}
@@ -643,9 +770,8 @@ export default function WorkflowsPage() {
                                       </div>
                                     )}
                                   </div>
-
                                   {/* Task Number - Top Left */}
-                                  <div className="mb-2">
+                                  <div className="mb-3">
                                     <span className="text-[10px] font-bold bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-200">
                                       Task #{task.taskNumber}
                                     </span>
@@ -653,26 +779,18 @@ export default function WorkflowsPage() {
                                       # {task.contractId}
                                     </span>
                                   </div>
-
                                   {/* Task Title */}
-                                  <h3 className="text-sm font-medium text-gray-900 mb-2">{task.title}</h3>
-
+                                  <h3 className="text-xs font-bold text-gray-900 mb-2">{task.title}</h3>
                                   {/* Contract Info */}
-                                  <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center justify-between mb-1">
                                     <span className="text-xs font-bold text-primary">
                                       {mockContracts.find(c => c.id === task.contractId)?.title}
                                     </span>
-                                    <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20">
-                                      {task.contractId}
-                                    </span>
                                   </div>
-
-                                  {/* Due Date */}
                                   <div className="flex items-center gap-1 mb-3">
                                     <LuCalendarClock className="text-gray-400 text-sm" />
-                                    <span className="text-xs text-gray-500">{task.due}</span>
+                                    <span className="text-xs text-gray-500">{formatDatePretty(task.due)}</span>
                                   </div>
-
                                   {/* Progress Section */}
                                   <div className="space-y-2 mb-3">
                                     <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -684,154 +802,6 @@ export default function WorkflowsPage() {
                                       />
                                     </div>
                                   </div>
-
-                                  {/* Assignee and Progress */}
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-xs text-gray-900">{task.assignee}</span>
-                                    <span className="text-xs text-gray-900">{task.progress}</span>
-                                  </div>
-                                </div>
-                              )}
-                            </Draggable>
-                          ))}
-                          {provided.placeholder}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </Droppable>
-              ))}
-          </div>
-        </DragDropContext>
-      )}
-      {kanbanTab === 'Completed' && (
-        <DragDropContext onDragEnd={onDragEnd}>
-          <div className="flex flex-grow overflow-x-auto space-x-6 p-4 rounded-lg">
-            {kanbanState
-              .filter(col => col.key === 'done' && (selectedStatuses.length === 0 || selectedStatuses.includes(col.key)))
-              .map((col) => (
-                <Droppable droppableId={col.key} key={col.key}>
-                  {(provided) => (
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.droppableProps}
-                      className="flex-shrink-0 w-80 bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden"
-                    >
-                      {/* Sticky Header */}
-                      <div className="sticky top-0 z-10 bg-white border-b border-gray-200">
-                        <div className={`flex items-center justify-between rounded-t-md py-2 px-4 text-lg font-semibold`}>
-                          <div className="flex items-center">
-                            {React.cloneElement(col.icon, { className: col.icon.props.className, style: { ...col.icon.props.style, color: col.icon.props.color }, color: col.icon.props.color })}
-                            <h3 className="text-lg font-semibold ml-2" style={{ color: col.icon.props.color }}>{col.title}</h3>
-                          </div>
-                          <div className="relative">
-                            <button
-                              className="border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors"
-                              style={{ fontFamily: 'Avenir, sans-serif' }}
-                              title="Column options"
-                              onClick={e => {
-                                e.stopPropagation();
-                                setOpenColumnMenu(openColumnMenu === col.key ? null : col.key);
-                              }}
-                            >
-                              <BiDotsHorizontal size={18} />
-                            </button>
-                            {openColumnMenu === col.key && (
-                              <div
-                                ref={columnMenuRef}
-                                className="absolute right-0 -mt-[1px] w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50"
-                                style={{
-                                  fontFamily: 'Avenir, sans-serif',
-                                  boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-                                }}
-                              >
-                                <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 hover:bg-primary/10 hover:text-primary">Add Task</button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      {/* Scrollable Content */}
-                      <div className="p-4 overflow-y-auto max-h-[calc(100vh-300px)]">
-                        <div className="space-y-3">
-                          {filterTasks(col.tasks).map((task, index) => (
-                            <Draggable key={task.code} draggableId={task.code} index={index}>
-                              {(provided, snapshot) => (
-                                <div
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                  className={`bg-white rounded-lg border border-gray-200 p-4 shadow-sm transition-shadow relative ${
-                                    snapshot.isDragging ? 'shadow-lg' : ''
-                                  }`}
-                                  onClick={() => setSelectedTask(task)}
-                                >
-                                  {/* Task Menu - Positioned at top right */}
-                                  <div className="absolute top-3 right-3">
-                                    <button
-                                      className="border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors"
-                                      onClick={e => {
-                                        e.stopPropagation();
-                                        setOpenMenuTask(openMenuTask === task.code ? null : task.code);
-                                      }}
-                                    >
-                                      <BiDotsHorizontal size={18} />
-                                    </button>
-                                    {openMenuTask === task.code && (
-                                      <div
-                                        ref={menuRef}
-                                        className="absolute right-0 mt-[1px] w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50"
-                                        style={{ fontFamily: 'Avenir, sans-serif' }}
-                                      >
-                                        <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 hover:bg-primary/10 hover:text-primary">View Details</button>
-                                        <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 hover:bg-primary/10 hover:text-primary">Edit Task</button>
-                                        <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 hover:bg-primary/10 hover:text-primary">Change Status</button>
-                                        <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 hover:bg-red-50 hover:text-red-700">Delete Task</button>
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  {/* Task Number - Top Left */}
-                                  <div className="mb-2">
-                                    <span className="text-[10px] font-bold bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-200">
-                                      Task #{task.taskNumber}
-                                    </span>
-                                    <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20 ml-1">
-                                      # {task.contractId}
-                                    </span>
-                                  </div>
-
-                                  {/* Task Title */}
-                                  <h3 className="text-sm font-medium text-gray-900 mb-2">{task.title}</h3>
-
-                                  {/* Contract Info */}
-                                  <div className="flex items-center justify-between mb-2">
-                                    <span className="text-xs font-bold text-primary">
-                                      {mockContracts.find(c => c.id === task.contractId)?.title}
-                                    </span>
-                                    <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20">
-                                      {task.contractId}
-                                    </span>
-                                  </div>
-
-                                  {/* Due Date */}
-                                  <div className="flex items-center gap-1 mb-3">
-                                    <LuCalendarClock className="text-gray-400 text-sm" />
-                                    <span className="text-xs text-gray-500">{task.due}</span>
-                                  </div>
-
-                                  {/* Progress Section */}
-                                  <div className="space-y-2 mb-3">
-                                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                                      <div
-                                        className="h-full bg-primary rounded-full"
-                                        style={{
-                                          width: `${(parseInt(task.progress.split(' of ')[0]) / parseInt(task.progress.split(' of ')[1])) * 100}%`,
-                                        }}
-                                      />
-                                    </div>
-                                  </div>
-
                                   {/* Assignee and Progress */}
                                   <div className="flex items-center justify-between">
                                     <span className="text-xs text-gray-900">{task.assignee}</span>
@@ -898,98 +868,160 @@ export default function WorkflowsPage() {
                         <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Task Title</div>
                         <input
                           type="text"
-                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                           placeholder={selectedTask?.title || ''}
                           value={editedTaskTitle}
                           onChange={e => setEditedTaskTitle(e.target.value)}
                           style={{ fontFamily: 'Avenir, sans-serif' }}
                         />
                       </div>
-                      <div>
+                      <div style={{ position: 'relative' }} ref={contractDropdownRef}>
                         <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Contract Title</div>
                         <input
                           type="text"
-                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                          className="contract-autocomplete-input w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                           placeholder={mockContracts.find(c => c.id === selectedTask?.contractId)?.title || ''}
-                          value={editedContractTitle}
-                          onChange={e => setEditedContractTitle(e.target.value)}
-                          style={{ fontFamily: 'Avenir, sans-serif' }}
+                          value={contractSearch}
+                          onChange={e => {
+                            setContractSearch(e.target.value);
+                            setShowContractDropdown(true);
+                          }}
+                          onFocus={() => setShowContractDropdown(true)}
+                          style={{ fontFamily: 'Avenir, sans-serif', color: '#000' }}
+                          autoComplete="off"
                         />
+                        {showContractDropdown && (
+                          <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                            {filteredContracts.length > 0 ? (
+                              filteredContracts.map(contract => (
+                                <div
+                                  key={contract.id}
+                                  className="px-4 py-2 text-xs cursor-pointer hover:bg-primary/10 hover:text-primary"
+                                  onMouseDown={() => {
+                                    if (selectedTask) {
+                                      setEditedContractTitle(contract.title);
+                                      setContractSearch('');
+                                      setShowContractDropdown(false);
+                                      setSelectedTask({ ...selectedTask, contractId: contract.id });
+                                    }
+                                  }}
+                                >
+                                  {contract.title}
+                                </div>
+                              ))
+                            ) : (
+                              <div className="px-4 py-2 text-xs text-gray-400">No contracts found</div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                     {/* Row 2: Assignee | Status */}
                     <div className="grid grid-cols-2 gap-6 mb-4">
                       <div>
                         <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Assignee</div>
-                        <div className="relative w-full">
-                          <select
-                            className="w-full px-4 pr-10 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors appearance-none"
+                        <div className="relative w-full" ref={assigneeDropdownRef}>
+                          <input
+                            type="text"
+                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                            placeholder={selectedTask?.assignee || ''}
                             value={editedAssignee}
                             onChange={e => setEditedAssignee(e.target.value)}
+                            onFocus={() => setShowAssigneeDropdown(true)}
                             style={{ fontFamily: 'Avenir, sans-serif' }}
-                          >
-                            {uniqueAssignees.map(assignee => (
-                              <option key={assignee} value={assignee}>{assignee}</option>
-                            ))}
-                          </select>
-                          <svg className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                          </svg>
+                            autoComplete="off"
+                          />
+                          {showAssigneeDropdown && (
+                            <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                              {uniqueAssignees.length > 0 ? (
+                                uniqueAssignees.map(assignee => (
+                                  <div
+                                    key={assignee}
+                                    className="px-4 py-2 text-xs cursor-pointer hover:bg-primary/10 hover:text-primary"
+                                    onClick={() => {
+                                      setEditedAssignee(assignee);
+                                      setShowAssigneeDropdown(false);
+                                    }}
+                                  >
+                                    {assignee}
+                                  </div>
+                                ))
+                              ) : (
+                                <div className="px-4 py-2 text-xs text-gray-400">No assignees found</div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div>
                         <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Status</div>
-                        <div className="relative w-full">
-                          <select 
-                            className="w-full text-xs font-medium text-gray-900 border-2 border-gray-200 rounded-lg px-3 pr-10 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary appearance-none"
-                            value={kanbanState.find(col => col.tasks.some(t => t.code === selectedTask.code))?.key || 'todo'}
+                        <div className="relative w-full" ref={statusDropdownRef}>
+                          <input
+                            type="text"
+                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10"
+                            placeholder={kanbanState.find(col => col.tasks.some(t => t.code === selectedTask.code))?.title || 'To Do'}
+                            value={kanbanState.find(col => col.tasks.some(t => t.code === selectedTask.code))?.title || 'To Do'}
+                            onFocus={() => setShowStatusDropdown(true)}
+                            readOnly
                             style={{ fontFamily: 'Avenir, sans-serif' }}
-                          >
-                            <option value="todo">To Do</option>
-                            <option value="blocked">Blocked</option>
-                            <option value="onhold">On Hold</option>
-                            <option value="inprogress">In Progress</option>
-                            <option value="inreview">In Review</option>
-                            <option value="done">Done</option>
-                          </select>
+                          />
                           <svg className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                           </svg>
+                          {showStatusDropdown && (
+                            <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                              {statusOptions.map(status => (
+                                <div
+                                  key={status.key}
+                                  className="px-4 py-2 text-xs cursor-pointer hover:bg-primary/10 hover:text-primary"
+                                  onClick={() => {
+                                    setShowStatusDropdown(false);
+                                  }}
+                                >
+                                  {status.title}
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
-                    {/* Row 3: Due Date | Created Date + Last Updated */}
+                    {/* Row 2.5: Due Date (left) | Created Date & Last Updated (right) */}
                     <div className="grid grid-cols-2 gap-6 mb-4">
+                      {/* Due Date (left) */}
                       <div>
                         <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Due Date</div>
-                        <div className="relative w-full flex items-center">
+                        <div className="relative flex items-center" style={{ width: '115px', minWidth: '115px' }}>
                           <input
                             type="date"
-                            className="w-full pl-3 pr-2 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                            className="pl-3 pr-2 py-2 border-2 border-gray-200 rounded-lg text-xs text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors w-full"
                             value={editedDueDate}
                             placeholder={selectedTask?.due ? formatDateToInput(selectedTask.due) : ''}
                             onChange={e => setEditedDueDate(e.target.value)}
                             style={{ fontFamily: 'Avenir, sans-serif' }}
                           />
-                          {/* Show pretty date as overlay if input is empty */}
-                          {!editedDueDate && selectedTask?.due && (
-                            <span className="absolute left-3 text-xs text-gray-500 pointer-events-none select-none">
-                              {selectedTask.due}
-                            </span>
-                          )}
                         </div>
                       </div>
-                      <div className="flex items-end gap-32 w-full">
-                        <div>
-                          <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Created Date</div>
-                          <div className="text-xs font-medium text-gray-900" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                            2024-05-01
+                      {/* Created/Updated Dates (right) */}
+                      <div>
+                        <div className="flex gap-6">
+                          <div>
+                            <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Created Date</div>
+                          </div>
+                          <div style={{ marginLeft: '75px' }}>
+                            <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Last Updated</div>
                           </div>
                         </div>
-                        <div>
-                          <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Last Updated</div>
-                          <div className="text-xs font-medium text-gray-900" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                            2024-05-02
+                        <div className="flex gap-6 mt-3">
+                          <div style={{ width: '90px' }}>
+                            <div className="text-xs text-black" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                              2024-05-01
+                            </div>
+                          </div>
+                          <div style={{ width: '90px', marginLeft: '58px' }}>
+                            <div className="text-xs text-black" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                              2024-05-02
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1009,20 +1041,104 @@ export default function WorkflowsPage() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Subtasks Box */}
+                  <div className="bg-white border border-gray-200 rounded-lg p-6 mt-2">
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-sm font-semibold text-gray-900" style={{ fontFamily: 'Avenir, sans-serif' }}>Subtasks (0 of 2)</span>
+                      <button className="flex items-center gap-2 px-2 py-1 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                        <span className="text-base font-bold text-primary">+</span> New Subtask
+                      </button>
+                    </div>
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center bg-white rounded-lg border border-gray-200 px-4 py-3">
+                        <input type="checkbox" className="mr-3 w-4 h-4 rounded border-gray-300" />
+                        <span className="text-xs text-gray-900 font-medium flex-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Review document sections</span>
+                        <button className="ml-2 border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors">
+                          <BiDotsHorizontal size={18} />
+                        </button>
+                      </div>
+                      <div className="flex items-center bg-white rounded-lg border border-gray-200 px-4 py-3">
+                        <input type="checkbox" className="mr-3 w-4 h-4 rounded border-gray-300" />
+                        <span className="text-xs text-gray-900 font-medium flex-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Verify pricing information</span>
+                        <button className="ml-2 border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors">
+                          <BiDotsHorizontal size={18} />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="mt-4">
+                      <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
+                        <div className="h-full bg-primary rounded-full" style={{ width: '0%' }} />
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Right Column */}
                 <div className="space-y-6">
-                  {/* Assignee Box */}
+                  {/* Recent Activity Box (replaces Assignee Box) */}
                   <div className="bg-white border border-gray-200 rounded-lg p-6">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4">Assignee Information</h3>
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${selectedTask.assigneeColor}`}>
-                        <span className="text-sm font-medium">{selectedTask.assigneeInitials}</span>
+                    <h3 className="text-sm font-semibold text-gray-900 mb-4">Recent Activity</h3>
+                    <div className="flex flex-col gap-5">
+                      {/* Activity 1 */}
+                      <div className="flex items-start gap-3">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100">
+                          <BsPerson className="text-blue-500 text-lg" />
+                        </span>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            <span className="font-semibold">Sarah Miller</span> assigned task to <span className="font-semibold">Michael Brown</span>
+                          </div>
+                          <div className="text-xs text-gray-500 mt-0.5">May 19, 2025 at 10:30 AM</div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">{selectedTask.assignee}</div>
-                        <div className="text-xs text-gray-500">Assigned to this task</div>
+                      {/* Activity 2 */}
+                      <div className="flex items-start gap-3">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100">
+                          <FaRegSquareCheck className="text-green-500 text-lg" />
+                        </span>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            <span className="font-semibold">Michael Brown</span> marked subtask as complete
+                          </div>
+                          <div className="text-xs text-gray-500 mt-0.5">May 18, 2025 at 3:45 PM</div>
+                        </div>
+                      </div>
+                      {/* Activity 3 */}
+                      <div className="flex items-start gap-3">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-purple-100">
+                          <HiOutlineDocumentText className="text-purple-500 text-lg" />
+                        </span>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            <span className="font-semibold">Emily Davis</span> uploaded a document
+                          </div>
+                          <div className="text-xs text-gray-500 mt-0.5">May 17, 2025 at 9:15 AM</div>
+                        </div>
+                      </div>
+                      {/* Activity 4 */}
+                      <div className="flex items-start gap-3">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100">
+                          <LuCalendarClock className="text-orange-500 text-lg" />
+                        </span>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            Due date updated to <span className="font-semibold">May 24, 2025</span>
+                          </div>
+                          <div className="text-xs text-gray-500 mt-0.5">May 16, 2025 at 11:20 AM</div>
+                        </div>
+                      </div>
+                      {/* Activity 5 */}
+                      <div className="flex items-start gap-3">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-teal-100">
+                          <FaPlus className="text-teal-500 text-lg" />
+                        </span>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            Task created by <span className="font-semibold">Alex Johnson</span>
+                          </div>
+                          <div className="text-xs text-gray-500 mt-0.5">May 15, 2025 at 2:00 PM</div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1054,4 +1170,4 @@ export default function WorkflowsPage() {
       )}
     </div>
   );
-} 
+}

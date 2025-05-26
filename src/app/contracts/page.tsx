@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { FaSearch, FaClock, FaSort, FaPlus, FaDollarSign, FaTimes } from 'react-icons/fa';
+import { FaSearch, FaClock, FaSort, FaPlus, FaDollarSign, FaTimes, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutlineTrash, HiOutlinePencilAlt, HiOutlineUpload, HiOutlineEye, HiOutlineClipboardList, HiOutlineExclamation } from 'react-icons/hi';
 import { HiOutlineViewBoards } from 'react-icons/hi';
 import { LuCalendarClock } from 'react-icons/lu';
@@ -27,8 +27,11 @@ const ContractsPage: React.FC = () => {
   const [activeContentTab, setActiveContentTab] = useState('contractList');
   const [activeRole, setActiveRole] = useState('creator');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>(['All']);
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showNewContractForm, setShowNewContractForm] = useState(false);
   const [modalStep, setModalStep] = useState(1);
+  const [lastUpdatedSort, setLastUpdatedSort] = useState<'asc' | 'desc'>('desc');
   const [modalForm, setModalForm] = useState({
     title: '',
     type: '',
@@ -154,27 +157,52 @@ const ContractsPage: React.FC = () => {
   ];
 
   const sampleDocuments = [
-    { id: 'DOC-001', name: 'Purchase Agreement.pdf', type: 'PDF', size: '2.4 MB', uploadedBy: 'John Smith', dateUploaded: '2024-03-15', contractTitle: 'New Property Acquisition', contractId: '9548' },
-    { id: 'DOC-002', name: 'Property Survey.pdf', type: 'PDF', size: '1.8 MB', uploadedBy: 'Sarah Johnson', dateUploaded: '2024-03-14', contractTitle: 'Land Development Contract', contractId: '9550' },
-    { id: 'DOC-003', name: 'Inspection Report.pdf', type: 'PDF', size: '3.2 MB', uploadedBy: 'Michael Brown', dateUploaded: '2024-03-13', contractTitle: 'Construction Escrow', contractId: '9145' },
-    { id: 'DOC-004', name: 'Lease Agreement.docx', type: 'DOCX', size: '1.1 MB', uploadedBy: 'Emma Johnson', dateUploaded: '2024-03-12', contractTitle: 'Commercial Lease Amendment', contractId: '8784' },
-    { id: 'DOC-005', name: 'Title Insurance.pdf', type: 'PDF', size: '2.0 MB', uploadedBy: 'Robert Chen', dateUploaded: '2024-03-11', contractTitle: 'Property Sale Contract', contractId: '8423' },
-    { id: 'DOC-006', name: 'Wire Authorization.pdf', type: 'PDF', size: '1.2 MB', uploadedBy: 'Sarah Miller', dateUploaded: '2024-03-10', contractTitle: 'Investment Property Escrow', contractId: '7804' },
-    { id: 'DOC-007', name: 'Appraisal Report.pdf', type: 'PDF', size: '2.7 MB', uploadedBy: 'David Miller', dateUploaded: '2024-03-09', contractTitle: 'Residential Sale Agreement', contractId: '7234' },
-    { id: 'DOC-008', name: 'Closing Disclosure.pdf', type: 'PDF', size: '1.9 MB', uploadedBy: 'Emily Davis', dateUploaded: '2024-03-08', contractTitle: 'Office Building Purchase', contractId: '6891' },
-    { id: 'DOC-009', name: 'Loan Estimate.pdf', type: 'PDF', size: '1.5 MB', uploadedBy: 'Alex Johnson', dateUploaded: '2024-03-07', contractTitle: 'Retail Space Lease', contractId: '6453' },
-    { id: 'DOC-010', name: 'Deed Transfer.pdf', type: 'PDF', size: '2.2 MB', uploadedBy: 'Samantha Fox', dateUploaded: '2024-03-06', contractTitle: 'Luxury Villa Purchase', contractId: '10003' }
+    { id: 'DOC-001', name: 'Purchase Agreement', type: 'PDF', size: '2.4 MB', uploadedBy: 'John Smith', dateUploaded: '2024-03-15', contractTitle: 'New Property Acquisition', contractId: '9548' },
+    { id: 'DOC-002', name: 'Property Survey', type: 'PDF', size: '1.8 MB', uploadedBy: 'Sarah Johnson', dateUploaded: '2024-03-14', contractTitle: 'Land Development Contract', contractId: '9550' },
+    { id: 'DOC-003', name: 'Inspection Report', type: 'PDF', size: '3.2 MB', uploadedBy: 'Michael Brown', dateUploaded: '2024-03-13', contractTitle: 'Construction Escrow', contractId: '9145' },
+    { id: 'DOC-004', name: 'Lease Agreement', type: 'DOCX', size: '1.1 MB', uploadedBy: 'Emma Johnson', dateUploaded: '2024-03-12', contractTitle: 'Commercial Lease Amendment', contractId: '8784' },
+    { id: 'DOC-005', name: 'Title Insurance', type: 'PDF', size: '2.0 MB', uploadedBy: 'Robert Chen', dateUploaded: '2024-03-11', contractTitle: 'Property Sale Contract', contractId: '8423' },
+    { id: 'DOC-006', name: 'Wire Authorization', type: 'PDF', size: '1.2 MB', uploadedBy: 'Sarah Miller', dateUploaded: '2024-03-10', contractTitle: 'Investment Property Escrow', contractId: '7804' },
+    { id: 'DOC-007', name: 'Appraisal Report', type: 'PDF', size: '2.7 MB', uploadedBy: 'David Miller', dateUploaded: '2024-03-09', contractTitle: 'Residential Sale Agreement', contractId: '7234' },
+    { id: 'DOC-008', name: 'Closing Disclosure', type: 'PDF', size: '1.9 MB', uploadedBy: 'Emily Davis', dateUploaded: '2024-03-08', contractTitle: 'Office Building Purchase', contractId: '6891' },
+    { id: 'DOC-009', name: 'Loan Estimate', type: 'PDF', size: '1.5 MB', uploadedBy: 'Alex Johnson', dateUploaded: '2024-03-07', contractTitle: 'Retail Space Lease', contractId: '6453' },
+    { id: 'DOC-010', name: 'Deed Transfer', type: 'PDF', size: '2.2 MB', uploadedBy: 'Samantha Fox', dateUploaded: '2024-03-06', contractTitle: 'Luxury Villa Purchase', contractId: '10003' }
   ];
 
-  // Filter contracts based on search term
+  // Get unique statuses from contracts
+  const availableStatuses = ['All', ...new Set(sampleContracts.map(contract => contract.status))];
+
+  // Filter contracts based on search term and status
   const filteredContracts = sampleContracts.filter(contract => {
     const search = searchTerm.toLowerCase();
-    return (
+    const matchesSearch = (
       contract.title.toLowerCase().includes(search) ||
       contract.parties.toLowerCase().includes(search) ||
       contract.id.toLowerCase().includes(search) ||
       contract.type.toLowerCase().includes(search)
     );
+    const matchesStatus = selectedStatuses.includes('All') || selectedStatuses.includes(contract.status);
+    return matchesSearch && matchesStatus;
+  }).sort((a, b) => {
+    // Sort by last updated
+    // Parse the 'updated' field, which is a string like '1 hour ago', '2 days ago', etc.
+    // For demo, sort by id as a fallback if parsing fails
+    function parseUpdated(str: string) {
+      if (!str) return 0;
+      const n = parseInt(str);
+      if (str.includes('hour')) return Date.now() - n * 60 * 60 * 1000;
+      if (str.includes('day')) return Date.now() - n * 24 * 60 * 60 * 1000;
+      if (str.includes('week')) return Date.now() - n * 7 * 24 * 60 * 60 * 1000;
+      if (str.includes('minute')) return Date.now() - n * 60 * 1000;
+      return Date.now();
+    }
+    const aTime = parseUpdated(a.updated);
+    const bTime = parseUpdated(b.updated);
+    if (lastUpdatedSort === 'desc') {
+      return bTime - aTime;
+    } else {
+      return aTime - bTime;
+    }
   });
 
   // Filter documents based on search term
@@ -232,6 +260,30 @@ const ContractsPage: React.FC = () => {
   const [isEditingValue, setIsEditingValue] = useState(false);
   const [editableValue, setEditableValue] = useState('');
 
+  // Ref for status dropdown
+  const statusDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Click outside to close status dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        showStatusDropdown &&
+        statusDropdownRef.current &&
+        !statusDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowStatusDropdown(false);
+      }
+    }
+    if (showStatusDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showStatusDropdown]);
+
   useEffect(() => {
     if (!documentsBoxRef.current) return;
     const updateHeight = () => {
@@ -276,6 +328,20 @@ const ContractsPage: React.FC = () => {
       ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "image/jpeg"].includes(file.type) && file.size <= 10 * 1024 * 1024
     );
     setUploadModalFiles(validFiles);
+  };
+
+  // Calculate total contract value
+  const calculateTotalValue = () => {
+    return sampleContracts.reduce((total, contract) => {
+      // Remove '$' and ',' from value string and convert to number
+      const value = parseFloat(contract.value?.replace(/[$,]/g, '') || '0');
+      return total + value;
+    }, 0).toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    });
   };
 
   return (
@@ -852,7 +918,7 @@ const ContractsPage: React.FC = () => {
         </div>
             <div className="flex flex-col items-start h-full">
               <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contract Value</p>
-              <p className="text-2xl font-bold text-primary">$8,255,000</p>
+              <p className="text-2xl font-bold text-primary">{calculateTotalValue()}</p>
               <p className="text-xs text-green-600 font-semibold">↑ 12% from last month</p>
       </div>
           </div>
@@ -874,20 +940,69 @@ const ContractsPage: React.FC = () => {
             style={{ fontFamily: 'Avenir, sans-serif' }}
           />
         </div>
-        <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
-          <HiOutlineViewBoards className="text-gray-400" size={18} />
-          <span>All Statuses</span>
+        <button 
+          className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 relative" 
+          style={{ fontFamily: 'Avenir, sans-serif' }}
+          onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+          ref={statusDropdownRef as any}
+        >
+          <HiOutlineViewBoards className="text-gray-400 text-lg" />
+          <span>Status</span>
           <span className="ml-1 text-gray-400">&#9662;</span>
+          
+          {showStatusDropdown && (
+            <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }} ref={statusDropdownRef}>
+              {availableStatuses.map((status) => (
+                <button
+                  key={status}
+                  className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
+                    selectedStatuses.includes(status) ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
+                  }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (status === 'All') {
+                      setSelectedStatuses(['All']);
+                    } else {
+                      setSelectedStatuses(prev => {
+                        const newStatuses = prev.filter(s => s !== 'All');
+                        if (prev.includes(status)) {
+                          const filtered = newStatuses.filter(s => s !== status);
+                          return filtered.length === 0 ? ['All'] : filtered;
+                        } else {
+                          return [...newStatuses, status];
+                        }
+                      });
+                    }
+                  }}
+                >
+                  <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedStatuses.includes(status) ? 'bg-primary' : 'border border-gray-300'}`}>
+                    {selectedStatuses.includes(status) && (
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                  {status}
+                </button>
+              ))}
+            </div>
+          )}
         </button>
         <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
           <LuCalendarClock className="text-gray-400" size={18} />
           <span>Last 30 days</span>
           <span className="ml-1 text-gray-400">&#9662;</span>
         </button>
-        <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[150px] ml-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+        <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[150px] ml-1" style={{ fontFamily: 'Avenir, sans-serif' }}
+          onClick={() => setLastUpdatedSort(prev => prev === 'desc' ? 'asc' : 'desc')}
+        >
           <FaSort className="text-gray-400" size={18} />
           <span>Recently Updated</span>
-          <span className="ml-1 text-gray-400">&#9662;</span>
+          {lastUpdatedSort === 'desc' ? (
+            <FaChevronDown className="ml-1 text-gray-400" size={12} />
+          ) : (
+            <FaChevronUp className="ml-1 text-gray-400" size={12} />
+          )}
         </button>
       </div>
 
@@ -957,23 +1072,23 @@ const ContractsPage: React.FC = () => {
                     className="hover:bg-gray-50 cursor-pointer"
                     onClick={() => setSelectedContract(contract)}
                   >
-                    <td className="px-6 py-4 whitespace-nowrap text-center text-xs">
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
                       <span className="text-primary underline font-semibold cursor-pointer" onClick={e => { e.stopPropagation(); setSelectedContract(contract); }}>{contract.id}</span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div className="text-sm font-medium text-gray-900">{contract.title}</div>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-sm">
+                      <div className="text-xs font-bold text-gray-900">{contract.title}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-xs">
+                    <td className="px-6 py-2.5 whitespace-nowrap text-xs">
                       <div className="text-gray-900">{contract.parties}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center text-xs">
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
                       <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full ${getStatusBadgeStyle(contract.status)}`}
                         style={{ minWidth: '7rem', display: 'inline-flex', borderWidth: '1px' }}>{contract.status}</span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center text-xs text-gray-500">2024-05-01</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center text-xs text-gray-500">{contract.updated}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center text-xs text-primary">{contract.value}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center text-xs">
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs text-gray-500">2024-05-01</td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs text-gray-500">{contract.updated}</td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs text-primary">{contract.value}</td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
                       <div className="flex items-center justify-center">
                         <span className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer" style={{ maxWidth: '120px' }} title={getContractHash(contract.id)}>
                           0x{contract.id}...{contract.id.slice(-4)}
@@ -990,7 +1105,7 @@ const ContractsPage: React.FC = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center text-xs font-medium">
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs font-medium">
                       <div className="flex items-center justify-center space-x-1">
                         <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Edit">
                           <HiOutlinePencilAlt className="h-4 w-4" />
@@ -1026,21 +1141,21 @@ const ContractsPage: React.FC = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredDocuments.map((doc) => (
                   <tr key={doc.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div className="font-medium text-gray-900">{doc.name}</div>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-sm">
+                      <div className="font-bold text-xs text-gray-900">{doc.name}</div>
                       <div className="text-xs text-gray-500 flex items-center gap-2">
                         <span>{doc.type}</span>
                         <span>&bull;</span>
                         <span>{doc.size}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-xs">{doc.uploadedBy}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500">{doc.dateUploaded}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{doc.contractTitle}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center text-xs">
+                    <td className="px-6 py-2.5 whitespace-nowrap text-xs">{doc.uploadedBy}</td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-xs text-gray-500">{doc.dateUploaded}</td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-xs font-bold text-gray-900">{doc.contractTitle}</td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
                       <a href={`#${doc.contractId}`} className="text-primary underline font-semibold cursor-pointer">{doc.contractId}</a>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center text-xs font-medium">
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs font-medium">
                       <div className="flex items-center justify-center space-x-1">
                         <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="View" onClick={() => { setSelectedPdf({ name: doc.name, url: `/documents/${doc.name}` }); setShowPdfViewer(true); }}>
                           <HiOutlineEye className="h-4 w-4" />

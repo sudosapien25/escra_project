@@ -21,3 +21,8 @@ input:focus, select:focus, textarea:focus {
   outline: none !important;
   box-shadow: none !important;
 }
+
+.contract-autocomplete-input::placeholder {
+  color: #000 !important;
+  opacity: 1;
+}
