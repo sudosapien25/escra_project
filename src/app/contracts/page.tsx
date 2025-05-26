@@ -288,7 +288,7 @@ const ContractsPage: React.FC = () => {
             <p className="text-gray-500 text-[15px] md:text-[16px] mt-0">
               Manage & monitor all your contracts
             </p>
-        </div>
+          </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 w-full md:w-auto">
             <div className="inline-block rounded-full bg-teal-50 px-2 py-0.5 text-teal-500 font-semibold text-xs border border-teal-100 self-start sm:self-center">
               Logged in as: Creator
@@ -318,13 +318,13 @@ const ContractsPage: React.FC = () => {
               onClick={() => setShowNewContractForm(!showNewContractForm)}
               className="flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold w-full sm:w-auto"
             >
-          <FaPlus className="mr-2 text-base" />
-          New Contract
-        </button>
+            <FaPlus className="mr-2 text-base" />
+            New Contract
+          </button>
           </div>
-      </div>
+        </div>
 
-      <hr className="my-6 border-gray-300" />
+        <hr className="my-6 border-gray-300" />
 
       {/* Stat Boxes or New Contract Modal */}
       {showNewContractForm ? (
@@ -339,14 +339,14 @@ const ContractsPage: React.FC = () => {
                 <p className="text-gray-500 text-sm leading-tight">Fill in the contract details to get started</p>
               </div>
             </div>
-            <button 
+              <button
               onClick={() => { setShowNewContractForm(false); setModalStep(1); }} 
               className="text-gray-400 hover:text-gray-600 p-2 rounded-full"
-            >
+              >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
-            </button>
+              </button>
           </div>
 
           {/* Stepper */}
@@ -373,8 +373,8 @@ const ContractsPage: React.FC = () => {
                     </button>
                     {idx < 2 && <div className="flex-1 h-0.5 bg-gray-200 mx-2 min-w-[20px]" />}
                   </React.Fragment>
-                ))}
-              </div>
+            ))}
+          </div>
             </div>
           </div>
 
@@ -806,7 +806,7 @@ const ContractsPage: React.FC = () => {
               </div>
               <div className="flex flex-col items-start h-full">
                 <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contracts</p>
-                <p className="text-2xl font-bold text-gray-900">10</p>
+                <p className="text-2xl font-bold text-gray-900">{sampleContracts.length}</p>
                 <p className="text-xs invisible">placeholder</p>
               </div>
             </div>
@@ -817,7 +817,7 @@ const ContractsPage: React.FC = () => {
               </div>
               <div className="flex flex-col items-start h-full">
                 <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Pending Signatures</p>
-                <p className="text-2xl font-bold text-gray-900">2</p>
+                <p className="text-2xl font-bold text-gray-900">{sampleContracts.filter(contract => contract.status === 'Signatures').length}</p>
                 <p className="text-xs text-gray-400">Requires action</p>
               </div>
             </div>
@@ -828,7 +828,7 @@ const ContractsPage: React.FC = () => {
               </div>
               <div className="flex flex-col items-start h-full">
                 <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Awaiting Wire Details</p>
-                <p className="text-2xl font-bold text-gray-900">2</p>
+                <p className="text-2xl font-bold text-gray-900">{sampleContracts.filter(contract => contract.status === 'Wire Details').length}</p>
                 <p className="text-xs text-gray-400">Needs attention</p>
               </div>
             </div>
@@ -843,17 +843,18 @@ const ContractsPage: React.FC = () => {
                 <p className="text-xs text-green-600 font-semibold">↓ 1.3 days faster</p>
               </div>
             </div>
+
           </div>
           {/* Total Contract Value Box */}
           <div className="mb-6 bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
             <div className="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center border-2 border-teal-200">
               <FaDollarSign size={18} color="#06b6d4" />
-            </div>
+        </div>
             <div className="flex flex-col items-start h-full">
               <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contract Value</p>
               <p className="text-2xl font-bold text-primary">$8,255,000</p>
               <p className="text-xs text-green-600 font-semibold">↑ 12% from last month</p>
-            </div>
+      </div>
           </div>
         </>
       )}
@@ -896,26 +897,19 @@ const ContractsPage: React.FC = () => {
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0 w-full">
           {/* Contracts/Documents Tabs */}
           <div className="flex space-x-8 overflow-x-auto w-full md:w-auto">
-            <button
-              className={`pb-2 text-sm font-semibold whitespace-nowrap ${
-                activeContentTab === 'contractList'
-                  ? 'text-primary border-b-2 border-primary'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-              onClick={() => setActiveContentTab('contractList')}
-            >
-              Contracts
-            </button>
-            <button
-              className={`pb-2 text-sm font-semibold whitespace-nowrap ${
-                activeContentTab === 'documents'
-                  ? 'text-primary border-b-2 border-primary'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-              onClick={() => setActiveContentTab('documents')}
-            >
-              Documents
-            </button>
+            {CONTENT_TABS.map((tab) => (
+              <button
+                key={tab.key}
+                className={`pb-2 text-sm font-semibold whitespace-nowrap ${
+                  activeContentTab === tab.key
+                    ? 'text-primary border-b-2 border-primary'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+                onClick={() => setActiveContentTab(tab.key)}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
           {/* Created by Me/Assigned to Me Tabs (styled like main tabs) */}
           <div className="flex flex-col items-end w-full md:w-auto">
@@ -1079,9 +1073,9 @@ const ContractsPage: React.FC = () => {
               {/* Left: Contract ID and Status */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-primary/10">
-                    <span className="text-xs font-semibold text-primary">#{selectedContract.id}</span>
-                  </div>
+                  <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20">
+                    # {selectedContract.id}
+                  </span>
                 </div>
               </div>
               {/* Right: Close Button (original, now sticky) */}
@@ -1609,28 +1603,28 @@ const ContractsPage: React.FC = () => {
         </div>
       </div>
     )}
-
+    
     {showUploadModal && (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
         <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-bold text-gray-900">Upload Documents</h2>
-            <button
+              <button
               className="text-gray-400 hover:text-gray-600"
               onClick={() => { setShowUploadModal(false); setUploadModalFiles([]); }}
-            >
+              >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           <div className="mb-2 text-sm text-gray-500">
             {uploadContractId && (
               <span>
                 For Contract: <span className="font-semibold text-primary">#{uploadContractId}</span>
               </span>
-            )}
-          </div>
+                              )}
+                            </div>
           <form
             className="p-0"
             onSubmit={e => {
@@ -1645,7 +1639,7 @@ const ContractsPage: React.FC = () => {
                 <HiOutlineUpload className="text-3xl text-gray-400 mb-2" />
                 <div className="text-gray-700 font-medium">Click to upload or drag and drop</div>
                 <div className="text-xs text-gray-400 mt-1">PDF, DOC, DOCX, or JPG (max. 10MB each)</div>
-                <input
+                          <input
                   id="upload-modal-file-upload"
                   name="upload-modal-file-upload"
                   type="file"
@@ -1654,7 +1648,7 @@ const ContractsPage: React.FC = () => {
                   multiple
                   onChange={handleUploadModalFileChange}
                 />
-              </div>
+                          </div>
             </label>
             {uploadModalFiles.length > 0 && (
               <ul className="mt-3 text-sm text-gray-600">
@@ -1667,7 +1661,7 @@ const ContractsPage: React.FC = () => {
               Upload
             </button>
           </form>
-        </div>
+                      </div>
       </div>
     )}
 
@@ -1685,15 +1679,15 @@ const ContractsPage: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
-            </div>
-          </div>
+                        </div>
+                      </div>
           <div className="flex-1 p-6 overflow-auto flex items-center justify-center bg-gray-50">
             {/* Blank area for PDF viewer */}
             <span className="text-gray-400 text-lg">No document available</span>
-          </div>
-        </div>
-      </div>
-    )}
+                      </div>
+                      </div>
+                          </div>
+                        )}
 
     {/* New Contract Modal */}
     {isNewContractModalOpen && (
@@ -1702,18 +1696,18 @@ const ContractsPage: React.FC = () => {
           <div className="py-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-semibold text-gray-900">New Contract</h2>
-              <button
+                      <button 
                 onClick={() => setIsNewContractModalOpen(false)}
                 className="text-gray-400 hover:text-gray-500"
-              >
+                      >
                 <FaTimes className="w-6 h-6" />
-              </button>
-            </div>
+                      </button>
+                    </div>
             {/* Modal content */}
-          </div>
-        </div>
-      </div>
-    )}
+                            </div>
+                          </div>
+                          </div>
+                        )}
     </>
   );
 }

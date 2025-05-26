@@ -1,79 +1,71 @@
 'use client';
 
 import React, { useRef } from 'react';
-import { HiOutlineDocumentText, HiOutlineViewBoards } from 'react-icons/hi';
-import { CgPlayPauseR } from 'react-icons/cg';
-import { BsPerson } from 'react-icons/bs';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { Card } from '@/components/common/Card';
+import { mockContracts } from '@/data/mockContracts';
+
+// Icons
+import { HiOutlineDocumentText, HiOutlineViewBoards } from 'react-icons/hi';
+import { CgPlayPauseR, CgPlayStopR } from 'react-icons/cg';
+import { BsPerson } from 'react-icons/bs';
 import { LuCalendarClock } from 'react-icons/lu';
 import { FaPlus, FaSearch, FaRetweet } from 'react-icons/fa';
 import { PiListMagnifyingGlassBold, PiListPlusBold } from 'react-icons/pi';
 import { FaRegSquareCheck } from 'react-icons/fa6';
-import { ProgressBar } from '@/components/common/ProgressBar';
 import { BiDotsHorizontal } from 'react-icons/bi';
-import { mockContracts } from '@/data/mockContracts';
-import { PageContentWrapper } from '@/components/layout/PageContentWrapper';
-import { Button } from '@/components/common/Button';
-import { DropdownMenu } from '@/components/common/DropdownMenu';
-import { Avatar } from '@/components/common/Avatar';
-import { Badge } from '@/components/common/Badge';
-import { Tooltip } from '@/components/common/Tooltip';
-import { Modal } from '@/components/common/Modal';
-import { Input } from '@/components/common/Input';
-import { Textarea } from '@/components/common/Textarea';
-import { Select } from '@/components/common/Select';
-import { HiOutlinePlus, HiOutlineDotsVertical, HiOutlineClock, HiOutlineUser, HiOutlineTag } from 'react-icons/hi';
-import { FaCheckCircle, FaExclamationCircle, FaClock } from 'react-icons/fa';
-import { MdOutlineDragIndicator } from 'react-icons/md';
-import { FaFilter, FaCalendarAlt, FaSort, FaRetweet as FaRetweetIcon } from 'react-icons/fa';
-import { FaPlus as FaPlusIcon } from 'react-icons/fa';
-import { ProgressBar as ProgressBarComponent } from '@/components/common/ProgressBar';
 
 interface Task {
-  id: string;
+  id?: string;
+  code: string;
   title: string;
-  description: string;
-  status: 'todo' | 'in-progress' | 'done';
-  assignee?: string;
-  dueDate?: string;
-  priority: 'low' | 'medium' | 'high';
-  tags: string[];
-}
-
-interface Column {
-  id: string;
-  title: string;
-  tasks: Task[];
-}
-
-interface DragResult {
-  draggableId: string;
+  contractId: string;
   type: string;
-  source: {
-    droppableId: string;
-    index: number;
-  };
-  destination?: {
-    droppableId: string;
-    index: number;
-  };
+  due: string;
+  progress: string;
+  assignee: string;
+  assigneeInitials: string;
+  assigneeColor: string;
+  taskNumber: number;
+}
+
+// Add date formatting utilities
+function formatDateToInput(dateStr: string): string {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return '';
+  return d.toISOString().slice(0, 10);
+}
+function formatDatePretty(dateStr: string): string {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 export default function WorkflowsPage() {
   const [kanbanTab, setKanbanTab] = React.useState('Active Tasks');
-  const kanbanTabs = ['All Tasks', 'Active Tasks', 'Upcoming', 'Completed'];
+  const kanbanTabs = ['All Tasks', 'Active Tasks', 'Upcoming'];
   const [taskSearchTerm, setTaskSearchTerm] = React.useState('');
   const [openMenuTask, setOpenMenuTask] = React.useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const [selectedAssignee, setSelectedAssignee] = React.useState('All');
   const [selectedContract, setSelectedContract] = React.useState('All');
+  const [selectedStatuses, setSelectedStatuses] = React.useState<string[]>([]);
   const [openAssigneeDropdown, setOpenAssigneeDropdown] = React.useState(false);
   const [openContractDropdown, setOpenContractDropdown] = React.useState(false);
+  const [openStatusDropdown, setOpenStatusDropdown] = React.useState(false);
   const assigneeButtonRef = useRef<HTMLButtonElement>(null);
   const contractButtonRef = useRef<HTMLButtonElement>(null);
+  const statusButtonRef = useRef<HTMLButtonElement>(null);
   const [openColumnMenu, setOpenColumnMenu] = React.useState<string | null>(null);
   const columnMenuRef = useRef<HTMLDivElement>(null);
+  const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
+  const [editedTaskTitle, setEditedTaskTitle] = React.useState(selectedTask?.title || '');
+  const [editedContractTitle, setEditedContractTitle] = React.useState(
+    mockContracts.find(c => c.id === selectedTask?.contractId)?.title || ''
+  );
+  const [editedDueDate, setEditedDueDate] = React.useState(selectedTask?.due || '');
+  const [editedAssignee, setEditedAssignee] = React.useState(selectedTask?.assignee || '');
 
   // Define Kanban columns as a single source of truth
   const kanbanColumns = [
@@ -92,7 +84,7 @@ export default function WorkflowsPage() {
       key: 'blocked',
       title: 'Blocked',
       color: 'bg-red-100',
-      icon: <CgPlayPauseR className="text-xl mr-2 text-red-500" />,
+      icon: <CgPlayStopR className="text-xl mr-2 text-red-500" />,
       tasks: [
         { code: 'TSK-002', title: 'Obtain Client Signatures', contractId: '8784', type: 'Task', due: 'May 27, 2025', progress: '0 of 2', assignee: 'Sarah Miller', assigneeInitials: 'SM', assigneeColor: 'bg-purple-200 text-purple-700', taskNumber: 104 },
         { code: 'TSK-012', title: 'Third Party Risk Assessment', contractId: '8423', type: 'Task', due: 'June 3, 2025', progress: '0 of 5', assignee: 'Alex Johnson', assigneeInitials: 'AJ', assigneeColor: 'bg-pink-200 text-pink-700', taskNumber: 105 },
@@ -111,7 +103,7 @@ export default function WorkflowsPage() {
       key: 'inprogress',
       title: 'In Progress',
       color: 'bg-blue-100',
-      icon: <FaRetweetIcon className="text-xl mr-2 text-blue-500" />,
+      icon: <FaRetweet className="text-xl mr-2 text-blue-500" />,
       tasks: [
         { code: 'TSK-001', title: 'Review Contract Terms', contractId: '7234', type: 'Task', due: 'May 25, 2025', progress: '2 of 3', assignee: 'Alex Johnson', assigneeInitials: 'AJ', assigneeColor: 'bg-pink-200 text-pink-700', taskNumber: 107 },
         { code: 'TSK-007', title: 'Legal Review of License Terms', contractId: '9102', type: 'Task', due: 'May 22, 2025', progress: '2 of 5', assignee: 'Jennifer White', assigneeInitials: 'JW', assigneeColor: 'bg-green-200 text-green-700', taskNumber: 108 },
@@ -154,15 +146,17 @@ export default function WorkflowsPage() {
         (openMenuTask && menuRef.current && !menuRef.current.contains(event.target as Node)) ||
         (openAssigneeDropdown && assigneeButtonRef.current && !assigneeButtonRef.current.contains(event.target as Node)) ||
         (openContractDropdown && contractButtonRef.current && !contractButtonRef.current.contains(event.target as Node)) ||
+        (openStatusDropdown && statusButtonRef.current && !statusButtonRef.current.contains(event.target as Node)) ||
         (openColumnMenu && columnMenuRef.current && !columnMenuRef.current.contains(event.target as Node))
       ) {
         setOpenMenuTask(null);
         setOpenAssigneeDropdown(false);
         setOpenContractDropdown(false);
+        setOpenStatusDropdown(false);
         setOpenColumnMenu(null);
       }
     }
-    if (openMenuTask || openAssigneeDropdown || openContractDropdown || openColumnMenu) {
+    if (openMenuTask || openAssigneeDropdown || openContractDropdown || openStatusDropdown || openColumnMenu) {
       document.addEventListener('click', handleClickOutside);
     } else {
       document.removeEventListener('click', handleClickOutside);
@@ -170,14 +164,23 @@ export default function WorkflowsPage() {
     return () => {
       document.removeEventListener('click', handleClickOutside);
     };
-  }, [openMenuTask, openAssigneeDropdown, openContractDropdown, openColumnMenu]);
+  }, [openMenuTask, openAssigneeDropdown, openContractDropdown, openStatusDropdown, openColumnMenu]);
 
   const allTasks = kanbanColumns.flatMap(col => col.tasks);
   const uniqueAssignees = Array.from(new Set(allTasks.map(t => t.assignee))).sort();
-  const uniqueContracts = mockContracts;
+
+  // Add this after the uniqueAssignees constant
+  const statusOptions = [
+    { key: 'todo', title: 'To Do' },
+    { key: 'blocked', title: 'Blocked' },
+    { key: 'onhold', title: 'On Hold' },
+    { key: 'inprogress', title: 'In Progress' },
+    { key: 'inreview', title: 'In Review' },
+    { key: 'done', title: 'Done' }
+  ];
 
   // Helper to filter tasks in a column according to current filters
-  function filterTasks(tasks: any[]) {
+  function filterTasks(tasks: Task[]) {
     return tasks.filter(task => {
       let matches = true;
       if (selectedAssignee !== 'All') {
@@ -198,7 +201,7 @@ export default function WorkflowsPage() {
           ))
         );
       }
-      return !!matches;
+      return matches;
     });
   }
 
@@ -222,6 +225,13 @@ export default function WorkflowsPage() {
     });
   }
 
+  React.useEffect(() => {
+    setEditedTaskTitle(selectedTask?.title || '');
+    setEditedContractTitle(mockContracts.find(c => c.id === selectedTask?.contractId)?.title || '');
+    setEditedDueDate(formatDateToInput(selectedTask?.due || ''));
+    setEditedAssignee(selectedTask?.assignee || '');
+  }, [selectedTask]);
+
   return (
     <div className="space-y-4">
       {/* Workflow Title and Button */}
@@ -232,7 +242,7 @@ export default function WorkflowsPage() {
           <p className="text-gray-500 text-[16px] mt-0">Track &amp; manage your activity</p>
         </div>
         <button className="flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold">
-          <FaPlusIcon className="mr-2 text-base" />
+          <FaPlus className="mr-2 text-base" />
           New Task
         </button>
       </div>
@@ -242,8 +252,8 @@ export default function WorkflowsPage() {
       {/* Workflow Stats and Filters Section */}
       <div className="space-y-4">
         {/* Tabs */}
-        <div className="flex gap-1 mb-2">
-          {kanbanTabs.map((tab, idx) => (
+        <div className="bg-white border border-gray-200 rounded-xl px-4 py-4 flex gap-1 w-fit">
+          {kanbanTabs.map((tab) => (
             <button
               key={tab}
               onClick={() => setKanbanTab(tab)}
@@ -254,11 +264,11 @@ export default function WorkflowsPage() {
           ))}
         </div>
         {/* Stat Cards */}
-        <div className="flex gap-6 mb-8">
+        <div className="flex gap-6 mb-6 mt-4">
           {/* Tasks in Progress */}
           <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full flex-1 min-w-[200px]">
             <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center border-2 border-blue-200">
-              <FaRetweetIcon size={18} color="#3b82f6" />
+              <FaRetweet size={18} color="#3b82f6" />
             </div>
             <div className="flex flex-col items-start h-full">
               <p className="text-sm font-medium text-gray-500 mb-1 font-sans">Tasks in Progress</p>
@@ -280,7 +290,7 @@ export default function WorkflowsPage() {
           {/* Blocked Tasks */}
           <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full flex-1 min-w-[200px]">
             <div className="h-10 w-10 rounded-lg bg-red-100 flex items-center justify-center border-2 border-red-200">
-              <CgPlayPauseR size={18} color="#ef4444" />
+              <CgPlayStopR size={18} color="#ef4444" />
             </div>
             <div className="flex flex-col items-start h-full">
               <p className="text-sm font-medium text-gray-500 mb-1 font-sans">Blocked Tasks</p>
@@ -290,7 +300,7 @@ export default function WorkflowsPage() {
           </div>
         </div>
         {/* Filter Bar */}
-        <div className="bg-white border border-gray-300 rounded-xl px-4 py-4 mb-6 flex items-center w-full mt-2">
+        <div className="bg-white border border-gray-200 rounded-xl px-4 py-4 mb-6 flex items-center w-full mt-2">
           <div className="relative ml-1">
             <button
               ref={assigneeButtonRef}
@@ -342,11 +352,48 @@ export default function WorkflowsPage() {
               </div>
             )}
           </div>
-          <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
-            <HiOutlineViewBoards className="text-gray-400 text-lg" />
-            <span>Status</span>
-            <span className="ml-1 text-gray-400">&#9662;</span>
-          </button>
+          <div className="relative ml-1">
+            <button
+              ref={statusButtonRef}
+              className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px]"
+              style={{ fontFamily: 'Avenir, sans-serif' }}
+              onClick={() => { setOpenStatusDropdown(v => !v); setOpenAssigneeDropdown(false); setOpenContractDropdown(false); }}
+            >
+              <HiOutlineViewBoards className="text-gray-400 text-lg" />
+              <span>Status</span>
+              <span className="ml-1 text-gray-400">&#9662;</span>
+            </button>
+            {openStatusDropdown && (
+              <div className="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
+                {statusOptions.map(status => (
+                  <button
+                    key={status.key}
+                    className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
+                      selectedStatuses.includes(status.key) ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
+                    }`}
+                    onClick={() => {
+                      setSelectedStatuses(prev => {
+                        if (prev.includes(status.key)) {
+                          return prev.filter(s => s !== status.key);
+                        } else {
+                          return [...prev, status.key];
+                        }
+                      });
+                    }}
+                  >
+                    <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedStatuses.includes(status.key) ? 'bg-primary' : 'border border-gray-300'}`}>
+                      {selectedStatuses.includes(status.key) && (
+                        <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                    {status.title}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <div className="flex items-center bg-white border border-gray-200 rounded-xl px-4 py-2 flex-1 ml-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
             <FaSearch className="text-gray-400 mr-2 text-lg" />
             <input
@@ -363,473 +410,647 @@ export default function WorkflowsPage() {
       <hr className="my-6 border-gray-300" />
 
       {/* Kanban Board Section (filtered by tab) */}
-      {kanbanTab === 'Active Tasks' && (
+      {kanbanTab === 'All Tasks' && (
         <DragDropContext onDragEnd={onDragEnd}>
           <div className="flex flex-grow overflow-x-auto space-x-6 p-4 rounded-lg">
-            {/* Kanban Columns: show all except 'done' */}
-            {kanbanState.filter(col => col.key !== 'done').map((col) => (
-              <Droppable droppableId={col.key} key={col.key}>
-                {(provided) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className="flex-shrink-0 w-80 bg-white rounded-lg shadow-md p-4 border border-gray-200"
-                  >
-                    <div className={`flex items-center justify-between rounded-t-md py-2 px-4 text-lg font-semibold mb-4`}>
-                      <div className="flex items-center">
-                        {React.cloneElement(col.icon, { className: col.icon.props.className, style: { ...col.icon.props.style, color: col.icon.props.color }, color: col.icon.props.color })}
-                        <h3 className="text-lg font-semibold ml-2" style={{ color: col.icon.props.color }}>{col.title}</h3>
-                      </div>
-                      <div className="relative">
-                        <button
-                          className="border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors"
-                          style={{ fontFamily: 'Avenir, sans-serif' }}
-                          title="Column options"
-                          onClick={e => {
-                            e.stopPropagation();
-                            setOpenColumnMenu(openColumnMenu === col.key ? null : col.key);
-                          }}
-                        >
-                          <BiDotsHorizontal size={18} />
-                        </button>
-                        {openColumnMenu === col.key && (
-                          <div
-                            ref={columnMenuRef}
-                            className="absolute z-50 bg-white rounded-xl shadow-lg border border-gray-100 py-2 overflow-y-auto"
-                            style={{
-                              width: '200px',
-                              fontFamily: 'Avenir, sans-serif',
-                              boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-                              top: '28px',
-                              right: 0,
-                            }}
-                          >
-                            <button className="w-full text-left px-4 py-2 text-gray-900 text-xs font-medium transition-colors hover:bg-primary/10 hover:text-primary" onClick={() => setOpenColumnMenu(null)}>Move column to the left</button>
-                            <button className="w-full text-left px-4 py-2 text-gray-900 text-xs font-medium transition-colors hover:bg-primary/10 hover:text-primary" onClick={() => setOpenColumnMenu(null)}>Move column to the right</button>
-                            <button className="w-full text-left px-4 py-2 text-gray-900 text-xs font-medium transition-colors hover:bg-primary/10 hover:text-primary" onClick={() => setOpenColumnMenu(null)}>Set column limit</button>
+            {kanbanState
+              .filter(col => selectedStatuses.length === 0 || selectedStatuses.includes(col.key))
+              .map((col) => (
+                <Droppable droppableId={col.key} key={col.key}>
+                  {(provided) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className="flex-shrink-0 w-80 bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden"
+                    >
+                      {/* Sticky Header */}
+                      <div className="sticky top-0 z-10 bg-white border-b border-gray-200">
+                        <div className={`flex items-center justify-between rounded-t-md py-2 px-4 text-lg font-semibold`}>
+                          <div className="flex items-center">
+                            {React.cloneElement(col.icon, { className: col.icon.props.className, style: { ...col.icon.props.style, color: col.icon.props.color }, color: col.icon.props.color })}
+                            <h3 className="text-lg font-semibold ml-2" style={{ color: col.icon.props.color }}>{col.title}</h3>
                           </div>
-                        )}
-                      </div>
-                    </div>
-                    <div style={{ maxHeight: '520px', overflowY: 'auto' }} className="flex flex-col gap-y-4">
-                      {filterTasks(col.tasks).map((task, idx) => {
-                        // Parse progress string like '1 of 3'
-                        const [completed, total] = (task.progress || '0 of 1').split(' of ').map(Number);
-                        const percent = total > 0 ? (completed / total) * 100 : 0;
-                        const contractObj = mockContracts.find(c => c.id === task.contractId);
-                        return (
-                          <Draggable draggableId={task.code} index={idx} key={task.code}>
-                            {(provided, snapshot) => (
+                          <div className="relative">
+                            <button
+                              className="border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors"
+                              style={{ fontFamily: 'Avenir, sans-serif' }}
+                              title="Column options"
+                              onClick={e => {
+                                e.stopPropagation();
+                                setOpenColumnMenu(openColumnMenu === col.key ? null : col.key);
+                              }}
+                            >
+                              <BiDotsHorizontal size={18} />
+                            </button>
+                            {openColumnMenu === col.key && (
                               <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
+                                ref={columnMenuRef}
+                                className="absolute right-0 -mt-[1px] w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50"
                                 style={{
-                                  ...provided.draggableProps.style,
-                                  boxShadow: snapshot.isDragging ? '0 4px 16px rgba(0,0,0,0.12)' : undefined,
+                                  fontFamily: 'Avenir, sans-serif',
+                                  boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
                                 }}
                               >
-                                <Card key={task.code} className="p-4 rounded-xl border border-gray-300 relative">
-                                  <div className="mb-2">
-                                    <div className="flex w-full items-start justify-between">
-                                      <span className="h-5 px-1.5 flex items-center justify-center rounded-lg bg-blue-100 text-blue-500 text-[11px] font-semibold border border-blue-200" style={{ minWidth: 24 }}>
-                                        Task #{task.taskNumber}
-                                      </span>
-                                      <div className="relative">
-                                        <button
-                                          className="border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors"
-                                          style={{ fontFamily: 'Avenir, sans-serif' }}
-                                          title="More options"
-                                          onClick={e => {
-                                            e.stopPropagation();
-                                            setOpenMenuTask(openMenuTask === task.code ? null : task.code);
-                                          }}
-                                        >
-                                          <BiDotsHorizontal size={18} />
-                                        </button>
-                                        {openMenuTask === task.code && (
-                                          <div
-                                            ref={menuRef}
-                                            className="absolute z-50 bg-white rounded-xl shadow-lg border border-gray-100 py-2 overflow-y-auto"
-                                            style={{
-                                              width: '90%',
-                                              maxWidth: '240px',
-                                              minWidth: '180px',
-                                              fontFamily: 'Avenir, sans-serif',
-                                              boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-                                              top: '28px',
-                                              right: 'calc(100% + 4px)',
-                                              maxHeight: '260px',
-                                            }}
-                                          >
-                                            <button className="w-full text-left px-4 py-1.5 text-gray-900 rounded-t-xl text-xs font-medium transition-colors hover:bg-primary/10 hover:text-primary" style={{fontFamily: 'Avenir, sans-serif'}} onClick={() => setOpenMenuTask(null)}>View Details</button>
-                                            <button className="w-full text-left px-4 py-1.5 text-gray-900 text-xs font-medium transition-colors hover:bg-primary/10 hover:text-primary" style={{fontFamily: 'Avenir, sans-serif'}} onClick={() => setOpenMenuTask(null)}>Mark Complete</button>
-                                            <button className="w-full text-left px-4 py-1.5 text-gray-900 text-xs font-medium transition-colors hover:bg-primary/10 hover:text-primary" style={{fontFamily: 'Avenir, sans-serif'}} onClick={() => setOpenMenuTask(null)}>Reassign</button>
-                                            <button className="w-full text-left px-4 py-1.5 text-gray-900 rounded-b-xl text-xs font-medium transition-colors hover:bg-red-50 hover:text-red-600" style={{fontFamily: 'Avenir, sans-serif'}} onClick={() => setOpenMenuTask(null)}>Delete</button>
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                    <div className="h-2" />
-                                    <div className="text-xs font-bold text-black whitespace-nowrap overflow-hidden text-ellipsis mt-2 p-0 m-0 leading-none" style={{ fontFamily: 'Avenir, sans-serif', marginTop: 0, padding: 0, lineHeight: 1 }}>
-                                      {task.title}
-                                    </div>
-                                  </div>
-                                  {/* Contract and Due Date Row (moved above progress bar) */}
-                                  <div className="text-xs text-gray-700 flex flex-col gap-0.5 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                                    <div className="flex items-center justify-between w-full mt-0 mb-0 p-0 m-0 leading-none" style={{ marginTop: 0, marginBottom: 0, padding: 0, lineHeight: 1 }}>
-                                      <span className="text-black cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap">{contractObj?.title}</span>
-                                      <span className="h-5 px-1.5 flex items-center justify-center rounded-lg bg-primary/10 text-primary text-[11px] font-semibold border border-primary/20 ml-2" style={{ minWidth: 24 }}>
-                                        {contractObj?.id}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center gap-1 mt-0.5 justify-between w-full">
-                                      <div className="flex items-center gap-1">
-                                        <LuCalendarClock className="text-gray-400 text-base" />
-                                        <span className="text-xs text-gray-500">{task.due}</span>
-                                      </div>
-                                    </div>
-                                    <div className="h-2" />
-                                  </div>
-                                  {/* Progress Bar Row */}
-                                  <div className="mb-2">
-                                    <ProgressBarComponent progress={percent} />
-                                  </div>
-                                  <div className="flex items-center justify-between mt-2">
-                                    <div className="flex items-center gap-2">
-                                      <BsPerson className="text-lg text-gray-400" />
-                                      <span className="text-xs text-black">{task.assignee}</span>
-                                    </div>
-                                    <div className="text-xs font-bold text-black">{task.progress}</div>
-                                  </div>
-                                </Card>
+                                <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 hover:bg-primary/10 hover:text-primary">Add Task</button>
                               </div>
                             )}
-                          </Draggable>
-                        );
-                      })}
-                      {provided.placeholder}
+                          </div>
+                        </div>
+                      </div>
+                      {/* Scrollable Content */}
+                      <div className="p-4 overflow-y-auto max-h-[calc(100vh-300px)]">
+                        <div className="space-y-3">
+                          {filterTasks(col.tasks).map((task, index) => (
+                            <Draggable key={task.code} draggableId={task.code} index={index}>
+                              {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  className={`bg-white rounded-lg border border-gray-200 p-4 shadow-sm transition-shadow relative ${
+                                    snapshot.isDragging ? 'shadow-lg' : ''
+                                  }`}
+                                  onClick={() => setSelectedTask(task)}
+                                >
+                                  {/* Task Menu - Positioned at top right */}
+                                  <div className="absolute top-3 right-3">
+                                    <button
+                                      className="border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors"
+                                      onClick={e => {
+                                        e.stopPropagation();
+                                        setOpenMenuTask(openMenuTask === task.code ? null : task.code);
+                                      }}
+                                    >
+                                      <BiDotsHorizontal size={18} />
+                                    </button>
+                                    {openMenuTask === task.code && (
+                                      <div
+                                        ref={menuRef}
+                                        className="absolute right-0 mt-[1px] w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50"
+                                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                                      >
+                                        <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 hover:bg-primary/10 hover:text-primary">View Details</button>
+                                        <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 hover:bg-primary/10 hover:text-primary">Edit Task</button>
+                                        <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 hover:bg-primary/10 hover:text-primary">Change Status</button>
+                                        <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 hover:bg-red-50 hover:text-red-700">Delete Task</button>
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* Task Number - Top Left */}
+                                  <div className="mb-2">
+                                    <span className="text-[10px] font-bold bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-200">
+                                      Task #{task.taskNumber}
+                                    </span>
+                                    <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20 ml-1">
+                                      # {task.contractId}
+                                    </span>
+                                  </div>
+
+                                  {/* Task Title */}
+                                  <h3 className="text-sm font-medium text-gray-900 mb-2">{task.title}</h3>
+
+                                  {/* Contract Info */}
+                                  <div className="flex items-center justify-between mb-2">
+                                    <span className="text-xs font-bold text-primary">
+                                      {mockContracts.find(c => c.id === task.contractId)?.title}
+                                    </span>
+                                    <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20">
+                                      {task.contractId}
+                                    </span>
+                                  </div>
+
+                                  {/* Due Date */}
+                                  <div className="flex items-center gap-1 mb-3">
+                                    <LuCalendarClock className="text-gray-400 text-sm" />
+                                    <span className="text-xs text-gray-500">{task.due}</span>
+                                  </div>
+
+                                  {/* Progress Section */}
+                                  <div className="space-y-2 mb-3">
+                                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                      <div
+                                        className="h-full bg-primary rounded-full"
+                                        style={{
+                                          width: `${(parseInt(task.progress.split(' of ')[0]) / parseInt(task.progress.split(' of ')[1])) * 100}%`,
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {/* Assignee and Progress */}
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs text-gray-900">{task.assignee}</span>
+                                    <span className="text-xs text-gray-900">{task.progress}</span>
+                                  </div>
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </Droppable>
-            ))}
+                  )}
+                </Droppable>
+              ))}
           </div>
         </DragDropContext>
       )}
-      {kanbanTab === 'Upcoming' && (
-        <div className="flex flex-grow overflow-x-auto space-x-6 p-4 rounded-lg">
-          {/* Placeholder: Upcoming Kanban */}
-          <div className="text-gray-400 text-lg mx-auto my-12">Upcoming tasks kanban coming soon...</div>
-        </div>
+      {kanbanTab === 'Active Tasks' && (
+        <DragDropContext onDragEnd={onDragEnd}>
+          <div className="flex flex-grow overflow-x-auto space-x-6 p-4 rounded-lg">
+            {kanbanState
+              .filter(col => col.key !== 'done' && (selectedStatuses.length === 0 || selectedStatuses.includes(col.key)))
+              .map((col) => (
+                <Droppable droppableId={col.key} key={col.key}>
+                  {(provided) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className="flex-shrink-0 w-80 bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden"
+                    >
+                      {/* Sticky Header */}
+                      <div className="sticky top-0 z-10 bg-white border-b border-gray-200">
+                        <div className={`flex items-center justify-between rounded-t-md py-2 px-4 text-lg font-semibold`}>
+                          <div className="flex items-center">
+                            {React.cloneElement(col.icon, { className: col.icon.props.className, style: { ...col.icon.props.style, color: col.icon.props.color }, color: col.icon.props.color })}
+                            <h3 className="text-lg font-semibold ml-2" style={{ color: col.icon.props.color }}>{col.title}</h3>
+                          </div>
+                          <div className="relative">
+                            <button
+                              className="border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors"
+                              style={{ fontFamily: 'Avenir, sans-serif' }}
+                              title="Column options"
+                              onClick={e => {
+                                e.stopPropagation();
+                                setOpenColumnMenu(openColumnMenu === col.key ? null : col.key);
+                              }}
+                            >
+                              <BiDotsHorizontal size={18} />
+                            </button>
+                            {openColumnMenu === col.key && (
+                              <div
+                                ref={columnMenuRef}
+                                className="absolute right-0 -mt-[1px] w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50"
+                                style={{
+                                  fontFamily: 'Avenir, sans-serif',
+                                  boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+                                }}
+                              >
+                                <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 hover:bg-primary/10 hover:text-primary">Add Task</button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      {/* Scrollable Content */}
+                      <div className="p-4 overflow-y-auto max-h-[calc(100vh-300px)]">
+                        <div className="space-y-3">
+                          {filterTasks(col.tasks).map((task, index) => (
+                            <Draggable key={task.code} draggableId={task.code} index={index}>
+                              {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  className={`bg-white rounded-lg border border-gray-200 p-4 shadow-sm transition-shadow relative ${
+                                    snapshot.isDragging ? 'shadow-lg' : ''
+                                  }`}
+                                  onClick={() => setSelectedTask(task)}
+                                >
+                                  {/* Task Menu - Positioned at top right */}
+                                  <div className="absolute top-3 right-3">
+                                    <button
+                                      className="border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors"
+                                      onClick={e => {
+                                        e.stopPropagation();
+                                        setOpenMenuTask(openMenuTask === task.code ? null : task.code);
+                                      }}
+                                    >
+                                      <BiDotsHorizontal size={18} />
+                                    </button>
+                                    {openMenuTask === task.code && (
+                                      <div
+                                        ref={menuRef}
+                                        className="absolute right-0 mt-[1px] w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50"
+                                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                                      >
+                                        <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 hover:bg-primary/10 hover:text-primary">View Details</button>
+                                        <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 hover:bg-primary/10 hover:text-primary">Edit Task</button>
+                                        <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 hover:bg-primary/10 hover:text-primary">Change Status</button>
+                                        <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 hover:bg-red-50 hover:text-red-700">Delete Task</button>
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* Task Number - Top Left */}
+                                  <div className="mb-2">
+                                    <span className="text-[10px] font-bold bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-200">
+                                      Task #{task.taskNumber}
+                                    </span>
+                                    <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20 ml-1">
+                                      # {task.contractId}
+                                    </span>
+                                  </div>
+
+                                  {/* Task Title */}
+                                  <h3 className="text-sm font-medium text-gray-900 mb-2">{task.title}</h3>
+
+                                  {/* Contract Info */}
+                                  <div className="flex items-center justify-between mb-2">
+                                    <span className="text-xs font-bold text-primary">
+                                      {mockContracts.find(c => c.id === task.contractId)?.title}
+                                    </span>
+                                    <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20">
+                                      {task.contractId}
+                                    </span>
+                                  </div>
+
+                                  {/* Due Date */}
+                                  <div className="flex items-center gap-1 mb-3">
+                                    <LuCalendarClock className="text-gray-400 text-sm" />
+                                    <span className="text-xs text-gray-500">{task.due}</span>
+                                  </div>
+
+                                  {/* Progress Section */}
+                                  <div className="space-y-2 mb-3">
+                                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                      <div
+                                        className="h-full bg-primary rounded-full"
+                                        style={{
+                                          width: `${(parseInt(task.progress.split(' of ')[0]) / parseInt(task.progress.split(' of ')[1])) * 100}%`,
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {/* Assignee and Progress */}
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs text-gray-900">{task.assignee}</span>
+                                    <span className="text-xs text-gray-900">{task.progress}</span>
+                                  </div>
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </Droppable>
+              ))}
+          </div>
+        </DragDropContext>
       )}
       {kanbanTab === 'Completed' && (
         <DragDropContext onDragEnd={onDragEnd}>
           <div className="flex flex-grow overflow-x-auto space-x-6 p-4 rounded-lg">
-            {/* Kanban Columns: show only 'done' */}
-            {kanbanState.filter(col => col.key === 'done').map((col) => (
-              <Droppable droppableId={col.key} key={col.key}>
-                {(provided) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className="flex-shrink-0 w-80 bg-white rounded-lg shadow-md p-4 border border-gray-200"
-                  >
-                    <div className={`flex items-center justify-between rounded-t-md py-2 px-4 text-lg font-semibold mb-4`}>
-                      <div className="flex items-center">
-                        {React.cloneElement(col.icon, { className: col.icon.props.className, style: { ...col.icon.props.style, color: col.icon.props.color }, color: col.icon.props.color })}
-                        <h3 className="text-lg font-semibold ml-2" style={{ color: col.icon.props.color }}>{col.title}</h3>
-                      </div>
-                      <div className="relative">
-                        <button
-                          className="border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors"
-                          style={{ fontFamily: 'Avenir, sans-serif' }}
-                          title="Column options"
-                          onClick={e => {
-                            e.stopPropagation();
-                            setOpenColumnMenu(openColumnMenu === col.key ? null : col.key);
-                          }}
-                        >
-                          <BiDotsHorizontal size={18} />
-                        </button>
-                        {openColumnMenu === col.key && (
-                          <div
-                            ref={columnMenuRef}
-                            className="absolute z-50 bg-white rounded-xl shadow-lg border border-gray-100 py-2 overflow-y-auto"
-                            style={{
-                              width: '200px',
-                              fontFamily: 'Avenir, sans-serif',
-                              boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-                              top: '28px',
-                              right: 0,
-                            }}
-                          >
-                            <button className="w-full text-left px-4 py-2 text-gray-900 text-xs font-medium transition-colors hover:bg-primary/10 hover:text-primary" onClick={() => setOpenColumnMenu(null)}>Move column to the left</button>
-                            <button className="w-full text-left px-4 py-2 text-gray-900 text-xs font-medium transition-colors hover:bg-primary/10 hover:text-primary" onClick={() => setOpenColumnMenu(null)}>Move column to the right</button>
-                            <button className="w-full text-left px-4 py-2 text-gray-900 text-xs font-medium transition-colors hover:bg-primary/10 hover:text-primary" onClick={() => setOpenColumnMenu(null)}>Set column limit</button>
+            {kanbanState
+              .filter(col => col.key === 'done' && (selectedStatuses.length === 0 || selectedStatuses.includes(col.key)))
+              .map((col) => (
+                <Droppable droppableId={col.key} key={col.key}>
+                  {(provided) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className="flex-shrink-0 w-80 bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden"
+                    >
+                      {/* Sticky Header */}
+                      <div className="sticky top-0 z-10 bg-white border-b border-gray-200">
+                        <div className={`flex items-center justify-between rounded-t-md py-2 px-4 text-lg font-semibold`}>
+                          <div className="flex items-center">
+                            {React.cloneElement(col.icon, { className: col.icon.props.className, style: { ...col.icon.props.style, color: col.icon.props.color }, color: col.icon.props.color })}
+                            <h3 className="text-lg font-semibold ml-2" style={{ color: col.icon.props.color }}>{col.title}</h3>
                           </div>
-                        )}
-                      </div>
-                    </div>
-                    <div style={{ maxHeight: '520px', overflowY: 'auto' }} className="flex flex-col gap-y-4">
-                      {filterTasks(col.tasks).map((task, idx) => {
-                        // Parse progress string like '1 of 3'
-                        const [completed, total] = (task.progress || '0 of 1').split(' of ').map(Number);
-                        const percent = total > 0 ? (completed / total) * 100 : 0;
-                        const contractObj = mockContracts.find(c => c.id === task.contractId);
-                        return (
-                          <Draggable draggableId={task.code} index={idx} key={task.code}>
-                            {(provided, snapshot) => (
+                          <div className="relative">
+                            <button
+                              className="border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors"
+                              style={{ fontFamily: 'Avenir, sans-serif' }}
+                              title="Column options"
+                              onClick={e => {
+                                e.stopPropagation();
+                                setOpenColumnMenu(openColumnMenu === col.key ? null : col.key);
+                              }}
+                            >
+                              <BiDotsHorizontal size={18} />
+                            </button>
+                            {openColumnMenu === col.key && (
                               <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
+                                ref={columnMenuRef}
+                                className="absolute right-0 -mt-[1px] w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50"
                                 style={{
-                                  ...provided.draggableProps.style,
-                                  boxShadow: snapshot.isDragging ? '0 4px 16px rgba(0,0,0,0.12)' : undefined,
+                                  fontFamily: 'Avenir, sans-serif',
+                                  boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
                                 }}
                               >
-                                <Card key={task.code} className="p-4 rounded-xl border border-gray-300 relative">
-                                  <div className="mb-2">
-                                    <div className="flex w-full items-start justify-between">
-                                      <span className="h-5 px-1.5 flex items-center justify-center rounded-lg bg-green-100 text-green-500 text-[11px] font-semibold border border-green-200" style={{ minWidth: 24 }}>
-                                        Task #{task.taskNumber}
-                                      </span>
-                                      <div className="relative">
-                                        <button
-                                          className="border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors"
-                                          style={{ fontFamily: 'Avenir, sans-serif' }}
-                                          title="More options"
-                                          onClick={e => {
-                                            e.stopPropagation();
-                                            setOpenMenuTask(openMenuTask === task.code ? null : task.code);
-                                          }}
-                                        >
-                                          <BiDotsHorizontal size={18} />
-                                        </button>
-                                        {openMenuTask === task.code && (
-                                          <div
-                                            ref={menuRef}
-                                            className="absolute z-50 bg-white rounded-xl shadow-lg border border-gray-100 py-2 overflow-y-auto"
-                                            style={{
-                                              width: '90%',
-                                              maxWidth: '240px',
-                                              minWidth: '180px',
-                                              fontFamily: 'Avenir, sans-serif',
-                                              boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-                                              top: '28px',
-                                              right: 'calc(100% + 4px)',
-                                              maxHeight: '260px',
-                                            }}
-                                          >
-                                            <button className="w-full text-left px-4 py-1.5 text-gray-900 rounded-t-xl text-xs font-medium transition-colors hover:bg-primary/10 hover:text-primary" style={{fontFamily: 'Avenir, sans-serif'}} onClick={() => setOpenMenuTask(null)}>View Details</button>
-                                            <button className="w-full text-left px-4 py-1.5 text-gray-900 text-xs font-medium transition-colors hover:bg-primary/10 hover:text-primary" style={{fontFamily: 'Avenir, sans-serif'}} onClick={() => setOpenMenuTask(null)}>Mark Complete</button>
-                                            <button className="w-full text-left px-4 py-1.5 text-gray-900 text-xs font-medium transition-colors hover:bg-primary/10 hover:text-primary" style={{fontFamily: 'Avenir, sans-serif'}} onClick={() => setOpenMenuTask(null)}>Reassign</button>
-                                            <button className="w-full text-left px-4 py-1.5 text-gray-900 rounded-b-xl text-xs font-medium transition-colors hover:bg-red-50 hover:text-red-600" style={{fontFamily: 'Avenir, sans-serif'}} onClick={() => setOpenMenuTask(null)}>Delete</button>
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                    <div className="h-2" />
-                                    <div className="text-xs font-bold text-black whitespace-nowrap overflow-hidden text-ellipsis mt-2 p-0 m-0 leading-none" style={{ fontFamily: 'Avenir, sans-serif', marginTop: 0, padding: 0, lineHeight: 1 }}>
-                                      {task.title}
-                                    </div>
-                                  </div>
-                                  {/* Contract and Due Date Row (moved above progress bar) */}
-                                  <div className="text-xs text-gray-700 flex flex-col gap-0.5 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                                    <div className="flex items-center justify-between w-full mt-0 mb-0 p-0 m-0 leading-none" style={{ marginTop: 0, marginBottom: 0, padding: 0, lineHeight: 1 }}>
-                                      <span className="text-black cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap">{contractObj?.title}</span>
-                                      <span className="h-5 px-1.5 flex items-center justify-center rounded-lg bg-primary/10 text-primary text-[11px] font-semibold border border-primary/20 ml-2" style={{ minWidth: 24 }}>
-                                        {contractObj?.id}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center gap-1 mt-0.5 justify-between w-full">
-                                      <div className="flex items-center gap-1">
-                                        <LuCalendarClock className="text-gray-400 text-base" />
-                                        <span className="text-xs text-gray-500">{task.due}</span>
-                                      </div>
-                                    </div>
-                                    <div className="h-2" />
-                                  </div>
-                                  {/* Progress Bar Row */}
-                                  <div className="mb-2">
-                                    <ProgressBarComponent progress={percent} />
-                                  </div>
-                                  <div className="flex items-center justify-between mt-2">
-                                    <div className="flex items-center gap-2">
-                                      <BsPerson className="text-lg text-gray-400" />
-                                      <span className="text-xs text-black">{task.assignee}</span>
-                                    </div>
-                                    <div className="text-xs font-bold text-black">{task.progress}</div>
-                                  </div>
-                                </Card>
+                                <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 hover:bg-primary/10 hover:text-primary">Add Task</button>
                               </div>
                             )}
-                          </Draggable>
-                        );
-                      })}
-                      {provided.placeholder}
+                          </div>
+                        </div>
+                      </div>
+                      {/* Scrollable Content */}
+                      <div className="p-4 overflow-y-auto max-h-[calc(100vh-300px)]">
+                        <div className="space-y-3">
+                          {filterTasks(col.tasks).map((task, index) => (
+                            <Draggable key={task.code} draggableId={task.code} index={index}>
+                              {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  className={`bg-white rounded-lg border border-gray-200 p-4 shadow-sm transition-shadow relative ${
+                                    snapshot.isDragging ? 'shadow-lg' : ''
+                                  }`}
+                                  onClick={() => setSelectedTask(task)}
+                                >
+                                  {/* Task Menu - Positioned at top right */}
+                                  <div className="absolute top-3 right-3">
+                                    <button
+                                      className="border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors"
+                                      onClick={e => {
+                                        e.stopPropagation();
+                                        setOpenMenuTask(openMenuTask === task.code ? null : task.code);
+                                      }}
+                                    >
+                                      <BiDotsHorizontal size={18} />
+                                    </button>
+                                    {openMenuTask === task.code && (
+                                      <div
+                                        ref={menuRef}
+                                        className="absolute right-0 mt-[1px] w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50"
+                                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                                      >
+                                        <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 hover:bg-primary/10 hover:text-primary">View Details</button>
+                                        <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 hover:bg-primary/10 hover:text-primary">Edit Task</button>
+                                        <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 hover:bg-primary/10 hover:text-primary">Change Status</button>
+                                        <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 hover:bg-red-50 hover:text-red-700">Delete Task</button>
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* Task Number - Top Left */}
+                                  <div className="mb-2">
+                                    <span className="text-[10px] font-bold bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-200">
+                                      Task #{task.taskNumber}
+                                    </span>
+                                    <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20 ml-1">
+                                      # {task.contractId}
+                                    </span>
+                                  </div>
+
+                                  {/* Task Title */}
+                                  <h3 className="text-sm font-medium text-gray-900 mb-2">{task.title}</h3>
+
+                                  {/* Contract Info */}
+                                  <div className="flex items-center justify-between mb-2">
+                                    <span className="text-xs font-bold text-primary">
+                                      {mockContracts.find(c => c.id === task.contractId)?.title}
+                                    </span>
+                                    <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20">
+                                      {task.contractId}
+                                    </span>
+                                  </div>
+
+                                  {/* Due Date */}
+                                  <div className="flex items-center gap-1 mb-3">
+                                    <LuCalendarClock className="text-gray-400 text-sm" />
+                                    <span className="text-xs text-gray-500">{task.due}</span>
+                                  </div>
+
+                                  {/* Progress Section */}
+                                  <div className="space-y-2 mb-3">
+                                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                      <div
+                                        className="h-full bg-primary rounded-full"
+                                        style={{
+                                          width: `${(parseInt(task.progress.split(' of ')[0]) / parseInt(task.progress.split(' of ')[1])) * 100}%`,
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {/* Assignee and Progress */}
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs text-gray-900">{task.assignee}</span>
+                                    <span className="text-xs text-gray-900">{task.progress}</span>
+                                  </div>
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </Droppable>
-            ))}
+                  )}
+                </Droppable>
+              ))}
           </div>
         </DragDropContext>
       )}
-      {kanbanTab === 'All Tasks' && (
-        <DragDropContext onDragEnd={onDragEnd}>
-          <div className="flex flex-grow overflow-x-auto space-x-6 p-4 rounded-lg">
-            {/* Kanban Columns: show all columns */}
-            {kanbanState.map((col) => (
-              <Droppable droppableId={col.key} key={col.key}>
-                {(provided) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className="flex-shrink-0 w-80 bg-white rounded-lg shadow-md p-4 border border-gray-200"
-                  >
-                    <div className={`flex items-center justify-between rounded-t-md py-2 px-4 text-lg font-semibold mb-4`}>
-                      <div className="flex items-center">
-                        {React.cloneElement(col.icon, { className: col.icon.props.className, style: { ...col.icon.props.style, color: col.icon.props.color }, color: col.icon.props.color })}
-                        <h3 className="text-lg font-semibold ml-2" style={{ color: col.icon.props.color }}>{col.title}</h3>
-                      </div>
-                      <div className="relative">
-                        <button
-                          className="border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors"
+
+      {/* Task Details Modal */}
+      {selectedTask && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="relative bg-white rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden">
+            {/* Sticky Header with Task ID and Close buttons */}
+            <div className="sticky top-0 z-40 bg-white px-6 py-4">
+              <div className="flex items-start justify-between">
+                {/* Left: Task ID and Contract ID */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center mb-4">
+                    <span className="text-[10px] font-bold bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-200">
+                      Task #{selectedTask.taskNumber}
+                    </span>
+                    <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20 ml-1">
+                      # {selectedTask.contractId}
+                    </span>
+                  </div>
+                </div>
+                {/* Right: Close Button */}
+                <button
+                  className="text-gray-400 hover:text-gray-600 p-2 rounded-full ml-4 mt-1"
+                  onClick={() => setSelectedTask(null)}
+                  aria-label="Close"
+                >
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="grid grid-cols-2 gap-6">
+                {/* Left Column */}
+                <div className="space-y-6">
+                  {/* Task Details Box */}
+                  <div className="bg-white border border-gray-200 rounded-lg p-6">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-4">Task Details</h3>
+                    {/* 3-row, 2-column layout */}
+                    {/* Row 1: Task Title | Contract Title */}
+                    <div className="grid grid-cols-2 gap-6 mb-4">
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Task Title</div>
+                        <input
+                          type="text"
+                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                          placeholder={selectedTask?.title || ''}
+                          value={editedTaskTitle}
+                          onChange={e => setEditedTaskTitle(e.target.value)}
                           style={{ fontFamily: 'Avenir, sans-serif' }}
-                          title="Column options"
-                          onClick={e => {
-                            e.stopPropagation();
-                            setOpenColumnMenu(openColumnMenu === col.key ? null : col.key);
-                          }}
-                        >
-                          <BiDotsHorizontal size={18} />
-                        </button>
-                        {openColumnMenu === col.key && (
-                          <div
-                            ref={columnMenuRef}
-                            className="absolute z-50 bg-white rounded-xl shadow-lg border border-gray-100 py-2 overflow-y-auto"
-                            style={{
-                              width: '200px',
-                              fontFamily: 'Avenir, sans-serif',
-                              boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-                              top: '28px',
-                              right: 0,
-                            }}
-                          >
-                            <button className="w-full text-left px-4 py-2 text-gray-900 text-xs font-medium transition-colors hover:bg-primary/10 hover:text-primary" onClick={() => setOpenColumnMenu(null)}>Move column to the left</button>
-                            <button className="w-full text-left px-4 py-2 text-gray-900 text-xs font-medium transition-colors hover:bg-primary/10 hover:text-primary" onClick={() => setOpenColumnMenu(null)}>Move column to the right</button>
-                            <button className="w-full text-left px-4 py-2 text-gray-900 text-xs font-medium transition-colors hover:bg-primary/10 hover:text-primary" onClick={() => setOpenColumnMenu(null)}>Set column limit</button>
-                          </div>
-                        )}
+                        />
+                      </div>
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Contract Title</div>
+                        <input
+                          type="text"
+                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                          placeholder={mockContracts.find(c => c.id === selectedTask?.contractId)?.title || ''}
+                          value={editedContractTitle}
+                          onChange={e => setEditedContractTitle(e.target.value)}
+                          style={{ fontFamily: 'Avenir, sans-serif' }}
+                        />
                       </div>
                     </div>
-                    <div style={{ maxHeight: '520px', overflowY: 'auto' }} className="flex flex-col gap-y-4">
-                      {filterTasks(col.tasks).map((task, idx) => {
-                        // Parse progress string like '1 of 3'
-                        const [completed, total] = (task.progress || '0 of 1').split(' of ').map(Number);
-                        const percent = total > 0 ? (completed / total) * 100 : 0;
-                        const contractObj = mockContracts.find(c => c.id === task.contractId);
-                        return (
-                          <Draggable draggableId={task.code} index={idx} key={task.code}>
-                            {(provided, snapshot) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                style={{
-                                  ...provided.draggableProps.style,
-                                  boxShadow: snapshot.isDragging ? '0 4px 16px rgba(0,0,0,0.12)' : undefined,
-                                }}
-                              >
-                                <Card key={task.code} className="p-4 rounded-xl border border-gray-300 relative">
-                                  <div className="mb-2">
-                                    <div className="flex w-full items-start justify-between">
-                                      <span className="h-5 px-1.5 flex items-center justify-center rounded-lg bg-blue-100 text-blue-500 text-[11px] font-semibold border border-blue-200" style={{ minWidth: 24 }}>
-                                        Task #{task.taskNumber}
-                                      </span>
-                                      <div className="relative">
-                                        <button
-                                          className="border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors"
-                                          style={{ fontFamily: 'Avenir, sans-serif' }}
-                                          title="More options"
-                                          onClick={e => {
-                                            e.stopPropagation();
-                                            setOpenMenuTask(openMenuTask === task.code ? null : task.code);
-                                          }}
-                                        >
-                                          <BiDotsHorizontal size={18} />
-                                        </button>
-                                        {openMenuTask === task.code && (
-                                          <div
-                                            ref={menuRef}
-                                            className="absolute z-50 bg-white rounded-xl shadow-lg border border-gray-100 py-2 overflow-y-auto"
-                                            style={{
-                                              width: '90%',
-                                              maxWidth: '240px',
-                                              minWidth: '180px',
-                                              fontFamily: 'Avenir, sans-serif',
-                                              boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-                                              top: '28px',
-                                              right: 'calc(100% + 4px)',
-                                              maxHeight: '260px',
-                                            }}
-                                          >
-                                            <button className="w-full text-left px-4 py-1.5 text-gray-900 rounded-t-xl text-xs font-medium transition-colors hover:bg-primary/10 hover:text-primary" style={{fontFamily: 'Avenir, sans-serif'}} onClick={() => setOpenMenuTask(null)}>View Details</button>
-                                            <button className="w-full text-left px-4 py-1.5 text-gray-900 text-xs font-medium transition-colors hover:bg-primary/10 hover:text-primary" style={{fontFamily: 'Avenir, sans-serif'}} onClick={() => setOpenMenuTask(null)}>Mark Complete</button>
-                                            <button className="w-full text-left px-4 py-1.5 text-gray-900 text-xs font-medium transition-colors hover:bg-primary/10 hover:text-primary" style={{fontFamily: 'Avenir, sans-serif'}} onClick={() => setOpenMenuTask(null)}>Reassign</button>
-                                            <button className="w-full text-left px-4 py-1.5 text-gray-900 rounded-b-xl text-xs font-medium transition-colors hover:bg-red-50 hover:text-red-600" style={{fontFamily: 'Avenir, sans-serif'}} onClick={() => setOpenMenuTask(null)}>Delete</button>
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                    <div className="h-2" />
-                                    <div className="text-xs font-bold text-black whitespace-nowrap overflow-hidden text-ellipsis mt-2 p-0 m-0 leading-none" style={{ fontFamily: 'Avenir, sans-serif', marginTop: 0, padding: 0, lineHeight: 1 }}>
-                                      {task.title}
-                                    </div>
-                                  </div>
-                                  {/* Contract and Due Date Row (moved above progress bar) */}
-                                  <div className="text-xs text-gray-700 flex flex-col gap-0.5 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                                    <div className="flex items-center justify-between w-full mt-0 mb-0 p-0 m-0 leading-none" style={{ marginTop: 0, marginBottom: 0, padding: 0, lineHeight: 1 }}>
-                                      <span className="text-black cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap">{contractObj?.title}</span>
-                                      <span className="h-5 px-1.5 flex items-center justify-center rounded-lg bg-primary/10 text-primary text-[11px] font-semibold border border-primary/20 ml-2" style={{ minWidth: 24 }}>
-                                        {contractObj?.id}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center gap-1 mt-0.5 justify-between w-full">
-                                      <div className="flex items-center gap-1">
-                                        <LuCalendarClock className="text-gray-400 text-base" />
-                                        <span className="text-xs text-gray-500">{task.due}</span>
-                                      </div>
-                                    </div>
-                                    <div className="h-2" />
-                                  </div>
-                                  {/* Progress Bar Row */}
-                                  <div className="mb-2">
-                                    <ProgressBarComponent progress={percent} />
-                                  </div>
-                                  <div className="flex items-center justify-between mt-2">
-                                    <div className="flex items-center gap-2">
-                                      <BsPerson className="text-lg text-gray-400" />
-                                      <span className="text-xs text-black">{task.assignee}</span>
-                                    </div>
-                                    <div className="text-xs font-bold text-black">{task.progress}</div>
-                                  </div>
-                                </Card>
-                              </div>
-                            )}
-                          </Draggable>
-                        );
-                      })}
-                      {provided.placeholder}
+                    {/* Row 2: Assignee | Status */}
+                    <div className="grid grid-cols-2 gap-6 mb-4">
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Assignee</div>
+                        <div className="relative w-full">
+                          <select
+                            className="w-full px-4 pr-10 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors appearance-none"
+                            value={editedAssignee}
+                            onChange={e => setEditedAssignee(e.target.value)}
+                            style={{ fontFamily: 'Avenir, sans-serif' }}
+                          >
+                            {uniqueAssignees.map(assignee => (
+                              <option key={assignee} value={assignee}>{assignee}</option>
+                            ))}
+                          </select>
+                          <svg className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Status</div>
+                        <div className="relative w-full">
+                          <select 
+                            className="w-full text-xs font-medium text-gray-900 border-2 border-gray-200 rounded-lg px-3 pr-10 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary appearance-none"
+                            value={kanbanState.find(col => col.tasks.some(t => t.code === selectedTask.code))?.key || 'todo'}
+                            style={{ fontFamily: 'Avenir, sans-serif' }}
+                          >
+                            <option value="todo">To Do</option>
+                            <option value="blocked">Blocked</option>
+                            <option value="onhold">On Hold</option>
+                            <option value="inprogress">In Progress</option>
+                            <option value="inreview">In Review</option>
+                            <option value="done">Done</option>
+                          </select>
+                          <svg className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Row 3: Due Date | Created Date + Last Updated */}
+                    <div className="grid grid-cols-2 gap-6 mb-4">
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Due Date</div>
+                        <div className="relative w-full flex items-center">
+                          <input
+                            type="date"
+                            className="w-full pl-3 pr-2 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                            value={editedDueDate}
+                            placeholder={selectedTask?.due ? formatDateToInput(selectedTask.due) : ''}
+                            onChange={e => setEditedDueDate(e.target.value)}
+                            style={{ fontFamily: 'Avenir, sans-serif' }}
+                          />
+                          {/* Show pretty date as overlay if input is empty */}
+                          {!editedDueDate && selectedTask?.due && (
+                            <span className="absolute left-3 text-xs text-gray-500 pointer-events-none select-none">
+                              {selectedTask.due}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-end gap-32 w-full">
+                        <div>
+                          <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Created Date</div>
+                          <div className="text-xs font-medium text-gray-900" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                            2024-05-01
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Last Updated</div>
+                          <div className="text-xs font-medium text-gray-900" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                            2024-05-02
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                )}
-              </Droppable>
-            ))}
+
+                  {/* Contract Info Box */}
+                  <div className="bg-white border border-gray-200 rounded-lg p-6">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-4">Contract Information</h3>
+                    <div className="grid grid-cols-1 gap-4">
+                      {/* Contract Title */}
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Contract Title</div>
+                        <div className="text-sm font-medium text-primary">
+                          {mockContracts.find(c => c.id === selectedTask.contractId)?.title}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column */}
+                <div className="space-y-6">
+                  {/* Assignee Box */}
+                  <div className="bg-white border border-gray-200 rounded-lg p-6">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-4">Assignee Information</h3>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${selectedTask.assigneeColor}`}>
+                        <span className="text-sm font-medium">{selectedTask.assigneeInitials}</span>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">{selectedTask.assignee}</div>
+                        <div className="text-xs text-gray-500">Assigned to this task</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Progress Box */}
+                  <div className="bg-white border border-gray-200 rounded-lg p-6">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-4">Progress Tracking</h3>
+                    <div className="space-y-4">
+                      {/* Progress Bar */}
+                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-primary rounded-full"
+                          style={{
+                            width: `${(parseInt(selectedTask.progress.split(' of ')[0]) / parseInt(selectedTask.progress.split(' of ')[1])) * 100}%`,
+                          }}
+                        />
+                      </div>
+                      {/* Progress Text */}
+                      <div className="text-sm text-gray-900">
+                        {selectedTask.progress} steps completed
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </DragDropContext>
+        </div>
       )}
     </div>
   );
