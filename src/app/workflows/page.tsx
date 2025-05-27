@@ -3,6 +3,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { mockContracts } from '@/data/mockContracts';
+import { mockTasks, Task } from '@/data/mockTasks';
 
 // Icons
 import { HiOutlineDocumentText, HiOutlineViewBoards, HiOutlineUpload, HiOutlineEye, HiOutlineDownload, HiOutlineTrash } from 'react-icons/hi';
@@ -23,20 +24,6 @@ import Link from '@tiptap/extension-link';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import { lowlight } from 'lowlight';
 import Strike from '@tiptap/extension-strike';
-
-interface Task {
-  id?: string;
-  code: string;
-  title: string;
-  contractId: string;
-  type: string;
-  due: string;
-  progress: string;
-  assignee: string;
-  assigneeInitials: string;
-  assigneeColor: string;
-  taskNumber: number;
-}
 
 // Add date formatting utilities
 function formatDateToInput(dateStr: string): string {
@@ -62,6 +49,7 @@ export default function WorkflowsPage() {
   const [selectedContract, setSelectedContract] = React.useState('All');
   const [selectedStatuses, setSelectedStatuses] = React.useState<string[]>([]);
   const [selectedAssignees, setSelectedAssignees] = React.useState<string[]>([]);
+  const [selectedContracts, setSelectedContracts] = React.useState<string[]>([]);
   const [openAssigneeDropdown, setOpenAssigneeDropdown] = React.useState(false);
   const [openContractDropdown, setOpenContractDropdown] = React.useState(false);
   const [openStatusDropdown, setOpenStatusDropdown] = React.useState(false);
@@ -85,7 +73,6 @@ export default function WorkflowsPage() {
   const [showAssigneeDropdown, setShowAssigneeDropdown] = React.useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = React.useState(false);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
-  const [selectedContracts, setSelectedContracts] = React.useState<string[]>([]);
 
   // Define Kanban columns as a single source of truth
   const kanbanColumns = [
@@ -94,74 +81,50 @@ export default function WorkflowsPage() {
       title: 'To Do',
       color: 'bg-gray-100',
       icon: <PiListPlusBold className="text-xl mr-2 text-gray-500" />,
-      tasks: [
-        { code: 'TSK-003', title: 'Verify Payment Schedule', contractId: '9548', type: 'Task', due: 'May 24, 2025', progress: '0 of 2', assignee: 'Michael Brown', assigneeInitials: 'MB', assigneeColor: 'bg-purple-200 text-purple-700', taskNumber: 101 },
-        { code: 'TSK-008', title: 'Negotiate Updated Terms', contractId: '9550', type: 'Task', due: 'May 29, 2025', progress: '0 of 3', assignee: 'Robert Green', assigneeInitials: 'RG', assigneeColor: 'bg-pink-200 text-pink-700', taskNumber: 102 },
-        { code: 'TSK-009', title: 'Finalize Pricing Details', contractId: '9145', type: 'Task', due: 'May 30, 2025', progress: '1 of 4', assignee: 'Emily Davis', assigneeInitials: 'ED', assigneeColor: 'bg-blue-200 text-blue-700', taskNumber: 103 },
-      ],
+      tasks: mockTasks.filter(task => task.status === 'todo')
     },
     {
       key: 'blocked',
       title: 'Blocked',
       color: 'bg-red-100',
       icon: <CgPlayStopR className="text-xl mr-2 text-red-500" />,
-      tasks: [
-        { code: 'TSK-002', title: 'Obtain Client Signatures', contractId: '8784', type: 'Task', due: 'May 27, 2025', progress: '0 of 2', assignee: 'Sarah Miller', assigneeInitials: 'SM', assigneeColor: 'bg-purple-200 text-purple-700', taskNumber: 104 },
-        { code: 'TSK-012', title: 'Third Party Risk Assessment', contractId: '8423', type: 'Task', due: 'June 3, 2025', progress: '0 of 5', assignee: 'Alex Johnson', assigneeInitials: 'AJ', assigneeColor: 'bg-pink-200 text-pink-700', taskNumber: 105 },
-      ],
+      tasks: mockTasks.filter(task => task.status === 'blocked')
     },
     {
       key: 'onhold',
       title: 'On Hold',
       color: 'bg-orange-100',
       icon: <CgPlayPauseR className="text-xl mr-2 text-orange-500" />,
-      tasks: [
-        { code: 'TSK-005', title: 'Review Employment Terms', contractId: '7804', type: 'Task', due: 'May 23, 2025', progress: '1 of 3', assignee: 'Emily Davis', assigneeInitials: 'ED', assigneeColor: 'bg-blue-200 text-blue-700', taskNumber: 106 },
-      ],
+      tasks: mockTasks.filter(task => task.status === 'onhold')
     },
     {
       key: 'inprogress',
       title: 'In Progress',
       color: 'bg-blue-100',
       icon: <FaRetweet className="text-xl mr-2 text-blue-500" />,
-      tasks: [
-        { code: 'TSK-001', title: 'Review Contract Terms', contractId: '7234', type: 'Task', due: 'May 25, 2025', progress: '2 of 3', assignee: 'Alex Johnson', assigneeInitials: 'AJ', assigneeColor: 'bg-pink-200 text-pink-700', taskNumber: 107 },
-        { code: 'TSK-007', title: 'Legal Review of License Terms', contractId: '9102', type: 'Task', due: 'May 22, 2025', progress: '2 of 5', assignee: 'Jennifer White', assigneeInitials: 'JW', assigneeColor: 'bg-green-200 text-green-700', taskNumber: 108 },
-        { code: 'TSK-011', title: 'Update Statement of Work', contractId: '6891', type: 'Task', due: 'May 28, 2025', progress: '1 of 4', assignee: 'Michael Brown', assigneeInitials: 'MB', assigneeColor: 'bg-purple-200 text-purple-700', taskNumber: 109 },
-        { code: 'TSK-015', title: 'Coordinate Inspection', contractId: '6453', type: 'Task', due: 'June 1, 2025', progress: '0 of 2', assignee: 'Samantha Fox', assigneeInitials: 'SF', assigneeColor: 'bg-orange-200 text-orange-700', taskNumber: 113 },
-        { code: 'TSK-016', title: 'Draft Addendum', contractId: '10001', type: 'Task', due: 'June 2, 2025', progress: '1 of 3', assignee: 'David Miller', assigneeInitials: 'DM', assigneeColor: 'bg-blue-200 text-blue-700', taskNumber: 114 },
-        { code: 'TSK-017', title: 'Schedule Appraisal', contractId: '10002', type: 'Task', due: 'June 3, 2025', progress: '0 of 1', assignee: 'Alice Lee', assigneeInitials: 'AL', assigneeColor: 'bg-teal-200 text-teal-700', taskNumber: 115 },
-        { code: 'TSK-018', title: 'Send Disclosures', contractId: '10003', type: 'Task', due: 'June 4, 2025', progress: '2 of 2', assignee: 'Robert Green', assigneeInitials: 'RG', assigneeColor: 'bg-pink-200 text-pink-700', taskNumber: 116 },
-        { code: 'TSK-019', title: 'Confirm Title Insurance', contractId: '10004', type: 'Task', due: 'June 5, 2025', progress: '1 of 1', assignee: 'Sarah Miller', assigneeInitials: 'SM', assigneeColor: 'bg-green-200 text-green-700', taskNumber: 117 },
-        { code: 'TSK-020', title: 'Finalize Closing Statement', contractId: '10005', type: 'Task', due: 'June 6, 2025', progress: '0 of 4', assignee: 'Emily Davis', assigneeInitials: 'ED', assigneeColor: 'bg-blue-200 text-blue-700', taskNumber: 118 },
-      ],
+      tasks: mockTasks.filter(task => task.status === 'inprogress')
     },
     {
       key: 'inreview',
       title: 'In Review',
       color: 'bg-yellow-100',
       icon: <PiListMagnifyingGlassBold className="text-xl mr-2 text-yellow-500" />,
-      tasks: [
-        { code: 'TSK-004', title: 'Final Document Verification', contractId: '10001', type: 'Task', due: 'May 26, 2025', progress: '2 of 3', assignee: 'Alex Johnson', assigneeInitials: 'AJ', assigneeColor: 'bg-pink-200 text-pink-700', taskNumber: 110 },
-      ],
+      tasks: mockTasks.filter(task => task.status === 'inreview')
     },
     {
       key: 'done',
       title: 'Done',
       color: 'bg-green-100',
       icon: <FaRegSquareCheck className="text-xl mr-2 text-green-600" />,
-      tasks: [
-        { code: 'TSK-013', title: 'Archive Completed Files', contractId: '10005', type: 'Task', due: 'May 20, 2025', progress: '5 of 5', assignee: 'Sarah Miller', assigneeInitials: 'SM', assigneeColor: 'bg-green-200 text-green-700', taskNumber: 111 },
-        { code: 'TSK-014', title: 'Send Completion Notice', contractId: '10002', type: 'Task', due: 'May 19, 2025', progress: '3 of 3', assignee: 'Robert Green', assigneeInitials: 'RG', assigneeColor: 'bg-green-200 text-green-700', taskNumber: 112 },
-      ],
+      tasks: mockTasks.filter(task => task.status === 'done')
     },
     {
       key: 'canceled',
       title: 'Canceled',
       color: 'bg-purple-100',
       icon: <MdCancelPresentation className="text-xl mr-2 text-purple-500" />,
-      tasks: [],
-    },
+      tasks: mockTasks.filter(task => task.status === 'canceled')
+    }
   ];
 
   // Kanban state for drag-and-drop
@@ -601,35 +564,9 @@ export default function WorkflowsPage() {
                             {React.cloneElement(col.icon, { className: col.icon.props.className, style: { ...col.icon.props.style, color: col.icon.props.color }, color: col.icon.props.color })}
                             <h3 className="text-lg font-semibold ml-2" style={{ color: col.icon.props.color }}>{col.title}</h3>
                           </div>
-                          <div className="relative">
-                            <button
-                              className="border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors"
-                              style={{ fontFamily: 'Avenir, sans-serif' }}
-                              title="Column options"
-                              onClick={e => {
-                                e.stopPropagation();
-                                setOpenColumnMenu(openColumnMenu === col.key ? null : col.key);
-                              }}
-                            >
-                              <FaPlus size={14} />
-                            </button>
-                            {openColumnMenu === col.key && (
-                              <div
-                                ref={columnMenuRef}
-                                className="absolute right-0 -mt-[1px] w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50"
-                                style={{
-                                  fontFamily: 'Avenir, sans-serif',
-                                  boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-                                }}
-                              >
-                                <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 hover:bg-primary/10 hover:text-primary">Add Task</button>
-                              </div>
-                            )}
-                          </div>
                         </div>
                       </div>
-                      {/* Scrollable Content */}
-                      <div className="p-4 overflow-y-auto max-h-[calc(100vh-300px)]">
+                      <div className="p-4 overflow-y-auto h-[600px]">
                         <div className="space-y-3">
                           {filterTasks(col.tasks).map((task, index) => (
                             <Draggable key={task.code} draggableId={task.code} index={index}>
@@ -743,35 +680,9 @@ export default function WorkflowsPage() {
                             {React.cloneElement(col.icon, { className: col.icon.props.className, style: { ...col.icon.props.style, color: col.icon.props.color }, color: col.icon.props.color })}
                             <h3 className="text-lg font-semibold ml-2" style={{ color: col.icon.props.color }}>{col.title}</h3>
                           </div>
-                          <div className="relative">
-                            <button
-                              className="border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors"
-                              style={{ fontFamily: 'Avenir, sans-serif' }}
-                              title="Column options"
-                              onClick={e => {
-                                e.stopPropagation();
-                                setOpenColumnMenu(openColumnMenu === col.key ? null : col.key);
-                              }}
-                            >
-                              <FaPlus size={14} />
-                            </button>
-                            {openColumnMenu === col.key && (
-                              <div
-                                ref={columnMenuRef}
-                                className="absolute right-0 -mt-[1px] w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50"
-                                style={{
-                                  fontFamily: 'Avenir, sans-serif',
-                                  boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-                                }}
-                              >
-                                <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 hover:bg-primary/10 hover:text-primary">Add Task</button>
-                              </div>
-                            )}
-                          </div>
                         </div>
                       </div>
-                      {/* Scrollable Content */}
-                      <div className="p-4 overflow-y-auto max-h-[calc(100vh-300px)]">
+                      <div className="p-4 overflow-y-auto h-[600px]">
                         <div className="space-y-3">
                           {filterTasks(col.tasks).map((task, index) => (
                             <Draggable key={task.code} draggableId={task.code} index={index}>

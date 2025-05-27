@@ -6,7 +6,9 @@ import { FaSearch, FaClock, FaSort, FaPlus, FaDollarSign, FaTimes, FaChevronDown
 import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutlineTrash, HiOutlinePencilAlt, HiOutlineUpload, HiOutlineEye, HiOutlineClipboardList, HiOutlineExclamation } from 'react-icons/hi';
 import { HiOutlineViewBoards } from 'react-icons/hi';
 import { LuCalendarClock } from 'react-icons/lu';
+import { BiDotsHorizontal } from 'react-icons/bi';
 import { Logo } from '@/components/common/Logo';
+import { mockTasks } from '@/data/mockTasks';
 
 interface Contract {
   id: string;
@@ -243,6 +245,7 @@ const ContractsPage: React.FC = () => {
   };
 
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
+  const [selectedTask, setSelectedTask] = useState<string | null>(null);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editableTitle, setEditableTitle] = useState('');
   const [selectedType, setSelectedType] = useState('Property Sale');
@@ -1226,10 +1229,10 @@ const ContractsPage: React.FC = () => {
                       { key: 'in review', label: 'In Review', number: 4 },
                       { key: 'signatures', label: 'Signatures', number: 5 },
                       { key: 'funds disbursed', label: 'Funds Disbursed', number: 6 },
-                      { key: 'complete', label: 'Complete', number: 7 }
+                      { key: 'completed', label: 'Completed', number: 7 }
                     ];
                     const currentIdx = steps.findIndex(s => s.label.toLowerCase() === selectedContract.status.toLowerCase());
-                    const percent = currentIdx <= 0 ? 0 : (currentIdx) / (steps.length - 1) * 100;
+                    const percent = currentIdx === -1 ? 0 : (currentIdx + 1) / steps.length * 100;
                     return (
                       <div className="absolute top-0 left-0 h-2 bg-primary rounded-full transition-all duration-500" style={{ width: `${percent}%` }} />
                     );
@@ -1245,13 +1248,13 @@ const ContractsPage: React.FC = () => {
                       { key: 'in review', label: 'In Review', number: 4 },
                       { key: 'signatures', label: 'Signatures', number: 5 },
                       { key: 'funds disbursed', label: 'Funds Disbursed', number: 6 },
-                      { key: 'complete', label: 'Complete', number: 7 }
+                      { key: 'completed', label: 'Completed', number: 7 }
                     ];
                     const currentIdx = steps.findIndex(s => s.label.toLowerCase() === selectedContract.status.toLowerCase());
                     // Calculate dynamic spacing for connectors
                     const connectorWidth = `calc((100% - ${steps.length * 48}px) / ${steps.length - 1})`;
                     return steps.map((step, idx) => {
-                      const isCompleted = idx < currentIdx;
+                      const isCompleted = idx <= currentIdx;
                       const isCurrent = idx === currentIdx;
                       return (
                         <div key={step.key} className="flex flex-col items-center" style={{ minWidth: 80, flex: 1 }}>
@@ -1647,7 +1650,7 @@ const ContractsPage: React.FC = () => {
                         { name: selectedContract?.seller || selectedContract?.parties?.split('&')[1]?.trim() || 'Eastside Properties', role: 'Seller', status: 'Signed', date: 'May 17, 2025' },
                         { name: selectedContract?.agent || 'N/A', role: 'Escrow Officer', status: 'Pending', date: null },
                       ].map((sig) => (
-                        <div key={sig.name} className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-1.5 border border-gray-100">
+                        <div key={sig.name} className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-2.5 border border-gray-100">
                           <div>
                             <div className="font-semibold text-gray-900 text-sm">{sig.name}</div>
                             <div className="text-xs text-gray-500">{sig.role}</div>
@@ -1671,39 +1674,53 @@ const ContractsPage: React.FC = () => {
                     </div>
                   </div>
                   {/* Tasks Box */}
-                  <div className="bg-white border border-gray-200 rounded-lg p-6 w-full flex flex-col min-h-0 box-border overflow-hidden" style={documentsBoxHeight ? { height: documentsBoxHeight } : {}}>
+                  <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
                     <h3 className="text-sm font-semibold text-gray-900 mb-4">Tasks</h3>
-                    <div
-                      className="flex flex-col gap-3 overflow-y-auto"
-                      style={{ maxHeight: 508 }}
-                    >
-                      {[{ name: 'Review Title Report', due: 'May 20, 2025', desc: 'Ensure there are no liens or encumbrances on the property.', contract: '9548' },
-                        { name: 'Schedule Inspection', due: 'May 21, 2025', desc: 'Arrange for a home inspection with a certified inspector.', contract: '9548' },
-                        { name: 'Order Appraisal', due: 'May 22, 2025', desc: 'Request an appraisal to confirm property value.', contract: '9548' },
-                        { name: 'Submit Loan Documents', due: 'May 23, 2025', desc: 'Provide all required documents to the lender.', contract: '9548' },
-                        { name: 'Review Closing Disclosure', due: 'May 24, 2025', desc: 'Verify all fees and terms in the closing disclosure.', contract: '9548' },
-                        { name: 'Schedule Final Walkthrough', due: 'May 25, 2025', desc: 'Conduct a final walkthrough of the property.', contract: '9548' },
-                        { name: 'Sign Closing Documents', due: 'May 26, 2025', desc: 'Attend closing and sign all necessary documents.', contract: '9548' },
-                        { name: 'Extra Task 1', due: 'May 27, 2025', desc: 'Additional task for testing.', contract: '9548' },
-                        { name: 'Extra Task 2', due: 'May 28, 2025', desc: 'Another extra task.', contract: '9548' },
-                      ].map((task) => (
-                        <div key={task.name} className="flex items-start justify-between bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
-                          <div>
-                            <div className="font-semibold text-xs text-black mb-1">{task.name}</div>
-                            <div className="text-xs text-gray-500 mb-1">Due: {task.due}</div>
-                            <div className="text-xs text-gray-500 mb-1">{task.desc}</div>
-                            <div className="inline-block px-2 py-0.5 rounded bg-primary/10 text-primary text-xs font-semibold">ID #{task.contract}</div>
-                          </div>
-                          <button 
-                            className="flex items-center justify-center w-8 h-8 rounded-lg border border-gray-200 bg-white text-gray-700 hover:border-primary hover:text-primary transition-colors"
-                            title="Expand"
+                    <div className="flex flex-col gap-3 overflow-y-auto" style={{ maxHeight: '352px' }}>
+                      {mockTasks
+                        .filter(task => task.contractId === selectedContract?.id)
+                        .map((task) => (
+                          <div 
+                            key={task.id} 
+                            className={`flex items-start justify-between rounded-lg px-4 py-3 border transition-colors cursor-pointer ${
+                              selectedTask === task.id 
+                                ? 'bg-primary/5 border-primary' 
+                                : 'bg-gray-50 border-gray-100 hover:bg-gray-100'
+                            }`}
+                            onClick={() => setSelectedTask(task.id)}
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
-                            </svg>
-                          </button>
-                        </div>
-                      ))}
+                            <div>
+                              <div className="mb-3">
+                                <span className="text-[10px] font-bold bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-200">
+                                  Task #{task.taskNumber}
+                                </span>
+                              </div>
+                              <div className="font-semibold text-xs text-black mb-1">{task.title}</div>
+                              <div className="flex items-center gap-1 mb-1">
+                                <div className="flex items-center gap-1">
+                                  <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                  </svg>
+                                  <span className="text-xs text-gray-500">{task.assignee}</span>
+                                </div>
+                                <div className="h-3 w-px bg-gray-200 mx-1"></div>
+                                <LuCalendarClock className="text-gray-400 text-sm" />
+                                <span className="text-xs text-gray-500">{task.due}</span>
+                              </div>
+                              <div className="text-xs text-gray-500 mb-1">{task.description}</div>
+                            </div>
+                            <button 
+                              className="flex items-center justify-center w-8 h-8 rounded-lg border border-gray-200 bg-white text-gray-700 hover:border-primary hover:text-primary transition-colors"
+                              title="Expand"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Add your expand logic here
+                              }}
+                            >
+                              <BiDotsHorizontal size={18} />
+                            </button>
+                          </div>
+                        ))}
                     </div>
                   </div>
                 </div>
