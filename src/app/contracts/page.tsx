@@ -170,7 +170,16 @@ const ContractsPage: React.FC = () => {
   ];
 
   // Get unique statuses from contracts
-  const availableStatuses = ['All', ...new Set(sampleContracts.map(contract => contract.status))];
+  const availableStatuses = [
+    'All',
+    'Initiation',
+    'Preparation',
+    'Wire Details',
+    'In Review',
+    'Signatures',
+    'Funds Disbursed',
+    'Complete'
+  ];
 
   // Filter contracts based on search term and status
   const filteredContracts = sampleContracts.filter(contract => {
@@ -424,7 +433,7 @@ const ContractsPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setModalStep(step)}
-                      className={`flex items-center gap-2 rounded-full font-semibold border transition-all duration-300 text-sm px-6 py-2 whitespace-nowrap
+                      className={`flex items-center gap-2 rounded-xl font-semibold border transition-all duration-300 text-sm px-4 py-2 whitespace-nowrap
                         ${modalStep === step
                           ? 'bg-white text-gray-900 border-gray-300 ring-1 ring-inset ring-gray-200 shadow-sm'
                           : 'text-gray-500 border-transparent hover:bg-gray-100'
@@ -1275,7 +1284,7 @@ const ContractsPage: React.FC = () => {
             <div className="overflow-y-auto p-6 flex-1">
               {/* Modal Content Grid: 2 columns */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full h-full min-h-0 -mt-2">
-                {/* LEFT COLUMN: Contract Details, Wire Details, Documents */}
+                {/* LEFT COLUMN: Contract Details, Parties Involved, Wire Details */}
                 <div className="flex flex-col gap-6 w-full h-full min-h-0">
                   {/* Contract Details Box */}
                   <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
@@ -1433,87 +1442,6 @@ const ContractsPage: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  {/* Wire Details Box */}
-                  <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4">Wire Details</h3>
-                    <div className="grid grid-cols-1 gap-y-4">
-                      {/* Routing Number */}
-                      <div>
-                        <div className="text-gray-500 text-xs mb-1">Routing Number</div>
-                        <input
-                          type="text"
-                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
-                          placeholder="Enter routing number"
-                        />
-                      </div>
-                      {/* Account Number */}
-                      <div>
-                        <div className="text-gray-500 text-xs mb-1">Account Number</div>
-                        <input
-                          type="text"
-                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
-                          placeholder="Enter account number"
-                        />
-                      </div>
-                      {/* Bank Name */}
-                      <div>
-                        <div className="text-gray-500 text-xs mb-1">Bank Name</div>
-                        <input
-                          type="text"
-                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
-                          placeholder="Enter bank name"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  {/* Documents Box */}
-                  <div ref={documentsBoxRef} className="bg-white border border-gray-200 rounded-lg p-6 w-full box-border">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-sm font-semibold text-gray-900">Documents</h3>
-                      <button 
-                        onClick={() => { setShowUploadModal(true); setUploadContractId(selectedContract?.id || null); }}
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors"
-                      >
-                        <HiOutlineUpload className="w-4 h-4 text-primary" />
-                        <span>Upload</span>
-                      </button>
-                    </div>
-                    <div className="flex flex-col gap-3 overflow-y-auto" style={{ maxHeight: '340px' }}>
-                      {/* Mock document list (7 items) */}
-                      {[{ name: 'Wire_Authorization', date: '2025-05-18', size: '1.2 MB', type: 'PDF' },
-                        { name: 'Closing_Disclosure', date: '2025-05-15', size: '0.9 MB', type: 'PDF' },
-                        { name: 'Purchase_Agreement', date: '2025-05-12', size: '2.1 MB', type: 'PDF' },
-                        { name: 'Inspection_Report', date: '2025-05-10', size: '1.5 MB', type: 'PDF' },
-                        { name: 'Appraisal', date: '2025-05-08', size: '1.0 MB', type: 'PDF' },
-                        { name: 'Title_Insurance', date: '2025-05-05', size: '1.3 MB', type: 'PDF' },
-                        { name: 'Loan_Estimate', date: '2025-05-02', size: '0.8 MB', type: 'PDF' },
-                      ].map((doc) => (
-                        <div key={doc.name} className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
-                          <div className="flex items-center gap-3">
-                            <HiOutlineDocumentText className="w-5 h-5 text-primary" />
-                            <div>
-                              <div className="font-semibold text-xs text-black cursor-pointer hover:underline">{doc.name}</div>
-                              <div className="text-xs text-gray-500">{doc.date} &bull; {doc.type} &bull; {doc.size}</div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="View" onClick={() => { setSelectedPdf({ name: doc.name, url: `/documents/${doc.name}` }); setShowPdfViewer(true); }}>
-                              <HiOutlineEye className="h-4 w-4" />
-                            </button>
-                            <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Download">
-                              <HiOutlineDownload className="h-4 w-4" />
-                            </button>
-                            <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Delete">
-                              <HiOutlineTrash className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                {/* RIGHT COLUMN: Parties Involved, Signature Status, Tasks */}
-                <div className="flex flex-col gap-6 w-full h-full min-h-0">
                   {/* Parties Involved Box */}
                   <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
                     <h3 className="text-sm font-semibold text-gray-900 mb-4">Parties Involved</h3>
@@ -1628,6 +1556,87 @@ const ContractsPage: React.FC = () => {
                       </div>
                     </div>
                   </div>
+                  {/* Wire Details Box */}
+                  <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-4">Wire Details</h3>
+                    <div className="grid grid-cols-1 gap-y-4">
+                      {/* Routing Number */}
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Routing Number</div>
+                        <input
+                          type="text"
+                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                          placeholder="Enter routing number"
+                        />
+                      </div>
+                      {/* Account Number */}
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Account Number</div>
+                        <input
+                          type="text"
+                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                          placeholder="Enter account number"
+                        />
+                      </div>
+                      {/* Bank Name */}
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">Bank Name</div>
+                        <input
+                          type="text"
+                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                          placeholder="Enter bank name"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {/* RIGHT COLUMN: Documents, Signature Status, Tasks */}
+                <div className="flex flex-col gap-6 w-full h-full min-h-0">
+                  {/* Documents Box */}
+                  <div ref={documentsBoxRef} className="bg-white border border-gray-200 rounded-lg p-6 w-full box-border">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-semibold text-gray-900 mb-4">Documents</h3>
+                      <button 
+                        onClick={() => { setShowUploadModal(true); setUploadContractId(selectedContract?.id || null); }}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors"
+                      >
+                        <HiOutlineUpload className="w-4 h-4 text-primary" />
+                        <span>Upload</span>
+                      </button>
+                    </div>
+                    <div className="flex flex-col gap-3 overflow-y-auto mt-4" style={{ maxHeight: '352px' }}>
+                      {/* Mock document list (7 items) */}
+                      {[{ name: 'Wire_Authorization', date: '2025-05-18', size: '1.2 MB', type: 'PDF' },
+                        { name: 'Closing_Disclosure', date: '2025-05-15', size: '0.9 MB', type: 'PDF' },
+                        { name: 'Purchase_Agreement', date: '2025-05-12', size: '2.1 MB', type: 'PDF' },
+                        { name: 'Inspection_Report', date: '2025-05-10', size: '1.5 MB', type: 'PDF' },
+                        { name: 'Appraisal', date: '2025-05-08', size: '1.0 MB', type: 'PDF' },
+                        { name: 'Title_Insurance', date: '2025-05-05', size: '1.3 MB', type: 'PDF' },
+                        { name: 'Loan_Estimate', date: '2025-05-02', size: '0.8 MB', type: 'PDF' },
+                      ].map((doc) => (
+                        <div key={doc.name} className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
+                          <div className="flex items-center gap-3">
+                            <HiOutlineDocumentText className="w-5 h-5 text-primary" />
+                            <div>
+                              <div className="font-semibold text-xs text-black cursor-pointer hover:underline">{doc.name}</div>
+                              <div className="text-xs text-gray-500">{doc.date} &bull; {doc.type} &bull; {doc.size}</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="View" onClick={() => { setSelectedPdf({ name: doc.name, url: `/documents/${doc.name}` }); setShowPdfViewer(true); }}>
+                              <HiOutlineEye className="h-4 w-4" />
+                            </button>
+                            <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Download">
+                              <HiOutlineDownload className="h-4 w-4" />
+                            </button>
+                            <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Delete">
+                              <HiOutlineTrash className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                   {/* Signature Status Box */}
                   <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
                     <h3 className="text-sm font-semibold text-gray-900 mb-4">Signature Status</h3>
@@ -1638,7 +1647,7 @@ const ContractsPage: React.FC = () => {
                         { name: selectedContract?.seller || selectedContract?.parties?.split('&')[1]?.trim() || 'Eastside Properties', role: 'Seller', status: 'Signed', date: 'May 17, 2025' },
                         { name: selectedContract?.agent || 'N/A', role: 'Escrow Officer', status: 'Pending', date: null },
                       ].map((sig) => (
-                        <div key={sig.name} className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
+                        <div key={sig.name} className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-1.5 border border-gray-100">
                           <div>
                             <div className="font-semibold text-gray-900 text-sm">{sig.name}</div>
                             <div className="text-xs text-gray-500">{sig.role}</div>

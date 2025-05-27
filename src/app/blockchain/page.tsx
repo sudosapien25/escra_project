@@ -171,9 +171,9 @@ export default function BlockchainPage() {
           ].map((tab) => (
             <button
               key={tab.key}
-              className={`relative flex items-center gap-2 font-semibold transition-all duration-300 text-sm px-6 py-2 whitespace-nowrap
+              className={`relative flex items-center gap-2 font-semibold transition-all duration-300 text-sm px-4 py-2 whitespace-nowrap
                 ${activeTab === tab.key
-                  ? 'text-primary'
+                  ? 'text-primary border-2 border-gray-200 rounded-lg'
                   : 'text-gray-500 hover:text-gray-700'}
               `}
               style={{ zIndex: 1 }}
@@ -183,10 +183,6 @@ export default function BlockchainPage() {
                 {activeTab === tab.key && <Logo width={18} height={18} className="pointer-events-none" />}
               </span>
               {tab.label}
-              {/* Sliding underline */}
-              {activeTab === tab.key && (
-                <span className="absolute left-0 right-0 -bottom-1 h-1 rounded bg-primary transition-all duration-300" style={{zIndex: 2}} />
-              )}
             </button>
           ))}
         </div>

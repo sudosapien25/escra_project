@@ -5,15 +5,24 @@ import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea
 import { mockContracts } from '@/data/mockContracts';
 
 // Icons
-import { HiOutlineDocumentText, HiOutlineViewBoards } from 'react-icons/hi';
+import { HiOutlineDocumentText, HiOutlineViewBoards, HiOutlineUpload, HiOutlineEye, HiOutlineDownload, HiOutlineTrash } from 'react-icons/hi';
 import { CgPlayPauseR, CgPlayStopR } from 'react-icons/cg';
 import { BsPerson } from 'react-icons/bs';
-import { LuCalendarClock } from 'react-icons/lu';
+import { LuCalendarClock, LuSendHorizontal } from 'react-icons/lu';
 import { FaPlus, FaSearch, FaRetweet } from 'react-icons/fa';
 import { PiListMagnifyingGlassBold, PiListPlusBold, PiDotsThreeOutline } from 'react-icons/pi';
 import { FaRegSquareCheck } from 'react-icons/fa6';
 import { BiDotsHorizontal } from 'react-icons/bi';
 import { MdCancelPresentation } from 'react-icons/md';
+
+// TipTap
+import { useEditor, EditorContent, BubbleMenu } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Underline from '@tiptap/extension-underline';
+import Link from '@tiptap/extension-link';
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
+import { lowlight } from 'lowlight';
+import Strike from '@tiptap/extension-strike';
 
 interface Task {
   id?: string;
@@ -76,6 +85,7 @@ export default function WorkflowsPage() {
   const [showAssigneeDropdown, setShowAssigneeDropdown] = React.useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = React.useState(false);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
+  const [selectedContracts, setSelectedContracts] = React.useState<string[]>([]);
 
   // Define Kanban columns as a single source of truth
   const kanbanColumns = [
@@ -210,8 +220,8 @@ export default function WorkflowsPage() {
       if (selectedAssignees.length > 0) {
         matches = matches && selectedAssignees.includes(task.assignee);
       }
-      if (selectedContract !== 'All') {
-        matches = matches && (String(task.contractId) === String(selectedContract));
+      if (selectedContracts.length > 0) {
+        matches = matches && selectedContracts.includes(String(task.contractId));
       }
       if (taskSearchTerm.trim()) {
         const search = taskSearchTerm.trim().toLowerCase();
@@ -274,6 +284,27 @@ export default function WorkflowsPage() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showContractDropdown]);
+
+  // Inside WorkflowsPage component, before return:
+  const commentEditor = useEditor({
+    extensions: [
+      StarterKit,
+      Underline,
+      Strike,
+      Link,
+      CodeBlockLowlight.configure({ lowlight }),
+    ],
+    content: '',
+  });
+
+  const handlePostComment = () => {
+    // Add your comment posting logic here
+    // Example: alert(commentEditor.getHTML());
+    if (commentEditor && commentEditor.getText().trim()) {
+      // TODO: Add comment to history
+      commentEditor.commands.clearContent();
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -422,16 +453,16 @@ export default function WorkflowsPage() {
               <div className="absolute left-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 min-w-[400px] w-96 contract-dropdown" style={{ fontFamily: 'Avenir, sans-serif' }}>
                 <button
                   className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
-                    selectedContract === 'All' ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
+                    selectedContracts.length === 0 ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
                   }`}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    setSelectedContract('All');
+                    setSelectedContracts([]);
                   }}
                 >
-                  <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedContract === 'All' ? 'bg-primary' : 'border border-gray-300'}`}>
-                    {selectedContract === 'All' && (
+                  <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedContracts.length === 0 ? 'bg-primary' : 'border border-gray-300'}`}>
+                    {selectedContracts.length === 0 && (
                       <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                       </svg>
@@ -443,17 +474,23 @@ export default function WorkflowsPage() {
                   <button
                     key={contract.id}
                     className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center whitespace-nowrap truncate ${
-                      selectedContract === String(contract.id) ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
+                      selectedContracts.includes(String(contract.id)) ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
                     }`}
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      setSelectedContract(String(contract.id));
+                      setSelectedContracts(prev => {
+                        if (prev.includes(String(contract.id))) {
+                          return prev.filter(c => c !== String(contract.id));
+                        } else {
+                          return [...prev, String(contract.id)];
+                        }
+                      });
                     }}
                     style={{ width: '100%' }}
                   >
-                    <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedContract === String(contract.id) ? 'bg-primary' : 'border border-gray-300'}`}>
-                      {selectedContract === String(contract.id) && (
+                    <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedContracts.includes(String(contract.id)) ? 'bg-primary' : 'border border-gray-300'}`}>
+                      {selectedContracts.includes(String(contract.id)) && (
                         <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                         </svg>
@@ -859,7 +896,7 @@ export default function WorkflowsPage() {
                 {/* Left Column */}
                 <div className="space-y-6">
                   {/* Task Details Box */}
-                  <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <div className="bg-white border border-gray-200 rounded-lg p-6 min-h-[420px]">
                     <h3 className="text-sm font-semibold text-gray-900 mb-4">Task Details</h3>
                     {/* 3-row, 2-column layout */}
                     {/* Row 1: Task Title | Contract Title */}
@@ -975,6 +1012,38 @@ export default function WorkflowsPage() {
                                   key={status.key}
                                   className="px-4 py-2 text-xs cursor-pointer hover:bg-primary/10 hover:text-primary"
                                   onClick={() => {
+                                    if (selectedTask) {
+                                      // Find the current column containing the task
+                                      const currentColumn = kanbanState.find(col => 
+                                        col.tasks.some(t => t.code === selectedTask.code)
+                                      );
+                                      
+                                      // Find the target column
+                                      const targetColumn = kanbanState.find(col => col.key === status.key);
+                                      
+                                      if (currentColumn && targetColumn) {
+                                        // Remove task from current column
+                                        const updatedCurrentColumn = {
+                                          ...currentColumn,
+                                          tasks: currentColumn.tasks.filter(t => t.code !== selectedTask.code)
+                                        };
+                                        
+                                        // Add task to target column
+                                        const updatedTargetColumn = {
+                                          ...targetColumn,
+                                          tasks: [...targetColumn.tasks, selectedTask]
+                                        };
+                                        
+                                        // Update kanban state
+                                        setKanbanState(prev => 
+                                          prev.map(col => {
+                                            if (col.key === currentColumn.key) return updatedCurrentColumn;
+                                            if (col.key === targetColumn.key) return updatedTargetColumn;
+                                            return col;
+                                          })
+                                        );
+                                      }
+                                    }
                                     setShowStatusDropdown(false);
                                   }}
                                 >
@@ -1026,31 +1095,28 @@ export default function WorkflowsPage() {
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Contract Info Box */}
-                  <div className="bg-white border border-gray-200 rounded-lg p-6">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4">Contract Information</h3>
-                    <div className="grid grid-cols-1 gap-4">
-                      {/* Contract Title */}
-                      <div>
-                        <div className="text-gray-500 text-xs mb-1">Contract Title</div>
-                        <div className="text-sm font-medium text-primary">
-                          {mockContracts.find(c => c.id === selectedTask.contractId)?.title}
-                        </div>
-                      </div>
+                    {/* Description Field */}
+                    <div className="mb-4">
+                      <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Description</div>
+                      <textarea
+                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors resize-none"
+                        rows={3}
+                        placeholder="Enter task description..."
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                      />
                     </div>
                   </div>
 
                   {/* Subtasks Box */}
-                  <div className="bg-white border border-gray-200 rounded-lg p-6 mt-2">
+                  <div className="bg-white border border-gray-200 rounded-lg p-6 min-h-[300px]">
                     <div className="flex items-center justify-between mb-4">
-                      <span className="text-sm font-semibold text-gray-900" style={{ fontFamily: 'Avenir, sans-serif' }}>Subtasks (0 of 2)</span>
+                      <span className="text-sm font-semibold text-gray-900" style={{ fontFamily: 'Avenir, sans-serif' }}>Subtasks (2 of 6)</span>
                       <button className="flex items-center gap-2 px-2 py-1 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors" style={{ fontFamily: 'Avenir, sans-serif' }}>
                         <span className="text-base font-bold text-primary">+</span> New Subtask
                       </button>
                     </div>
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-3 max-h-[300px] overflow-y-auto pr-2">
                       <div className="flex items-center bg-white rounded-lg border border-gray-200 px-4 py-3">
                         <input type="checkbox" className="mr-3 w-4 h-4 rounded border-gray-300" />
                         <span className="text-xs text-gray-900 font-medium flex-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Review document sections</span>
@@ -1065,10 +1131,38 @@ export default function WorkflowsPage() {
                           <BiDotsHorizontal size={18} />
                         </button>
                       </div>
+                      <div className="flex items-center bg-white rounded-lg border border-gray-200 px-4 py-3">
+                        <input type="checkbox" className="mr-3 w-4 h-4 rounded border-gray-300" />
+                        <span className="text-xs text-gray-900 font-medium flex-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Check legal compliance</span>
+                        <button className="ml-2 border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors">
+                          <BiDotsHorizontal size={18} />
+                        </button>
+                      </div>
+                      <div className="flex items-center bg-white rounded-lg border border-gray-200 px-4 py-3">
+                        <input type="checkbox" className="mr-3 w-4 h-4 rounded border-gray-300" />
+                        <span className="text-xs text-gray-900 font-medium flex-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Update contact information</span>
+                        <button className="ml-2 border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors">
+                          <BiDotsHorizontal size={18} />
+                        </button>
+                      </div>
+                      <div className="flex items-center bg-white rounded-lg border border-gray-200 px-4 py-3">
+                        <input type="checkbox" className="mr-3 w-4 h-4 rounded border-gray-300" />
+                        <span className="text-xs text-gray-900 font-medium flex-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Schedule follow-up meeting</span>
+                        <button className="ml-2 border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors">
+                          <BiDotsHorizontal size={18} />
+                        </button>
+                      </div>
+                      <div className="flex items-center bg-white rounded-lg border border-gray-200 px-4 py-3">
+                        <input type="checkbox" className="mr-3 w-4 h-4 rounded border-gray-300" />
+                        <span className="text-xs text-gray-900 font-medium flex-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Prepare summary report</span>
+                        <button className="ml-2 border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors">
+                          <BiDotsHorizontal size={18} />
+                        </button>
+                      </div>
                     </div>
                     <div className="mt-4">
                       <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
-                        <div className="h-full bg-primary rounded-full" style={{ width: '0%' }} />
+                        <div className="h-full bg-primary rounded-full" style={{ width: '33%' }} />
                       </div>
                     </div>
                   </div>
@@ -1076,8 +1170,121 @@ export default function WorkflowsPage() {
 
                 {/* Right Column */}
                 <div className="space-y-6">
-                  {/* Recent Activity Box (replaces Assignee Box) */}
-                  <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  {/* Documents Box */}
+                  <div className="bg-white border border-gray-200 rounded-lg p-6 min-h-[420px]">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm font-semibold text-gray-900">Documents</h3>
+                      <button className="flex items-center gap-2 px-2 py-1 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                        <HiOutlineUpload className="w-4 h-4 text-primary" />
+                        <span>Upload</span>
+                      </button>
+                    </div>
+                    <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+                      <div className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
+                        <div className="flex items-center gap-3">
+                          <HiOutlineDocumentText className="w-5 h-5 text-primary" />
+                          <div>
+                            <div className="font-semibold text-xs text-black cursor-pointer hover:underline">Contract Agreement</div>
+                            <div className="text-xs text-gray-500">2025-05-15 &bull; PDF &bull; 2.4 MB</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="View">
+                            <HiOutlineEye className="h-4 w-4" />
+                          </button>
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Download">
+                            <HiOutlineDownload className="h-4 w-4" />
+                          </button>
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Delete">
+                            <HiOutlineTrash className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
+                        <div className="flex items-center gap-3">
+                          <HiOutlineDocumentText className="w-5 h-5 text-primary" />
+                          <div>
+                            <div className="font-semibold text-xs text-black cursor-pointer hover:underline">Payment Schedule</div>
+                            <div className="text-xs text-gray-500">2025-05-16 &bull; XLSX &bull; 1.8 MB</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="View">
+                            <HiOutlineEye className="h-4 w-4" />
+                          </button>
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Download">
+                            <HiOutlineDownload className="h-4 w-4" />
+                          </button>
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Delete">
+                            <HiOutlineTrash className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
+                        <div className="flex items-center gap-3">
+                          <HiOutlineDocumentText className="w-5 h-5 text-primary" />
+                          <div>
+                            <div className="font-semibold text-xs text-black cursor-pointer hover:underline">Terms and Conditions</div>
+                            <div className="text-xs text-gray-500">2025-05-17 &bull; DOCX &bull; 1.2 MB</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="View">
+                            <HiOutlineEye className="h-4 w-4" />
+                          </button>
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Download">
+                            <HiOutlineDownload className="h-4 w-4" />
+                          </button>
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Delete">
+                            <HiOutlineTrash className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
+                        <div className="flex items-center gap-3">
+                          <HiOutlineDocumentText className="w-5 h-5 text-primary" />
+                          <div>
+                            <div className="font-semibold text-xs text-black cursor-pointer hover:underline">Meeting Notes</div>
+                            <div className="text-xs text-gray-500">2025-05-18 &bull; DOCX &bull; 0.8 MB</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="View">
+                            <HiOutlineEye className="h-4 w-4" />
+                          </button>
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Download">
+                            <HiOutlineDownload className="h-4 w-4" />
+                          </button>
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Delete">
+                            <HiOutlineTrash className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
+                        <div className="flex items-center gap-3">
+                          <HiOutlineDocumentText className="w-5 h-5 text-primary" />
+                          <div>
+                            <div className="font-semibold text-xs text-black cursor-pointer hover:underline">Project Timeline</div>
+                            <div className="text-xs text-gray-500">2025-05-19 &bull; XLSX &bull; 1.5 MB</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="View">
+                            <HiOutlineEye className="h-4 w-4" />
+                          </button>
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Download">
+                            <HiOutlineDownload className="h-4 w-4" />
+                          </button>
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Delete">
+                            <HiOutlineTrash className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Recent Activity Box */}
+                  <div className="bg-white border border-gray-200 rounded-lg p-6 min-h-[300px]">
                     <h3 className="text-sm font-semibold text-gray-900 mb-4">Recent Activity</h3>
                     <div className="flex flex-col gap-5">
                       {/* Activity 1 */}
@@ -1086,7 +1293,7 @@ export default function WorkflowsPage() {
                           <BsPerson className="text-blue-500 text-lg" />
                         </span>
                         <div>
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-xs font-medium text-gray-900">
                             <span className="font-semibold">Sarah Miller</span> assigned task to <span className="font-semibold">Michael Brown</span>
                           </div>
                           <div className="text-xs text-gray-500 mt-0.5">May 19, 2025 at 10:30 AM</div>
@@ -1095,10 +1302,10 @@ export default function WorkflowsPage() {
                       {/* Activity 2 */}
                       <div className="flex items-start gap-3">
                         <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100">
-                          <FaRegSquareCheck className="text-green-500 text-lg" />
+                          <BsPerson className="text-green-500 text-lg" />
                         </span>
                         <div>
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-xs font-medium text-gray-900">
                             <span className="font-semibold">Michael Brown</span> marked subtask as complete
                           </div>
                           <div className="text-xs text-gray-500 mt-0.5">May 18, 2025 at 3:45 PM</div>
@@ -1107,10 +1314,10 @@ export default function WorkflowsPage() {
                       {/* Activity 3 */}
                       <div className="flex items-start gap-3">
                         <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-purple-100">
-                          <HiOutlineDocumentText className="text-purple-500 text-lg" />
+                          <BsPerson className="text-purple-500 text-lg" />
                         </span>
                         <div>
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-xs font-medium text-gray-900">
                             <span className="font-semibold">Emily Davis</span> uploaded a document
                           </div>
                           <div className="text-xs text-gray-500 mt-0.5">May 17, 2025 at 9:15 AM</div>
@@ -1122,7 +1329,7 @@ export default function WorkflowsPage() {
                           <LuCalendarClock className="text-orange-500 text-lg" />
                         </span>
                         <div>
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-xs font-medium text-gray-900">
                             Due date updated to <span className="font-semibold">May 24, 2025</span>
                           </div>
                           <div className="text-xs text-gray-500 mt-0.5">May 16, 2025 at 11:20 AM</div>
@@ -1134,7 +1341,7 @@ export default function WorkflowsPage() {
                           <FaPlus className="text-teal-500 text-lg" />
                         </span>
                         <div>
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-xs font-medium text-gray-900">
                             Task created by <span className="font-semibold">Alex Johnson</span>
                           </div>
                           <div className="text-xs text-gray-500 mt-0.5">May 15, 2025 at 2:00 PM</div>
@@ -1142,23 +1349,136 @@ export default function WorkflowsPage() {
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
 
-                  {/* Progress Box */}
-                  <div className="bg-white border border-gray-200 rounded-lg p-6">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4">Progress Tracking</h3>
-                    <div className="space-y-4">
-                      {/* Progress Bar */}
-                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-primary rounded-full"
-                          style={{
-                            width: `${(parseInt(selectedTask.progress.split(' of ')[0]) / parseInt(selectedTask.progress.split(' of ')[1])) * 100}%`,
-                          }}
-                        />
+              {/* Comments Box - Full Width */}
+              <div className="mt-6">
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-4">Comments</h3>
+                  
+                  {/* Comment History */}
+                  <div className="space-y-4 mb-4 max-h-[300px] overflow-y-auto pr-2">
+                    {/* Comment 1 */}
+                    <div className="flex items-start gap-3">
+                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100">
+                        <BsPerson className="text-blue-500 text-lg" />
+                      </span>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs font-semibold text-gray-900">Sarah Miller</span>
+                          <span className="text-xs text-gray-500">May 19, 2025 at 10:30 AM</span>
+                        </div>
+                        <p className="text-xs text-gray-900 font-medium">Please review the updated contract terms and let me know if you have any questions.</p>
                       </div>
-                      {/* Progress Text */}
-                      <div className="text-sm text-gray-900">
-                        {selectedTask.progress} steps completed
+                    </div>
+
+                    {/* Comment 2 */}
+                    <div className="flex items-start gap-3">
+                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100">
+                        <BsPerson className="text-green-500 text-lg" />
+                      </span>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs font-semibold text-gray-900">Michael Brown</span>
+                          <span className="text-xs text-gray-500">May 18, 2025 at 3:45 PM</span>
+                        </div>
+                        <p className="text-xs text-gray-900 font-medium">I've reviewed the terms and everything looks good. We can proceed with the next steps.</p>
+                      </div>
+                    </div>
+
+                    {/* Comment 3 */}
+                    <div className="flex items-start gap-3">
+                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-purple-100">
+                        <BsPerson className="text-purple-500 text-lg" />
+                      </span>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs font-semibold text-gray-900">Emily Davis</span>
+                          <span className="text-xs text-gray-500">May 17, 2025 at 9:15 AM</span>
+                        </div>
+                        <p className="text-xs text-gray-900 font-medium">I've attached the latest version of the document for your review.</p>
+                      </div>
+                    </div>
+
+                    {/* Comment 4 */}
+                    <div className="flex items-start gap-3">
+                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100">
+                        <BsPerson className="text-orange-500 text-lg" />
+                      </span>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs font-semibold text-gray-900">Alex Johnson</span>
+                          <span className="text-xs text-gray-500">May 16, 2025 at 2:30 PM</span>
+                        </div>
+                        <p className="text-xs text-gray-900 font-medium">The timeline looks good, but we should adjust the delivery dates for phase 2.</p>
+                      </div>
+                    </div>
+
+                    {/* Comment 5 */}
+                    <div className="flex items-start gap-3">
+                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-teal-100">
+                        <BsPerson className="text-teal-500 text-lg" />
+                      </span>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs font-semibold text-gray-900">Robert Green</span>
+                          <span className="text-xs text-gray-500">May 15, 2025 at 11:20 AM</span>
+                        </div>
+                        <p className="text-xs text-gray-900 font-medium">I've updated the payment schedule as discussed in our last meeting.</p>
+                      </div>
+                    </div>
+
+                    {/* Comment 6 */}
+                    <div className="flex items-start gap-3">
+                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-pink-100">
+                        <BsPerson className="text-pink-500 text-lg" />
+                      </span>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs font-semibold text-gray-900">Jennifer White</span>
+                          <span className="text-xs text-gray-500">May 14, 2025 at 4:15 PM</span>
+                        </div>
+                        <p className="text-xs text-gray-900 font-medium">Please review the updated budget allocation for the project.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Add Comment Section */}
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="flex items-start gap-3">
+                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary/10">
+                        <BsPerson className="text-primary text-lg" />
+                      </span>
+                      <div className="flex-1">
+                        {/* Toolbar */}
+                        {commentEditor && (
+                          <>
+                            <div className="flex gap-2 mb-2 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 items-center">
+                              <button onClick={() => commentEditor.chain().focus().toggleBold().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('bold') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'}`} title="Bold"><b>B</b></button>
+                              <button onClick={() => commentEditor.chain().focus().toggleItalic().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('italic') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'}`} title="Italic"><i>I</i></button>
+                              <button onClick={() => commentEditor.chain().focus().toggleUnderline().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('underline') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'}`} title="Underline"><u>U</u></button>
+                              <button onClick={() => commentEditor.chain().focus().toggleStrike().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('strike') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'}`} title="Strikethrough"><s>S</s></button>
+                              <button onClick={() => commentEditor.chain().focus().toggleBulletList().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('bulletList') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'}`} title="Bullet List">• List</button>
+                              <button onClick={() => commentEditor.chain().focus().toggleOrderedList().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('orderedList') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'}`} title="Numbered List">1. List</button>
+                              <button onClick={handlePostComment} className="ml-auto text-xs px-2 py-1 rounded transition-colors flex items-center group" title="Post Comment">
+                                <LuSendHorizontal className="w-4 h-4 text-black group-hover:text-primary transition-colors" />
+                              </button>
+                            </div>
+                            <div className="border-2 border-gray-200 rounded-lg bg-white focus-within:border-primary transition-colors">
+                              <EditorContent
+                                editor={commentEditor}
+                                className="tiptap min-h-[48px] px-4 py-2 text-xs font-medium text-black font-sans outline-none"
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handlePostComment();
+                                  }
+                                }}
+                              />
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>

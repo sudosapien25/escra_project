@@ -26,7 +26,13 @@
     "react-icons": "^5.5.0",
     "socket.io-client": "^4.7.4",
     "tailwind-merge": "^2.2.1",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "@tiptap/react": "^2.0.0-beta.273",
+    "@tiptap/starter-kit": "^2.0.0-beta.273",
+    "@tiptap/extension-link": "^2.0.0-beta.273",
+    "@tiptap/extension-underline": "^2.0.0-beta.273",
+    "@tiptap/extension-code-block-lowlight": "^2.0.0-beta.273",
+    "lowlight": "^2.6.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.19",
