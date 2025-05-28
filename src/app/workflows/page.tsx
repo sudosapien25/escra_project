@@ -6,7 +6,7 @@ import { mockContracts } from '@/data/mockContracts';
 import { mockTasks, Task } from '@/data/mockTasks';
 
 // Icons
-import { HiOutlineDocumentText, HiOutlineViewBoards, HiOutlineUpload, HiOutlineEye, HiOutlineDownload, HiOutlineTrash } from 'react-icons/hi';
+import { HiOutlineDocumentText, HiOutlineViewBoards, HiOutlineUpload, HiOutlineEye, HiOutlineDownload, HiOutlineTrash, HiPlus } from 'react-icons/hi';
 import { CgPlayPauseR, CgPlayStopR } from 'react-icons/cg';
 import { BsPerson } from 'react-icons/bs';
 import { LuCalendarClock, LuSendHorizontal } from 'react-icons/lu';
@@ -15,6 +15,7 @@ import { PiListMagnifyingGlassBold, PiListPlusBold, PiDotsThreeOutline } from 'r
 import { FaRegSquareCheck } from 'react-icons/fa6';
 import { BiDotsHorizontal } from 'react-icons/bi';
 import { MdCancelPresentation } from 'react-icons/md';
+import { MdOutlineLightMode, MdOutlineDarkMode } from 'react-icons/md';
 
 // TipTap
 import { useEditor, EditorContent, BubbleMenu } from '@tiptap/react';
@@ -37,6 +38,16 @@ function formatDatePretty(dateStr: string): string {
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return dateStr;
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+// Add Comment interface
+interface Comment {
+  id: string;
+  author: string;
+  content: string;
+  timestamp: string;
+  avatarColor: string;
+  textColor: string;
 }
 
 export default function WorkflowsPage() {
@@ -73,6 +84,28 @@ export default function WorkflowsPage() {
   const [showAssigneeDropdown, setShowAssigneeDropdown] = React.useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = React.useState(false);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
+  const [editingCommentId, setEditingCommentId] = React.useState<string | null>(null);
+  const [showNewTaskModal, setShowNewTaskModal] = React.useState(false);
+  
+  // Replace the comments state with taskComments
+  const [taskComments, setTaskComments] = React.useState<Record<string, Comment[]>>(() => {
+    // Check if we're in the browser environment
+    if (typeof window !== 'undefined') {
+      const savedComments = localStorage.getItem('taskComments');
+      if (savedComments) {
+        return JSON.parse(savedComments);
+      }
+    }
+    // Default comments if no saved comments exist
+    return {};
+  });
+
+  // Save comments to localStorage whenever they change
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('taskComments', JSON.stringify(taskComments));
+    }
+  }, [taskComments]);
 
   // Define Kanban columns as a single source of truth
   const kanbanColumns = [
@@ -129,38 +162,6 @@ export default function WorkflowsPage() {
 
   // Kanban state for drag-and-drop
   const [kanbanState, setKanbanState] = React.useState(kanbanColumns);
-
-  React.useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        (openMenuTask && menuRef.current && !menuRef.current.contains(event.target as Node)) ||
-        (openAssigneeDropdown && assigneeButtonRef.current && !assigneeButtonRef.current.contains(event.target as Node) && !(event.target as Element).closest('.assignee-dropdown')) ||
-        (openContractDropdown && contractButtonRef.current && !contractButtonRef.current.contains(event.target as Node) && !(event.target as Element).closest('.contract-dropdown')) ||
-        (openStatusDropdown && statusButtonRef.current && !statusButtonRef.current.contains(event.target as Node) && !(event.target as Element).closest('.status-dropdown')) ||
-        (openColumnMenu && columnMenuRef.current && !columnMenuRef.current.contains(event.target as Node)) ||
-        (showContractDropdown && contractDropdownRef.current && !contractDropdownRef.current.contains(event.target as Node)) ||
-        (showAssigneeDropdown && assigneeDropdownRef.current && !assigneeDropdownRef.current.contains(event.target as Node)) ||
-        (showStatusDropdown && statusDropdownRef.current && !statusDropdownRef.current.contains(event.target as Node))
-      ) {
-        setOpenMenuTask(null);
-        setOpenAssigneeDropdown(false);
-        setOpenContractDropdown(false);
-        setOpenStatusDropdown(false);
-        setOpenColumnMenu(null);
-        setShowContractDropdown(false);
-        setShowAssigneeDropdown(false);
-        setShowStatusDropdown(false);
-      }
-    }
-    if (openMenuTask || openAssigneeDropdown || openContractDropdown || openStatusDropdown || openColumnMenu || showContractDropdown || showAssigneeDropdown || showStatusDropdown) {
-      document.addEventListener('click', handleClickOutside);
-    } else {
-      document.removeEventListener('click', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('click', handleClickOutside);
-    };
-  }, [openMenuTask, openAssigneeDropdown, openContractDropdown, openStatusDropdown, openColumnMenu, showContractDropdown, showAssigneeDropdown, showStatusDropdown]);
 
   const allTasks = kanbanColumns.flatMap(col => col.tasks);
   const uniqueAssignees = Array.from(new Set(allTasks.map(t => t.assignee))).sort();
@@ -261,83 +262,149 @@ export default function WorkflowsPage() {
   });
 
   const handlePostComment = () => {
-    // Add your comment posting logic here
-    // Example: alert(commentEditor.getHTML());
-    if (commentEditor && commentEditor.getText().trim()) {
-      // TODO: Add comment to history
-      commentEditor.commands.clearContent();
+    if (!selectedTask || !commentEditor || !commentEditor.getText().trim()) return;
+
+    const taskId = selectedTask.code;
+    const currentComments = taskComments[taskId] || [];
+
+    if (editingCommentId) {
+      // Update existing comment
+      setTaskComments({
+        ...taskComments,
+        [taskId]: currentComments.map((comment: Comment) => 
+          comment.id === editingCommentId 
+            ? { ...comment, content: commentEditor.getHTML() }
+            : comment
+        )
+      });
+      setEditingCommentId(null);
+    } else {
+      // Add new comment at the end
+      const newComment: Comment = {
+        id: Date.now().toString(),
+        author: 'Current User',
+        content: commentEditor.getHTML(),
+        timestamp: new Date().toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: 'numeric',
+          hour12: true
+        }),
+        avatarColor: 'bg-primary/10',
+        textColor: 'text-primary'
+      };
+      setTaskComments({
+        ...taskComments,
+        [taskId]: [...currentComments, newComment]
+      });
     }
+    commentEditor.commands.clearContent();
+  };
+
+  const handleEditComment = (commentId: string) => {
+    if (!selectedTask) return;
+    const taskId = selectedTask.code;
+    const currentComments = taskComments[taskId] || [];
+    const comment = currentComments.find((c: Comment) => c.id === commentId);
+    if (comment && commentEditor) {
+      commentEditor.commands.setContent(comment.content);
+      setEditingCommentId(commentId);
+    }
+  };
+
+  const handleDeleteComment = (commentId: string) => {
+    if (!selectedTask) return;
+    const taskId = selectedTask.code;
+    const currentComments = taskComments[taskId] || [];
+    setTaskComments({
+      ...taskComments,
+      [taskId]: currentComments.filter((comment: Comment) => comment.id !== commentId)
+    });
   };
 
   return (
     <div className="space-y-4">
       {/* Workflow Title and Button */}
-      <div className="flex justify-between items-center">
-        {/* Group title and subtitle with controlled spacing */}
-        <div className="pb-1">
-          <h1 className="text-[30px] font-bold text-black mb-1">Tasks</h1>
-          <p className="text-gray-500 text-[16px] mt-0">Track &amp; manage your activity</p>
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-[30px] font-bold text-black dark:text-white mb-1">Tasks</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-[16px] mt-0">Track &amp; manage your activity</p>
         </div>
-        <button className="flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold">
-          <FaPlus className="mr-2 text-base" />
-          New Task
-        </button>
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={() => setShowNewTaskModal(true)}
+            className="flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+          >
+            <FaPlus className="mr-2 text-base" />
+            New Task
+          </button>
+        </div>
       </div>
 
-      <hr className="my-6 border-gray-300" />
+      <hr className="my-6 border-gray-300 dark:border-gray-700" />
 
       {/* Workflow Stats and Filters Section */}
       <div className="space-y-4">
         {/* Tabs */}
-        <div className="bg-white border border-gray-200 rounded-xl px-4 py-4 flex gap-1 w-fit">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 flex gap-1 w-fit">
           {kanbanTabs.map((tab) => (
             <button
               key={tab}
               onClick={() => setKanbanTab(tab)}
-              className={`px-4 py-2 rounded-xl text-xs font-medium border border-gray-200 transition-colors font-sans min-w-[120px] ${kanbanTab === tab ? 'bg-teal-50 text-teal-500' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+              className={`px-4 py-2 rounded-xl text-xs font-medium border border-gray-200 dark:border-gray-700 transition-colors font-sans min-w-[120px] ${
+                kanbanTab === tab 
+                  ? 'bg-teal-50 dark:bg-teal-900/30 text-teal-500 dark:text-teal-400' 
+                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+              }`}
             >
               {tab}
             </button>
           ))}
         </div>
+
         {/* Stat Cards */}
         <div className="flex gap-6 mb-6 mt-4">
           {/* Tasks in Progress */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full flex-1 min-w-[200px]">
-            <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center border-2 border-blue-200">
-              <FaRetweet size={18} color="#3b82f6" />
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full flex-1 min-w-[200px]">
+            <div className="h-10 w-10 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center border-2 border-blue-200 dark:border-blue-800">
+              <FaRetweet size={18} className="text-blue-500 dark:text-blue-400" />
             </div>
             <div className="flex flex-col items-start h-full">
-              <p className="text-sm font-medium text-gray-500 mb-1 font-sans">Tasks in Progress</p>
-              <p className="text-2xl font-bold text-gray-900">{kanbanState.find(col => col.key === 'inprogress')?.tasks.length || 0}</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans">Tasks in Progress</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{kanbanState.find(col => col.key === 'inprogress')?.tasks.length || 0}</p>
               <p className="text-xs invisible">placeholder</p>
             </div>
           </div>
+
           {/* Due Within 7 Days */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full flex-1 min-w-[200px]">
-            <div className="h-10 w-10 rounded-lg bg-yellow-100 flex items-center justify-center border-2 border-yellow-200">
-              <LuCalendarClock size={18} color="#f59e42" />
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full flex-1 min-w-[200px]">
+            <div className="h-10 w-10 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center border-2 border-yellow-200 dark:border-yellow-800">
+              <LuCalendarClock size={18} className="text-yellow-500 dark:text-yellow-400" />
             </div>
             <div className="flex flex-col items-start h-full">
-              <p className="text-sm font-medium text-gray-500 mb-1 font-sans">Due Within 7 Days</p>
-              <p className="text-2xl font-bold text-gray-900">5</p>
-              <p className="text-xs text-gray-400">Needs attention</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans">Due Within 7 Days</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">5</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">Needs attention</p>
             </div>
           </div>
+
           {/* Blocked Tasks */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full flex-1 min-w-[200px]">
-            <div className="h-10 w-10 rounded-lg bg-red-100 flex items-center justify-center border-2 border-red-200">
-              <CgPlayStopR size={18} color="#ef4444" />
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full flex-1 min-w-[200px]">
+            <div className="h-10 w-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center border-2 border-red-200 dark:border-red-800">
+              <CgPlayStopR size={18} className="text-red-500 dark:text-red-400" />
             </div>
             <div className="flex flex-col items-start h-full">
-              <p className="text-sm font-medium text-gray-500 mb-1 font-sans">Blocked Tasks</p>
-              <p className="text-2xl font-bold text-gray-900">{kanbanState.find(col => col.key === 'blocked')?.tasks.length || 0}</p>
-              <p className="text-xs text-gray-400">Requires action</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans">Blocked Tasks</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{kanbanState.find(col => col.key === 'blocked')?.tasks.length || 0}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">Requires action</p>
             </div>
           </div>
         </div>
+
         {/* Filter Bar */}
-        <div className="bg-white border border-gray-200 rounded-xl px-4 py-4 mb-6 flex items-center w-full mt-2">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 mb-6 flex items-center w-full mt-2">
           <div className="relative ml-1">
             <button
               ref={assigneeButtonRef}
@@ -1270,89 +1337,43 @@ export default function WorkflowsPage() {
                   
                   {/* Comment History */}
                   <div className="space-y-4 mb-4 max-h-[300px] overflow-y-auto pr-2">
-                    {/* Comment 1 */}
-                    <div className="flex items-start gap-3">
-                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100">
-                        <BsPerson className="text-blue-500 text-lg" />
-                      </span>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs font-semibold text-gray-900">Sarah Miller</span>
-                          <span className="text-xs text-gray-500">May 19, 2025 at 10:30 AM</span>
+                    {(selectedTask ? (taskComments[selectedTask.code] || []) : []).map((comment) => (
+                      <div key={comment.id} className="flex items-start gap-3">
+                        <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${comment.avatarColor}`}>
+                          <BsPerson className={`${comment.textColor} text-lg`} />
+                        </span>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xs font-semibold text-gray-900">{comment.author}</span>
+                            <span className="text-xs text-gray-500">{comment.timestamp}</span>
+                          </div>
+                          <div 
+                            className="text-xs text-gray-900 font-medium mb-2"
+                            dangerouslySetInnerHTML={{ __html: comment.content }}
+                          />
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => handleEditComment(comment.id)}
+                              className="text-xs text-gray-500 hover:text-primary transition-colors flex items-center gap-1"
+                            >
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteComment(comment.id)}
+                              className="text-xs text-gray-500 hover:text-red-500 transition-colors flex items-center gap-1"
+                            >
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                              Delete
+                            </button>
+                          </div>
                         </div>
-                        <p className="text-xs text-gray-900 font-medium">Please review the updated contract terms and let me know if you have any questions.</p>
                       </div>
-                    </div>
-
-                    {/* Comment 2 */}
-                    <div className="flex items-start gap-3">
-                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100">
-                        <BsPerson className="text-green-500 text-lg" />
-                      </span>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs font-semibold text-gray-900">Michael Brown</span>
-                          <span className="text-xs text-gray-500">May 18, 2025 at 3:45 PM</span>
-                        </div>
-                        <p className="text-xs text-gray-900 font-medium">I've reviewed the terms and everything looks good. We can proceed with the next steps.</p>
-                      </div>
-                    </div>
-
-                    {/* Comment 3 */}
-                    <div className="flex items-start gap-3">
-                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-purple-100">
-                        <BsPerson className="text-purple-500 text-lg" />
-                      </span>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs font-semibold text-gray-900">Emily Davis</span>
-                          <span className="text-xs text-gray-500">May 17, 2025 at 9:15 AM</span>
-                        </div>
-                        <p className="text-xs text-gray-900 font-medium">I've attached the latest version of the document for your review.</p>
-                      </div>
-                    </div>
-
-                    {/* Comment 4 */}
-                    <div className="flex items-start gap-3">
-                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100">
-                        <BsPerson className="text-orange-500 text-lg" />
-                      </span>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs font-semibold text-gray-900">Alex Johnson</span>
-                          <span className="text-xs text-gray-500">May 16, 2025 at 2:30 PM</span>
-                        </div>
-                        <p className="text-xs text-gray-900 font-medium">The timeline looks good, but we should adjust the delivery dates for phase 2.</p>
-                      </div>
-                    </div>
-
-                    {/* Comment 5 */}
-                    <div className="flex items-start gap-3">
-                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-teal-100">
-                        <BsPerson className="text-teal-500 text-lg" />
-                      </span>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs font-semibold text-gray-900">Robert Green</span>
-                          <span className="text-xs text-gray-500">May 15, 2025 at 11:20 AM</span>
-                        </div>
-                        <p className="text-xs text-gray-900 font-medium">I've updated the payment schedule as discussed in our last meeting.</p>
-                      </div>
-                    </div>
-
-                    {/* Comment 6 */}
-                    <div className="flex items-start gap-3">
-                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-pink-100">
-                        <BsPerson className="text-pink-500 text-lg" />
-                      </span>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs font-semibold text-gray-900">Jennifer White</span>
-                          <span className="text-xs text-gray-500">May 14, 2025 at 4:15 PM</span>
-                        </div>
-                        <p className="text-xs text-gray-900 font-medium">Please review the updated budget allocation for the project.</p>
-                      </div>
-                    </div>
+                    ))}
                   </div>
 
                   {/* Add Comment Section */}
@@ -1372,9 +1393,20 @@ export default function WorkflowsPage() {
                               <button onClick={() => commentEditor.chain().focus().toggleStrike().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('strike') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'}`} title="Strikethrough"><s>S</s></button>
                               <button onClick={() => commentEditor.chain().focus().toggleBulletList().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('bulletList') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'}`} title="Bullet List">• List</button>
                               <button onClick={() => commentEditor.chain().focus().toggleOrderedList().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('orderedList') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'}`} title="Numbered List">1. List</button>
-                              <button onClick={handlePostComment} className="ml-auto text-xs px-2 py-1 rounded transition-colors flex items-center group" title="Post Comment">
+                              <button onClick={handlePostComment} className="ml-auto text-xs px-2 py-1 rounded transition-colors flex items-center group" title={editingCommentId ? "Update Comment" : "Post Comment"}>
                                 <LuSendHorizontal className="w-4 h-4 text-black group-hover:text-primary transition-colors" />
                               </button>
+                              {editingCommentId && (
+                                <button 
+                                  onClick={() => {
+                                    setEditingCommentId(null);
+                                    commentEditor.commands.clearContent();
+                                  }} 
+                                  className="text-xs px-2 py-1 rounded text-gray-500 hover:text-red-500 transition-colors"
+                                >
+                                  Cancel
+                                </button>
+                              )}
                             </div>
                             <div className="border-2 border-gray-200 rounded-lg bg-white focus-within:border-primary transition-colors">
                               <EditorContent

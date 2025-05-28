@@ -9,6 +9,26 @@ import { LuCalendarClock } from 'react-icons/lu';
 import { BiDotsHorizontal } from 'react-icons/bi';
 import { Logo } from '@/components/common/Logo';
 import { mockTasks } from '@/data/mockTasks';
+import { useEditor } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Underline from '@tiptap/extension-underline';
+import Strike from '@tiptap/extension-strike';
+import Link from '@tiptap/extension-link';
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
+import { lowlight } from 'lowlight';
+import { EditorContent } from '@tiptap/react';
+import { BsPerson } from 'react-icons/bs';
+import { LuSendHorizontal } from 'react-icons/lu';
+
+// Add Comment interface
+interface Comment {
+  id: string;
+  author: string;
+  content: string;
+  timestamp: string;
+  avatarColor: string;
+  textColor: string;
+}
 
 interface Contract {
   id: string;
@@ -256,6 +276,89 @@ const ContractsPage: React.FC = () => {
   const [isEditingAgent, setIsEditingAgent] = useState(false);
   const [editableAgent, setEditableAgent] = useState('');
 
+  // Add contract comments state and functions
+  const [contractComments, setContractComments] = useState<Record<string, Comment[]>>(() => {
+    if (typeof window !== 'undefined') {
+      const savedComments = localStorage.getItem('contractComments');
+      if (savedComments) {
+        return JSON.parse(savedComments);
+      }
+    }
+    return {};
+  });
+
+  const [editingContractCommentId, setEditingContractCommentId] = useState<string | null>(null);
+
+  // Save contract comments to localStorage whenever they change
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('contractComments', JSON.stringify(contractComments));
+    }
+  }, [contractComments]);
+
+  const handlePostContractComment = () => {
+    if (!selectedContract || !commentEditor || !commentEditor.getText().trim()) return;
+
+    const contractId = selectedContract.id;
+    const currentComments = contractComments[contractId] || [];
+
+    if (editingContractCommentId) {
+      // Update existing comment
+      setContractComments({
+        ...contractComments,
+        [contractId]: currentComments.map((comment: Comment) => 
+          comment.id === editingContractCommentId 
+            ? { ...comment, content: commentEditor.getHTML() }
+            : comment
+        )
+      });
+      setEditingContractCommentId(null);
+    } else {
+      // Add new comment at the end
+      const newComment: Comment = {
+        id: Date.now().toString(),
+        author: 'Current User',
+        content: commentEditor.getHTML(),
+        timestamp: new Date().toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: 'numeric',
+          hour12: true
+        }),
+        avatarColor: 'bg-primary/10',
+        textColor: 'text-primary'
+      };
+      setContractComments({
+        ...contractComments,
+        [contractId]: [...currentComments, newComment]
+      });
+    }
+    commentEditor.commands.clearContent();
+  };
+
+  const handleEditContractComment = (commentId: string) => {
+    if (!selectedContract) return;
+    const contractId = selectedContract.id;
+    const currentComments = contractComments[contractId] || [];
+    const comment = currentComments.find((c: Comment) => c.id === commentId);
+    if (comment && commentEditor) {
+      commentEditor.commands.setContent(comment.content);
+      setEditingContractCommentId(commentId);
+    }
+  };
+
+  const handleDeleteContractComment = (commentId: string) => {
+    if (!selectedContract) return;
+    const contractId = selectedContract.id;
+    const currentComments = contractComments[contractId] || [];
+    setContractComments({
+      ...contractComments,
+      [contractId]: currentComments.filter((comment: Comment) => comment.id !== commentId)
+    });
+  };
+
   const [documentsBoxHeight, setDocumentsBoxHeight] = useState<number | undefined>(undefined);
   const documentsBoxRef = useRef<HTMLDivElement>(null);
 
@@ -355,6 +458,18 @@ const ContractsPage: React.FC = () => {
       maximumFractionDigits: 0
     });
   };
+
+  // Add commentEditor setup
+  const commentEditor = useEditor({
+    extensions: [
+      StarterKit,
+      Underline,
+      Strike,
+      Link,
+      CodeBlockLowlight.configure({ lowlight }),
+    ],
+    content: '',
+  });
 
   return (
     <>
@@ -1296,7 +1411,7 @@ const ContractsPage: React.FC = () => {
                       {/* Row 1: Contract ID and Hash */}
                       <div>
                         <div className="text-gray-500 text-xs mb-1">Contract ID</div>
-                        <div className="text-xs font-semibold text-primary">{selectedContract.id}</div>
+                        <div className="text-xs text-black">{selectedContract.id}</div>
                       </div>
                       <div>
                         <div className="text-gray-500 text-xs mb-1">Contract Hash</div>
@@ -1369,16 +1484,8 @@ const ContractsPage: React.FC = () => {
                       </div>
                       <div>
                         <div className="text-gray-500 text-xs mb-1">Contract Type</div>
-                        <div className="relative">
-                          <select
-                            className="contract-type-select w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs appearance-none bg-white bg-no-repeat bg-[length:20px] bg-[right_12px_center] bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236B7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')]"
-                            value={selectedType}
-                            onChange={e => setSelectedType(e.target.value)}
-                          >
-                            {CONTRACT_TYPES.map(type => (
-                              <option key={type} value={type}>{type}</option>
-                            ))}
-                          </select>
+                        <div className="w-full px-4 py-2 text-xs text-black -ml-4">
+                          {selectedType}
                         </div>
                       </div>
                       {/* Status Row */}
@@ -1400,11 +1507,11 @@ const ContractsPage: React.FC = () => {
                       <div className="col-span-2 grid grid-cols-2 gap-x-12">
                         <div>
                           <div className="text-gray-500 text-xs mb-1">Created Date</div>
-                          <div className="text-xs font-semibold text-primary">2024-05-01</div>
+                          <div className="text-xs text-black">2024-05-01</div>
                         </div>
                         <div>
                           <div className="text-gray-500 text-xs mb-1">Last Updated</div>
-                          <div className="text-xs font-semibold text-primary">2024-05-02</div>
+                          <div className="text-xs text-black">2024-05-02</div>
                         </div>
                       </div>
                       {/* Row 5: Total Value */}
@@ -1721,6 +1828,104 @@ const ContractsPage: React.FC = () => {
                             </button>
                           </div>
                         ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Comments Box - Full Width */}
+              <div className="mt-6">
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-4">Comments</h3>
+                  
+                  {/* Comment History */}
+                  <div className="space-y-4 mb-4 max-h-[300px] overflow-y-auto pr-2">
+                    {(selectedContract ? (contractComments[selectedContract.id] || []) : []).map((comment) => (
+                      <div key={comment.id} className="flex items-start gap-3">
+                        <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${comment.avatarColor}`}>
+                          <BsPerson className={`${comment.textColor} text-lg`} />
+                        </span>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xs font-semibold text-gray-900">{comment.author}</span>
+                            <span className="text-xs text-gray-500">{comment.timestamp}</span>
+                          </div>
+                          <div 
+                            className="text-xs text-gray-900 font-medium mb-2"
+                            dangerouslySetInnerHTML={{ __html: comment.content }}
+                          />
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => handleEditContractComment(comment.id)}
+                              className="text-xs text-gray-500 hover:text-primary transition-colors flex items-center gap-1"
+                            >
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteContractComment(comment.id)}
+                              className="text-xs text-gray-500 hover:text-red-500 transition-colors flex items-center gap-1"
+                            >
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Add Comment Section */}
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="flex items-start gap-3">
+                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary/10">
+                        <BsPerson className="text-primary text-lg" />
+                      </span>
+                      <div className="flex-1">
+                        {/* Toolbar */}
+                        {commentEditor && (
+                          <>
+                            <div className="flex gap-2 mb-2 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 items-center">
+                              <button onClick={() => commentEditor.chain().focus().toggleBold().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('bold') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'}`} title="Bold"><b>B</b></button>
+                              <button onClick={() => commentEditor.chain().focus().toggleItalic().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('italic') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'}`} title="Italic"><i>I</i></button>
+                              <button onClick={() => commentEditor.chain().focus().toggleUnderline().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('underline') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'}`} title="Underline"><u>U</u></button>
+                              <button onClick={() => commentEditor.chain().focus().toggleStrike().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('strike') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'}`} title="Strikethrough"><s>S</s></button>
+                              <button onClick={() => commentEditor.chain().focus().toggleBulletList().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('bulletList') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'}`} title="Bullet List">• List</button>
+                              <button onClick={() => commentEditor.chain().focus().toggleOrderedList().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('orderedList') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'}`} title="Numbered List">1. List</button>
+                              <button onClick={handlePostContractComment} className="ml-auto text-xs px-2 py-1 rounded transition-colors flex items-center group" title={editingContractCommentId ? "Update Comment" : "Post Comment"}>
+                                <LuSendHorizontal className="w-4 h-4 text-black group-hover:text-primary transition-colors" />
+                              </button>
+                              {editingContractCommentId && (
+                                <button 
+                                  onClick={() => {
+                                    setEditingContractCommentId(null);
+                                    commentEditor.commands.clearContent();
+                                  }} 
+                                  className="text-xs px-2 py-1 rounded text-gray-500 hover:text-red-500 transition-colors"
+                                >
+                                  Cancel
+                                </button>
+                              )}
+                            </div>
+                            <div className="border-2 border-gray-200 rounded-lg bg-white focus-within:border-primary transition-colors">
+                              <EditorContent
+                                editor={commentEditor}
+                                className="tiptap min-h-[48px] px-4 py-2 text-xs font-medium text-black font-sans outline-none"
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handlePostContractComment();
+                                  }
+                                }}
+                              />
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
