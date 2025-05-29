@@ -3,10 +3,10 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { mockContracts } from '@/data/mockContracts';
-import { mockTasks, Task } from '@/data/mockTasks';
+import { Task } from '@/types/task';
 
 // Icons
-import { HiOutlineDocumentText, HiOutlineViewBoards, HiOutlineUpload, HiOutlineEye, HiOutlineDownload, HiOutlineTrash, HiPlus } from 'react-icons/hi';
+import { HiOutlineDocumentText, HiOutlineViewBoards, HiOutlineUpload, HiOutlineEye, HiOutlineDownload, HiOutlineTrash, HiPlus, HiChevronDown } from 'react-icons/hi';
 import { CgPlayPauseR, CgPlayStopR } from 'react-icons/cg';
 import { BsPerson } from 'react-icons/bs';
 import { LuCalendarClock, LuSendHorizontal } from 'react-icons/lu';
@@ -31,12 +31,19 @@ function formatDateToInput(dateStr: string): string {
   if (!dateStr) return '';
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return '';
+  // Adjust for timezone offset to prevent date shifting
+  const offset = d.getTimezoneOffset();
+  d.setMinutes(d.getMinutes() + offset);
   return d.toISOString().slice(0, 10);
 }
+
 function formatDatePretty(dateStr: string): string {
   if (!dateStr) return '';
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return dateStr;
+  // Adjust for timezone offset to prevent date shifting
+  const offset = d.getTimezoneOffset();
+  d.setMinutes(d.getMinutes() + offset);
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
@@ -49,6 +56,9 @@ interface Comment {
   avatarColor: string;
   textColor: string;
 }
+
+// Use the task store
+import { useTaskStore } from '@/data/taskStore';
 
 export default function WorkflowsPage() {
   const [kanbanTab, setKanbanTab] = React.useState('All Tasks');
@@ -69,13 +79,10 @@ export default function WorkflowsPage() {
   const statusButtonRef = useRef<HTMLButtonElement>(null);
   const [openColumnMenu, setOpenColumnMenu] = React.useState<string | null>(null);
   const columnMenuRef = useRef<HTMLDivElement>(null);
-  const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
-  const [editedTaskTitle, setEditedTaskTitle] = React.useState(selectedTask?.title || '');
-  const [editedContractTitle, setEditedContractTitle] = React.useState(
-    mockContracts.find(c => c.id === selectedTask?.contractId)?.title || ''
-  );
-  const [editedDueDate, setEditedDueDate] = React.useState(selectedTask?.due || '');
-  const [editedAssignee, setEditedAssignee] = React.useState(selectedTask?.assignee || '');
+  const [editedTaskTitle, setEditedTaskTitle] = React.useState('');
+  const [editedContractTitle, setEditedContractTitle] = React.useState('');
+  const [editedDueDate, setEditedDueDate] = React.useState('');
+  const [editedAssignee, setEditedAssignee] = React.useState('');
   const [contractSearch, setContractSearch] = useState('');
   const [showContractDropdown, setShowContractDropdown] = useState(false);
   const filteredContracts = mockContracts.filter(c => c.title.toLowerCase().includes(contractSearch.toLowerCase()));
@@ -86,17 +93,60 @@ export default function WorkflowsPage() {
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const [editingCommentId, setEditingCommentId] = React.useState<string | null>(null);
   const [showNewTaskModal, setShowNewTaskModal] = React.useState(false);
-  
+  const [taskCounts, setTaskCounts] = useState({
+    total: 0,
+    todo: 0,
+    inProgress: 0,
+    done: 0,
+    blocked: 0,
+    onHold: 0,
+    inReview: 0,
+    canceled: 0,
+  });
+
+  // Use the task store
+  const {
+    tasks,
+    selectedTask,
+    setSelectedTask,
+    updateTask,
+    moveTask,
+    getTasksByStatus,
+    initializeTasks
+  } = useTaskStore();
+
+  // Initialize tasks from storage
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      initializeTasks();
+      console.log('Initialized tasks:', tasks);
+    }
+  }, []); // Remove initializeTasks from dependencies to prevent infinite loop
+
+  // Update task counts when tasks change
+  React.useEffect(() => {
+    const counts = {
+      total: tasks.length,
+      todo: tasks.filter(t => t.status === 'To Do').length,
+      inProgress: tasks.filter(t => t.status === 'In Progress').length,
+      done: tasks.filter(t => t.status === 'Done').length,
+      blocked: tasks.filter(t => t.status === 'Blocked').length,
+      onHold: tasks.filter(t => t.status === 'On Hold').length,
+      inReview: tasks.filter(t => t.status === 'In Review').length,
+      canceled: tasks.filter(t => t.status === 'Canceled').length,
+    };
+    setTaskCounts(counts);
+    console.log('Updated task counts:', counts);
+  }, [tasks]);
+
   // Replace the comments state with taskComments
   const [taskComments, setTaskComments] = React.useState<Record<string, Comment[]>>(() => {
-    // Check if we're in the browser environment
     if (typeof window !== 'undefined') {
       const savedComments = localStorage.getItem('taskComments');
       if (savedComments) {
         return JSON.parse(savedComments);
       }
     }
-    // Default comments if no saved comments exist
     return {};
   });
 
@@ -107,74 +157,71 @@ export default function WorkflowsPage() {
     }
   }, [taskComments]);
 
-  // Define Kanban columns as a single source of truth
+  // Define Kanban columns using the task store
   const kanbanColumns = [
     {
-      key: 'todo',
+      key: 'To Do',
       title: 'To Do',
       color: 'bg-gray-100',
       icon: <PiListPlusBold className="text-xl mr-2 text-gray-500" />,
-      tasks: mockTasks.filter(task => task.status === 'todo')
+      tasks: getTasksByStatus('To Do')
     },
     {
-      key: 'blocked',
+      key: 'Blocked',
       title: 'Blocked',
       color: 'bg-red-100',
       icon: <CgPlayStopR className="text-xl mr-2 text-red-500" />,
-      tasks: mockTasks.filter(task => task.status === 'blocked')
+      tasks: getTasksByStatus('Blocked')
     },
     {
-      key: 'onhold',
+      key: 'On Hold',
       title: 'On Hold',
       color: 'bg-orange-100',
       icon: <CgPlayPauseR className="text-xl mr-2 text-orange-500" />,
-      tasks: mockTasks.filter(task => task.status === 'onhold')
+      tasks: getTasksByStatus('On Hold')
     },
     {
-      key: 'inprogress',
+      key: 'In Progress',
       title: 'In Progress',
       color: 'bg-blue-100',
       icon: <FaRetweet className="text-xl mr-2 text-blue-500" />,
-      tasks: mockTasks.filter(task => task.status === 'inprogress')
+      tasks: getTasksByStatus('In Progress')
     },
     {
-      key: 'inreview',
+      key: 'In Review',
       title: 'In Review',
       color: 'bg-yellow-100',
       icon: <PiListMagnifyingGlassBold className="text-xl mr-2 text-yellow-500" />,
-      tasks: mockTasks.filter(task => task.status === 'inreview')
+      tasks: getTasksByStatus('In Review')
     },
     {
-      key: 'done',
+      key: 'Done',
       title: 'Done',
       color: 'bg-green-100',
       icon: <FaRegSquareCheck className="text-xl mr-2 text-green-600" />,
-      tasks: mockTasks.filter(task => task.status === 'done')
+      tasks: getTasksByStatus('Done')
     },
     {
-      key: 'canceled',
+      key: 'Canceled',
       title: 'Canceled',
       color: 'bg-purple-100',
       icon: <MdCancelPresentation className="text-xl mr-2 text-purple-500" />,
-      tasks: mockTasks.filter(task => task.status === 'canceled')
+      tasks: getTasksByStatus('Canceled')
     }
   ];
 
-  // Kanban state for drag-and-drop
-  const [kanbanState, setKanbanState] = React.useState(kanbanColumns);
-
-  const allTasks = kanbanColumns.flatMap(col => col.tasks);
+  const allTasks = tasks;
   const uniqueAssignees = Array.from(new Set(allTasks.map(t => t.assignee))).sort();
 
-  // Add this after the uniqueAssignees constant
+  // Add status options constant
   const statusOptions = [
-    { key: 'todo', title: 'To Do' },
-    { key: 'blocked', title: 'Blocked' },
-    { key: 'onhold', title: 'On Hold' },
-    { key: 'inprogress', title: 'In Progress' },
-    { key: 'inreview', title: 'In Review' },
-    { key: 'done', title: 'Done' },
-    { key: 'canceled', title: 'Canceled' }
+    { key: 'To Do' as const, title: 'To Do' },
+    { key: 'Blocked' as const, title: 'Blocked' },
+    { key: 'On Hold' as const, title: 'On Hold' },
+    { key: 'In Progress' as const, title: 'In Progress' },
+    { key: 'In Review' as const, title: 'In Review' },
+    { key: 'Done' as const, title: 'Done' },
+    { key: 'Canceled' as const, title: 'Canceled' }
   ];
 
   // Helper to filter tasks in a column according to current filters
@@ -208,19 +255,10 @@ export default function WorkflowsPage() {
     const { source, destination } = result;
     if (!destination) return;
     if (source.droppableId === destination.droppableId && source.index === destination.index) return;
-    setKanbanState(prev => {
-      const sourceColIdx = prev.findIndex(col => col.key === source.droppableId);
-      const destColIdx = prev.findIndex(col => col.key === destination.droppableId);
-      if (sourceColIdx === -1 || destColIdx === -1) return prev;
-      const sourceCol = { ...prev[sourceColIdx], tasks: [...prev[sourceColIdx].tasks] };
-      const destCol = sourceColIdx === destColIdx ? sourceCol : { ...prev[destColIdx], tasks: [...prev[destColIdx].tasks] };
-      const [movedTask] = sourceCol.tasks.splice(source.index, 1);
-      destCol.tasks.splice(destination.index, 0, movedTask);
-      const newState = [...prev];
-      newState[sourceColIdx] = sourceCol;
-      newState[destColIdx] = destCol;
-      return newState;
-    });
+
+    const taskId = result.draggableId;
+    console.log('Moving task:', taskId, 'to status:', destination.droppableId);
+    moveTask(taskId, destination.droppableId as Task['status']);
   }
 
   React.useEffect(() => {
@@ -229,25 +267,6 @@ export default function WorkflowsPage() {
     setEditedDueDate(formatDateToInput(selectedTask?.due || ''));
     setEditedAssignee(selectedTask?.assignee || '');
   }, [selectedTask]);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        contractDropdownRef.current &&
-        !contractDropdownRef.current.contains(event.target as Node)
-      ) {
-        setShowContractDropdown(false);
-      }
-    }
-    if (showContractDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-    } else {
-      document.removeEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showContractDropdown]);
 
   // Inside WorkflowsPage component, before return:
   const commentEditor = useEditor({
@@ -324,6 +343,120 @@ export default function WorkflowsPage() {
     });
   };
 
+  // Update the status change handler
+  const handleStatusChange = (status: typeof statusOptions[number]['key']) => {
+    if (selectedTask) {
+      moveTask(selectedTask.id, status);
+      setShowStatusDropdown(false);
+    }
+  };
+
+  // Add this useEffect for the contract dropdown click-outside handler
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      const dropdown = document.querySelector('.contract-dropdown');
+      const button = contractButtonRef.current;
+
+      // Only close if clicking outside both the dropdown and button
+      if (openContractDropdown && 
+          !dropdown?.contains(target) && 
+          !button?.contains(target)) {
+        setOpenContractDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openContractDropdown]);
+
+  // Add this useEffect for the status filter dropdown click-outside handler
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      const dropdown = document.querySelector('.status-filter-dropdown');
+      const button = statusButtonRef.current;
+
+      // Only close if clicking outside both the dropdown and button
+      if (openStatusDropdown && 
+          !dropdown?.contains(target) && 
+          !button?.contains(target)) {
+        setOpenStatusDropdown(false);
+      }
+    }
+
+    if (openStatusDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openStatusDropdown]);
+
+  // Add this useEffect for the assignee dropdown click-outside handler
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      const dropdown = document.querySelector('.assignee-dropdown');
+      const button = assigneeButtonRef.current;
+
+      // Only close if clicking outside both the dropdown and button
+      if (openAssigneeDropdown && 
+          !dropdown?.contains(target) && 
+          !button?.contains(target)) {
+        setOpenAssigneeDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openAssigneeDropdown]);
+
+  // Update the status change handler for the task details modal
+  const handleTaskStatusChange = (status: typeof statusOptions[number]['key']) => {
+    if (selectedTask) {
+      moveTask(selectedTask.code, status);
+      // Update the selected task's status in the modal
+      setSelectedTask({ ...selectedTask, status });
+      setShowStatusDropdown(false);
+    }
+  };
+
+  // Add handler for assignee changes
+  const handleAssigneeChange = (newAssignee: string) => {
+    if (selectedTask) {
+      // Update the task in the store
+      updateTask(selectedTask.code, { ...selectedTask, assignee: newAssignee });
+      // Update the selected task in the modal
+      setSelectedTask({ ...selectedTask, assignee: newAssignee });
+      setShowAssigneeDropdown(false);
+    }
+  };
+
+  // Add handler for due date changes
+  const handleDueDateChange = (newDueDate: string) => {
+    if (selectedTask) {
+      // Update the task in the store
+      updateTask(selectedTask.code, { ...selectedTask, due: newDueDate });
+      // Update the selected task in the modal
+      setSelectedTask({ ...selectedTask, due: newDueDate });
+      setEditedDueDate(newDueDate);
+    }
+  };
+
+  // Add debug logs for selectedTask and subtasks
+  if (selectedTask) {
+    console.log('Selected Task:', selectedTask);
+    console.log('Selected Task Subtasks:', selectedTask.subtasks);
+  }
+
+  // Debug: Print all tasks from the store to check for subtasks
+  console.log('All tasks from store:', tasks);
+
   return (
     <div className="space-y-4">
       {/* Workflow Title and Button */}
@@ -373,7 +506,7 @@ export default function WorkflowsPage() {
             </div>
             <div className="flex flex-col items-start h-full">
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans">Tasks in Progress</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{kanbanState.find(col => col.key === 'inprogress')?.tasks.length || 0}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{kanbanColumns.find(col => col.key === 'In Progress')?.tasks.length || 0}</p>
               <p className="text-xs invisible">placeholder</p>
             </div>
           </div>
@@ -397,7 +530,7 @@ export default function WorkflowsPage() {
             </div>
             <div className="flex flex-col items-start h-full">
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans">Blocked Tasks</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{kanbanState.find(col => col.key === 'blocked')?.tasks.length || 0}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{kanbanColumns.find(col => col.key === 'Blocked')?.tasks.length || 0}</p>
               <p className="text-xs text-gray-400 dark:text-gray-500">Requires action</p>
             </div>
           </div>
@@ -414,7 +547,7 @@ export default function WorkflowsPage() {
             >
               <BsPerson className="text-gray-400 text-lg" />
               <span>Assignee</span>
-              <span className="ml-1 text-gray-400">&#9662;</span>
+              <HiChevronDown className="text-gray-400 text-base" />
             </button>
             {openAssigneeDropdown && (
               <div className="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 assignee-dropdown" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
@@ -473,23 +606,38 @@ export default function WorkflowsPage() {
               ref={contractButtonRef}
               className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px]"
               style={{ fontFamily: 'Avenir, sans-serif' }}
-              onClick={() => { setOpenContractDropdown(v => !v); setOpenAssigneeDropdown(false); }}
+              onClick={() => setOpenContractDropdown(v => !v)}
             >
               <HiOutlineDocumentText className="text-gray-400 text-lg" />
               <span>Contract</span>
-              <span className="ml-1 text-gray-400">&#9662;</span>
+              <HiChevronDown className="text-gray-400 text-base" />
             </button>
             {openContractDropdown && (
-              <div className="absolute left-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 min-w-[400px] w-96 contract-dropdown" style={{ fontFamily: 'Avenir, sans-serif' }}>
+              <div 
+                className="absolute left-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 min-w-[400px] w-96 contract-dropdown" 
+                style={{ fontFamily: 'Avenir, sans-serif' }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Search Bar */}
+                <div className="px-4 py-2 border-b border-gray-100">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search contracts..."
+                      value={contractSearch}
+                      onChange={(e) => setContractSearch(e.target.value)}
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                    />
+                    <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  </div>
+                </div>
+
                 <button
                   className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
                     selectedContracts.length === 0 ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
                   }`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setSelectedContracts([]);
-                  }}
+                  onClick={() => setSelectedContracts([])}
                 >
                   <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedContracts.length === 0 ? 'bg-primary' : 'border border-gray-300'}`}>
                     {selectedContracts.length === 0 && (
@@ -500,35 +648,37 @@ export default function WorkflowsPage() {
                   </div>
                   All Contracts
                 </button>
-                {mockContracts.map(contract => (
-                  <button
-                    key={contract.id}
-                    className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center whitespace-nowrap truncate ${
-                      selectedContracts.includes(String(contract.id)) ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
-                    }`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setSelectedContracts(prev => {
-                        if (prev.includes(String(contract.id))) {
-                          return prev.filter(c => c !== String(contract.id));
-                        } else {
-                          return [...prev, String(contract.id)];
-                        }
-                      });
-                    }}
-                    style={{ width: '100%' }}
-                  >
-                    <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedContracts.includes(String(contract.id)) ? 'bg-primary' : 'border border-gray-300'}`}>
-                      {selectedContracts.includes(String(contract.id)) && (
-                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </div>
-                    {contract.id} - {contract.title}
-                  </button>
-                ))}
+                {mockContracts
+                  .filter(contract => 
+                    contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
+                    contract.title.toLowerCase().includes(contractSearch.toLowerCase())
+                  )
+                  .map(contract => (
+                    <button
+                      key={contract.id}
+                      className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center whitespace-nowrap truncate ${
+                        selectedContracts.includes(String(contract.id)) ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
+                      }`}
+                      onClick={() => {
+                        setSelectedContracts(prev => {
+                          if (prev.includes(String(contract.id))) {
+                            return prev.filter(c => c !== String(contract.id));
+                          } else {
+                            return [...prev, String(contract.id)];
+                          }
+                        });
+                      }}
+                    >
+                      <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedContracts.includes(String(contract.id)) ? 'bg-primary' : 'border border-gray-300'}`}>
+                        {selectedContracts.includes(String(contract.id)) && (
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </div>
+                      {contract.id} - {contract.title}
+                    </button>
+                  ))}
               </div>
             )}
           </div>
@@ -541,10 +691,14 @@ export default function WorkflowsPage() {
             >
               <HiOutlineViewBoards className="text-gray-400 text-lg" />
               <span>Status</span>
-              <span className="ml-1 text-gray-400">&#9662;</span>
+              <HiChevronDown className="text-gray-400 text-base" />
             </button>
             {openStatusDropdown && (
-              <div className="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 status-dropdown" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
+              <div 
+                className="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 status-filter-dropdown" 
+                style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                onClick={(e) => e.stopPropagation()}
+              >
                 <button
                   className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
                     selectedStatuses.length === 0 ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
@@ -562,7 +716,7 @@ export default function WorkflowsPage() {
                       </svg>
                     )}
                   </div>
-                  All
+                  All Statuses
                 </button>
                 {statusOptions.map(status => (
                   <button
@@ -614,7 +768,7 @@ export default function WorkflowsPage() {
       {kanbanTab === 'All Tasks' && (
         <DragDropContext onDragEnd={onDragEnd}>
           <div className="flex flex-grow overflow-x-auto space-x-6 p-4 rounded-lg">
-            {kanbanState
+            {kanbanColumns
               .filter(col => selectedStatuses.length === 0 || selectedStatuses.includes(col.key))
               .map((col) => (
                 <Droppable droppableId={col.key} key={col.key}>
@@ -645,7 +799,10 @@ export default function WorkflowsPage() {
                                   className={`bg-white rounded-lg border border-gray-200 p-4 shadow-sm transition-shadow relative ${
                                     snapshot.isDragging ? 'shadow-lg' : ''
                                   }`}
-                                  onClick={() => setSelectedTask(task)}
+                                  onClick={() => {
+                                    const fullTask = tasks.find(t => t.code === task.code);
+                                    setSelectedTask(fullTask || task);
+                                  }}
                                 >
                                   {/* Task Menu - Positioned at top right */}
                                   <div className="absolute top-3 right-3">
@@ -702,7 +859,11 @@ export default function WorkflowsPage() {
                                       <div
                                         className="h-full bg-primary rounded-full"
                                         style={{
-                                          width: `${(parseInt(task.progress.split(' of ')[0]) / parseInt(task.progress.split(' of ')[1])) * 100}%`,
+                                          width: `${(() => {
+                                            const taskSubtasks = task.subtasks || [];
+                                            const completed = taskSubtasks.filter(st => st.completed).length;
+                                            return taskSubtasks.length === 0 ? 0 : (completed / taskSubtasks.length) * 100;
+                                          })()}%`,
                                         }}
                                       />
                                     </div>
@@ -711,7 +872,11 @@ export default function WorkflowsPage() {
                                   {/* Assignee and Progress */}
                                   <div className="flex items-center justify-between">
                                     <span className="text-xs text-gray-900">{task.assignee}</span>
-                                    <span className="text-xs text-gray-900">{task.progress}</span>
+                                    <span className="text-xs text-gray-900">{(() => {
+                                      const taskSubtasks = task.subtasks || [];
+                                      const completed = taskSubtasks.filter(st => st.completed).length;
+                                      return `${completed} of ${taskSubtasks.length}`;
+                                    })()}</span>
                                   </div>
                                 </div>
                               )}
@@ -730,8 +895,8 @@ export default function WorkflowsPage() {
       {kanbanTab === 'Active Tasks' && (
         <DragDropContext onDragEnd={onDragEnd}>
           <div className="flex flex-grow overflow-x-auto space-x-6 p-4 rounded-lg">
-            {kanbanState
-              .filter(col => col.key !== 'done' && col.key !== 'canceled' && (selectedStatuses.length === 0 || selectedStatuses.includes(col.key)))
+            {kanbanColumns
+              .filter(col => col.key !== 'Done' && col.key !== 'Canceled' && (selectedStatuses.length === 0 || selectedStatuses.includes(col.key)))
               .map((col) => (
                 <Droppable droppableId={col.key} key={col.key}>
                   {(provided) => (
@@ -759,7 +924,10 @@ export default function WorkflowsPage() {
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
                                   className={`bg-white rounded-lg border border-gray-200 p-4 shadow-sm transition-shadow relative ${snapshot.isDragging ? 'shadow-lg' : ''}`}
-                                  onClick={() => setSelectedTask(task)}
+                                  onClick={() => {
+                                    const fullTask = tasks.find(t => t.code === task.code);
+                                    setSelectedTask(fullTask || task);
+                                  }}
                                 >
                                   {/* Task Menu - Positioned at top right */}
                                   <div className="absolute top-3 right-3">
@@ -812,7 +980,11 @@ export default function WorkflowsPage() {
                                       <div
                                         className="h-full bg-primary rounded-full"
                                         style={{
-                                          width: `${(parseInt(task.progress.split(' of ')[0]) / parseInt(task.progress.split(' of ')[1])) * 100}%`,
+                                          width: `${(() => {
+                                            const taskSubtasks = task.subtasks || [];
+                                            const completed = taskSubtasks.filter(st => st.completed).length;
+                                            return taskSubtasks.length === 0 ? 0 : (completed / taskSubtasks.length) * 100;
+                                          })()}%`,
                                         }}
                                       />
                                     </div>
@@ -820,7 +992,11 @@ export default function WorkflowsPage() {
                                   {/* Assignee and Progress */}
                                   <div className="flex items-center justify-between">
                                     <span className="text-xs text-gray-900">{task.assignee}</span>
-                                    <span className="text-xs text-gray-900">{task.progress}</span>
+                                    <span className="text-xs text-gray-900">{(() => {
+                                      const taskSubtasks = task.subtasks || [];
+                                      const completed = taskSubtasks.filter(st => st.completed).length;
+                                      return `${completed} of ${taskSubtasks.length}`;
+                                    })()}</span>
                                   </div>
                                 </div>
                               )}
@@ -891,44 +1067,10 @@ export default function WorkflowsPage() {
                         />
                       </div>
                       <div style={{ position: 'relative' }} ref={contractDropdownRef}>
-                        <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Contract Title</div>
-                        <input
-                          type="text"
-                          className="contract-autocomplete-input w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                          placeholder={mockContracts.find(c => c.id === selectedTask?.contractId)?.title || ''}
-                          value={contractSearch}
-                          onChange={e => {
-                            setContractSearch(e.target.value);
-                            setShowContractDropdown(true);
-                          }}
-                          onFocus={() => setShowContractDropdown(true)}
-                          style={{ fontFamily: 'Avenir, sans-serif', color: '#000' }}
-                          autoComplete="off"
-                        />
-                        {showContractDropdown && (
-                          <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                            {filteredContracts.length > 0 ? (
-                              filteredContracts.map(contract => (
-                                <div
-                                  key={contract.id}
-                                  className="px-4 py-2 text-xs cursor-pointer hover:bg-primary/10 hover:text-primary"
-                                  onMouseDown={() => {
-                                    if (selectedTask) {
-                                      setEditedContractTitle(contract.title);
-                                      setContractSearch('');
-                                      setShowContractDropdown(false);
-                                      setSelectedTask({ ...selectedTask, contractId: contract.id });
-                                    }
-                                  }}
-                                >
-                                  {contract.title}
-                                </div>
-                              ))
-                            ) : (
-                              <div className="px-4 py-2 text-xs text-gray-400">No contracts found</div>
-                            )}
-                          </div>
-                        )}
+                        <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Contract</div>
+                        <div className="w-full pl-0 pr-4 py-2 text-xs font-medium text-black" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                          {mockContracts.find(c => c.id === selectedTask?.contractId)?.title || ''}
+                        </div>
                       </div>
                     </div>
                     {/* Row 2: Assignee | Status */}
@@ -954,8 +1096,7 @@ export default function WorkflowsPage() {
                                     key={assignee}
                                     className="px-4 py-2 text-xs cursor-pointer hover:bg-primary/10 hover:text-primary"
                                     onClick={() => {
-                                      setEditedAssignee(assignee);
-                                      setShowAssigneeDropdown(false);
+                                      handleAssigneeChange(assignee);
                                     }}
                                   >
                                     {assignee}
@@ -974,59 +1115,36 @@ export default function WorkflowsPage() {
                           <input
                             type="text"
                             className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10"
-                            placeholder={kanbanState.find(col => col.tasks.some(t => t.code === selectedTask.code))?.title || 'To Do'}
-                            value={kanbanState.find(col => col.tasks.some(t => t.code === selectedTask.code))?.title || 'To Do'}
-                            onFocus={() => setShowStatusDropdown(true)}
+                            placeholder={kanbanColumns.find(col => col.tasks.some(t => t.code === selectedTask.code))?.title || 'To Do'}
+                            value={kanbanColumns.find(col => col.tasks.some(t => t.code === selectedTask.code))?.title || 'To Do'}
+                            onClick={() => setShowStatusDropdown(!showStatusDropdown)}
                             readOnly
                             style={{ fontFamily: 'Avenir, sans-serif' }}
                           />
-                          <svg className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                          </svg>
+                          <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                           {showStatusDropdown && (
-                            <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                            <div className="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 status-dropdown" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
                               {statusOptions.map(status => (
-                                <div
+                                <button
                                   key={status.key}
-                                  className="px-4 py-2 text-xs cursor-pointer hover:bg-primary/10 hover:text-primary"
-                                  onClick={() => {
-                                    if (selectedTask) {
-                                      // Find the current column containing the task
-                                      const currentColumn = kanbanState.find(col => 
-                                        col.tasks.some(t => t.code === selectedTask.code)
-                                      );
-                                      
-                                      // Find the target column
-                                      const targetColumn = kanbanState.find(col => col.key === status.key);
-                                      
-                                      if (currentColumn && targetColumn) {
-                                        // Remove task from current column
-                                        const updatedCurrentColumn = {
-                                          ...currentColumn,
-                                          tasks: currentColumn.tasks.filter(t => t.code !== selectedTask.code)
-                                        };
-                                        
-                                        // Add task to target column
-                                        const updatedTargetColumn = {
-                                          ...targetColumn,
-                                          tasks: [...targetColumn.tasks, selectedTask]
-                                        };
-                                        
-                                        // Update kanban state
-                                        setKanbanState(prev => 
-                                          prev.map(col => {
-                                            if (col.key === currentColumn.key) return updatedCurrentColumn;
-                                            if (col.key === targetColumn.key) return updatedTargetColumn;
-                                            return col;
-                                          })
-                                        );
-                                      }
-                                    }
-                                    setShowStatusDropdown(false);
+                                  className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
+                                    selectedTask?.status === status.key ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
+                                  }`}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleTaskStatusChange(status.key);
                                   }}
                                 >
+                                  <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedTask?.status === status.key ? 'bg-primary' : 'border border-gray-300'}`}>
+                                    {selectedTask?.status === status.key && (
+                                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                      </svg>
+                                    )}
+                                  </div>
                                   {status.title}
-                                </div>
+                                </button>
                               ))}
                             </div>
                           )}
@@ -1044,7 +1162,7 @@ export default function WorkflowsPage() {
                             className="pl-3 pr-2 py-2 border-2 border-gray-200 rounded-lg text-xs text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors w-full"
                             value={editedDueDate}
                             placeholder={selectedTask?.due ? formatDateToInput(selectedTask.due) : ''}
-                            onChange={e => setEditedDueDate(e.target.value)}
+                            onChange={e => handleDueDateChange(e.target.value)}
                             style={{ fontFamily: 'Avenir, sans-serif' }}
                           />
                         </div>
@@ -1087,61 +1205,63 @@ export default function WorkflowsPage() {
                   </div>
 
                   {/* Subtasks Box */}
-                  <div className="bg-white border border-gray-200 rounded-lg p-6 min-h-[300px]">
+                  <div className="bg-white border border-gray-200 rounded-lg p-6 min-h-[336px]">
                     <div className="flex items-center justify-between mb-4">
-                      <span className="text-sm font-semibold text-gray-900" style={{ fontFamily: 'Avenir, sans-serif' }}>Subtasks (2 of 6)</span>
+                      <span className="text-sm font-semibold text-gray-900" style={{ fontFamily: 'Avenir, sans-serif' }}>Subtasks</span>
                       <button className="flex items-center gap-2 px-2 py-1 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors" style={{ fontFamily: 'Avenir, sans-serif' }}>
                         <span className="text-base font-bold text-primary">+</span> New Subtask
                       </button>
                     </div>
-                    <div className="flex flex-col gap-3 max-h-[300px] overflow-y-auto pr-2">
-                      <div className="flex items-center bg-white rounded-lg border border-gray-200 px-4 py-3">
-                        <input type="checkbox" className="mr-3 w-4 h-4 rounded border-gray-300" />
-                        <span className="text-xs text-gray-900 font-medium flex-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Review document sections</span>
-                        <button className="ml-2 border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors">
-                          <BiDotsHorizontal size={18} />
-                        </button>
-                      </div>
-                      <div className="flex items-center bg-white rounded-lg border border-gray-200 px-4 py-3">
-                        <input type="checkbox" className="mr-3 w-4 h-4 rounded border-gray-300" />
-                        <span className="text-xs text-gray-900 font-medium flex-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Verify pricing information</span>
-                        <button className="ml-2 border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors">
-                          <BiDotsHorizontal size={18} />
-                        </button>
-                      </div>
-                      <div className="flex items-center bg-white rounded-lg border border-gray-200 px-4 py-3">
-                        <input type="checkbox" className="mr-3 w-4 h-4 rounded border-gray-300" />
-                        <span className="text-xs text-gray-900 font-medium flex-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Check legal compliance</span>
-                        <button className="ml-2 border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors">
-                          <BiDotsHorizontal size={18} />
-                        </button>
-                      </div>
-                      <div className="flex items-center bg-white rounded-lg border border-gray-200 px-4 py-3">
-                        <input type="checkbox" className="mr-3 w-4 h-4 rounded border-gray-300" />
-                        <span className="text-xs text-gray-900 font-medium flex-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Update contact information</span>
-                        <button className="ml-2 border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors">
-                          <BiDotsHorizontal size={18} />
-                        </button>
-                      </div>
-                      <div className="flex items-center bg-white rounded-lg border border-gray-200 px-4 py-3">
-                        <input type="checkbox" className="mr-3 w-4 h-4 rounded border-gray-300" />
-                        <span className="text-xs text-gray-900 font-medium flex-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Schedule follow-up meeting</span>
-                        <button className="ml-2 border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors">
-                          <BiDotsHorizontal size={18} />
-                        </button>
-                      </div>
-                      <div className="flex items-center bg-white rounded-lg border border-gray-200 px-4 py-3">
-                        <input type="checkbox" className="mr-3 w-4 h-4 rounded border-gray-300" />
-                        <span className="text-xs text-gray-900 font-medium flex-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Prepare summary report</span>
-                        <button className="ml-2 border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors">
-                          <BiDotsHorizontal size={18} />
-                        </button>
-                      </div>
-                    </div>
-                    <div className="mt-4">
-                      <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
-                        <div className="h-full bg-primary rounded-full" style={{ width: '33%' }} />
-                      </div>
+                    <div className="space-y-2">
+                      {selectedTask?.subtasks?.map((subtask) => (
+                        <div key={subtask.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                          <div className="flex-1">
+                            <span className="text-xs font-medium text-gray-900">{subtask.title}</span>
+                          </div>
+                          <label className="relative flex items-center cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={subtask.completed}
+                              onChange={() => {
+                                const fullTask = tasks.find(t => t.code === selectedTask.code);
+                                if (fullTask) {
+                                  const updatedSubtasks = fullTask.subtasks.map(st =>
+                                    st.id === subtask.id ? { ...st, completed: !st.completed } : st
+                                  );
+                                  updateTask(fullTask.code, { subtasks: updatedSubtasks });
+                                  // After updating, get the latest task from the store and set it as selected
+                                  setTimeout(() => {
+                                    const refreshedTask = useTaskStore.getState().tasks.find(t => t.code === fullTask.code);
+                                    setSelectedTask(refreshedTask || { ...fullTask, subtasks: updatedSubtasks });
+                                  }, 0);
+                                }
+                              }}
+                              className="peer absolute opacity-0 w-5 h-5 cursor-pointer"
+                              tabIndex={0}
+                              aria-checked={subtask.completed}
+                            />
+                            <span
+                              className={
+                                `w-5 h-5 flex items-center justify-center rounded-md border transition-colors duration-150 ` +
+                                (subtask.completed
+                                  ? 'bg-primary border-primary'
+                                  : 'bg-white border-gray-300 hover:border-primary')
+                              }
+                            >
+                              {subtask.completed && (
+                                <svg className="w-3 h-3" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <path d="M5 10.5L9 14.5L15 7.5" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                              )}
+                            </span>
+                          </label>
+                        </div>
+                      ))}
+                      {(!selectedTask?.subtasks || selectedTask.subtasks.length === 0) && (
+                        <div className="text-center py-8 text-gray-500 text-sm">
+                          No subtasks yet. Click "New Subtask" to add one.
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
