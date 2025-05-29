@@ -1,3 +1,8 @@
+export interface Subtask {
+  title: string;
+  completed: boolean;
+}
+
 export interface Task {
   id: string;
   code: string;
@@ -12,6 +17,7 @@ export interface Task {
   taskNumber: number;
   description: string;
   status: 'todo' | 'blocked' | 'onhold' | 'inprogress' | 'inreview' | 'done' | 'canceled';
+  subtasks: Subtask[];
 }
 
 export const mockTasks: Task[] = [
@@ -29,7 +35,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-purple-200 text-purple-700',
     taskNumber: 101,
     description: 'Review and confirm all payment milestones and schedules.',
-    status: 'todo'
+    status: 'todo',
+    subtasks: []
   },
   {
     id: '102',
@@ -44,7 +51,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-pink-200 text-pink-700',
     taskNumber: 102,
     description: 'Conduct thorough title search and verify ownership.',
-    status: 'inprogress'
+    status: 'inprogress',
+    subtasks: []
   },
   {
     id: '103',
@@ -59,7 +67,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-blue-200 text-blue-700',
     taskNumber: 103,
     description: 'Schedule and complete property inspection.',
-    status: 'blocked'
+    status: 'blocked',
+    subtasks: []
   },
   // Contract 9550 - Land Development Contract
   {
@@ -75,7 +84,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-pink-200 text-pink-700',
     taskNumber: 104,
     description: 'Conduct environmental impact assessment for the land development.',
-    status: 'todo'
+    status: 'todo',
+    subtasks: []
   },
   {
     id: '105',
@@ -90,7 +100,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-blue-200 text-blue-700',
     taskNumber: 105,
     description: 'Verify zoning regulations and obtain necessary permits.',
-    status: 'inreview'
+    status: 'inreview',
+    subtasks: []
   },
   {
     id: '106',
@@ -105,7 +116,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-purple-200 text-purple-700',
     taskNumber: 106,
     description: 'Review and approve land development plans.',
-    status: 'done'
+    status: 'done',
+    subtasks: []
   },
   // Contract 9145 - Construction Escrow
   {
@@ -121,7 +133,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-pink-200 text-pink-700',
     taskNumber: 107,
     description: 'Review and approve construction milestones and timeline.',
-    status: 'todo'
+    status: 'todo',
+    subtasks: []
   },
   {
     id: '108',
@@ -136,7 +149,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-green-200 text-green-700',
     taskNumber: 108,
     description: 'Verify material orders and delivery schedules.',
-    status: 'onhold'
+    status: 'onhold',
+    subtasks: []
   },
   {
     id: '109',
@@ -151,7 +165,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-purple-200 text-purple-700',
     taskNumber: 109,
     description: 'Conduct safety inspection of construction site.',
-    status: 'inprogress'
+    status: 'inprogress',
+    subtasks: []
   },
   // Contract 8784 - Commercial Lease Amendment
   {
@@ -167,7 +182,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-blue-200 text-blue-700',
     taskNumber: 110,
     description: 'Review and update lease terms and conditions.',
-    status: 'todo'
+    status: 'todo',
+    subtasks: []
   },
   {
     id: '111',
@@ -182,7 +198,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-pink-200 text-pink-700',
     taskNumber: 111,
     description: 'Obtain tenant approval for lease amendments.',
-    status: 'inreview'
+    status: 'inreview',
+    subtasks: []
   },
   {
     id: '112',
@@ -197,7 +214,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-pink-200 text-pink-700',
     taskNumber: 112,
     description: 'Finalize and prepare lease amendment documents.',
-    status: 'blocked'
+    status: 'blocked',
+    subtasks: []
   },
   // Contract 8423 - Property Sale Contract
   {
@@ -213,7 +231,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-purple-200 text-purple-700',
     taskNumber: 113,
     description: 'Conduct property valuation and assessment.',
-    status: 'todo'
+    status: 'todo',
+    subtasks: []
   },
   {
     id: '114',
@@ -228,7 +247,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-green-200 text-green-700',
     taskNumber: 114,
     description: 'Perform market analysis for property pricing.',
-    status: 'inprogress'
+    status: 'inprogress',
+    subtasks: []
   },
   {
     id: '115',
@@ -243,7 +263,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-blue-200 text-blue-700',
     taskNumber: 115,
     description: 'Negotiate contract terms with buyer and seller.',
-    status: 'onhold'
+    status: 'onhold',
+    subtasks: []
   },
   // Contract 7804 - Investment Property Escrow
   {
@@ -259,7 +280,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-pink-200 text-pink-700',
     taskNumber: 116,
     description: 'Analyze investment potential and returns.',
-    status: 'todo'
+    status: 'todo',
+    subtasks: []
   },
   {
     id: '117',
@@ -274,7 +296,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-purple-200 text-purple-700',
     taskNumber: 117,
     description: 'Conduct risk assessment for investment property.',
-    status: 'inreview'
+    status: 'inreview',
+    subtasks: []
   },
   {
     id: '118',
@@ -289,7 +312,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-pink-200 text-pink-700',
     taskNumber: 118,
     description: 'Set up escrow account and terms.',
-    status: 'done'
+    status: 'done',
+    subtasks: []
   },
   // Contract 7234 - Residential Sale Agreement
   {
@@ -305,7 +329,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-blue-200 text-blue-700',
     taskNumber: 119,
     description: 'Schedule and complete home inspection.',
-    status: 'todo'
+    status: 'todo',
+    subtasks: []
   },
   {
     id: '120',
@@ -320,7 +345,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-purple-200 text-purple-700',
     taskNumber: 120,
     description: 'Review property appraisal report.',
-    status: 'inprogress'
+    status: 'inprogress',
+    subtasks: []
   },
   {
     id: '121',
@@ -335,7 +361,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-pink-200 text-pink-700',
     taskNumber: 121,
     description: 'Prepare closing documents and schedule.',
-    status: 'inreview'
+    status: 'inreview',
+    subtasks: []
   },
   // Contract 9102 - Commercial Lease Escrow
   {
@@ -351,7 +378,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-pink-200 text-pink-700',
     taskNumber: 122,
     description: 'Review commercial lease documents.',
-    status: 'todo'
+    status: 'todo',
+    subtasks: []
   },
   {
     id: '123',
@@ -366,7 +394,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-green-200 text-green-700',
     taskNumber: 123,
     description: 'Verify tenant credentials and history.',
-    status: 'blocked'
+    status: 'blocked',
+    subtasks: []
   },
   {
     id: '124',
@@ -381,7 +410,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-blue-200 text-blue-700',
     taskNumber: 124,
     description: 'Process security deposit payment.',
-    status: 'onhold'
+    status: 'onhold',
+    subtasks: []
   },
   // Contract 6891 - Office Building Purchase
   {
@@ -397,7 +427,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-purple-200 text-purple-700',
     taskNumber: 125,
     description: 'Conduct comprehensive building inspection.',
-    status: 'todo'
+    status: 'todo',
+    subtasks: []
   },
   {
     id: '126',
@@ -412,7 +443,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-pink-200 text-pink-700',
     taskNumber: 126,
     description: 'Analyze building financial performance.',
-    status: 'inprogress'
+    status: 'inprogress',
+    subtasks: []
   },
   {
     id: '127',
@@ -427,7 +459,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-pink-200 text-pink-700',
     taskNumber: 127,
     description: 'Review existing tenant leases and agreements.',
-    status: 'inreview'
+    status: 'inreview',
+    subtasks: []
   },
   // Contract 6453 - Retail Space Lease
   {
@@ -443,7 +476,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-blue-200 text-blue-700',
     taskNumber: 128,
     description: 'Verify retail space measurements.',
-    status: 'todo'
+    status: 'todo',
+    subtasks: []
   },
   {
     id: '129',
@@ -458,7 +492,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-green-200 text-green-700',
     taskNumber: 129,
     description: 'Finalize retail lease terms.',
-    status: 'blocked'
+    status: 'blocked',
+    subtasks: []
   },
   {
     id: '130',
@@ -473,7 +508,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-purple-200 text-purple-700',
     taskNumber: 130,
     description: 'Review insurance requirements and coverage.',
-    status: 'onhold'
+    status: 'onhold',
+    subtasks: []
   },
   // Contract 10001 - Downtown Condo Sale
   {
@@ -489,7 +525,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-pink-200 text-pink-700',
     taskNumber: 131,
     description: 'Conduct condo unit inspection.',
-    status: 'todo'
+    status: 'todo',
+    subtasks: []
   },
   {
     id: '132',
@@ -504,7 +541,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-pink-200 text-pink-700',
     taskNumber: 132,
     description: 'Review HOA documents and fees.',
-    status: 'inprogress'
+    status: 'inprogress',
+    subtasks: []
   },
   {
     id: '133',
@@ -519,7 +557,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-blue-200 text-blue-700',
     taskNumber: 133,
     description: 'Prepare condo closing documents.',
-    status: 'inreview'
+    status: 'inreview',
+    subtasks: []
   },
   // Contract 10002 - Warehouse Lease
   {
@@ -535,7 +574,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-purple-200 text-purple-700',
     taskNumber: 134,
     description: 'Inspect warehouse facilities and equipment.',
-    status: 'todo'
+    status: 'todo',
+    subtasks: []
   },
   {
     id: '135',
@@ -550,7 +590,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-green-200 text-green-700',
     taskNumber: 135,
     description: 'Draft warehouse lease agreement.',
-    status: 'blocked'
+    status: 'blocked',
+    subtasks: []
   },
   {
     id: '136',
@@ -565,7 +606,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-pink-200 text-pink-700',
     taskNumber: 136,
     description: 'Review warehouse security measures.',
-    status: 'onhold'
+    status: 'onhold',
+    subtasks: []
   },
   // Contract 10003 - Luxury Villa Purchase
   {
@@ -581,7 +623,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-blue-200 text-blue-700',
     taskNumber: 137,
     description: 'Conduct luxury villa property tour.',
-    status: 'todo'
+    status: 'todo',
+    subtasks: []
   },
   {
     id: '138',
@@ -596,7 +639,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-pink-200 text-pink-700',
     taskNumber: 138,
     description: 'Document luxury features and amenities.',
-    status: 'inprogress'
+    status: 'inprogress',
+    subtasks: []
   },
   {
     id: '139',
@@ -611,7 +655,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-purple-200 text-purple-700',
     taskNumber: 139,
     description: 'Prepare luxury villa purchase agreement.',
-    status: 'inreview'
+    status: 'inreview',
+    subtasks: []
   },
   // Contract 10004 - Industrial Park Development
   {
@@ -627,7 +672,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-pink-200 text-pink-700',
     taskNumber: 140,
     description: 'Conduct industrial park site survey.',
-    status: 'todo'
+    status: 'todo',
+    subtasks: []
   },
   {
     id: '141',
@@ -642,7 +688,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-green-200 text-green-700',
     taskNumber: 141,
     description: 'Create industrial park development plan.',
-    status: 'blocked'
+    status: 'blocked',
+    subtasks: []
   },
   {
     id: '142',
@@ -657,7 +704,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-blue-200 text-blue-700',
     taskNumber: 142,
     description: 'Submit industrial development permits.',
-    status: 'onhold'
+    status: 'onhold',
+    subtasks: []
   },
   // Contract 10005 - Beachfront Property Sale
   {
@@ -673,7 +721,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-pink-200 text-pink-700',
     taskNumber: 143,
     description: 'Review beach access rights and restrictions.',
-    status: 'todo'
+    status: 'todo',
+    subtasks: []
   },
   {
     id: '144',
@@ -688,7 +737,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-purple-200 text-purple-700',
     taskNumber: 144,
     description: 'Conduct beachfront property valuation.',
-    status: 'inprogress'
+    status: 'inprogress',
+    subtasks: []
   },
   {
     id: '145',
@@ -703,7 +753,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-pink-200 text-pink-700',
     taskNumber: 145,
     description: 'Perform coastal environmental assessment.',
-    status: 'inreview'
+    status: 'inreview',
+    subtasks: []
   },
   // Contract 10006 - Mixed-Use Development
   {
@@ -719,7 +770,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-blue-200 text-blue-700',
     taskNumber: 146,
     description: 'Analyze zoning requirements for mixed-use development.',
-    status: 'todo'
+    status: 'todo',
+    subtasks: []
   },
   {
     id: '147',
@@ -734,7 +786,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-purple-200 text-purple-700',
     taskNumber: 147,
     description: 'Create comprehensive development plan.',
-    status: 'inprogress'
+    status: 'inprogress',
+    subtasks: []
   },
   {
     id: '148',
@@ -749,7 +802,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-pink-200 text-pink-700',
     taskNumber: 148,
     description: 'Conduct market research for mixed-use development.',
-    status: 'blocked'
+    status: 'blocked',
+    subtasks: []
   },
   // Contract 10007 - Corporate Office Lease
   {
@@ -765,7 +819,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-pink-200 text-pink-700',
     taskNumber: 149,
     description: 'Plan corporate office space layout.',
-    status: 'todo'
+    status: 'todo',
+    subtasks: []
   },
   {
     id: '150',
@@ -780,7 +835,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-green-200 text-green-700',
     taskNumber: 150,
     description: 'Negotiate corporate lease terms.',
-    status: 'inprogress'
+    status: 'inprogress',
+    subtasks: []
   },
   {
     id: '151',
@@ -795,7 +851,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-blue-200 text-blue-700',
     taskNumber: 151,
     description: 'Review corporate facility requirements.',
-    status: 'onhold'
+    status: 'onhold',
+    subtasks: []
   },
   // Contract 10008 - Hotel Development
   {
@@ -811,7 +868,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-purple-200 text-purple-700',
     taskNumber: 152,
     description: 'Conduct hotel development feasibility study.',
-    status: 'todo'
+    status: 'todo',
+    subtasks: []
   },
   {
     id: '153',
@@ -826,7 +884,8 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-pink-200 text-pink-700',
     taskNumber: 153,
     description: 'Review hotel design plans and specifications.',
-    status: 'inprogress'
+    status: 'inprogress',
+    subtasks: []
   },
   {
     id: '154',
@@ -841,6 +900,7 @@ export const mockTasks: Task[] = [
     assigneeColor: 'bg-pink-200 text-pink-700',
     taskNumber: 154,
     description: 'Submit hotel development permits.',
-    status: 'inreview'
+    status: 'inreview',
+    subtasks: []
   }
 ]; 
