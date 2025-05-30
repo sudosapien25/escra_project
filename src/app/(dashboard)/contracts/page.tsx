@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { FaSearch, FaClock, FaSort, FaPlus, FaDollarSign, FaTimes, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { FaArrowUpRightFromSquare } from 'react-icons/fa6';
 import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutlineTrash, HiOutlinePencilAlt, HiOutlineUpload, HiOutlineEye, HiOutlineClipboardList, HiOutlineExclamation } from 'react-icons/hi';
 import { HiOutlineViewBoards } from 'react-icons/hi';
 import { LuCalendarClock } from 'react-icons/lu';
@@ -1933,10 +1934,9 @@ const ContractsPage: React.FC = () => {
                       <h3 className="text-sm font-semibold text-gray-900 mb-4">Documents</h3>
                       <button 
                         onClick={() => { setShowUploadModal(true); setUploadContractId(selectedContract?.id || null); }}
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors"
+                        className="flex items-center gap-2 px-2 py-1 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors" style={{ fontFamily: 'Avenir, sans-serif' }}
                       >
-                        <HiOutlineUpload className="w-4 h-4 text-primary" />
-                        <span>Upload</span>
+                        <span className="text-base font-bold text-primary">+</span> Upload
                       </button>
                     </div>
                     <div className="flex flex-col gap-3 overflow-y-auto mt-4" style={{ maxHeight: '352px' }}>
@@ -2028,13 +2028,26 @@ const ContractsPage: React.FC = () => {
                                 </span>
                               </div>
 
+                              {/* Open Task Button - Top Right */}
+                              <button 
+                                className="absolute top-3 right-3 border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors" 
+                                title="Open Task"
+                              >
+                                <FaArrowUpRightFromSquare className="h-3 w-3" />
+                              </button>
+
                               {/* Task Title */}
                               <h3 className="text-xs font-bold text-gray-900 mb-2">{task.title}</h3>
 
-                              {/* Due Date */}
-                              <div className="flex items-center gap-1 mb-3">
-                                <LuCalendarClock className="text-gray-400 text-sm" />
-                                <span className="text-xs text-gray-500">{formatDatePretty(task.due)}</span>
+                              {/* Due Date and Status */}
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-1">
+                                  <LuCalendarClock className="text-gray-400 text-sm" />
+                                  <span className="text-xs text-gray-500">{formatDatePretty(task.due)}</span>
+                                </div>
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${getTaskStatusBadgeStyle(task.status)}`}>
+                                  {getTaskStatusLabel(task.status)}
+                                </span>
                               </div>
 
                               {/* Progress Section */}
@@ -2061,13 +2074,6 @@ const ContractsPage: React.FC = () => {
                                   const completed = taskSubtasks.filter(st => st.completed).length;
                                   return `${completed} of ${taskSubtasks.length}`;
                                 })()}</span>
-                              </div>
-
-                              {/* Status Badge */}
-                              <div className="absolute top-3 right-3">
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${getTaskStatusBadgeStyle(task.status)}`}>
-                                  {getTaskStatusLabel(task.status)}
-                                </span>
                               </div>
                             </div>
                           ))

@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/common/Input';
 import { Select, SelectOption } from '@/components/common/Select';
 import { Logo } from '@/components/common/Logo';
+import { HiMiniChevronDown } from 'react-icons/hi2';
 
 const COMPANY_TYPES: SelectOption[] = [
   { value: 'sole_proprietorship', label: 'Sole Proprietorship' },
@@ -221,6 +222,59 @@ const COUNTRIES: SelectOption[] = [
   { value: 'ZW', label: 'Zimbabwe' }
 ];
 
+const US_STATES: SelectOption[] = [
+  { value: 'AL', label: 'Alabama' },
+  { value: 'AK', label: 'Alaska' },
+  { value: 'AZ', label: 'Arizona' },
+  { value: 'AR', label: 'Arkansas' },
+  { value: 'CA', label: 'California' },
+  { value: 'CO', label: 'Colorado' },
+  { value: 'CT', label: 'Connecticut' },
+  { value: 'DE', label: 'Delaware' },
+  { value: 'FL', label: 'Florida' },
+  { value: 'GA', label: 'Georgia' },
+  { value: 'HI', label: 'Hawaii' },
+  { value: 'ID', label: 'Idaho' },
+  { value: 'IL', label: 'Illinois' },
+  { value: 'IN', label: 'Indiana' },
+  { value: 'IA', label: 'Iowa' },
+  { value: 'KS', label: 'Kansas' },
+  { value: 'KY', label: 'Kentucky' },
+  { value: 'LA', label: 'Louisiana' },
+  { value: 'ME', label: 'Maine' },
+  { value: 'MD', label: 'Maryland' },
+  { value: 'MA', label: 'Massachusetts' },
+  { value: 'MI', label: 'Michigan' },
+  { value: 'MN', label: 'Minnesota' },
+  { value: 'MS', label: 'Mississippi' },
+  { value: 'MO', label: 'Missouri' },
+  { value: 'MT', label: 'Montana' },
+  { value: 'NE', label: 'Nebraska' },
+  { value: 'NV', label: 'Nevada' },
+  { value: 'NH', label: 'New Hampshire' },
+  { value: 'NJ', label: 'New Jersey' },
+  { value: 'NM', label: 'New Mexico' },
+  { value: 'NY', label: 'New York' },
+  { value: 'NC', label: 'North Carolina' },
+  { value: 'ND', label: 'North Dakota' },
+  { value: 'OH', label: 'Ohio' },
+  { value: 'OK', label: 'Oklahoma' },
+  { value: 'OR', label: 'Oregon' },
+  { value: 'PA', label: 'Pennsylvania' },
+  { value: 'RI', label: 'Rhode Island' },
+  { value: 'SC', label: 'South Carolina' },
+  { value: 'SD', label: 'South Dakota' },
+  { value: 'TN', label: 'Tennessee' },
+  { value: 'TX', label: 'Texas' },
+  { value: 'UT', label: 'Utah' },
+  { value: 'VT', label: 'Vermont' },
+  { value: 'VA', label: 'Virginia' },
+  { value: 'WA', label: 'Washington' },
+  { value: 'WV', label: 'West Virginia' },
+  { value: 'WI', label: 'Wisconsin' },
+  { value: 'WY', label: 'Wyoming' }
+];
+
 export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -237,6 +291,24 @@ export default function OnboardingPage() {
     zipCode: '',
     website: ''
   });
+  const [showStateDropdown, setShowStateDropdown] = useState(false);
+  const stateDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showStateDropdown) return;
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        stateDropdownRef.current &&
+        !stateDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowStateDropdown(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showStateDropdown]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -333,17 +405,49 @@ export default function OnboardingPage() {
                 />
               </div>
               {tab === 'business' && (
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Country of Formation</label>
-                  <Select
-                    options={COUNTRIES}
-                    value={formData.country}
-                    onChange={e => handleChange({ target: { name: 'country', value: e.target.value } } as any)}
-                    placeholder="Select your country"
-                    required
-                    className="py-0.5 text-sm"
-                  />
-                </div>
+                <>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">State</label>
+                    <div className="relative w-full" ref={stateDropdownRef}>
+                      <input
+                        type="text"
+                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white"
+                        placeholder="Select state"
+                        value={US_STATES.find(s => s.value === formData.state)?.label || ''}
+                        readOnly
+                        onClick={() => setShowStateDropdown(true)}
+                      />
+                      <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      {showStateDropdown && (
+                        <div className="absolute left-0 mt-2 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                          {US_STATES.map(state => (
+                            <button
+                              key={state.value}
+                              className={`w-full text-left px-4 py-2 text-xs font-medium ${formData.state === state.value ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`}
+                              onClick={e => {
+                                e.preventDefault();
+                                setFormData(prev => ({ ...prev, state: state.value }));
+                              }}
+                            >
+                              {state.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Country</label>
+                    <Select
+                      options={COUNTRIES}
+                      value={formData.country}
+                      onChange={e => handleChange({ target: { name: 'country', value: e.target.value } } as any)}
+                      placeholder="Select your country"
+                      required
+                      className="py-0.5 text-sm"
+                    />
+                  </div>
+                </>
               )}
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Phone Number</label>
@@ -357,6 +461,51 @@ export default function OnboardingPage() {
                   required
                 />
               </div>
+              {tab === 'personal' && (
+                <>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">State</label>
+                    <div className="relative w-full" ref={stateDropdownRef}>
+                      <input
+                        type="text"
+                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white"
+                        placeholder="Select state"
+                        value={US_STATES.find(s => s.value === formData.state)?.label || ''}
+                        readOnly
+                        onClick={() => setShowStateDropdown(true)}
+                      />
+                      <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      {showStateDropdown && (
+                        <div className="absolute left-0 mt-2 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                          {US_STATES.map(state => (
+                            <button
+                              key={state.value}
+                              className={`w-full text-left px-4 py-2 text-xs font-medium ${formData.state === state.value ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`}
+                              onClick={e => {
+                                e.preventDefault();
+                                setFormData(prev => ({ ...prev, state: state.value }));
+                              }}
+                            >
+                              {state.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Country</label>
+                    <Select
+                      options={COUNTRIES}
+                      value={formData.country}
+                      onChange={e => handleChange({ target: { name: 'country', value: e.target.value } } as any)}
+                      placeholder="Select your country"
+                      required
+                      className="py-0.5 text-sm"
+                    />
+                  </div>
+                </>
+              )}
               <button
                 type="button"
                 onClick={() => setStep(2)}

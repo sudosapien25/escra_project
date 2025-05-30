@@ -17,18 +17,18 @@ export default function AdminSettingsPage() {
 
   return (
     <div className="flex h-screen">
-      <div className="w-64 bg-white p-4"> {/* Retained p-4 for padding */}
-        <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center mb-8 border border-gray-300 ml-[-6]"> {/* Updated negative left margin to ml-[-6] */}
+      <div className="w-64 bg-white p-4">
+        <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center mb-8 border border-gray-200 ml-[-6]">
           <div className="relative w-32 h-32 mb-4">
             <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center">
               <FaUser className="w-16 h-16 text-gray-400" />
             </div>
-            <button className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full hover:bg-primary/90">
+            <button className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full hover:bg-primary-dark">
               <FaCamera className="w-4 h-4" />
             </button>
           </div>
-          <h3 className="text-lg font-semibold">John Doe</h3>
-          <p className="text-gray-500 text-sm">Administrator</p>
+          <h3 className="text-lg font-bold text-black">John Doe</h3>
+          <p className="text-gray-500 text-xs">Administrator</p>
         </div>
       </div>
 
@@ -60,43 +60,43 @@ export default function AdminSettingsPage() {
           {/* Tab Content */}
           {activeTab === 'profile' && (
             <div className="bg-white rounded-lg shadow p-6 w-full">
-              <h2 className="text-xl font-semibold mb-4">Profile Information</h2>
-               <p className="text-gray-600 text-sm mb-6">Update your personal details and contact information.</p>
+              <h2 className="text-xl font-bold mb-4 text-black">Profile Information</h2>
+              <p className="text-gray-600 text-xs mb-6">Update your personal details and contact information.</p>
               <form className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                    <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" placeholder="John Doe" />
+                    <input type="text" className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs" placeholder="John Doe" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-                    <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Doe" />
+                    <input type="text" className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs" placeholder="Doe" />
                   </div>
                 </div>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                    <input type="email" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" placeholder="john.doe@email.com" />
+                    <input type="email" className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs" placeholder="john.doe@email.com" />
                   </div>
-                   <div>
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                    <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" placeholder="(555) 123-4567" />
+                    <input type="text" className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs" placeholder="(555) 123-4567" />
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
-                  <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Administrator" />
+                  <input type="text" className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs" placeholder="Administrator" />
                 </div>
                 <div className="flex justify-end">
-                  <button type="submit" className="bg-primary hover:bg-primary/90 text-white font-semibold py-2 px-6 rounded-md">Save Changes</button>
+                  <button type="submit" className="bg-primary hover:bg-primary-dark text-white font-semibold py-2 px-6 rounded-lg">Save Changes</button>
                 </div>
               </form>
             </div>
           )}
           {activeTab !== 'profile' && (
             <div className="bg-white rounded-lg shadow p-6 w-full">
-              <h2 className="text-xl font-semibold mb-4">{TABS.find(tab => tab.key === activeTab)?.label} (Placeholder)</h2>
-              <p>Content for the {TABS.find(tab => tab.key === activeTab)?.label} tab will go here.</p>
+              <h2 className="text-xl font-bold mb-4 text-black">{TABS.find(tab => tab.key === activeTab)?.label} (Placeholder)</h2>
+              <p className="text-gray-600 text-xs">Content for the {TABS.find(tab => tab.key === activeTab)?.label} tab will go here.</p>
             </div>
           )}
         </div>

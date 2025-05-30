@@ -1,57 +1,108 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import clsx from 'clsx';
-import { useDropzone } from 'react-dropzone';
+import { HiOutlineUpload } from 'react-icons/hi';
 
-interface FileUploadProps extends React.HTMLAttributes<HTMLDivElement> {
-  onFilesAccepted: (files: File[]) => void;
+export interface FileUploadProps {
+  label?: string;
+  error?: string;
+  helperText?: string;
+  fullWidth?: boolean;
+  accept?: string;
   multiple?: boolean;
-  accept?: string | string[];
-  children?: React.ReactNode;
+  maxSize?: number; // in MB
+  onChange?: (files: File[]) => void;
+  className?: string;
+  id?: string;
+  name?: string;
+  required?: boolean;
+  disabled?: boolean;
 }
 
-export const FileUpload: React.FC<FileUploadProps> = ({
-  onFilesAccepted,
-  multiple = false,
-  accept,
-  children,
-  className,
-  ...props
-}) => {
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    onFilesAccepted(acceptedFiles);
-  }, [onFilesAccepted]);
+export const FileUpload = React.forwardRef<HTMLInputElement, FileUploadProps>(
+  ({ 
+    label, 
+    error, 
+    helperText, 
+    fullWidth = true, 
+    accept = '.pdf,.doc,.docx,.jpg,.jpeg',
+    multiple = false,
+    maxSize = 10,
+    onChange,
+    className,
+    id,
+    name,
+    required,
+    disabled,
+    ...props 
+  }, ref) => {
+    const [files, setFiles] = React.useState<File[]>([]);
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    multiple,
-    accept: accept ? 
-      typeof accept === 'string' ? 
-        { [accept]: ['.'] } :
-        accept.reduce((acc, type) => ({ ...acc, [type]: ['.'] }), {}) 
-      : undefined,
-    onDragEnter: () => {},
-    onDragLeave: () => {},
-    onDragOver: () => {}
-  });
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (!e.target.files) return;
+      
+      const newFiles = Array.from(e.target.files);
+      const validFiles = newFiles.filter(file => {
+        const isValidType = accept.split(',').some(type => {
+          const ext = type.trim();
+          return file.type === ext || file.name.toLowerCase().endsWith(ext);
+        });
+        const isValidSize = file.size <= maxSize * 1024 * 1024;
+        return isValidType && isValidSize;
+      });
 
-  return (
-    <div
-      {...getRootProps()}
-      className={clsx(
-        'flex flex-col items-center justify-center w-full px-4 py-6 border-2 border-dashed rounded-md cursor-pointer',
-        isDragActive ? 'border-primary text-primary' : 'border-gray-300 text-gray-500',
-        className
-      )}
-      {...props}
-    >
-      <input {...getInputProps()} type="file" />
-      {
-        isDragActive ?
-          <p>Drop the files here ...</p> :
-          children ? children : <p>Drag 'n' drop some files here, or click to select files</p>
-      }
-    </div>
-  );
-};
+      setFiles(validFiles);
+      onChange?.(validFiles);
+    };
+
+    return (
+      <div className={clsx('space-y-1', fullWidth && 'w-full')}>
+        {label && (
+          <label className="block text-sm font-medium text-gray-700">
+            {label}
+          </label>
+        )}
+        <label htmlFor={id} className="block cursor-pointer">
+          <div className={clsx(
+            'flex flex-col items-center justify-center border-2 border-dashed rounded-xl bg-gray-50 py-8 px-4 text-center transition',
+            error ? 'border-red-300' : 'border-gray-300 hover:border-primary',
+            disabled && 'opacity-50 cursor-not-allowed',
+            className
+          )}>
+            <HiOutlineUpload className="text-3xl text-gray-400 mb-2" />
+            <div className="text-gray-700 font-medium">Click to upload or drag and drop</div>
+            <div className="text-xs text-gray-400 mt-1">
+              {accept.split(',').join(', ')} (max. {maxSize}MB each)
+            </div>
+            <input
+              ref={ref}
+              type="file"
+              id={id}
+              name={name}
+              accept={accept}
+              multiple={multiple}
+              onChange={handleFileChange}
+              className="hidden"
+              required={required}
+              disabled={disabled}
+              {...props}
+            />
+          </div>
+        </label>
+        {files.length > 0 && (
+          <ul className="mt-3 text-sm text-gray-600">
+            {files.map((file, idx) => (
+              <li key={idx} className="truncate">{file.name}</li>
+            ))}
+          </ul>
+        )}
+        {(error || helperText) && (
+          <p className={clsx('text-sm', error ? 'text-red-600' : 'text-gray-500')}>
+            {error || helperText}
+          </p>
+        )}
+      </div>
+    );
+  }
+);
 
 FileUpload.displayName = 'FileUpload'; 

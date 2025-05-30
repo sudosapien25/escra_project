@@ -7,6 +7,7 @@ interface LogoProps {
   height?: number;
   theme?: 'light' | 'dark';
   className?: string;
+  targetUrl?: string;
 }
 
 export const Logo: React.FC<LogoProps> = ({
@@ -14,12 +15,13 @@ export const Logo: React.FC<LogoProps> = ({
   height = 32,
   theme = 'light',
   className,
+  targetUrl = '/dashboard', // Default to dashboard if no target is specified
 }) => {
   // Placeholder for logo source - will be updated once files are provided
   const logoSrc = theme === 'dark' ? '/assets/logos/escra-logo-white.png' : '/assets/logos/escra-logo-teal.png';
 
   return (
-    <Link href="/dashboard" className={clsx('block', className)}>
+    <Link href={targetUrl} className={clsx('block cursor-pointer', className)}>
       <Image
         src={logoSrc}
         alt="Escra Logo"

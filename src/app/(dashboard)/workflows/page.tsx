@@ -1,5 +1,4 @@
 'use client';
-
 import React, { useRef, useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { mockContracts } from '@/data/mockContracts';
@@ -1287,8 +1286,7 @@ export default function WorkflowsPage() {
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-sm font-semibold text-gray-900">Documents</h3>
                       <button className="flex items-center gap-2 px-2 py-1 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                        <HiOutlineUpload className="w-4 h-4 text-primary" />
-                        <span>Upload</span>
+                        <span className="text-base font-bold text-primary">+</span> Upload
                       </button>
                     </div>
                     <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
