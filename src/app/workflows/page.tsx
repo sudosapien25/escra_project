@@ -400,13 +400,13 @@ export default function WorkflowsPage() {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as HTMLElement;
       const dropdown = document.querySelector('.assignee-dropdown');
-      const button = assigneeButtonRef.current;
+      const input = document.querySelector('input[placeholder*="Assignee"]');
 
-      // Only close if clicking outside both the dropdown and button
-      if (openAssigneeDropdown && 
+      // Only close if clicking outside both the dropdown and input
+      if (showAssigneeDropdown && 
           !dropdown?.contains(target) && 
-          !button?.contains(target)) {
-        setOpenAssigneeDropdown(false);
+          !input?.contains(target)) {
+        setShowAssigneeDropdown(false);
       }
     }
 
@@ -414,7 +414,7 @@ export default function WorkflowsPage() {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [openAssigneeDropdown]);
+  }, [showAssigneeDropdown]);
 
   // Update the status change handler for the task details modal
   const handleTaskStatusChange = (status: typeof statusOptions[number]['key']) => {
@@ -456,6 +456,27 @@ export default function WorkflowsPage() {
 
   // Debug: Print all tasks from the store to check for subtasks
   console.log('All tasks from store:', tasks);
+
+  // Add this useEffect for the status dropdown click-outside handler in task details modal
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      const dropdown = document.querySelector('.status-dropdown');
+      const input = document.querySelector('input[placeholder*="Status"]');
+
+      // Only close if clicking outside both the dropdown and input
+      if (showStatusDropdown && 
+          !dropdown?.contains(target) && 
+          !input?.contains(target)) {
+        setShowStatusDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showStatusDropdown]);
 
   return (
     <div className="space-y-4">
@@ -1127,7 +1148,7 @@ export default function WorkflowsPage() {
                               {statusOptions.map(status => (
                                 <button
                                   key={status.key}
-                                  className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
+                                  className={`w-full text-left px-4 py-2 text-xs font-medium ${
                                     selectedTask?.status === status.key ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
                                   }`}
                                   onClick={(e) => {
@@ -1136,13 +1157,6 @@ export default function WorkflowsPage() {
                                     handleTaskStatusChange(status.key);
                                   }}
                                 >
-                                  <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedTask?.status === status.key ? 'bg-primary' : 'border border-gray-300'}`}>
-                                    {selectedTask?.status === status.key && (
-                                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                      </svg>
-                                    )}
-                                  </div>
                                   {status.title}
                                 </button>
                               ))}
