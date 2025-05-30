@@ -262,7 +262,11 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     return tasks;
   },
 
-  getTasksByContract: (contractId) => get().tasks.filter((task) => task.contractId === contractId),
+  getTasksByContract: (contractId) => {
+    const tasks = get().tasks.filter((task) => task.contractId === contractId);
+    console.log(`Getting tasks for contract ${contractId}:`, tasks);
+    return tasks;
+  },
 
   getTaskById: (taskId) => get().tasks.find((task) => task.code === taskId),
 

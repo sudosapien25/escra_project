@@ -8,7 +8,7 @@ import { HiOutlineViewBoards } from 'react-icons/hi';
 import { LuCalendarClock } from 'react-icons/lu';
 import { BiDotsHorizontal } from 'react-icons/bi';
 import { Logo } from '@/components/common/Logo';
-import { mockTasks } from '@/data/mockTasks';
+import { mockContracts } from '@/data/mockContracts';
 import { useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -19,6 +19,22 @@ import { lowlight } from 'lowlight';
 import { EditorContent } from '@tiptap/react';
 import { BsPerson } from 'react-icons/bs';
 import { LuSendHorizontal } from 'react-icons/lu';
+import { RxCaretSort } from 'react-icons/rx';
+import { MdOutlineEditCalendar } from 'react-icons/md';
+import { RiArrowDropDownLine } from 'react-icons/ri';
+import { HiMiniChevronUpDown, HiMiniChevronDown } from 'react-icons/hi2';
+import { useTaskStore } from '@/data/taskStore';
+
+// Add date formatting utilities
+function formatDatePretty(dateStr: string): string {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  // Adjust for timezone offset to prevent date shifting
+  const offset = d.getTimezoneOffset();
+  d.setMinutes(d.getMinutes() + offset);
+  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
 
 // Add Comment interface
 interface Comment {
@@ -264,6 +280,32 @@ const ContractsPage: React.FC = () => {
     }
   };
 
+  const getTaskStatusBadgeStyle = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'to do': return 'bg-gray-100 text-gray-800 border border-gray-400';
+      case 'in progress': return 'bg-blue-100 text-blue-800 border border-blue-500';
+      case 'in review': return 'bg-yellow-100 text-yellow-800 border border-yellow-500';
+      case 'done': return 'bg-green-100 text-green-800 border border-green-500';
+      case 'blocked': return 'bg-red-100 text-red-800 border border-red-500';
+      case 'on hold': return 'bg-orange-100 text-orange-800 border border-orange-400';
+      case 'canceled': return 'bg-gray-100 text-gray-800 border border-gray-400';
+      default: return 'bg-gray-100 text-gray-800 border border-gray-400';
+    }
+  };
+
+  const getTaskStatusLabel = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'to do': return 'To Do';
+      case 'in progress': return 'In Progress';
+      case 'in review': return 'In Review';
+      case 'done': return 'Done';
+      case 'blocked': return 'Blocked';
+      case 'on hold': return 'On Hold';
+      case 'canceled': return 'Canceled';
+      default: return status;
+    }
+  };
+
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [selectedTask, setSelectedTask] = useState<string | null>(null);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -470,6 +512,158 @@ const ContractsPage: React.FC = () => {
     ],
     content: '',
   });
+
+  // Add state for sorting
+  const [idSortDirection, setIdSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [contractSortDirection, setContractSortDirection] = useState<'asc' | 'desc' | null>(null);
+  const [partiesSortDirection, setPartiesSortDirection] = useState<'asc' | 'desc' | null>(null);
+  const [statusSortDirection, setStatusSortDirection] = useState<'asc' | 'desc' | null>(null);
+  const [createdDateSortDirection, setCreatedDateSortDirection] = useState<'asc' | 'desc' | null>(null);
+  const [lastUpdatedSortDirection, setLastUpdatedSortDirection] = useState<'asc' | 'desc' | null>(null);
+  const [valueSortDirection, setValueSortDirection] = useState<'asc' | 'desc' | null>(null);
+
+  // Sorting handlers
+  const handleIdSort = () => {
+    setIdSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setContractSortDirection(null);
+    setPartiesSortDirection(null);
+    setStatusSortDirection(null);
+    setCreatedDateSortDirection(null);
+    setLastUpdatedSortDirection(null);
+    setValueSortDirection(null);
+  };
+  const handleContractSort = () => {
+    setContractSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setPartiesSortDirection(null);
+    setStatusSortDirection(null);
+    setCreatedDateSortDirection(null);
+    setLastUpdatedSortDirection(null);
+    setValueSortDirection(null);
+  };
+  const handlePartiesSort = () => {
+    setPartiesSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setContractSortDirection(null);
+    setStatusSortDirection(null);
+    setCreatedDateSortDirection(null);
+    setLastUpdatedSortDirection(null);
+    setValueSortDirection(null);
+  };
+  const handleStatusSort = () => {
+    setStatusSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setContractSortDirection(null);
+    setPartiesSortDirection(null);
+    setCreatedDateSortDirection(null);
+    setLastUpdatedSortDirection(null);
+    setValueSortDirection(null);
+  };
+  const handleCreatedDateSort = () => {
+    setCreatedDateSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setContractSortDirection(null);
+    setPartiesSortDirection(null);
+    setStatusSortDirection(null);
+    setLastUpdatedSortDirection(null);
+    setValueSortDirection(null);
+  };
+  const handleLastUpdatedSort = () => {
+    setLastUpdatedSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setContractSortDirection(null);
+    setPartiesSortDirection(null);
+    setStatusSortDirection(null);
+    setCreatedDateSortDirection(null);
+    setValueSortDirection(null);
+  };
+  const handleValueSort = () => {
+    setValueSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setContractSortDirection(null);
+    setPartiesSortDirection(null);
+    setStatusSortDirection(null);
+    setCreatedDateSortDirection(null);
+    setLastUpdatedSortDirection(null);
+  };
+
+  // Helper to parse 'updated' field
+  function parseUpdated(str: string) {
+    if (!str) return 0;
+    const n = parseInt(str);
+    if (str.includes('hour')) return Date.now() - n * 60 * 60 * 1000;
+    if (str.includes('day')) return Date.now() - n * 24 * 60 * 60 * 1000;
+    if (str.includes('week')) return Date.now() - n * 7 * 24 * 60 * 60 * 1000;
+    if (str.includes('minute')) return Date.now() - n * 60 * 1000;
+    return Date.now();
+  }
+
+  // Helper to parse value string
+  function parseValue(val?: string) {
+    if (!val) return 0;
+    return parseFloat(val.replace(/[$,]/g, ''));
+  }
+
+  // Sort filteredContracts by id, contract title, parties, status, created date, last updated, or value
+  const sortedContracts = [...filteredContracts].sort((a, b) => {
+    if (valueSortDirection) {
+      const aValue = parseValue(a.value);
+      const bValue = parseValue(b.value);
+      if (valueSortDirection === 'asc') {
+        return aValue - bValue;
+      } else {
+        return bValue - aValue;
+      }
+    } else if (lastUpdatedSortDirection) {
+      const aTime = parseUpdated(a.updated);
+      const bTime = parseUpdated(b.updated);
+      if (lastUpdatedSortDirection === 'asc') {
+        return aTime - bTime;
+      } else {
+        return bTime - aTime;
+      }
+    } else if (createdDateSortDirection) {
+      const aDate = new Date('2024-05-01');
+      const bDate = new Date('2024-05-01');
+      if (createdDateSortDirection === 'asc') {
+        return aDate.getTime() - bDate.getTime();
+      } else {
+        return bDate.getTime() - aDate.getTime();
+      }
+    } else if (statusSortDirection) {
+      const aStatus = a.status.toLowerCase();
+      const bStatus = b.status.toLowerCase();
+      if (statusSortDirection === 'asc') {
+        return aStatus.localeCompare(bStatus);
+      } else {
+        return bStatus.localeCompare(aStatus);
+      }
+    } else if (partiesSortDirection) {
+      const aParties = a.parties.toLowerCase();
+      const bParties = b.parties.toLowerCase();
+      if (partiesSortDirection === 'asc') {
+        return aParties.localeCompare(bParties);
+      } else {
+        return bParties.localeCompare(aParties);
+      }
+    } else if (contractSortDirection) {
+      const aTitle = a.title.toLowerCase();
+      const bTitle = b.title.toLowerCase();
+      if (contractSortDirection === 'asc') {
+        return aTitle.localeCompare(bTitle);
+      } else {
+        return bTitle.localeCompare(aTitle);
+      }
+    } else {
+      const aId = Number(a.id);
+      const bId = Number(b.id);
+      if (idSortDirection === 'asc') {
+        return aId - bId;
+      } else {
+        return bId - aId;
+      }
+    }
+  });
+
+  const { getTasksByContract, initializeTasks } = useTaskStore();
+
+  useEffect(() => {
+    initializeTasks();
+  }, [initializeTasks]);
 
   return (
     <>
@@ -1075,7 +1269,7 @@ const ContractsPage: React.FC = () => {
         >
           <HiOutlineViewBoards className="text-gray-400 text-lg" />
           <span>Status</span>
-          <span className="ml-1 text-gray-400">&#9662;</span>
+          <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
           
           {showStatusDropdown && (
             <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }} ref={statusDropdownRef}>
@@ -1118,18 +1312,14 @@ const ContractsPage: React.FC = () => {
         <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
           <LuCalendarClock className="text-gray-400" size={18} />
           <span>Last 30 days</span>
-          <span className="ml-1 text-gray-400">&#9662;</span>
+          <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
         </button>
         <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[150px] ml-1" style={{ fontFamily: 'Avenir, sans-serif' }}
           onClick={() => setLastUpdatedSort(prev => prev === 'desc' ? 'asc' : 'desc')}
         >
-          <FaSort className="text-gray-400" size={18} />
+          <MdOutlineEditCalendar className="text-gray-400" size={18} />
           <span>Recently Updated</span>
-          {lastUpdatedSort === 'desc' ? (
-            <FaChevronDown className="ml-1 text-gray-400" size={12} />
-          ) : (
-            <FaChevronUp className="ml-1 text-gray-400" size={12} />
-          )}
+          <HiMiniChevronUpDown className="ml-1 inline-block align-middle text-gray-400 transition-transform duration-200" style={{ transform: lastUpdatedSort === 'asc' ? 'rotate(180deg)' : 'rotate(0deg)' }} size={16} />
         </button>
       </div>
 
@@ -1181,19 +1371,54 @@ const ContractsPage: React.FC = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead>
                 <tr>
-                  <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                  <th className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Contract</th>
-                  <th className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Parties</th>
-                  <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Created Date</th>
-                  <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Last Updated</th>
-                  <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
+                  <th
+                    className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleIdSort}
+                  >
+                    ID
+                  </th>
+                  <th
+                    className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleContractSort}
+                  >
+                    Contract
+                  </th>
+                  <th
+                    className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handlePartiesSort}
+                  >
+                    Parties
+                  </th>
+                  <th
+                    className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleStatusSort}
+                  >
+                    Status
+                  </th>
+                  <th
+                    className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleCreatedDateSort}
+                  >
+                    Created Date
+                  </th>
+                  <th
+                    className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleLastUpdatedSort}
+                  >
+                    Last Updated
+                  </th>
+                  <th
+                    className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleValueSort}
+                  >
+                    Value
+                  </th>
                   <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Contract Hash</th>
                   <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredContracts.map((contract) => (
+                {sortedContracts.map((contract) => (
                   <tr
                     key={contract.id}
                     className="hover:bg-gray-50 cursor-pointer"
@@ -1782,52 +2007,80 @@ const ContractsPage: React.FC = () => {
                   </div>
                   {/* Tasks Box */}
                   <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4">Tasks</h3>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm font-semibold text-gray-900">Tasks</h3>
+                      <button className="flex items-center gap-2 px-2 py-1 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                        <span className="text-base font-bold text-primary">+</span> New Task
+                      </button>
+                    </div>
                     <div className="flex flex-col gap-3 overflow-y-auto" style={{ maxHeight: '352px' }}>
-                      {mockTasks
-                        .filter(task => task.contractId === selectedContract?.id)
-                        .map((task) => (
-                          <div 
-                            key={task.id} 
-                            className={`flex items-start justify-between rounded-lg px-4 py-3 border transition-colors cursor-pointer ${
-                              selectedTask === task.id 
-                                ? 'bg-primary/5 border-primary' 
-                                : 'bg-gray-50 border-gray-100 hover:bg-gray-100'
-                            }`}
-                            onClick={() => setSelectedTask(task.id)}
-                          >
-                            <div>
+                      {selectedContract ? (
+                        getTasksByContract(selectedContract.id).length > 0 ? (
+                          getTasksByContract(selectedContract.id).map(task => (
+                            <div key={task.id} className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm relative">
+                              {/* Task Number - Top Left */}
                               <div className="mb-3">
                                 <span className="text-[10px] font-bold bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-200">
                                   Task #{task.taskNumber}
                                 </span>
+                                <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20 ml-1">
+                                  # {task.contractId}
+                                </span>
                               </div>
-                              <div className="font-semibold text-xs text-black mb-1">{task.title}</div>
-                              <div className="flex items-center gap-1 mb-1">
-                                <div className="flex items-center gap-1">
-                                  <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                  </svg>
-                                  <span className="text-xs text-gray-500">{task.assignee}</span>
-                                </div>
-                                <div className="h-3 w-px bg-gray-200 mx-1"></div>
+
+                              {/* Task Title */}
+                              <h3 className="text-xs font-bold text-gray-900 mb-2">{task.title}</h3>
+
+                              {/* Due Date */}
+                              <div className="flex items-center gap-1 mb-3">
                                 <LuCalendarClock className="text-gray-400 text-sm" />
-                                <span className="text-xs text-gray-500">{task.due}</span>
+                                <span className="text-xs text-gray-500">{formatDatePretty(task.due)}</span>
                               </div>
-                              <div className="text-xs text-gray-500 mb-1">{task.description}</div>
+
+                              {/* Progress Section */}
+                              <div className="space-y-2 mb-3">
+                                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full bg-primary rounded-full"
+                                    style={{
+                                      width: `${(() => {
+                                        const taskSubtasks = task.subtasks || [];
+                                        const completed = taskSubtasks.filter(st => st.completed).length;
+                                        return taskSubtasks.length === 0 ? 0 : (completed / taskSubtasks.length) * 100;
+                                      })()}%`,
+                                    }}
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Assignee and Progress */}
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-900">{task.assignee}</span>
+                                <span className="text-xs text-gray-900">{(() => {
+                                  const taskSubtasks = task.subtasks || [];
+                                  const completed = taskSubtasks.filter(st => st.completed).length;
+                                  return `${completed} of ${taskSubtasks.length}`;
+                                })()}</span>
+                              </div>
+
+                              {/* Status Badge */}
+                              <div className="absolute top-3 right-3">
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${getTaskStatusBadgeStyle(task.status)}`}>
+                                  {getTaskStatusLabel(task.status)}
+                                </span>
+                              </div>
                             </div>
-                            <button 
-                              className="flex items-center justify-center w-8 h-8 rounded-lg border border-gray-200 bg-white text-gray-700 hover:border-primary hover:text-primary transition-colors"
-                              title="Expand"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                // Add your expand logic here
-                              }}
-                            >
-                              <BiDotsHorizontal size={18} />
-                            </button>
+                          ))
+                        ) : (
+                          <div className="text-center py-8 text-gray-500 text-sm">
+                            No tasks for this contract. Click "New Task" to add one.
                           </div>
-                        ))}
+                        )
+                      ) : (
+                        <div className="text-center py-8 text-gray-500 text-sm">
+                          Select a contract to view its tasks.
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

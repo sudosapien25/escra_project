@@ -395,18 +395,18 @@ export default function WorkflowsPage() {
     };
   }, [openStatusDropdown]);
 
-  // Add this useEffect for the assignee dropdown click-outside handler
+  // Add this useEffect for the assignee filter dropdown click-outside handler
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as HTMLElement;
       const dropdown = document.querySelector('.assignee-dropdown');
-      const input = document.querySelector('input[placeholder*="Assignee"]');
+      const button = assigneeButtonRef.current;
 
-      // Only close if clicking outside both the dropdown and input
-      if (showAssigneeDropdown && 
+      // Only close if clicking outside both the dropdown and button
+      if (openAssigneeDropdown && 
           !dropdown?.contains(target) && 
-          !input?.contains(target)) {
-        setShowAssigneeDropdown(false);
+          !button?.contains(target)) {
+        setOpenAssigneeDropdown(false);
       }
     }
 
@@ -414,7 +414,7 @@ export default function WorkflowsPage() {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showAssigneeDropdown]);
+  }, [openAssigneeDropdown]);
 
   // Update the status change handler for the task details modal
   const handleTaskStatusChange = (status: typeof statusOptions[number]['key']) => {
