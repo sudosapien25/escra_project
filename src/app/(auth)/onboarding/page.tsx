@@ -292,23 +292,44 @@ export default function OnboardingPage() {
     website: ''
   });
   const [showStateDropdown, setShowStateDropdown] = useState(false);
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  const [showCompanyTypeDropdown, setShowCompanyTypeDropdown] = useState(false);
+  const [showIndustryDropdown, setShowIndustryDropdown] = useState(false);
   const stateDropdownRef = useRef<HTMLDivElement>(null);
+  const countryDropdownRef = useRef<HTMLDivElement>(null);
+  const companyTypeDropdownRef = useRef<HTMLDivElement>(null);
+  const industryDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!showStateDropdown) return;
     function handleClickOutside(event: MouseEvent) {
-      if (
-        stateDropdownRef.current &&
-        !stateDropdownRef.current.contains(event.target as Node)
-      ) {
+      const target = event.target as Node;
+      
+      // Handle state dropdown
+      if (showStateDropdown && stateDropdownRef.current && !stateDropdownRef.current.contains(target)) {
         setShowStateDropdown(false);
       }
+      
+      // Handle country dropdown
+      if (showCountryDropdown && countryDropdownRef.current && !countryDropdownRef.current.contains(target)) {
+        setShowCountryDropdown(false);
+      }
+      
+      // Handle company type dropdown
+      if (showCompanyTypeDropdown && companyTypeDropdownRef.current && !companyTypeDropdownRef.current.contains(target)) {
+        setShowCompanyTypeDropdown(false);
+      }
+      
+      // Handle industry dropdown
+      if (showIndustryDropdown && industryDropdownRef.current && !industryDropdownRef.current.contains(target)) {
+        setShowIndustryDropdown(false);
+      }
     }
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showStateDropdown]);
+  }, [showStateDropdown, showCountryDropdown, showCompanyTypeDropdown, showIndustryDropdown]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -325,20 +346,18 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 py-8 px-4 font-sans">
-      <div className="flex flex-col items-center mb-8">
-        <div className="rounded-full bg-primary/10 p-2 mb-6">
-          <Logo width={80} height={80} />
+    <div className="min-h-screen flex flex-col items-center justify-center bg-white dark:bg-gray-800 py-4 px-4 font-sans">
+      <div className="flex flex-col items-center mb-4">
+        <div className="rounded-full bg-primary/10 p-2 mb-4">
+          <Logo width={60} height={60} />
         </div>
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2 text-center">Complete Your Profile</h1>
-        <p className="text-gray-500 dark:text-gray-300 text-base text-center max-w-md">Tell us more about your business</p>
       </div>
 
-      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8">
+      <div className={`w-full ${tab === 'business' ? 'max-w-3xl' : 'max-w-md'} bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 transition-all duration-300`}>
         <div className="mb-2">
-          <h2 className="text-xl font-bold text-center text-gray-900 dark:text-white mb-1">Complete Your Profile</h2>
-          <p className="text-center text-gray-500 dark:text-gray-300 text-sm mb-4">Tell us more about your business</p>
-          <div className="flex rounded-lg bg-gray-100 dark:bg-gray-700 overflow-hidden mb-4 border border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-bold text-center text-gray-900 dark:text-white mb-1">Complete Your Profile</h2>
+          <p className="text-center text-gray-500 dark:text-gray-300 text-sm mb-3">Tell us more about your business</p>
+          <div className="flex rounded-lg bg-gray-100 dark:bg-gray-700 overflow-hidden mb-3 border border-gray-200 dark:border-gray-700">
             <button
               className={`flex-1 py-1.5 text-sm font-semibold transition-colors duration-150 ${tab === 'personal' ? 'bg-white dark:bg-gray-800 text-primary shadow' : 'text-gray-500 dark:text-gray-300'}`}
               onClick={() => setTab('personal')}
@@ -354,101 +373,157 @@ export default function OnboardingPage() {
           </div>
         </div>
 
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-1">
             <div className="flex-1 h-1 bg-gray-200 dark:bg-gray-700 rounded-full">
               <div className="h-1 bg-primary rounded-full" style={{ width: `${(step / 2) * 100}%` }}></div>
             </div>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 text-center">Step {step} of 2</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 text-center">Step {step} of 2</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {step === 1 ? (
+        <form onSubmit={handleSubmit} className={`space-y-3 ${tab === 'business' ? 'max-w-3xl' : ''}`}>
+          {tab === 'business' && step === 1 ? (
             <>
-              {tab === 'business' && (
-                <>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Company Name</label>
-                    <Input
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Company Name</label>
+                  <Input
+                    type="text"
+                    name="companyName"
+                    value={formData.companyName}
+                    onChange={handleChange}
+                    placeholder="Enter your company name"
+                    className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Company Type</label>
+                  <div className="relative w-full" ref={companyTypeDropdownRef}>
+                    <input
                       type="text"
-                      name="companyName"
-                      value={formData.companyName}
-                      onChange={handleChange}
-                      placeholder="Enter your company name"
-                      className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Company Type</label>
-                    <Select
-                      options={COMPANY_TYPES}
-                      value={formData.companyType}
-                      onChange={e => handleChange({ target: { name: 'companyType', value: e.target.value } } as any)}
+                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white"
                       placeholder="Select company type"
-                      required
-                      className="py-0.5 text-sm"
+                      value={COMPANY_TYPES.find(t => t.value === formData.companyType)?.label || ''}
+                      readOnly
+                      onClick={() => setShowCompanyTypeDropdown(true)}
                     />
+                    <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    {showCompanyTypeDropdown && (
+                      <div className="absolute left-0 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                        {COMPANY_TYPES.map(type => (
+                          <button
+                            key={type.value}
+                            className={`w-full text-left px-3 py-0.5 text-xs font-medium ${formData.companyType === type.value ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`}
+                            onClick={e => {
+                              e.preventDefault();
+                              setFormData(prev => ({ ...prev, companyType: type.value }));
+                              setShowCompanyTypeDropdown(false);
+                            }}
+                          >
+                            {type.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </>
-              )}
+                </div>
+              </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Industry</label>
-                <Select
-                  options={INDUSTRIES}
-                  value={formData.industry}
-                  onChange={e => handleChange({ target: { name: 'industry', value: e.target.value } } as any)}
-                  placeholder="Select industry"
-                  required
-                  className="py-0.5 text-sm"
-                />
-              </div>
-              {tab === 'business' && (
-                <>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">State</label>
-                    <div className="relative w-full" ref={stateDropdownRef}>
-                      <input
-                        type="text"
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white"
-                        placeholder="Select state"
-                        value={US_STATES.find(s => s.value === formData.state)?.label || ''}
-                        readOnly
-                        onClick={() => setShowStateDropdown(true)}
-                      />
-                      <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      {showStateDropdown && (
-                        <div className="absolute left-0 mt-2 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                          {US_STATES.map(state => (
-                            <button
-                              key={state.value}
-                              className={`w-full text-left px-4 py-2 text-xs font-medium ${formData.state === state.value ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`}
-                              onClick={e => {
-                                e.preventDefault();
-                                setFormData(prev => ({ ...prev, state: state.value }));
-                              }}
-                            >
-                              {state.label}
-                            </button>
-                          ))}
-                        </div>
-                      )}
+                <div className="relative w-full" ref={industryDropdownRef}>
+                  <input
+                    type="text"
+                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white"
+                    placeholder="Select industry"
+                    value={INDUSTRIES.find(i => i.value === formData.industry)?.label || ''}
+                    readOnly
+                    onClick={() => setShowIndustryDropdown(true)}
+                  />
+                  <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  {showIndustryDropdown && (
+                    <div className="absolute left-0 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                      {INDUSTRIES.map(industry => (
+                        <button
+                          key={industry.value}
+                          className={`w-full text-left px-3 py-0.5 text-xs font-medium ${formData.industry === industry.value ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`}
+                          onClick={e => {
+                            e.preventDefault();
+                            setFormData(prev => ({ ...prev, industry: industry.value }));
+                            setShowIndustryDropdown(false);
+                          }}
+                        >
+                          {industry.label}
+                        </button>
+                      ))}
                     </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Country</label>
-                    <Select
-                      options={COUNTRIES}
-                      value={formData.country}
-                      onChange={e => handleChange({ target: { name: 'country', value: e.target.value } } as any)}
-                      placeholder="Select your country"
-                      required
-                      className="py-0.5 text-sm"
+                  )}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">State</label>
+                  <div className="relative w-full" ref={stateDropdownRef}>
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white"
+                      placeholder="Select state"
+                      value={US_STATES.find(s => s.value === formData.state)?.label || ''}
+                      readOnly
+                      onClick={() => setShowStateDropdown(true)}
                     />
+                    <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    {showStateDropdown && (
+                      <div className="absolute left-0 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                        {US_STATES.map(state => (
+                          <button
+                            key={state.value}
+                            className={`w-full text-left px-3 py-0.5 text-xs font-medium ${formData.state === state.value ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`}
+                            onClick={e => {
+                              e.preventDefault();
+                              setFormData(prev => ({ ...prev, state: state.value }));
+                            }}
+                          >
+                            {state.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </>
-              )}
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Country</label>
+                  <div className="relative w-full" ref={countryDropdownRef}>
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white"
+                      placeholder="Select country"
+                      value={COUNTRIES.find(c => c.value === formData.country)?.label || ''}
+                      readOnly
+                      onClick={() => setShowCountryDropdown(true)}
+                    />
+                    <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    {showCountryDropdown && (
+                      <div className="absolute left-0 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                        {COUNTRIES.map(country => (
+                          <button
+                            key={country.value}
+                            className={`w-full text-left px-3 py-0.5 text-xs font-medium ${formData.country === country.value ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`}
+                            onClick={e => {
+                              e.preventDefault();
+                              setFormData(prev => ({ ...prev, country: country.value }));
+                              setShowCountryDropdown(false);
+                            }}
+                          >
+                            {country.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Phone Number</label>
                 <Input
@@ -461,51 +536,6 @@ export default function OnboardingPage() {
                   required
                 />
               </div>
-              {tab === 'personal' && (
-                <>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">State</label>
-                    <div className="relative w-full" ref={stateDropdownRef}>
-                      <input
-                        type="text"
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white"
-                        placeholder="Select state"
-                        value={US_STATES.find(s => s.value === formData.state)?.label || ''}
-                        readOnly
-                        onClick={() => setShowStateDropdown(true)}
-                      />
-                      <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      {showStateDropdown && (
-                        <div className="absolute left-0 mt-2 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                          {US_STATES.map(state => (
-                            <button
-                              key={state.value}
-                              className={`w-full text-left px-4 py-2 text-xs font-medium ${formData.state === state.value ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`}
-                              onClick={e => {
-                                e.preventDefault();
-                                setFormData(prev => ({ ...prev, state: state.value }));
-                              }}
-                            >
-                              {state.label}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Country</label>
-                    <Select
-                      options={COUNTRIES}
-                      value={formData.country}
-                      onChange={e => handleChange({ target: { name: 'country', value: e.target.value } } as any)}
-                      placeholder="Select your country"
-                      required
-                      className="py-0.5 text-sm"
-                    />
-                  </div>
-                </>
-              )}
               <button
                 type="button"
                 onClick={() => setStep(2)}
@@ -514,21 +544,21 @@ export default function OnboardingPage() {
                 Next
               </button>
             </>
-          ) : (
+          ) : tab === 'business' && step === 2 ? (
             <>
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">{tab === 'business' ? 'Business Address' : 'Address'}</label>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Business Address</label>
                 <Input
                   type="text"
                   name="address"
                   value={formData.address}
                   onChange={handleChange}
-                  placeholder={tab === 'business' ? "Enter your business address" : "Enter your address"}
+                  placeholder="Enter your business address"
                   className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
                   required
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">City</label>
                   <Input
@@ -566,20 +596,18 @@ export default function OnboardingPage() {
                   required
                 />
               </div>
-              {tab === 'business' && (
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Website (Optional)</label>
-                  <Input
-                    type="url"
-                    name="website"
-                    value={formData.website}
-                    onChange={handleChange}
-                    placeholder="Enter your website"
-                    className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
-                  />
-                </div>
-              )}
-              <div className="flex gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Website (Optional)</label>
+                <Input
+                  type="url"
+                  name="website"
+                  value={formData.website}
+                  onChange={handleChange}
+                  placeholder="Enter your website"
+                  className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
+                />
+              </div>
+              <div className="flex gap-3">
                 <button
                   type="button"
                   onClick={() => setStep(1)}
@@ -594,6 +622,126 @@ export default function OnboardingPage() {
                   Complete Setup
                 </button>
               </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Phone Number</label>
+                <Input
+                  type="tel"
+                  name="phoneNumber"
+                  value={formData.phoneNumber}
+                  onChange={handleChange}
+                  placeholder="Enter your phone number"
+                  className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Address</label>
+                <Input
+                  type="text"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  placeholder="Enter your address"
+                  className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">City</label>
+                  <Input
+                    type="text"
+                    name="city"
+                    value={formData.city}
+                    onChange={handleChange}
+                    placeholder="City"
+                    className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">State</label>
+                  <div className="relative w-full" ref={stateDropdownRef}>
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white"
+                      placeholder="Select state"
+                      value={US_STATES.find(s => s.value === formData.state)?.label || ''}
+                      readOnly
+                      onClick={() => setShowStateDropdown(true)}
+                    />
+                    <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    {showStateDropdown && (
+                      <div className="absolute left-0 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                        {US_STATES.map(state => (
+                          <button
+                            key={state.value}
+                            className={`w-full text-left px-3 py-0.5 text-xs font-medium ${formData.state === state.value ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`}
+                            onClick={e => {
+                              e.preventDefault();
+                              setFormData(prev => ({ ...prev, state: state.value }));
+                            }}
+                          >
+                            {state.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">ZIP Code</label>
+                <Input
+                  type="text"
+                  name="zipCode"
+                  value={formData.zipCode}
+                  onChange={handleChange}
+                  placeholder="Enter ZIP code"
+                  className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Country</label>
+                <div className="relative w-full" ref={countryDropdownRef}>
+                  <input
+                    type="text"
+                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white"
+                    placeholder="Select country"
+                    value={COUNTRIES.find(c => c.value === formData.country)?.label || ''}
+                    readOnly
+                    onClick={() => setShowCountryDropdown(true)}
+                  />
+                  <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  {showCountryDropdown && (
+                    <div className="absolute left-0 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                      {COUNTRIES.map(country => (
+                        <button
+                          key={country.value}
+                          className={`w-full text-left px-3 py-0.5 text-xs font-medium ${formData.country === country.value ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`}
+                          onClick={e => {
+                            e.preventDefault();
+                            setFormData(prev => ({ ...prev, country: country.value }));
+                            setShowCountryDropdown(false);
+                          }}
+                        >
+                          {country.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <button
+                type="submit"
+                className="w-full py-1.5 rounded-lg bg-primary text-white font-semibold text-sm shadow hover:bg-primary/90 transition-colors"
+              >
+                Complete Setup
+              </button>
             </>
           )}
         </form>

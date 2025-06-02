@@ -79,9 +79,7 @@ export default function LandingPage() {
                 />
               </div>
               <span className="inline-flex items-center justify-center flex-wrap gap-2">
-                <span className="text-primary">Secure</span> <svg className="h-8 w-8 mx-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 5V19M5 12H19" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg> <span className="text-primary">streamline</span> <span className="text-primary">contracts</span>
+                <span className="text-primary">Secure</span><span>,</span> <span className="text-primary">streamlined</span> <span className="text-primary">contracts</span>
               </span>
             </h1>
             
