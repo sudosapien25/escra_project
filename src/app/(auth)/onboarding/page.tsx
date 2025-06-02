@@ -17,12 +17,17 @@ const COMPANY_TYPES: SelectOption[] = [
 
 const INDUSTRIES: SelectOption[] = [
   { value: 'real_estate', label: 'Real Estate' },
+  { value: 'athletics', label: 'Athletics' },
   { value: 'construction', label: 'Construction' },
-  { value: 'technology', label: 'Technology' },
+  { value: 'entertainment', label: 'Entertainment' },
   { value: 'finance', label: 'Finance' },
   { value: 'healthcare', label: 'Healthcare' },
-  { value: 'retail', label: 'Retail' },
+  { value: 'labor', label: 'Labor' },
+  { value: 'legal', label: 'Legal' },
   { value: 'manufacturing', label: 'Manufacturing' },
+  { value: 'retail', label: 'Retail' },
+  { value: 'supply_chain', label: 'Logistics' },
+  { value: 'technology', label: 'Technology' },
   { value: 'other', label: 'Other' }
 ];
 
@@ -353,7 +358,7 @@ export default function OnboardingPage() {
         </div>
       </div>
 
-      <div className={`w-full ${tab === 'business' ? 'max-w-3xl' : 'max-w-md'} bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 transition-all duration-300`}>
+      <div className={`w-full ${tab === 'business' ? 'max-w-3xl' : 'max-w-md'} bg-white dark:bg-gray-800 rounded-2xl p-4 transition-all duration-300`} style={{ boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
         <div className="mb-2">
           <h2 className="text-lg font-bold text-center text-gray-900 dark:text-white mb-1">Complete Your Profile</h2>
           <p className="text-center text-gray-500 dark:text-gray-300 text-sm mb-3">Tell us more about your business</p>
@@ -385,19 +390,19 @@ export default function OnboardingPage() {
         <form onSubmit={handleSubmit} className={`space-y-3 ${tab === 'business' ? 'max-w-3xl' : ''}`}>
           {tab === 'business' && step === 1 ? (
             <>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Company Name</label>
+                <Input
+                  type="text"
+                  name="companyName"
+                  value={formData.companyName}
+                  onChange={handleChange}
+                  placeholder="Enter your company name"
+                  className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
+                  required
+                />
+              </div>
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Company Name</label>
-                  <Input
-                    type="text"
-                    name="companyName"
-                    value={formData.companyName}
-                    onChange={handleChange}
-                    placeholder="Enter your company name"
-                    className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
-                    required
-                  />
-                </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Company Type</label>
                   <div className="relative w-full" ref={companyTypeDropdownRef}>
@@ -429,39 +434,63 @@ export default function OnboardingPage() {
                     )}
                   </div>
                 </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Industry</label>
-                <div className="relative w-full" ref={industryDropdownRef}>
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white"
-                    placeholder="Select industry"
-                    value={INDUSTRIES.find(i => i.value === formData.industry)?.label || ''}
-                    readOnly
-                    onClick={() => setShowIndustryDropdown(true)}
-                  />
-                  <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  {showIndustryDropdown && (
-                    <div className="absolute left-0 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                      {INDUSTRIES.map(industry => (
-                        <button
-                          key={industry.value}
-                          className={`w-full text-left px-3 py-0.5 text-xs font-medium ${formData.industry === industry.value ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`}
-                          onClick={e => {
-                            e.preventDefault();
-                            setFormData(prev => ({ ...prev, industry: industry.value }));
-                            setShowIndustryDropdown(false);
-                          }}
-                        >
-                          {industry.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Industry</label>
+                  <div className="relative w-full" ref={industryDropdownRef}>
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white"
+                      placeholder="Select industry"
+                      value={INDUSTRIES.find(i => i.value === formData.industry)?.label || ''}
+                      readOnly
+                      onClick={() => setShowIndustryDropdown(true)}
+                    />
+                    <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    {showIndustryDropdown && (
+                      <div className="absolute left-0 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                        {INDUSTRIES.map(industry => (
+                          <button
+                            key={industry.value}
+                            className={`w-full text-left px-3 py-0.5 text-xs font-medium ${formData.industry === industry.value ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`}
+                            onClick={e => {
+                              e.preventDefault();
+                              setFormData(prev => ({ ...prev, industry: industry.value }));
+                              setShowIndustryDropdown(false);
+                            }}
+                          >
+                            {industry.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Business Address</label>
+                <Input
+                  type="text"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  placeholder="Enter your business address"
+                  className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
+                  required
+                />
+              </div>
               <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">City</label>
+                  <Input
+                    type="text"
+                    name="city"
+                    value={formData.city}
+                    onChange={handleChange}
+                    placeholder="City"
+                    className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
+                    required
+                  />
+                </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">State</label>
                   <div className="relative w-full" ref={stateDropdownRef}>
@@ -492,12 +521,28 @@ export default function OnboardingPage() {
                     )}
                   </div>
                 </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">ZIP Code</label>
+                  <div className="relative w-full">
+                    <input
+                      type="text"
+                      name="zipCode"
+                      value={formData.zipCode}
+                      onChange={handleChange}
+                      placeholder="Enter ZIP code"
+                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 bg-white"
+                      required
+                    />
+                  </div>
+                </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Country</label>
                   <div className="relative w-full" ref={countryDropdownRef}>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white"
+                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 bg-white"
                       placeholder="Select country"
                       value={COUNTRIES.find(c => c.value === formData.country)?.label || ''}
                       readOnly
@@ -524,16 +569,32 @@ export default function OnboardingPage() {
                   </div>
                 </div>
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Phone Number</label>
+                  <div className="relative w-full">
+                    <input
+                      type="tel"
+                      name="phoneNumber"
+                      value={formData.phoneNumber}
+                      onChange={handleChange}
+                      placeholder="Enter your phone #"
+                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 bg-white"
+                      required
+                    />
+                  </div>
+                </div>
+                <div></div>
+              </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Phone Number</label>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Website (Optional)</label>
                 <Input
-                  type="tel"
-                  name="phoneNumber"
-                  value={formData.phoneNumber}
+                  type="url"
+                  name="website"
+                  value={formData.website}
                   onChange={handleChange}
-                  placeholder="Enter your phone number"
+                  placeholder="Enter your website"
                   className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
-                  required
                 />
               </div>
               <button
@@ -546,18 +607,6 @@ export default function OnboardingPage() {
             </>
           ) : tab === 'business' && step === 2 ? (
             <>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Business Address</label>
-                <Input
-                  type="text"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  placeholder="Enter your business address"
-                  className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
-                  required
-                />
-              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">City</label>
@@ -584,29 +633,6 @@ export default function OnboardingPage() {
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">ZIP Code</label>
-                <Input
-                  type="text"
-                  name="zipCode"
-                  value={formData.zipCode}
-                  onChange={handleChange}
-                  placeholder="Enter ZIP code"
-                  className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Website (Optional)</label>
-                <Input
-                  type="url"
-                  name="website"
-                  value={formData.website}
-                  onChange={handleChange}
-                  placeholder="Enter your website"
-                  className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
-                />
-              </div>
               <div className="flex gap-3">
                 <button
                   type="button"
@@ -625,18 +651,6 @@ export default function OnboardingPage() {
             </>
           ) : (
             <>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Phone Number</label>
-                <Input
-                  type="tel"
-                  name="phoneNumber"
-                  value={formData.phoneNumber}
-                  onChange={handleChange}
-                  placeholder="Enter your phone number"
-                  className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
-                  required
-                />
-              </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Address</label>
                 <Input
@@ -693,48 +707,69 @@ export default function OnboardingPage() {
                   </div>
                 </div>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">ZIP Code</label>
-                <Input
-                  type="text"
-                  name="zipCode"
-                  value={formData.zipCode}
-                  onChange={handleChange}
-                  placeholder="Enter ZIP code"
-                  className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Country</label>
-                <div className="relative w-full" ref={countryDropdownRef}>
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white"
-                    placeholder="Select country"
-                    value={COUNTRIES.find(c => c.value === formData.country)?.label || ''}
-                    readOnly
-                    onClick={() => setShowCountryDropdown(true)}
-                  />
-                  <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  {showCountryDropdown && (
-                    <div className="absolute left-0 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                      {COUNTRIES.map(country => (
-                        <button
-                          key={country.value}
-                          className={`w-full text-left px-3 py-0.5 text-xs font-medium ${formData.country === country.value ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`}
-                          onClick={e => {
-                            e.preventDefault();
-                            setFormData(prev => ({ ...prev, country: country.value }));
-                            setShowCountryDropdown(false);
-                          }}
-                        >
-                          {country.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">ZIP Code</label>
+                  <div className="relative w-full">
+                    <input
+                      type="text"
+                      name="zipCode"
+                      value={formData.zipCode}
+                      onChange={handleChange}
+                      placeholder="Enter ZIP code"
+                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 bg-white"
+                      required
+                    />
+                  </div>
                 </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Country</label>
+                  <div className="relative w-full" ref={countryDropdownRef}>
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 bg-white"
+                      placeholder="Select country"
+                      value={COUNTRIES.find(c => c.value === formData.country)?.label || ''}
+                      readOnly
+                      onClick={() => setShowCountryDropdown(true)}
+                    />
+                    <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    {showCountryDropdown && (
+                      <div className="absolute left-0 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                        {COUNTRIES.map(country => (
+                          <button
+                            key={country.value}
+                            className={`w-full text-left px-3 py-0.5 text-xs font-medium ${formData.country === country.value ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`}
+                            onClick={e => {
+                              e.preventDefault();
+                              setFormData(prev => ({ ...prev, country: country.value }));
+                              setShowCountryDropdown(false);
+                            }}
+                          >
+                            {country.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Phone Number</label>
+                  <div className="relative w-full">
+                    <input
+                      type="tel"
+                      name="phoneNumber"
+                      value={formData.phoneNumber}
+                      onChange={handleChange}
+                      placeholder="Enter your phone #"
+                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 bg-white"
+                      required
+                    />
+                  </div>
+                </div>
+                <div></div>
               </div>
               <button
                 type="submit"

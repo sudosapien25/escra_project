@@ -242,7 +242,8 @@ export default function WorkflowsPage() {
           (!!contractObj && (
             contractObj.title.toLowerCase().includes(search) ||
             contractObj.id.toLowerCase().includes(search)
-          ))
+          )) ||
+          (typeof task.assignee === 'string' && task.assignee.toLowerCase().includes(search))
         );
       }
       return matches;
@@ -773,10 +774,11 @@ export default function WorkflowsPage() {
             <FaSearch className="text-gray-400 mr-2 text-lg" />
             <input
               type="text"
-              placeholder="Search contracts, tasks, or numbers"
+              placeholder="Search tasks, assignees, contracts or IDs"
               value={taskSearchTerm}
               onChange={e => setTaskSearchTerm(e.target.value)}
               className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 placeholder-gray-400 font-medium min-w-0"
+              style={{ fontFamily: 'Avenir, sans-serif' }}
             />
           </div>
         </div>

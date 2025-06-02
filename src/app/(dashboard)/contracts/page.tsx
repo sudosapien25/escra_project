@@ -421,26 +421,38 @@ const ContractsPage: React.FC = () => {
   // Ref for status dropdown
   const statusDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Click outside to close status dropdown
+  const [showContractTypeDropdown, setShowContractTypeDropdown] = useState(false);
+  const [showPropertyTypeDropdown, setShowPropertyTypeDropdown] = useState(false);
+  const [showMilestoneDropdown, setShowMilestoneDropdown] = useState(false);
+  const contractTypeDropdownRef = useRef<HTMLDivElement>(null);
+  const propertyTypeDropdownRef = useRef<HTMLDivElement>(null);
+  const milestoneDropdownRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (
-        showStatusDropdown &&
-        statusDropdownRef.current &&
-        !statusDropdownRef.current.contains(event.target as Node)
-      ) {
-        setShowStatusDropdown(false);
+      const target = event.target as Node;
+      
+      // Handle contract type dropdown
+      if (showContractTypeDropdown && contractTypeDropdownRef.current && !contractTypeDropdownRef.current.contains(target)) {
+        setShowContractTypeDropdown(false);
+      }
+      
+      // Handle property type dropdown
+      if (showPropertyTypeDropdown && propertyTypeDropdownRef.current && !propertyTypeDropdownRef.current.contains(target)) {
+        setShowPropertyTypeDropdown(false);
+      }
+      
+      // Handle milestone dropdown
+      if (showMilestoneDropdown && milestoneDropdownRef.current && !milestoneDropdownRef.current.contains(target)) {
+        setShowMilestoneDropdown(false);
       }
     }
-    if (showStatusDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-    } else {
-      document.removeEventListener('mousedown', handleClickOutside);
-    }
+
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showStatusDropdown]);
+  }, [showContractTypeDropdown, showPropertyTypeDropdown, showMilestoneDropdown]);
 
   useEffect(() => {
     if (!documentsBoxRef.current) return;
@@ -799,51 +811,96 @@ const ContractsPage: React.FC = () => {
                   </div>
                   <div>
                     <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">Contract Type</label>
-                    <select
-                      id="type"
-                      name="type"
-                      value={modalForm.type}
-                      onChange={handleModalChange}
-                      className="contract-type-select w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs appearance-none bg-white bg-no-repeat bg-[length:20px] bg-[right_12px_center] bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236B7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')]"
-                      required
-                    >
-                      <option value="" disabled>Select a contract type</option>
-                      {CONTRACT_TYPES.map(type => (
-                        <option key={type} value={type}>{type}</option>
-                      ))}
-                    </select>
+                    <div className="relative w-full" ref={contractTypeDropdownRef}>
+                      <input
+                        type="text"
+                        className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white"
+                        placeholder="Select contract type"
+                        value={CONTRACT_TYPES.find(t => t === modalForm.type) || ''}
+                        readOnly
+                        onClick={() => setShowContractTypeDropdown(true)}
+                      />
+                      <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      {showContractTypeDropdown && (
+                        <div className="absolute left-0 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                          {CONTRACT_TYPES.map(type => (
+                            <button
+                              key={type}
+                              className={`w-full text-left px-3 py-0.5 text-xs font-medium ${modalForm.type === type ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`}
+                              onClick={e => {
+                                e.preventDefault();
+                                setModalForm(prev => ({ ...prev, type }));
+                                setShowContractTypeDropdown(false);
+                              }}
+                            >
+                              {type}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <label htmlFor="propertyType" className="block text-sm font-medium text-gray-700 mb-1">Property Type</label>
-                    <select
-                      id="propertyType"
-                      name="propertyType"
-                      value={modalForm.propertyType}
-                      onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs appearance-none bg-white bg-no-repeat bg-[length:20px] bg-[right_12px_center] bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236B7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')]"
-                      required
-                    >
-                      <option value="" disabled>Select property type</option>
-                      {PROPERTY_TYPES.map(type => (
-                        <option key={type} value={type}>{type}</option>
-                      ))}
-                    </select>
+                    <div className="relative w-full" ref={propertyTypeDropdownRef}>
+                      <input
+                        type="text"
+                        className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white"
+                        placeholder="Select property type"
+                        value={PROPERTY_TYPES.find(t => t === modalForm.propertyType) || ''}
+                        readOnly
+                        onClick={() => setShowPropertyTypeDropdown(true)}
+                      />
+                      <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      {showPropertyTypeDropdown && (
+                        <div className="absolute left-0 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                          {PROPERTY_TYPES.map(type => (
+                            <button
+                              key={type}
+                              className={`w-full text-left px-3 py-0.5 text-xs font-medium ${modalForm.propertyType === type ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`}
+                              onClick={e => {
+                                e.preventDefault();
+                                setModalForm(prev => ({ ...prev, propertyType: type }));
+                                setShowPropertyTypeDropdown(false);
+                              }}
+                            >
+                              {type}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <label htmlFor="milestone" className="block text-sm font-medium text-gray-700 mb-1">Milestone Template</label>
-                    <select
-                      id="milestone"
-                      name="milestone"
-                      value={modalForm.milestone}
-                      onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs appearance-none bg-white bg-no-repeat bg-[length:20px] bg-[right_12px_center] bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236B7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')]"
-                      required
-                    >
-                      <option value="" disabled>Select a milestone template</option>
-                      {MILESTONE_TEMPLATES.map(template => (
-                        <option key={template} value={template}>{template}</option>
-                      ))}
-                    </select>
+                    <div className="relative w-full" ref={milestoneDropdownRef}>
+                      <input
+                        type="text"
+                        className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white"
+                        placeholder="Select milestone template"
+                        value={MILESTONE_TEMPLATES.find(t => t === modalForm.milestone) || ''}
+                        readOnly
+                        onClick={() => setShowMilestoneDropdown(true)}
+                      />
+                      <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      {showMilestoneDropdown && (
+                        <div className="absolute left-0 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                          {MILESTONE_TEMPLATES.map(template => (
+                            <button
+                              key={template}
+                              className={`w-full text-left px-3 py-0.5 text-xs font-medium ${modalForm.milestone === template ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`}
+                              onClick={e => {
+                                e.preventDefault();
+                                setModalForm(prev => ({ ...prev, milestone: template }));
+                                setShowMilestoneDropdown(false);
+                              }}
+                            >
+                              {template}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <label htmlFor="value" className="block text-sm font-medium text-gray-700 mb-1">Contract Value</label>
@@ -866,7 +923,7 @@ const ContractsPage: React.FC = () => {
                       name="dueDate"
                       value={modalForm.dueDate}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 pr-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs text-gray-500 bg-white"
+                      className="w-full px-4 py-2 pr-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs text-black bg-white"
                       required
                     />
                   </div>
@@ -1042,7 +1099,7 @@ const ContractsPage: React.FC = () => {
                       name="closingDate"
                       value={modalForm.closingDate}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 pr-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs text-gray-500 bg-white"
+                      className="w-full px-4 py-2 pr-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs text-black bg-white"
                       required
                     />
                   </div>
@@ -1255,9 +1312,9 @@ const ContractsPage: React.FC = () => {
           <FaSearch className="text-gray-400 mr-2" size={18} />
           <input
             type="text"
-            placeholder="Search contracts, parties, or documents"
+            placeholder="Search contracts, parties, documents or IDs"
             value={searchTerm}
-            onChange={handleSearchChange}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 placeholder-gray-400 font-medium min-w-0"
             style={{ fontFamily: 'Avenir, sans-serif' }}
           />

@@ -349,11 +349,13 @@ export default function AuthPage() {
       <div className="min-h-screen relative z-10">
         {/* Centered Login/Register Form */}
         <div className="relative flex flex-col items-center justify-center min-h-screen py-8 px-4 font-sans">
+          <div className="flex flex-col items-center mb-4">
+            <div className="rounded-full bg-primary/10 p-2 mb-4">
+              <Logo width={60} height={60} targetUrl="/" />
+            </div>
+          </div>
           <div className="w-full max-w-md bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-8 space-y-6" style={{ boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
-            <div className="flex flex-col items-center mb-8">
-              <div className="rounded-full bg-primary/10 p-2 mb-6">
-                <Logo width={80} height={80} targetUrl="/" />
-              </div>
+            <div className="mb-2">
               <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2 text-center">Welcome</h1>
               <p className="text-gray-500 dark:text-gray-300 text-base text-center max-w-md">Your secure contract execution platform</p>
             </div>
@@ -363,13 +365,13 @@ export default function AuthPage() {
               <p className="text-center text-gray-500 dark:text-gray-300 text-sm mb-4">Sign in to your account or create a new one</p>
               <div className="flex rounded-lg bg-gray-100 dark:bg-gray-700 overflow-hidden mb-4 border border-gray-200 dark:border-gray-700">
                 <button
-                  className={`flex-1 py-1.5 text-sm font-semibold transition-colors duration-150 ${tab === 'login' ? 'bg-white dark:bg-gray-800 text-primary shadow' : 'text-gray-500 dark:text-gray-300'}`}
+                  className={`flex-1 py-1.5 text-sm font-semibold transition-colors duration-150 ${tab === 'login' ? 'bg-white dark:bg-gray-800 text-primary shadow rounded-l-lg' : 'text-gray-500 dark:text-gray-300'}`}
                   onClick={() => setTab('login')}
                 >
                   Login
                 </button>
                 <button
-                  className={`flex-1 py-1.5 text-sm font-semibold transition-colors duration-150 ${tab === 'register' ? 'bg-white dark:bg-gray-800 text-primary shadow' : 'text-gray-500 dark:text-gray-300'}`}
+                  className={`flex-1 py-1.5 text-sm font-semibold transition-colors duration-150 border-l border-gray-200 dark:border-gray-700 ${tab === 'register' ? 'bg-white dark:bg-gray-800 text-primary shadow border-r border-gray-200 dark:border-gray-700 rounded-r-lg' : 'text-gray-500 dark:text-gray-300'}`}
                   onClick={() => setTab('register')}
                 >
                   Create Account
