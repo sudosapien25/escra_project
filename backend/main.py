@@ -11,7 +11,7 @@ load_dotenv()
 app = FastAPI(title="ESCRa Backend")
 
 # Database setup
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@postgres:5432/escra_db")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://localhost/escra_db")
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
