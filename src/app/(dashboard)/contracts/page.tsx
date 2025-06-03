@@ -61,6 +61,14 @@ interface Contract {
   agent?: string;
 }
 
+interface Document {
+  id: string;
+  name: string;
+  date: string;
+  size: string;
+  type: string;
+}
+
 const ContractsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('allContracts');
   const [activeContentTab, setActiveContentTab] = useState('contractList');
@@ -196,16 +204,16 @@ const ContractsPage: React.FC = () => {
   ];
 
   const sampleDocuments = [
-    { id: 'DOC-001', name: 'Purchase Agreement', type: 'PDF', size: '2.4 MB', uploadedBy: 'John Smith', dateUploaded: '2024-03-15', contractTitle: 'New Property Acquisition', contractId: '9548' },
-    { id: 'DOC-002', name: 'Property Survey', type: 'PDF', size: '1.8 MB', uploadedBy: 'Sarah Johnson', dateUploaded: '2024-03-14', contractTitle: 'Land Development Contract', contractId: '9550' },
-    { id: 'DOC-003', name: 'Inspection Report', type: 'PDF', size: '3.2 MB', uploadedBy: 'Michael Brown', dateUploaded: '2024-03-13', contractTitle: 'Construction Escrow', contractId: '9145' },
-    { id: 'DOC-004', name: 'Lease Agreement', type: 'DOCX', size: '1.1 MB', uploadedBy: 'Emma Johnson', dateUploaded: '2024-03-12', contractTitle: 'Commercial Lease Amendment', contractId: '8784' },
-    { id: 'DOC-005', name: 'Title Insurance', type: 'PDF', size: '2.0 MB', uploadedBy: 'Robert Chen', dateUploaded: '2024-03-11', contractTitle: 'Property Sale Contract', contractId: '8423' },
-    { id: 'DOC-006', name: 'Wire Authorization', type: 'PDF', size: '1.2 MB', uploadedBy: 'Sarah Miller', dateUploaded: '2024-03-10', contractTitle: 'Investment Property Escrow', contractId: '7804' },
-    { id: 'DOC-007', name: 'Appraisal Report', type: 'PDF', size: '2.7 MB', uploadedBy: 'David Miller', dateUploaded: '2024-03-09', contractTitle: 'Residential Sale Agreement', contractId: '7234' },
-    { id: 'DOC-008', name: 'Closing Disclosure', type: 'PDF', size: '1.9 MB', uploadedBy: 'Emily Davis', dateUploaded: '2024-03-08', contractTitle: 'Office Building Purchase', contractId: '6891' },
-    { id: 'DOC-009', name: 'Loan Estimate', type: 'PDF', size: '1.5 MB', uploadedBy: 'Alex Johnson', dateUploaded: '2024-03-07', contractTitle: 'Retail Space Lease', contractId: '6453' },
-    { id: 'DOC-010', name: 'Deed Transfer', type: 'PDF', size: '2.2 MB', uploadedBy: 'Samantha Fox', dateUploaded: '2024-03-06', contractTitle: 'Luxury Villa Purchase', contractId: '10003' }
+    { id: '1234', name: 'Purchase Agreement', type: 'PDF', size: '2.4 MB', uploadedBy: 'John Smith', dateUploaded: '2024-03-15', contractTitle: 'New Property Acquisition', contractId: '9548' },
+    { id: '2345', name: 'Property Survey', type: 'PDF', size: '1.8 MB', uploadedBy: 'Sarah Johnson', dateUploaded: '2024-03-14', contractTitle: 'Land Development Contract', contractId: '9550' },
+    { id: '3456', name: 'Inspection Report', type: 'PDF', size: '3.2 MB', uploadedBy: 'Michael Brown', dateUploaded: '2024-03-13', contractTitle: 'Construction Escrow', contractId: '9145' },
+    { id: '4567', name: 'Lease Agreement', type: 'DOCX', size: '1.1 MB', uploadedBy: 'Emma Johnson', dateUploaded: '2024-03-12', contractTitle: 'Commercial Lease Amendment', contractId: '8784' },
+    { id: '5678', name: 'Title Insurance', type: 'PDF', size: '2.0 MB', uploadedBy: 'Robert Chen', dateUploaded: '2024-03-11', contractTitle: 'Property Sale Contract', contractId: '8423' },
+    { id: '6789', name: 'Wire Authorization', type: 'PDF', size: '1.2 MB', uploadedBy: 'Sarah Miller', dateUploaded: '2024-03-10', contractTitle: 'Investment Property Escrow', contractId: '7804' },
+    { id: '7890', name: 'Appraisal Report', type: 'PDF', size: '2.7 MB', uploadedBy: 'David Miller', dateUploaded: '2024-03-09', contractTitle: 'Residential Sale Agreement', contractId: '7234' },
+    { id: '8901', name: 'Closing Disclosure', type: 'PDF', size: '1.9 MB', uploadedBy: 'Emily Davis', dateUploaded: '2024-03-08', contractTitle: 'Office Building Purchase', contractId: '6891' },
+    { id: '9012', name: 'Loan Estimate', type: 'PDF', size: '1.5 MB', uploadedBy: 'Alex Johnson', dateUploaded: '2024-03-07', contractTitle: 'Retail Space Lease', contractId: '6453' },
+    { id: '0123', name: 'Deed Transfer', type: 'PDF', size: '2.2 MB', uploadedBy: 'Samantha Fox', dateUploaded: '2024-03-06', contractTitle: 'Luxury Villa Purchase', contractId: '10003' }
   ];
 
   // Get unique statuses from contracts
@@ -410,7 +418,7 @@ const ContractsPage: React.FC = () => {
   const [uploadModalFiles, setUploadModalFiles] = useState<File[]>([]);
 
   const [showPdfViewer, setShowPdfViewer] = useState(false);
-  const [selectedPdf, setSelectedPdf] = useState<{ name: string; url: string } | null>(null);
+  const [selectedPdf, setSelectedPdf] = useState<{ name: string; url: string; id?: string } | null>(null);
 
   const [isNewContractModalOpen, setIsNewContractModalOpen] = useState(false);
 
@@ -784,7 +792,7 @@ const ContractsPage: React.FC = () => {
               <form onSubmit={e => { e.preventDefault(); setModalStep(2); }}>
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Contract Title</label>
+                    <label htmlFor="title" className="block text-xs font-medium text-gray-500 mb-1">Contract Title</label>
                     <input
                       type="text"
                       id="title"
@@ -797,7 +805,7 @@ const ContractsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="escrowNumber" className="block text-sm font-medium text-gray-700 mb-1">Escrow Number</label>
+                    <label htmlFor="escrowNumber" className="block text-xs font-medium text-gray-500 mb-1">Escrow Number</label>
                     <input
                       type="text"
                       id="escrowNumber"
@@ -810,7 +818,7 @@ const ContractsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">Contract Type</label>
+                    <label htmlFor="type" className="block text-xs font-medium text-gray-500 mb-1">Contract Type</label>
                     <div className="relative w-full" ref={contractTypeDropdownRef}>
                       <input
                         type="text"
@@ -841,7 +849,7 @@ const ContractsPage: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="propertyType" className="block text-sm font-medium text-gray-700 mb-1">Property Type</label>
+                    <label htmlFor="propertyType" className="block text-xs font-medium text-gray-500 mb-1">Property Type</label>
                     <div className="relative w-full" ref={propertyTypeDropdownRef}>
                       <input
                         type="text"
@@ -872,7 +880,7 @@ const ContractsPage: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="milestone" className="block text-sm font-medium text-gray-700 mb-1">Milestone Template</label>
+                    <label htmlFor="milestone" className="block text-xs font-medium text-gray-500 mb-1">Milestone Template</label>
                     <div className="relative w-full" ref={milestoneDropdownRef}>
                       <input
                         type="text"
@@ -903,7 +911,7 @@ const ContractsPage: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="value" className="block text-sm font-medium text-gray-700 mb-1">Contract Value</label>
+                    <label htmlFor="value" className="block text-xs font-medium text-gray-500 mb-1">Contract Value</label>
                     <input
                       type="text"
                       id="value"
@@ -916,7 +924,7 @@ const ContractsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                    <label htmlFor="dueDate" className="block text-xs font-medium text-gray-500 mb-1">Due Date</label>
                     <input
                       type="date"
                       id="dueDate"
@@ -929,7 +937,7 @@ const ContractsPage: React.FC = () => {
                   </div>
                 </div>
                 <div className="mt-6">
-                  <label htmlFor="propertyAddress" className="block text-sm font-medium text-gray-700 mb-1">Property Address</label>
+                  <label htmlFor="propertyAddress" className="block text-xs font-medium text-gray-500 mb-1">Property Address</label>
                   <input
                     type="text"
                     id="propertyAddress"
@@ -942,7 +950,7 @@ const ContractsPage: React.FC = () => {
                   />
                 </div>
                 <div className="mt-6">
-                  <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">Notes (Optional)</label>
+                  <label htmlFor="notes" className="block text-xs font-medium text-gray-500 mb-1">Notes (Optional)</label>
                   <textarea
                     id="notes"
                     name="notes"
@@ -962,7 +970,7 @@ const ContractsPage: React.FC = () => {
               <form onSubmit={e => { e.preventDefault(); setModalStep(3); }}>
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="buyer" className="block text-sm font-medium text-gray-700 mb-1">Buyer / Client</label>
+                    <label htmlFor="buyer" className="block text-xs font-medium text-gray-500 mb-1">Buyer / Client</label>
                     <input
                       type="text"
                       id="buyer"
@@ -975,7 +983,7 @@ const ContractsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="buyerEmail" className="block text-sm font-medium text-gray-700 mb-1">Buyer Email</label>
+                    <label htmlFor="buyerEmail" className="block text-xs font-medium text-gray-500 mb-1">Buyer Email</label>
                     <input
                       type="email"
                       id="buyerEmail"
@@ -993,7 +1001,7 @@ const ContractsPage: React.FC = () => {
                     )}
                   </div>
                   <div>
-                    <label htmlFor="seller" className="block text-sm font-medium text-gray-700 mb-1">Seller / Provider</label>
+                    <label htmlFor="seller" className="block text-xs font-medium text-gray-500 mb-1">Seller / Provider</label>
                     <input
                       type="text"
                       id="seller"
@@ -1006,7 +1014,7 @@ const ContractsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="sellerEmail" className="block text-sm font-medium text-gray-700 mb-1">Seller Email</label>
+                    <label htmlFor="sellerEmail" className="block text-xs font-medium text-gray-500 mb-1">Seller Email</label>
                     <input
                       type="email"
                       id="sellerEmail"
@@ -1024,7 +1032,7 @@ const ContractsPage: React.FC = () => {
                     )}
                   </div>
                   <div>
-                    <label htmlFor="agent" className="block text-sm font-medium text-gray-700 mb-1">Agent / Escrow Officer (Optional)</label>
+                    <label htmlFor="agent" className="block text-xs font-medium text-gray-500 mb-1">Agent / Escrow Officer (Optional)</label>
                     <input
                       type="text"
                       id="agent"
@@ -1036,7 +1044,7 @@ const ContractsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="agentEmail" className="block text-sm font-medium text-gray-700 mb-1">Agent Email (Optional)</label>
+                    <label htmlFor="agentEmail" className="block text-xs font-medium text-gray-500 mb-1">Agent Email (Optional)</label>
                     <input
                       type="email"
                       id="agentEmail"
@@ -1053,7 +1061,7 @@ const ContractsPage: React.FC = () => {
                     )}
                   </div>
                   <div>
-                    <label htmlFor="lenderName" className="block text-sm font-medium text-gray-700 mb-1">Lender Name</label>
+                    <label htmlFor="lenderName" className="block text-xs font-medium text-gray-500 mb-1">Lender Name</label>
                     <input
                       type="text"
                       id="lenderName"
@@ -1066,7 +1074,7 @@ const ContractsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="titleCompany" className="block text-sm font-medium text-gray-700 mb-1">Title Company</label>
+                    <label htmlFor="titleCompany" className="block text-xs font-medium text-gray-500 mb-1">Title Company</label>
                     <input
                       type="text"
                       id="titleCompany"
@@ -1079,7 +1087,7 @@ const ContractsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="insuranceCompany" className="block text-sm font-medium text-gray-700 mb-1">Insurance Company</label>
+                    <label htmlFor="insuranceCompany" className="block text-xs font-medium text-gray-500 mb-1">Insurance Company</label>
                     <input
                       type="text"
                       id="insuranceCompany"
@@ -1092,7 +1100,7 @@ const ContractsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="closingDate" className="block text-sm font-medium text-gray-700 mb-1">Expected Closing Date</label>
+                    <label htmlFor="closingDate" className="block text-xs font-medium text-gray-500 mb-1">Expected Closing Date</label>
                     <input
                       type="date"
                       id="closingDate"
@@ -1106,7 +1114,7 @@ const ContractsPage: React.FC = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-6 mt-6">
                   <div>
-                    <label htmlFor="earnestMoney" className="block text-sm font-medium text-gray-700 mb-1">Earnest Money</label>
+                    <label htmlFor="earnestMoney" className="block text-xs font-medium text-gray-500 mb-1">Earnest Money</label>
                     <input
                       type="text"
                       id="earnestMoney"
@@ -1119,7 +1127,7 @@ const ContractsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="downPayment" className="block text-sm font-medium text-gray-700 mb-1">Down Payment</label>
+                    <label htmlFor="downPayment" className="block text-xs font-medium text-gray-500 mb-1">Down Payment</label>
                     <input
                       type="text"
                       id="downPayment"
@@ -1132,7 +1140,7 @@ const ContractsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="loanAmount" className="block text-sm font-medium text-gray-700 mb-1">Loan Amount</label>
+                    <label htmlFor="loanAmount" className="block text-xs font-medium text-gray-500 mb-1">Loan Amount</label>
                     <input
                       type="text"
                       id="loanAmount"
@@ -1145,7 +1153,7 @@ const ContractsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="interestRate" className="block text-sm font-medium text-gray-700 mb-1">Interest Rate (%)</label>
+                    <label htmlFor="interestRate" className="block text-xs font-medium text-gray-500 mb-1">Interest Rate (%)</label>
                     <input
                       type="text"
                       id="interestRate"
@@ -1158,7 +1166,7 @@ const ContractsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="loanTerm" className="block text-sm font-medium text-gray-700 mb-1">Loan Term (Years)</label>
+                    <label htmlFor="loanTerm" className="block text-xs font-medium text-gray-500 mb-1">Loan Term (Years)</label>
                     <input
                       type="text"
                       id="loanTerm"
@@ -1171,7 +1179,7 @@ const ContractsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="inspectionPeriod" className="block text-sm font-medium text-gray-700 mb-1">Inspection Period (Days)</label>
+                    <label htmlFor="inspectionPeriod" className="block text-xs font-medium text-gray-500 mb-1">Inspection Period (Days)</label>
             <input
               type="text"
                       id="inspectionPeriod"
@@ -1185,7 +1193,7 @@ const ContractsPage: React.FC = () => {
                   </div>
                 </div>
                 <div className="mt-6">
-                  <label htmlFor="contingencies" className="block text-sm font-medium text-gray-700 mb-1">Contingencies</label>
+                  <label htmlFor="contingencies" className="block text-xs font-medium text-gray-500 mb-1">Contingencies</label>
                   <textarea
                     id="contingencies"
                     name="contingencies"
@@ -1471,7 +1479,6 @@ const ContractsPage: React.FC = () => {
                   >
                     Value
                   </th>
-                  <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Contract Hash</th>
                   <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -1498,23 +1505,6 @@ const ContractsPage: React.FC = () => {
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs text-gray-500">2024-05-01</td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs text-gray-500">{contract.updated}</td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs text-primary">{contract.value}</td>
-                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
-                      <div className="flex items-center justify-center">
-                        <span className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer" style={{ maxWidth: '120px' }} title={getContractHash(contract.id)}>
-                          0x{contract.id}...{contract.id.slice(-4)}
-                        </span>
-                        <div className="relative">
-                          <button type="button" className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none" onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(getContractHash(contract.id)); setCopiedContractId(contract.id); setTimeout(() => setCopiedContractId(null), 1500); }} onMouseEnter={() => setHoveredContractId(contract.id)} onMouseLeave={() => setHoveredContractId(null)} aria-label="Copy contract hash">
-                            <HiOutlineDuplicate className="w-4 h-4" />
-                          </button>
-                          {(hoveredContractId === contract.id || copiedContractId === contract.id) && (
-                            <span className="absolute left-1/2 -translate-x-1/2 mt-2 px-2 py-1 rounded bg-gray-800 text-white text-xs whitespace-nowrap z-20 pointer-events-none">
-                              {copiedContractId === contract.id ? 'Copied' : 'Copy'}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs font-medium">
                       <div className="flex items-center justify-center space-x-1">
                         <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Edit">
@@ -1540,6 +1530,7 @@ const ContractsPage: React.FC = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead>
                 <tr>
+                  <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
                   <th className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">File Name</th>
                   <th className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">UPLOADED BY</th>
                   <th className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">DATE UPLOADED</th>
@@ -1551,6 +1542,9 @@ const ContractsPage: React.FC = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredDocuments.map((doc) => (
                   <tr key={doc.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-2.5 whitespace-nowrap text-xs text-gray-900 text-center">
+                      <span className="text-primary underline font-semibold cursor-pointer">{doc.id}</span>
+                    </td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-sm">
                       <div className="font-bold text-xs text-gray-900">{doc.name}</div>
                       <div className="text-xs text-gray-500 flex items-center gap-2">
@@ -1567,7 +1561,7 @@ const ContractsPage: React.FC = () => {
                     </td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs font-medium">
                       <div className="flex items-center justify-center space-x-1">
-                        <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="View" onClick={() => { setSelectedPdf({ name: doc.name, url: `/documents/${doc.name}` }); setShowPdfViewer(true); }}>
+                        <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="View" onClick={() => { setSelectedPdf({ name: doc.name, url: `/documents/${doc.name}`, id: doc.id }); setShowPdfViewer(true); }}>
                           <HiOutlineEye className="h-4 w-4" />
                         </button>
                         <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Download">
@@ -1998,14 +1992,15 @@ const ContractsPage: React.FC = () => {
                     </div>
                     <div className="flex flex-col gap-3 overflow-y-auto mt-4" style={{ maxHeight: '352px' }}>
                       {/* Mock document list (7 items) */}
-                      {[{ name: 'Wire_Authorization', date: '2025-05-18', size: '1.2 MB', type: 'PDF' },
-                        { name: 'Closing_Disclosure', date: '2025-05-15', size: '0.9 MB', type: 'PDF' },
-                        { name: 'Purchase_Agreement', date: '2025-05-12', size: '2.1 MB', type: 'PDF' },
-                        { name: 'Inspection_Report', date: '2025-05-10', size: '1.5 MB', type: 'PDF' },
-                        { name: 'Appraisal', date: '2025-05-08', size: '1.0 MB', type: 'PDF' },
-                        { name: 'Title_Insurance', date: '2025-05-05', size: '1.3 MB', type: 'PDF' },
-                        { name: 'Loan_Estimate', date: '2025-05-02', size: '0.8 MB', type: 'PDF' },
-                      ].map((doc) => (
+                      {([
+                        { id: '1234', name: 'Wire_Authorization', date: '2025-05-18', size: '1.2 MB', type: 'PDF' },
+                        { id: '2345', name: 'Closing_Disclosure', date: '2025-05-15', size: '0.9 MB', type: 'PDF' },
+                        { id: '3456', name: 'Purchase_Agreement', date: '2025-05-12', size: '2.1 MB', type: 'PDF' },
+                        { id: '4567', name: 'Inspection_Report', date: '2025-05-10', size: '1.5 MB', type: 'PDF' },
+                        { id: '5678', name: 'Appraisal', date: '2025-05-08', size: '1.0 MB', type: 'PDF' },
+                        { id: '6789', name: 'Title_Insurance', date: '2025-05-05', size: '1.3 MB', type: 'PDF' },
+                        { id: '7890', name: 'Loan_Estimate', date: '2025-05-02', size: '0.8 MB', type: 'PDF' },
+                      ] as Document[]).map((doc: Document) => (
                         <div key={doc.name} className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
                           <div className="flex items-center gap-3">
                             <HiOutlineDocumentText className="w-5 h-5 text-primary" />
@@ -2015,7 +2010,7 @@ const ContractsPage: React.FC = () => {
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="View" onClick={() => { setSelectedPdf({ name: doc.name, url: `/documents/${doc.name}` }); setShowPdfViewer(true); }}>
+                            <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="View" onClick={() => { setSelectedPdf({ name: doc.name, url: `/documents/${doc.name}`, id: doc.id }); setShowPdfViewer(true); }}>
                               <HiOutlineEye className="h-4 w-4" />
                             </button>
                             <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Download">
@@ -2332,7 +2327,12 @@ const ContractsPage: React.FC = () => {
         <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col">
           <div className="p-6 border-b border-gray-200">
             <div className="flex justify-between items-center">
-              <h2 className="text-lg font-bold text-gray-900">{selectedPdf.name}</h2>
+              <div className="flex flex-col gap-2 items-start">
+                <span className="inline-block max-w-max text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20">
+                  # {selectedPdf.id || '1234'}
+                </span>
+                <h2 className="text-lg font-bold text-gray-900 mt-0.5">{selectedPdf.name}</h2>
+              </div>
               <button
                 className="text-gray-400 hover:text-gray-600"
                 onClick={() => setShowPdfViewer(false)}
@@ -2341,15 +2341,15 @@ const ContractsPage: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
-                        </div>
-                      </div>
+            </div>
+          </div>
           <div className="flex-1 p-6 overflow-auto flex items-center justify-center bg-gray-50">
             {/* Blank area for PDF viewer */}
             <span className="text-gray-400 text-lg">No document available</span>
-                      </div>
-                      </div>
-                          </div>
-                        )}
+          </div>
+        </div>
+      </div>
+    )}
 
     {/* New Contract Modal */}
     {isNewContractModalOpen && (

@@ -1046,7 +1046,7 @@ export default function WorkflowsPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center mb-4">
                     <span className="text-[10px] font-bold bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-200">
-                      Task #{selectedTask.taskNumber}
+                      #{selectedTask.taskNumber}
                     </span>
                     <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20 ml-1">
                       # {selectedTask.contractId}
@@ -1074,7 +1074,21 @@ export default function WorkflowsPage() {
                   {/* Task Details Box */}
                   <div className="bg-white border border-gray-200 rounded-lg p-6 min-h-[420px]">
                     <h3 className="text-sm font-semibold text-gray-900 mb-4">Task Details</h3>
-                    {/* 3-row, 2-column layout */}
+                    {/* Task ID and Contract ID Row */}
+                    <div className="grid grid-cols-2 gap-6 mb-4">
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Task ID</div>
+                        <div className="text-xs font-medium text-gray-900" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                          {selectedTask.taskNumber}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Contract ID</div>
+                        <div className="text-xs font-medium text-gray-900" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                          {selectedTask.contractId}
+                        </div>
+                      </div>
+                    </div>
                     {/* Row 1: Task Title | Contract Title */}
                     <div className="grid grid-cols-2 gap-6 mb-4">
                       <div>
