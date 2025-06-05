@@ -69,7 +69,7 @@ export const FileUpload = React.forwardRef<HTMLInputElement, FileUploadProps>(
             className
           )}>
             <HiOutlineUpload className="text-3xl text-gray-400 mb-2" />
-            <div className="text-gray-700 font-medium">Click to upload or drag and drop</div>
+            <div className="text-xs text-gray-500 font-medium">Click to upload or drag and drop</div>
             <div className="text-xs text-gray-400 mt-1">
               {accept.split(',').join(', ')} (max. {maxSize}MB each)
             </div>

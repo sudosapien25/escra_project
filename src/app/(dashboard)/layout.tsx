@@ -47,11 +47,9 @@ export default function DashboardLayout({
   };
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedCollapsed = localStorage.getItem(LOCAL_STORAGE_COLLAPSED_KEY);
-      const initialCollapsed = storedCollapsed ? JSON.parse(storedCollapsed) : false;
-      setIsCollapsed(initialCollapsed);
-    }
+    const storedCollapsed = localStorage.getItem(LOCAL_STORAGE_COLLAPSED_KEY);
+    const initialCollapsed = storedCollapsed ? JSON.parse(storedCollapsed) : false;
+    setIsCollapsed(initialCollapsed);
   }, []);
 
   useEffect(() => {

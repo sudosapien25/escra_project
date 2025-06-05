@@ -13,6 +13,9 @@ import { IconBaseProps } from 'react-icons';
 
 export default function SignaturesPage() {
   const [activeTab, setActiveTab] = useState('all');
+  const [inboxTab, setInboxTab] = useState('all');
+  const [cancelledTab, setCancelledTab] = useState('all');
+  const [pendingTab, setPendingTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [selectedStatuses, setSelectedStatuses] = useState(['All']);
@@ -43,12 +46,21 @@ export default function SignaturesPage() {
     'Voided'
   ];
 
-  // Available assignees
+  // Available assignees (synced with contracts page documents tab)
   const availableAssignees = [
+    'John Smith',
+    'Sarah Johnson',
     'Michael Brown',
-    'Robert Green',
-    'Emily Davis'
+    'Robert Chen',
+    'Sarah Miller',
+    'David Miller',
+    'Emily Davis',
+    'Alex Johnson',
+    'Samantha Fox'
   ];
+
+  // Placeholder for current user's name
+  const currentUserName = 'John Smith'; // TODO: Replace with actual user context
 
   // Function to check if a row should be shown based on selected statuses
   const shouldShowRow = (status: string) => {
@@ -56,9 +68,28 @@ export default function SignaturesPage() {
     return selectedStatuses.includes(status);
   };
 
+  // Function to check if a row should be shown based on cancelled tab
+  const shouldShowCancelledRow = (status: string) => {
+    if (activeTab !== 'cancelled') return true;
+    
+    if (cancelledTab === 'all') {
+      return status === 'Rejected' || status === 'Expired' || status === 'Voided';
+    } else if (cancelledTab === 'rejected') {
+      return status === 'Rejected';
+    } else if (cancelledTab === 'expired') {
+      return status === 'Expired';
+    } else if (cancelledTab === 'voided') {
+      return status === 'Voided';
+    }
+    return false;
+  };
+
   // Function to check if a row should be shown based on selected assignees
   const shouldShowAssignee = (assignee: string) => {
     if (selectedAssignees.length === 0) return true;
+    if (selectedAssignees.includes('__ME__')) {
+      return assignee === currentUserName;
+    }
     return selectedAssignees.includes(assignee);
   };
 
@@ -119,6 +150,69 @@ export default function SignaturesPage() {
 
       {/* Horizontal line below subtitle */}
       <hr className="my-6 border-gray-300" />
+
+      {/* Filter Elements */}
+      <div className="bg-white border border-gray-200 rounded-xl px-4 py-4 flex gap-1 w-fit">
+        <button
+          onClick={() => setActiveTab('all')}
+          className={`px-4 py-2 rounded-xl text-xs font-medium border border-gray-200 transition-colors font-sans min-w-[120px] ${
+            activeTab === 'all' 
+              ? 'bg-teal-50 text-teal-500' 
+              : 'bg-white text-gray-700 hover:bg-gray-50'
+          }`}
+        >
+          All
+        </button>
+        <button
+          onClick={() => {
+            setActiveTab('inbox');
+            setInboxTab('all');
+          }}
+          className={`px-4 py-2 rounded-xl text-xs font-medium border border-gray-200 transition-colors font-sans min-w-[120px] ${
+            activeTab === 'inbox' 
+              ? 'bg-teal-50 text-teal-500' 
+              : 'bg-white text-gray-700 hover:bg-gray-50'
+          }`}
+        >
+          Inbox
+        </button>
+        <button
+          onClick={() => {
+            setActiveTab('pending');
+            setPendingTab('all');
+          }}
+          className={`px-4 py-2 rounded-xl text-xs font-medium border border-gray-200 transition-colors font-sans min-w-[120px] ${
+            activeTab === 'pending' 
+              ? 'bg-teal-50 text-teal-500' 
+              : 'bg-white text-gray-700 hover:bg-gray-50'
+          }`}
+        >
+          Sent
+        </button>
+        <button
+          onClick={() => setActiveTab('completed')}
+          className={`px-4 py-2 rounded-xl text-xs font-medium border border-gray-200 transition-colors font-sans min-w-[120px] ${
+            activeTab === 'completed' 
+              ? 'bg-teal-50 text-teal-500' 
+              : 'bg-white text-gray-700 hover:bg-gray-50'
+          }`}
+        >
+          Completed
+        </button>
+        <button
+          onClick={() => {
+            setActiveTab('cancelled');
+            setCancelledTab('all');
+          }}
+          className={`px-4 py-2 rounded-xl text-xs font-medium border border-gray-200 transition-colors font-sans min-w-[120px] ${
+            activeTab === 'cancelled' 
+              ? 'bg-teal-50 text-teal-500' 
+              : 'bg-white text-gray-700 hover:bg-gray-50'
+          }`}
+        >
+          Cancelled
+        </button>
+      </div>
 
       {/* Search/Filter Bar - outlined box (identical to contracts page) */}
       <div className="bg-white border border-gray-200 rounded-xl px-4 py-4 mb-6 flex items-center w-full mt-2">
@@ -211,7 +305,26 @@ export default function SignaturesPage() {
                     </svg>
                   )}
                 </div>
-                All Assignees
+                All
+              </button>
+              <button
+                className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
+                  selectedAssignees.includes('__ME__') ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
+                }`}
+                style={{ fontFamily: 'Avenir, sans-serif' }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedAssignees(['__ME__']);
+                }}
+              >
+                <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedAssignees.includes('__ME__') ? 'bg-primary' : 'border border-gray-300'}`}>
+                  {selectedAssignees.includes('__ME__') && (
+                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </div>
+                Me
               </button>
               {availableAssignees.map((assignee) => (
                 <button
@@ -262,36 +375,128 @@ export default function SignaturesPage() {
         <div className="bg-white border border-gray-200 rounded-xl p-6">
           {/* Tabs */}
           <div className="flex flex-col sm:flex-row space-x-0 sm:space-x-4 border-b border-gray-200">
-            <button
-              className={clsx(
-                "pb-2 border-b-2 text-sm w-full sm:w-auto font-bold",
-                activeTab === 'pending' ? "border-primary text-primary" : "border-transparent text-gray-500 hover:text-gray-700"
-              )}
-              style={{ fontFamily: 'Avenir, sans-serif' }}
-              onClick={() => setActiveTab('pending')}
-            >
-              Pending
-            </button>
-            <button
-              className={clsx(
-                "pb-2 border-b-2 text-sm w-full sm:w-auto font-bold",
-                activeTab === 'completed' ? "border-primary text-primary" : "border-transparent text-gray-500 hover:text-gray-700"
-              )}
-              style={{ fontFamily: 'Avenir, sans-serif' }}
-              onClick={() => setActiveTab('completed')}
-            >
-              Completed
-            </button>
-            <button
-              className={clsx(
-                "pb-2 border-b-2 text-sm w-full sm:w-auto font-bold",
-                activeTab === 'all' ? "border-primary text-primary" : "border-transparent text-gray-500 hover:text-gray-700"
-              )}
-              style={{ fontFamily: 'Avenir, sans-serif' }}
-              onClick={() => setActiveTab('all')}
-            >
-              All
-            </button>
+            {activeTab === 'inbox' ? (
+              <>
+                <button
+                  className={clsx(
+                    "pb-2 border-b-2 text-sm w-full sm:w-auto font-bold",
+                    inboxTab === 'all' ? "border-primary text-primary" : "border-transparent text-gray-500 hover:text-gray-700"
+                  )}
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                  onClick={() => setInboxTab('all')}
+                >
+                  All
+                </button>
+                <button
+                  className={clsx(
+                    "pb-2 border-b-2 text-sm w-full sm:w-auto font-bold",
+                    inboxTab === 'received' ? "border-primary text-primary" : "border-transparent text-gray-500 hover:text-gray-700"
+                  )}
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                  onClick={() => setInboxTab('received')}
+                >
+                  Received
+                </button>
+                <button
+                  className={clsx(
+                    "pb-2 border-b-2 text-sm w-full sm:w-auto font-bold",
+                    inboxTab === 'action-required' ? "border-primary text-primary" : "border-transparent text-gray-500 hover:text-gray-700"
+                  )}
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                  onClick={() => setInboxTab('action-required')}
+                >
+                  Action Required
+                </button>
+              </>
+            ) : activeTab === 'cancelled' ? (
+              <>
+                <button
+                  className={clsx(
+                    "pb-2 border-b-2 text-sm w-full sm:w-auto font-bold",
+                    cancelledTab === 'all' ? "border-primary text-primary" : "border-transparent text-gray-500 hover:text-gray-700"
+                  )}
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                  onClick={() => setCancelledTab('all')}
+                >
+                  All
+                </button>
+                <button
+                  className={clsx(
+                    "pb-2 border-b-2 text-sm w-full sm:w-auto font-bold",
+                    cancelledTab === 'rejected' ? "border-primary text-primary" : "border-transparent text-gray-500 hover:text-gray-700"
+                  )}
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                  onClick={() => setCancelledTab('rejected')}
+                >
+                  Rejected
+                </button>
+                <button
+                  className={clsx(
+                    "pb-2 border-b-2 text-sm w-full sm:w-auto font-bold",
+                    cancelledTab === 'voided' ? "border-primary text-primary" : "border-transparent text-gray-500 hover:text-gray-700"
+                  )}
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                  onClick={() => setCancelledTab('voided')}
+                >
+                  Voided
+                </button>
+                <button
+                  className={clsx(
+                    "pb-2 border-b-2 text-sm w-full sm:w-auto font-bold",
+                    cancelledTab === 'expired' ? "border-primary text-primary" : "border-transparent text-gray-500 hover:text-gray-700"
+                  )}
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                  onClick={() => setCancelledTab('expired')}
+                >
+                  Expired
+                </button>
+              </>
+            ) : activeTab === 'completed' ? (
+              <>
+                <button
+                  className={clsx(
+                    "pb-2 border-b-2 text-sm w-full sm:w-auto font-bold",
+                    "border-primary text-primary"
+                  )}
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                >
+                  All
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  className={clsx(
+                    "pb-2 border-b-2 text-sm w-full sm:w-auto font-bold",
+                    pendingTab === 'all' ? "border-primary text-primary" : "border-transparent text-gray-500 hover:text-gray-700"
+                  )}
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                  onClick={() => setPendingTab('all')}
+                >
+                  All
+                </button>
+                <button
+                  className={clsx(
+                    "pb-2 border-b-2 text-sm w-full sm:w-auto font-bold",
+                    pendingTab === 'waiting' ? "border-primary text-primary" : "border-transparent text-gray-500 hover:text-gray-700"
+                  )}
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                  onClick={() => setPendingTab('waiting')}
+                >
+                  Waiting for Others
+                </button>
+                <button
+                  className={clsx(
+                    "pb-2 border-b-2 text-sm w-full sm:w-auto font-bold",
+                    pendingTab === 'expiring' ? "border-primary text-primary" : "border-transparent text-gray-500 hover:text-gray-700"
+                  )}
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                  onClick={() => setPendingTab('expiring')}
+                >
+                  Expiring Soon
+                </button>
+              </>
+            )}
           </div>
 
           {/* Signature List Content based on Active Tab */}
@@ -302,7 +507,7 @@ export default function SignaturesPage() {
                   <div className="grid grid-cols-[60px_180px_200px_120px_100px_100px_180px_120px_120px_120px_220px] gap-4 px-2 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ fontFamily: 'Avenir, sans-serif' }}>
                     <div className="text-center">ID</div>
                     <div className="text-left">Document</div>
-                    <div className="text-left">Parties</div>
+                    <div className="text-left">Recipients</div>
                     <div className="text-center">Signing Status</div>
                     <div className="text-center">Signatures</div>
                     <div className="text-center whitespace-nowrap">ID</div>
@@ -474,7 +679,7 @@ export default function SignaturesPage() {
                 )}
 
                 {/* Document Row 3 */}
-                {(activeTab === 'all' || activeTab === 'rejected') && shouldShowRow('Rejected') && shouldShowAssignee('Michael Brown') && matchesSearch({
+                {(activeTab === 'all' || activeTab === 'cancelled') && shouldShowRow('Rejected') && shouldShowCancelledRow('Rejected') && shouldShowAssignee('Michael Brown') && matchesSearch({
                   document: 'Inspection Report',
                   parties: ['BuildRight', 'Horizon Developers'],
                   contract: 'Construction Escrow',
@@ -544,7 +749,7 @@ export default function SignaturesPage() {
                 )}
 
                 {/* Document Row 4 */}
-                {(activeTab === 'all' || activeTab === 'expired') && shouldShowRow('Expired') && shouldShowAssignee('Emma Johnson') && matchesSearch({
+                {(activeTab === 'all' || activeTab === 'cancelled') && shouldShowRow('Expired') && shouldShowCancelledRow('Expired') && shouldShowAssignee('Emma Johnson') && matchesSearch({
                   document: 'Lease Agreement',
                   parties: ['Pacific Properties'],
                   contract: 'Commercial Lease Amendment',
@@ -1094,7 +1299,7 @@ export default function SignaturesPage() {
         </div>
       </div>
 
-      {/* Document Details Modal */}
+      {/* Signature Details Modal */}
       {selectedDocument && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
           <div className="relative bg-white rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden">
@@ -1125,11 +1330,11 @@ export default function SignaturesPage() {
             <div className="flex flex-col flex-1 min-h-0">
               <div className="overflow-y-auto p-6 flex-1">
                 {/* Modal Content Grid: 2 columns */}
-                <div className="grid grid-cols-2 gap-6 w-full h-full min-h-0 -mt-2">
+                <div className="grid grid-cols-2 gap-6 w-full h-full min-h-0">
                   {/* LEFT COLUMN: Document Details */}
                   <div className="flex flex-col gap-6 w-full h-full min-h-0">
                     {/* Document Details Box */}
-                    <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
+                    <div className="bg-white border border-gray-200 rounded-lg p-6 w-full h-full flex flex-col">
                       <h3 className="text-sm font-semibold text-gray-900 mb-4">Document Details</h3>
                       <div className="grid grid-cols-3 gap-x-12 gap-y-4">
                         {/* Row 1: Document ID, Document Hash, and Contract ID */}
@@ -1155,6 +1360,13 @@ export default function SignaturesPage() {
                           <div className="text-gray-500 text-xs mb-1">Contract Name</div>
                           <div className="text-xs text-black mb-4">{selectedDocument.contract}</div>
                         </div>
+                        {/* Message Field */}
+                        <div className="col-span-3">
+                          <div className="text-gray-500 text-xs mb-1">Message</div>
+                          <div className="w-full min-h-24 px-3 py-2 text-xs border border-gray-200 rounded-lg bg-gray-50">
+                            Please review and sign the attached document at your earliest convenience. This document requires your signature to proceed with the transaction.
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1162,7 +1374,7 @@ export default function SignaturesPage() {
                   {/* RIGHT COLUMN: Signature Details */}
                   <div className="flex flex-col gap-6 w-full h-full min-h-0">
                     {/* Signature Details Box */}
-                    <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
+                    <div className="bg-white border border-gray-200 rounded-lg p-6 w-full h-full flex flex-col">
                       <h3 className="text-sm font-semibold text-gray-900 mb-4">Signature Details</h3>
                       <div className="grid grid-cols-2 gap-x-12 gap-y-4">
                         {/* Row 1: Parties and Signatures */}
@@ -1171,8 +1383,8 @@ export default function SignaturesPage() {
                             <div>
                               <div className="text-gray-500 text-xs mb-1">Parties</div>
                               <div className="text-xs text-black mb-4">
-                                {selectedDocument.parties.map((party, index) => (
-                                  <div key={index}>{party}</div>
+                                {selectedDocument.parties.map((party, idx) => (
+                                  <div key={idx}>{party}</div>
                                 ))}
                               </div>
                             </div>
@@ -1227,6 +1439,45 @@ export default function SignaturesPage() {
                         </div>
                         <div></div>
                       </div>
+                    </div>
+                  </div>
+                </div>
+                {/* Recipients Box - New Section */}
+                <div className="col-span-2 mt-6">
+                  <div className="bg-white border border-gray-200 rounded-lg p-6 w-full" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                    <h3 className="text-sm font-semibold text-gray-900 mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>Recipients</h3>
+                    <div className="w-full" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                      <div className="grid grid-cols-[40px_40px_1.5fr_2fr_1fr_1.5fr_1.5fr] gap-2 px-2 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                        <div className="text-center">#</div>
+                        <div></div>
+                        <div className="text-left">Name</div>
+                        <div className="text-left">Email</div>
+                        <div className="text-left">Status</div>
+                        <div className="text-left">Date/Time</div>
+                        <div className="text-left">Location</div>
+                      </div>
+                      {/* Recipients Data */}
+                      {selectedDocument.parties.map((party, idx) => {
+                        // Generate a placeholder email from the party name
+                        const email = party.toLowerCase().replace(/[^a-z0-9]/g, '.') + '@example.com';
+                        return (
+                          <div key={party} className="grid grid-cols-[40px_40px_1.5fr_2fr_1fr_1.5fr_1.5fr] gap-2 items-center px-2 py-4 border-b border-gray-100 text-xs text-gray-800" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                            <div className="text-center font-semibold">{idx + 1}</div>
+                            <div className="flex justify-center items-center">
+                              <FaCheckCircle className="text-primary" size={18} />
+                            </div>
+                            <div className="font-bold">{party}</div>
+                            <div className="text-gray-500">{email}</div>
+                            <div className="font-semibold text-primary flex items-center gap-1">
+                              <span>Signed</span>
+                            </div>
+                            <div className="text-gray-700">12/31/2024 | 12:00:00 pm</div>
+                            <div>
+                              <a href="#" className="text-primary underline hover:text-primary-dark">Signed in location</a>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>

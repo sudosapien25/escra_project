@@ -214,7 +214,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
               <label htmlFor="file-upload" className="block cursor-pointer">
                 <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 py-8 px-4 text-center transition hover:border-primary">
                   <HiOutlineDocumentText className="text-3xl text-gray-400 mb-2" />
-                  <div className="text-gray-700 font-medium">Click to upload or drag and drop</div>
+                  <div className="text-xs text-gray-500 font-medium">Click to upload or drag and drop</div>
                   <div className="text-xs text-gray-400 mt-1">PDF, DOC, DOCX, or JPG (max. 10MB each)</div>
                   <input
                     id="file-upload"

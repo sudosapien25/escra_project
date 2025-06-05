@@ -289,13 +289,16 @@ export default function OnboardingPage() {
     companyType: '',
     industry: '',
     country: '',
-    phoneNumber: '',
-    address: '',
-    city: '',
     state: '',
+    city: '',
+    address: '',
     zipCode: '',
+    phoneNumber: '',
     website: ''
   });
+
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
   const [showStateDropdown, setShowStateDropdown] = useState(false);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const [showCompanyTypeDropdown, setShowCompanyTypeDropdown] = useState(false);
@@ -309,22 +312,18 @@ export default function OnboardingPage() {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as Node;
       
-      // Handle state dropdown
       if (showStateDropdown && stateDropdownRef.current && !stateDropdownRef.current.contains(target)) {
         setShowStateDropdown(false);
       }
       
-      // Handle country dropdown
       if (showCountryDropdown && countryDropdownRef.current && !countryDropdownRef.current.contains(target)) {
         setShowCountryDropdown(false);
       }
       
-      // Handle company type dropdown
       if (showCompanyTypeDropdown && companyTypeDropdownRef.current && !companyTypeDropdownRef.current.contains(target)) {
         setShowCompanyTypeDropdown(false);
       }
       
-      // Handle industry dropdown
       if (showIndustryDropdown && industryDropdownRef.current && !industryDropdownRef.current.contains(target)) {
         setShowIndustryDropdown(false);
       }
@@ -338,16 +337,90 @@ export default function OnboardingPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormErrors(prev => ({ ...prev, [name]: '' }));
+  };
+
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+    let isValid = true;
+
+    if (tab === 'business') {
+      // Business tab required fields
+      const requiredFields = [
+        'companyName',
+        'companyType',
+        'industry',
+        'address',
+        'city',
+        'state',
+        'zipCode',
+        'country',
+        'phoneNumber'
+      ];
+
+      requiredFields.forEach(field => {
+        if (!formData[field as keyof typeof formData]) {
+          errors[field] = 'Please fill out this field';
+          isValid = false;
+        }
+      });
+
+      // Phone validation
+      if (formData.phoneNumber && !/^\+?[\d\s-()]{10,}$/.test(formData.phoneNumber)) {
+        errors.phoneNumber = 'Please enter a valid phone number';
+        isValid = false;
+      }
+
+      // Website validation (optional)
+      if (formData.website && !/^https?:\/\/.+\..+/.test(formData.website)) {
+        errors.website = 'Please enter a valid website URL';
+        isValid = false;
+      }
+    } else {
+      // Personal tab required fields
+      const requiredFields = [
+        'address',
+        'city',
+        'state',
+        'zipCode',
+        'country',
+        'phoneNumber'
+      ];
+
+      requiredFields.forEach(field => {
+        if (!formData[field as keyof typeof formData]) {
+          errors[field] = 'Please fill out this field';
+          isValid = false;
+        }
+      });
+
+      // Phone validation
+      if (formData.phoneNumber && !/^\+?[\d\s-()]{10,}$/.test(formData.phoneNumber)) {
+        errors.phoneNumber = 'Please enter a valid phone number';
+        isValid = false;
+      }
+    }
+
+    setFormErrors(errors);
+    return isValid;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Save onboarding data and redirect to dashboard
-    router.push('/dashboard');
+    const isValid = validateForm();
+    
+    if (isValid) {
+      // TODO: Submit form data
+      router.push('/dashboard');
+    }
+  };
+
+  const handleNext = () => {
+    const isValid = validateForm();
+    if (isValid) {
+      setStep(2);
+    }
   };
 
   return (
@@ -387,7 +460,7 @@ export default function OnboardingPage() {
           <p className="text-xs text-gray-500 dark:text-gray-400 text-center">Step {step} of 2</p>
         </div>
 
-        <form onSubmit={handleSubmit} className={`space-y-3 ${tab === 'business' ? 'max-w-3xl' : ''}`}>
+        <form onSubmit={handleSubmit} className={`space-y-3 ${tab === 'business' ? 'max-w-3xl' : ''}`} noValidate>
           {tab === 'business' && step === 1 ? (
             <>
               <div>
@@ -398,9 +471,10 @@ export default function OnboardingPage() {
                   value={formData.companyName}
                   onChange={handleChange}
                   placeholder="Enter your company name"
-                  className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
+                  className={`py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 ${formErrors.companyName ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
                   required
                 />
+                {formErrors.companyName && <p className="text-xs text-red-600 mt-1">{formErrors.companyName}</p>}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -408,7 +482,7 @@ export default function OnboardingPage() {
                   <div className="relative w-full" ref={companyTypeDropdownRef}>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white"
+                      className={`w-full px-3 py-2 border-2 ${formErrors.companyType ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : 'border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary'} rounded-lg text-xs font-medium text-black transition-colors pr-10 cursor-pointer bg-white`}
                       placeholder="Select company type"
                       value={COMPANY_TYPES.find(t => t.value === formData.companyType)?.label || ''}
                       readOnly
@@ -433,13 +507,14 @@ export default function OnboardingPage() {
                       </div>
                     )}
                   </div>
+                  {formErrors.companyType && <p className="text-xs text-red-600 mt-1">{formErrors.companyType}</p>}
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Industry</label>
                   <div className="relative w-full" ref={industryDropdownRef}>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white"
+                      className={`w-full px-3 py-2 border-2 ${formErrors.industry ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : 'border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary'} rounded-lg text-xs font-medium text-black transition-colors pr-10 cursor-pointer bg-white`}
                       placeholder="Select industry"
                       value={INDUSTRIES.find(i => i.value === formData.industry)?.label || ''}
                       readOnly
@@ -464,6 +539,7 @@ export default function OnboardingPage() {
                       </div>
                     )}
                   </div>
+                  {formErrors.industry && <p className="text-xs text-red-600 mt-1">{formErrors.industry}</p>}
                 </div>
               </div>
               <div>
@@ -474,9 +550,10 @@ export default function OnboardingPage() {
                   value={formData.address}
                   onChange={handleChange}
                   placeholder="Enter your business address"
-                  className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
+                  className={`py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 ${formErrors.address ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
                   required
                 />
+                {formErrors.address && <p className="text-xs text-red-600 mt-1">{formErrors.address}</p>}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -487,16 +564,17 @@ export default function OnboardingPage() {
                     value={formData.city}
                     onChange={handleChange}
                     placeholder="City"
-                    className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
+                    className={`py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 ${formErrors.city ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
                     required
                   />
+                  {formErrors.city && <p className="text-xs text-red-600 mt-1">{formErrors.city}</p>}
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">State</label>
                   <div className="relative w-full" ref={stateDropdownRef}>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white"
+                      className={`w-full px-3 py-2 border-2 ${formErrors.state ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : 'border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary'} rounded-lg text-xs font-medium text-black transition-colors pr-10 cursor-pointer bg-white`}
                       placeholder="Select state"
                       value={US_STATES.find(s => s.value === formData.state)?.label || ''}
                       readOnly
@@ -512,6 +590,7 @@ export default function OnboardingPage() {
                             onClick={e => {
                               e.preventDefault();
                               setFormData(prev => ({ ...prev, state: state.value }));
+                              setShowStateDropdown(false);
                             }}
                           >
                             {state.label}
@@ -520,29 +599,29 @@ export default function OnboardingPage() {
                       </div>
                     )}
                   </div>
+                  {formErrors.state && <p className="text-xs text-red-600 mt-1">{formErrors.state}</p>}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">ZIP Code</label>
-                  <div className="relative w-full">
-                    <input
-                      type="text"
-                      name="zipCode"
-                      value={formData.zipCode}
-                      onChange={handleChange}
-                      placeholder="Enter ZIP code"
-                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 bg-white"
-                      required
-                    />
-                  </div>
+                  <Input
+                    type="text"
+                    name="zipCode"
+                    value={formData.zipCode}
+                    onChange={handleChange}
+                    placeholder="Enter ZIP code"
+                    className={`py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 ${formErrors.zipCode ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
+                    required
+                  />
+                  {formErrors.zipCode && <p className="text-xs text-red-600 mt-1">{formErrors.zipCode}</p>}
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Country</label>
                   <div className="relative w-full" ref={countryDropdownRef}>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 bg-white"
+                      className={`w-full px-3 py-2 border-2 ${formErrors.country ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : 'border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary'} rounded-lg text-xs font-medium text-black transition-colors pr-10 bg-white`}
                       placeholder="Select country"
                       value={COUNTRIES.find(c => c.value === formData.country)?.label || ''}
                       readOnly
@@ -567,22 +646,22 @@ export default function OnboardingPage() {
                       </div>
                     )}
                   </div>
+                  {formErrors.country && <p className="text-xs text-red-600 mt-1">{formErrors.country}</p>}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Phone Number</label>
-                  <div className="relative w-full">
-                    <input
-                      type="tel"
-                      name="phoneNumber"
-                      value={formData.phoneNumber}
-                      onChange={handleChange}
-                      placeholder="Enter your phone #"
-                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 bg-white"
-                      required
-                    />
-                  </div>
+                  <Input
+                    type="tel"
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
+                    onChange={handleChange}
+                    placeholder="Enter your phone #"
+                    className={`py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 ${formErrors.phoneNumber ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
+                    required
+                  />
+                  {formErrors.phoneNumber && <p className="text-xs text-red-600 mt-1">{formErrors.phoneNumber}</p>}
                 </div>
                 <div></div>
               </div>
@@ -594,12 +673,13 @@ export default function OnboardingPage() {
                   value={formData.website}
                   onChange={handleChange}
                   placeholder="Enter your website"
-                  className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
+                  className={`py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 ${formErrors.website ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
                 />
+                {formErrors.website && <p className="text-xs text-red-600 mt-1">{formErrors.website}</p>}
               </div>
               <button
                 type="button"
-                onClick={() => setStep(2)}
+                onClick={handleNext}
                 className="w-full py-1.5 rounded-lg bg-primary text-white font-semibold text-sm shadow hover:bg-primary/90 transition-colors"
               >
                 Next
@@ -616,9 +696,10 @@ export default function OnboardingPage() {
                     value={formData.city}
                     onChange={handleChange}
                     placeholder="City"
-                    className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
+                    className={`py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 ${formErrors.city ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
                     required
                   />
+                  {formErrors.city && <p className="text-xs text-red-600 mt-1">{formErrors.city}</p>}
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">State</label>
@@ -628,9 +709,10 @@ export default function OnboardingPage() {
                     value={formData.state}
                     onChange={handleChange}
                     placeholder="State"
-                    className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
+                    className={`py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 ${formErrors.state ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
                     required
                   />
+                  {formErrors.state && <p className="text-xs text-red-600 mt-1">{formErrors.state}</p>}
                 </div>
               </div>
               <div className="flex gap-3">
@@ -659,9 +741,10 @@ export default function OnboardingPage() {
                   value={formData.address}
                   onChange={handleChange}
                   placeholder="Enter your address"
-                  className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
+                  className={`py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 ${formErrors.address ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
                   required
                 />
+                {formErrors.address && <p className="text-xs text-red-600 mt-1">{formErrors.address}</p>}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -672,16 +755,17 @@ export default function OnboardingPage() {
                     value={formData.city}
                     onChange={handleChange}
                     placeholder="City"
-                    className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
+                    className={`py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 ${formErrors.city ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
                     required
                   />
+                  {formErrors.city && <p className="text-xs text-red-600 mt-1">{formErrors.city}</p>}
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">State</label>
                   <div className="relative w-full" ref={stateDropdownRef}>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white"
+                      className={`w-full px-3 py-2 border-2 ${formErrors.state ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : 'border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary'} rounded-lg text-xs font-medium text-black transition-colors pr-10 cursor-pointer bg-white`}
                       placeholder="Select state"
                       value={US_STATES.find(s => s.value === formData.state)?.label || ''}
                       readOnly
@@ -697,6 +781,7 @@ export default function OnboardingPage() {
                             onClick={e => {
                               e.preventDefault();
                               setFormData(prev => ({ ...prev, state: state.value }));
+                              setShowStateDropdown(false);
                             }}
                           >
                             {state.label}
@@ -705,29 +790,29 @@ export default function OnboardingPage() {
                       </div>
                     )}
                   </div>
+                  {formErrors.state && <p className="text-xs text-red-600 mt-1">{formErrors.state}</p>}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">ZIP Code</label>
-                  <div className="relative w-full">
-                    <input
-                      type="text"
-                      name="zipCode"
-                      value={formData.zipCode}
-                      onChange={handleChange}
-                      placeholder="Enter ZIP code"
-                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 bg-white"
-                      required
-                    />
-                  </div>
+                  <Input
+                    type="text"
+                    name="zipCode"
+                    value={formData.zipCode}
+                    onChange={handleChange}
+                    placeholder="Enter ZIP code"
+                    className={`py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 ${formErrors.zipCode ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
+                    required
+                  />
+                  {formErrors.zipCode && <p className="text-xs text-red-600 mt-1">{formErrors.zipCode}</p>}
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Country</label>
                   <div className="relative w-full" ref={countryDropdownRef}>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 bg-white"
+                      className={`w-full px-3 py-2 border-2 ${formErrors.country ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : 'border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary'} rounded-lg text-xs font-medium text-black transition-colors pr-10 bg-white`}
                       placeholder="Select country"
                       value={COUNTRIES.find(c => c.value === formData.country)?.label || ''}
                       readOnly
@@ -752,22 +837,22 @@ export default function OnboardingPage() {
                       </div>
                     )}
                   </div>
+                  {formErrors.country && <p className="text-xs text-red-600 mt-1">{formErrors.country}</p>}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Phone Number</label>
-                  <div className="relative w-full">
-                    <input
-                      type="tel"
-                      name="phoneNumber"
-                      value={formData.phoneNumber}
-                      onChange={handleChange}
-                      placeholder="Enter your phone #"
-                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 bg-white"
-                      required
-                    />
-                  </div>
+                  <Input
+                    type="tel"
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
+                    onChange={handleChange}
+                    placeholder="Enter your phone #"
+                    className={`py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 ${formErrors.phoneNumber ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
+                    required
+                  />
+                  {formErrors.phoneNumber && <p className="text-xs text-red-600 mt-1">{formErrors.phoneNumber}</p>}
                 </div>
                 <div></div>
               </div>

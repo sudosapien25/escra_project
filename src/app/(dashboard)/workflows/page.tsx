@@ -92,6 +92,9 @@ export default function WorkflowsPage() {
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const [editingCommentId, setEditingCommentId] = React.useState<string | null>(null);
   const [showNewTaskModal, setShowNewTaskModal] = React.useState(false);
+  const [showUploadModal, setShowUploadModal] = React.useState(false);
+  const [uploadContractId, setUploadContractId] = React.useState<string | null>(null);
+  const [uploadModalFiles, setUploadModalFiles] = React.useState<File[]>([]);
   const [taskCounts, setTaskCounts] = useState({
     total: 0,
     todo: 0,
@@ -102,6 +105,8 @@ export default function WorkflowsPage() {
     inReview: 0,
     canceled: 0,
   });
+  const taskDetailsAssigneeDropdownRef = useRef<HTMLDivElement>(null);
+  const taskDetailsAssigneeInputRef = useRef<HTMLInputElement>(null);
 
   // Use the task store
   const {
@@ -223,12 +228,19 @@ export default function WorkflowsPage() {
     { key: 'Canceled' as const, title: 'Canceled' }
   ];
 
+  // Placeholder for current user's name
+  const currentUserName = 'John Smith'; // TODO: Replace with actual user context
+
   // Helper to filter tasks in a column according to current filters
   function filterTasks(tasks: Task[]) {
     return tasks.filter(task => {
       let matches = true;
       if (selectedAssignees.length > 0) {
-        matches = matches && selectedAssignees.includes(task.assignee);
+        if (selectedAssignees.includes('__ME__')) {
+          matches = matches && task.assignee === currentUserName;
+        } else {
+          matches = matches && selectedAssignees.includes(task.assignee);
+        }
       }
       if (selectedContracts.length > 0) {
         matches = matches && selectedContracts.includes(String(task.contractId));
@@ -448,6 +460,15 @@ export default function WorkflowsPage() {
     }
   };
 
+  const handleUploadModalFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const files = Array.from(e.target.files);
+    const validFiles = files.filter(file =>
+      ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "image/jpeg"].includes(file.type) && file.size <= 10 * 1024 * 1024
+    );
+    setUploadModalFiles(validFiles);
+  };
+
   // Add debug logs for selectedTask and subtasks
   if (selectedTask) {
     console.log('Selected Task:', selectedTask);
@@ -477,6 +498,26 @@ export default function WorkflowsPage() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showStatusDropdown]);
+
+  // Add click-off behavior for task details modal assignee dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      const dropdown = taskDetailsAssigneeDropdownRef.current;
+      const input = taskDetailsAssigneeInputRef.current;
+
+      if (showAssigneeDropdown && 
+          !dropdown?.contains(target) && 
+          !input?.contains(target)) {
+        setShowAssigneeDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showAssigneeDropdown]);
 
   return (
     <div className="space-y-4">
@@ -589,7 +630,26 @@ export default function WorkflowsPage() {
                       </svg>
                     )}
                   </div>
-                  All Assignees
+                  All
+                </button>
+                <button
+                  className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
+                    selectedAssignees.includes('__ME__') ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
+                  }`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setSelectedAssignees(['__ME__']);
+                  }}
+                >
+                  <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedAssignees.includes('__ME__') ? 'bg-primary' : 'border border-gray-300'}`}>
+                    {selectedAssignees.includes('__ME__') && (
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                  Me
                 </button>
                 {uniqueAssignees.map(assignee => (
                   <button
@@ -619,87 +679,6 @@ export default function WorkflowsPage() {
                     {assignee}
                   </button>
                 ))}
-              </div>
-            )}
-          </div>
-          <div className="relative ml-1">
-            <button
-              ref={contractButtonRef}
-              className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px]"
-              style={{ fontFamily: 'Avenir, sans-serif' }}
-              onClick={() => setOpenContractDropdown(v => !v)}
-            >
-              <HiOutlineDocumentText className="text-gray-400 text-lg" />
-              <span>Contract</span>
-              <HiChevronDown className="text-gray-400 text-base" />
-            </button>
-            {openContractDropdown && (
-              <div 
-                className="absolute left-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 min-w-[400px] w-96 contract-dropdown" 
-                style={{ fontFamily: 'Avenir, sans-serif' }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {/* Search Bar */}
-                <div className="px-4 py-2 border-b border-gray-100">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="Search contracts..."
-                      value={contractSearch}
-                      onChange={(e) => setContractSearch(e.target.value)}
-                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                      style={{ fontFamily: 'Avenir, sans-serif' }}
-                    />
-                    <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                  </div>
-                </div>
-
-                <button
-                  className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
-                    selectedContracts.length === 0 ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
-                  }`}
-                  onClick={() => setSelectedContracts([])}
-                >
-                  <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedContracts.length === 0 ? 'bg-primary' : 'border border-gray-300'}`}>
-                    {selectedContracts.length === 0 && (
-                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </div>
-                  All Contracts
-                </button>
-                {mockContracts
-                  .filter(contract => 
-                    contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
-                    contract.title.toLowerCase().includes(contractSearch.toLowerCase())
-                  )
-                  .map(contract => (
-                    <button
-                      key={contract.id}
-                      className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center whitespace-nowrap truncate ${
-                        selectedContracts.includes(String(contract.id)) ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
-                      }`}
-                      onClick={() => {
-                        setSelectedContracts(prev => {
-                          if (prev.includes(String(contract.id))) {
-                            return prev.filter(c => c !== String(contract.id));
-                          } else {
-                            return [...prev, String(contract.id)];
-                          }
-                        });
-                      }}
-                    >
-                      <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedContracts.includes(String(contract.id)) ? 'bg-primary' : 'border border-gray-300'}`}>
-                        {selectedContracts.includes(String(contract.id)) && (
-                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
-                      </div>
-                      {contract.id} - {contract.title}
-                    </button>
-                  ))}
               </div>
             )}
           </div>
@@ -737,7 +716,7 @@ export default function WorkflowsPage() {
                       </svg>
                     )}
                   </div>
-                  All Statuses
+                  All
                 </button>
                 {statusOptions.map(status => (
                   <button
@@ -1113,8 +1092,9 @@ export default function WorkflowsPage() {
                     <div className="grid grid-cols-2 gap-6 mb-4">
                       <div>
                         <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Assignee</div>
-                        <div className="relative w-full" ref={assigneeDropdownRef}>
+                        <div className="relative w-full" ref={taskDetailsAssigneeDropdownRef}>
                           <input
+                            ref={taskDetailsAssigneeInputRef}
                             type="text"
                             className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                             placeholder={selectedTask?.assignee || ''}
@@ -1126,6 +1106,14 @@ export default function WorkflowsPage() {
                           />
                           {showAssigneeDropdown && (
                             <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                              <div
+                                className="px-4 py-2 text-xs cursor-pointer hover:bg-primary/10 hover:text-primary"
+                                onClick={() => {
+                                  handleAssigneeChange(currentUserName);
+                                }}
+                              >
+                                Me
+                              </div>
                               {uniqueAssignees.length > 0 ? (
                                 uniqueAssignees.map(assignee => (
                                   <div
@@ -1301,8 +1289,11 @@ export default function WorkflowsPage() {
                   <div className="bg-white border border-gray-200 rounded-lg p-6 min-h-[420px]">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-sm font-semibold text-gray-900">Documents</h3>
-                      <button className="flex items-center gap-2 px-2 py-1 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                        <span className="text-base font-bold text-primary">+</span> Upload
+                      <button 
+                        onClick={() => { setShowUploadModal(true); setUploadContractId(selectedTask?.contractId || null); }}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors" style={{ fontFamily: 'Avenir, sans-serif' }}
+                      >
+                        <HiOutlineUpload className="text-base text-primary" /> Upload
                       </button>
                     </div>
                     <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
@@ -1576,6 +1567,68 @@ export default function WorkflowsPage() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Upload Modal */}
+      {showUploadModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold text-gray-900">Upload Documents</h2>
+              <button
+                className="text-gray-400 hover:text-gray-600"
+                onClick={() => { setShowUploadModal(false); setUploadModalFiles([]); }}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="mb-4 text-xs text-gray-500">
+              {uploadContractId && (
+                <span>
+                  For Contract: <span className="font-semibold text-primary">#{uploadContractId}</span>
+                </span>
+              )}
+            </div>
+            <form
+              className="p-0"
+              onSubmit={e => {
+                e.preventDefault();
+                setShowUploadModal(false);
+                setUploadModalFiles([]);
+              }}
+            >
+              <label className="block text-xs font-medium text-gray-700 mb-2">Upload Documents (Optional)</label>
+              <label htmlFor="upload-modal-file-upload" className="block cursor-pointer">
+                <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 py-8 px-4 text-center transition hover:border-primary">
+                  <HiOutlineUpload className="h-4 w-4 text-gray-400 mb-2" />
+                  <div className="text-xs text-gray-700 font-medium">Click to upload or drag and drop</div>
+                  <div className="text-[10px] text-gray-400 mt-1">PDF, DOC, DOCX, or JPG (max. 10MB each)</div>
+                  <input
+                    id="upload-modal-file-upload"
+                    name="upload-modal-file-upload"
+                    type="file"
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg"
+                    className="hidden"
+                    multiple
+                    onChange={handleUploadModalFileChange}
+                  />
+                </div>
+              </label>
+              {uploadModalFiles.length > 0 && (
+                <ul className="mt-3 text-sm text-gray-600">
+                  {uploadModalFiles.map((file, idx) => (
+                    <li key={idx} className="truncate">{file.name}</li>
+                  ))}
+                </ul>
+              )}
+              <button type="submit" className="w-full mt-6 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold">
+                Upload
+              </button>
+            </form>
           </div>
         </div>
       )}

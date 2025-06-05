@@ -4,6 +4,12 @@ import { Toaster } from "react-hot-toast";
 import "./globals.css";
 import { AuthProvider } from '@/context/AuthContext';
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
+
+// Create a client-only component for toolbar initialization
+const StagewiseToolbar = dynamic(() => import('@/components/StagewiseToolbar'), {
+  ssr: false
+});
 
 export default function RootLayout({
   children,
@@ -37,6 +43,7 @@ export default function RootLayout({
         <AuthProvider>
           {children}
           <Toaster position="top-right" />
+          {process.env.NODE_ENV === 'development' && <StagewiseToolbar />}
         </AuthProvider>
       </body>
     </html>

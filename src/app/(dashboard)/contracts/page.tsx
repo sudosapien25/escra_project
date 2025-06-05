@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaSearch, FaClock, FaSort, FaPlus, FaDollarSign, FaTimes, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { FaArrowUpRightFromSquare } from 'react-icons/fa6';
-import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutlineTrash, HiOutlinePencilAlt, HiOutlineUpload, HiOutlineEye, HiOutlineClipboardList, HiOutlineExclamation } from 'react-icons/hi';
+import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutlineTrash, HiOutlinePencilAlt, HiOutlineUpload, HiOutlineEye, HiOutlineClipboardList, HiOutlineExclamation, HiChevronDown } from 'react-icons/hi';
 import { HiOutlineViewBoards } from 'react-icons/hi';
 import { LuCalendarClock } from 'react-icons/lu';
 import { BiDotsHorizontal } from 'react-icons/bi';
@@ -25,6 +25,9 @@ import { MdOutlineEditCalendar } from 'react-icons/md';
 import { RiArrowDropDownLine } from 'react-icons/ri';
 import { HiMiniChevronUpDown, HiMiniChevronDown } from 'react-icons/hi2';
 import { useTaskStore } from '@/data/taskStore';
+import { X } from 'lucide-react';
+import { useAssigneeStore } from '@/data/assigneeStore';
+import { useAuth } from '@/context/AuthContext';
 
 // Add date formatting utilities
 function formatDatePretty(dateStr: string): string {
@@ -64,18 +67,145 @@ interface Contract {
 interface Document {
   id: string;
   name: string;
-  date: string;
-  size: string;
   type: string;
+  size: string;
+  date: string;
+  uploadedBy?: string;
+  dateUploaded?: string;
+  contractTitle?: string;
+  contractId?: string;
+  assignee?: string;
 }
 
+// Sample data
+const sampleDocuments: Document[] = [
+  {
+    id: '1234',
+    name: 'Wire Authorization',
+    type: 'PDF',
+    size: '2.4 MB',
+    date: '2024-03-15',
+    uploadedBy: 'John Smith',
+    dateUploaded: '2024-03-15',
+    contractTitle: 'New Property Acquisition',
+    contractId: '9548',
+    assignee: 'John Smith'
+  },
+  {
+    id: '2345',
+    name: 'Closing Disclosure',
+    type: 'PDF',
+    size: '1.8 MB',
+    date: '2024-03-14',
+    uploadedBy: 'Sarah Johnson',
+    dateUploaded: '2024-03-14',
+    contractTitle: 'Land Development Contract',
+    contractId: '9550',
+    assignee: 'Sarah Johnson'
+  },
+  {
+    id: '3456',
+    name: 'Purchase Agreement',
+    type: 'PDF',
+    size: '2.1 MB',
+    date: '2024-03-13',
+    uploadedBy: 'Michael Brown',
+    dateUploaded: '2024-03-13',
+    contractTitle: 'Construction Escrow',
+    contractId: '9145',
+    assignee: 'Michael Brown'
+  },
+  {
+    id: '5678',
+    name: 'Title Insurance',
+    type: 'PDF',
+    size: '1.5 MB',
+    date: '2024-03-12',
+    uploadedBy: 'Emily Davis',
+    dateUploaded: '2024-03-12',
+    contractTitle: 'Property Sale Contract',
+    contractId: '8423',
+    assignee: 'Robert Chen'
+  },
+  {
+    id: '6789',
+    name: 'Appraisal',
+    type: 'PDF',
+    size: '1.0 MB',
+    date: '2024-03-11',
+    uploadedBy: 'Robert Wilson',
+    dateUploaded: '2024-03-11',
+    contractTitle: 'Investment Property Escrow',
+    contractId: '7804',
+    assignee: 'Sarah Miller'
+  },
+  {
+    id: '7890',
+    name: 'Appraisal Report',
+    type: 'PDF',
+    size: '1.3 MB',
+    date: '2024-03-10',
+    uploadedBy: 'Lisa Anderson',
+    dateUploaded: '2024-03-10',
+    contractTitle: 'Residential Sale Agreement',
+    contractId: '7234',
+    assignee: 'David Miller'
+  },
+  {
+    id: '8901',
+    name: 'Closing Disclosure',
+    type: 'PDF',
+    size: '0.8 MB',
+    date: '2024-03-09',
+    uploadedBy: 'David Taylor',
+    dateUploaded: '2024-03-09',
+    contractTitle: 'Office Building Purchase',
+    contractId: '6891',
+    assignee: 'Emily Davis'
+  },
+  {
+    id: '9012',
+    name: 'Loan Estimate',
+    type: 'PDF',
+    size: '1.2 MB',
+    date: '2024-03-08',
+    uploadedBy: 'Jennifer Martinez',
+    dateUploaded: '2024-03-08',
+    contractTitle: 'Retail Space Lease',
+    contractId: '6453',
+    assignee: 'Alex Johnson'
+  },
+  {
+    id: '0123',
+    name: 'Property Survey',
+    type: 'PDF',
+    size: '1.6 MB',
+    date: '2024-03-07',
+    uploadedBy: 'James Thompson',
+    dateUploaded: '2024-03-07',
+    contractTitle: 'Luxury Villa Purchase',
+    contractId: '10003',
+    assignee: 'Samantha Fox'
+  }
+];
+
 const ContractsPage: React.FC = () => {
+  const { user } = useAuth();
+  const currentUserName = user?.name || '';
+
   const [activeTab, setActiveTab] = useState('allContracts');
   const [activeContentTab, setActiveContentTab] = useState('contractList');
   const [activeRole, setActiveRole] = useState('creator');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>(['All']);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const [selectedContracts, setSelectedContracts] = useState<string[]>([]);
+  const [openContractDropdown, setOpenContractDropdown] = useState(false);
+  const [contractSearch, setContractSearch] = useState('');
+  const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
+  const [openAssigneeDropdown, setOpenAssigneeDropdown] = useState(false);
+  const assigneeButtonRef = useRef<HTMLButtonElement>(null);
+  const contractButtonRef = useRef<HTMLButtonElement>(null);
   const [showNewContractForm, setShowNewContractForm] = useState(false);
   const [modalStep, setModalStep] = useState(1);
   const [lastUpdatedSort, setLastUpdatedSort] = useState<'asc' | 'desc'>('desc');
@@ -108,6 +238,7 @@ const ContractsPage: React.FC = () => {
     contingencies: '',
   });
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [contracts, setContracts] = useState<Contract[]>(mockContracts);
 
   const [emailErrors, setEmailErrors] = useState({
     buyerEmail: false,
@@ -116,10 +247,11 @@ const ContractsPage: React.FC = () => {
   });
 
   const CONTRACT_TYPES = [
-    'Property Sale',
-    'Commercial Lease',
-    'Construction Escrow',
-    'Investment Property',
+    'Residential – Cash',
+    'Residential – Financed',
+    'Commercial – Cash or Financed',
+    'Assignment / Wholesale',
+    'Installment / Lease-to-Own',
   ];
   const MILESTONE_TEMPLATES = [
     'Standard (6 milestones)',
@@ -142,9 +274,12 @@ const ContractsPage: React.FC = () => {
     return emailRegex.test(email);
   };
 
+  const [formErrors, setFormErrors] = useState<Record<string, boolean>>({});
+
   const handleModalChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setModalForm({ ...modalForm, [name]: value });
+    setFormErrors(prev => ({ ...prev, [name]: false }));
 
     // Email validation
     if (name === 'buyerEmail' || name === 'sellerEmail' || name === 'agentEmail') {
@@ -153,6 +288,34 @@ const ContractsPage: React.FC = () => {
       } else {
         setEmailErrors(prev => ({ ...prev, [name]: false }));
       }
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const isValid = form.checkValidity();
+    
+    if (!isValid) {
+      const newErrors: Record<string, boolean> = {};
+      Array.from(form.elements).forEach((element) => {
+        if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement) {
+          if (element.required && !element.value) {
+            newErrors[element.name] = true;
+          }
+        }
+      });
+      setFormErrors(newErrors);
+      return;
+    }
+
+    if (modalStep === 1) {
+      setModalStep(2);
+    } else if (modalStep === 2) {
+      setModalStep(3);
+    } else {
+      setShowNewContractForm(false);
+      setModalStep(1);
     }
   };
 
@@ -181,55 +344,8 @@ const ContractsPage: React.FC = () => {
     setUploadedFiles(validFiles);
   };
 
-  // Sample data
-  const sampleContracts: Contract[] = [
-    { id: '9548', title: 'New Property Acquisition', parties: 'Robert Chen & Eastside Properties', status: 'Initiation', updated: '1 hour ago', value: '$680,000', documents: 2, type: 'Property Sale' },
-    { id: '9550', title: 'Land Development Contract', parties: 'GreenSpace Developers', status: 'Initiation', updated: '3 hours ago', value: '$1,250,000', documents: 1, type: 'Property Sale' },
-    { id: '9145', title: 'Construction Escrow', parties: 'BuildRight & Horizon Developers', status: 'Preparation', updated: '1 day ago', value: '$780,000', documents: 4, type: 'Construction Escrow' },
-    { id: '8784', title: 'Commercial Lease Amendment', parties: 'Pacific Properties', status: 'Preparation', updated: '5 hours ago', value: '$325,000', documents: 4, type: 'Commercial Lease' },
-    { id: '8423', title: 'Property Sale Contract', parties: 'John Smith & Emma Johnson', status: 'Preparation', updated: '2 hours ago', value: '$450,000', documents: 4, type: 'Property Sale' },
-    { id: '7804', title: 'Investment Property Escrow', parties: 'Global Investors Group', status: 'Wire Details', updated: '1 day ago', value: '$1,750,000', documents: 3, type: 'Property Sale' },
-    { id: '7234', title: 'Residential Sale Agreement', parties: 'David Miller & Sarah Thompson', status: 'Signatures', updated: '4 hours ago', value: '$525,000', documents: 3, type: 'Property Sale' },
-    { id: '9102', title: 'Commercial Lease Escrow', parties: 'TechStart Inc. & Pacific Properties', status: 'Signatures', updated: '5 hours ago', value: '$325,000', documents: 1, type: 'Commercial Lease' },
-    { id: '6891', title: 'Office Building Purchase', parties: 'Riverfront Ventures', status: 'Funds Disbursed', updated: '3 days ago', value: '$3,200,000', documents: 4, type: 'Property Sale' },
-    { id: '6453', title: 'Retail Space Lease', parties: 'Urban Outfitters Co.', status: 'Completed', updated: '1 week ago', value: '$275,000', documents: 2, type: 'Commercial Lease' },
-    { id: '10001', title: 'Downtown Condo Sale', parties: 'Alice Lee & Bob Martin', status: 'Initiation', updated: '2 days ago', value: '$900,000', documents: 2, type: 'Property Sale' },
-    { id: '10002', title: 'Warehouse Lease', parties: 'Logistics Corp & Storage Solutions', status: 'In Review', updated: '6 hours ago', value: '$1,100,000', documents: 3, type: 'Commercial Lease' },
-    { id: '10003', title: 'Luxury Villa Purchase', parties: 'Samantha Fox & Elite Estates', status: 'Wire Details', updated: '3 days ago', value: '$2,500,000', documents: 5, type: 'Property Sale' },
-    { id: '10004', title: 'Industrial Park Development', parties: 'MegaBuild Inc.', status: 'Funds Disbursed', updated: '1 week ago', value: '$5,000,000', documents: 6, type: 'Property Sale' },
-    { id: '10005', title: 'Beachfront Property Sale', parties: 'Oceanic Realty & Sun Resorts', status: 'Completed', updated: '2 weeks ago', value: '$3,800,000', documents: 4, type: 'Property Sale' },
-    { id: '10006', title: 'Mountain Cabin Escrow', parties: 'Wilderness Realty & Jane Doe', status: 'Initiation', updated: '4 days ago', value: '$600,000', documents: 2, type: 'Property Sale' },
-    { id: '10007', title: 'City Apartment Lease', parties: 'Urban Living LLC & Mark Smith', status: 'Preparation', updated: '8 hours ago', value: '$1,200,000', documents: 3, type: 'Commercial Lease' },
-    { id: '10008', title: 'Farm Land Purchase', parties: 'AgriCorp & Green Farms', status: 'Completed', updated: '3 weeks ago', value: '$2,100,000', documents: 5, type: 'Property Sale' }
-  ];
-
-  const sampleDocuments = [
-    { id: '1234', name: 'Purchase Agreement', type: 'PDF', size: '2.4 MB', uploadedBy: 'John Smith', dateUploaded: '2024-03-15', contractTitle: 'New Property Acquisition', contractId: '9548' },
-    { id: '2345', name: 'Property Survey', type: 'PDF', size: '1.8 MB', uploadedBy: 'Sarah Johnson', dateUploaded: '2024-03-14', contractTitle: 'Land Development Contract', contractId: '9550' },
-    { id: '3456', name: 'Inspection Report', type: 'PDF', size: '3.2 MB', uploadedBy: 'Michael Brown', dateUploaded: '2024-03-13', contractTitle: 'Construction Escrow', contractId: '9145' },
-    { id: '4567', name: 'Lease Agreement', type: 'DOCX', size: '1.1 MB', uploadedBy: 'Emma Johnson', dateUploaded: '2024-03-12', contractTitle: 'Commercial Lease Amendment', contractId: '8784' },
-    { id: '5678', name: 'Title Insurance', type: 'PDF', size: '2.0 MB', uploadedBy: 'Robert Chen', dateUploaded: '2024-03-11', contractTitle: 'Property Sale Contract', contractId: '8423' },
-    { id: '6789', name: 'Wire Authorization', type: 'PDF', size: '1.2 MB', uploadedBy: 'Sarah Miller', dateUploaded: '2024-03-10', contractTitle: 'Investment Property Escrow', contractId: '7804' },
-    { id: '7890', name: 'Appraisal Report', type: 'PDF', size: '2.7 MB', uploadedBy: 'David Miller', dateUploaded: '2024-03-09', contractTitle: 'Residential Sale Agreement', contractId: '7234' },
-    { id: '8901', name: 'Closing Disclosure', type: 'PDF', size: '1.9 MB', uploadedBy: 'Emily Davis', dateUploaded: '2024-03-08', contractTitle: 'Office Building Purchase', contractId: '6891' },
-    { id: '9012', name: 'Loan Estimate', type: 'PDF', size: '1.5 MB', uploadedBy: 'Alex Johnson', dateUploaded: '2024-03-07', contractTitle: 'Retail Space Lease', contractId: '6453' },
-    { id: '0123', name: 'Deed Transfer', type: 'PDF', size: '2.2 MB', uploadedBy: 'Samantha Fox', dateUploaded: '2024-03-06', contractTitle: 'Luxury Villa Purchase', contractId: '10003' }
-  ];
-
-  // Get unique statuses from contracts
-  const availableStatuses = [
-    'All',
-    'Initiation',
-    'Preparation',
-    'Wire Details',
-    'In Review',
-    'Signatures',
-    'Funds Disbursed',
-    'Complete'
-  ];
-
-  // Filter contracts based on search term and status
-  const filteredContracts = sampleContracts.filter(contract => {
+  // Filter contracts based on search term and selected statuses
+  const filteredContracts = mockContracts.filter(contract => {
     const search = searchTerm.toLowerCase();
     const matchesSearch = (
       contract.title.toLowerCase().includes(search) ||
@@ -238,11 +354,10 @@ const ContractsPage: React.FC = () => {
       contract.type.toLowerCase().includes(search)
     );
     const matchesStatus = selectedStatuses.includes('All') || selectedStatuses.includes(contract.status);
-    return matchesSearch && matchesStatus;
+    const matchesContract = selectedContracts.length === 0 || selectedContracts.includes(contract.id);
+    return matchesSearch && matchesStatus && matchesContract;
   }).sort((a, b) => {
     // Sort by last updated
-    // Parse the 'updated' field, which is a string like '1 hour ago', '2 days ago', etc.
-    // For demo, sort by id as a fallback if parsing fails
     function parseUpdated(str: string) {
       if (!str) return 0;
       const n = parseInt(str);
@@ -263,15 +378,37 @@ const ContractsPage: React.FC = () => {
 
   // Filter documents based on search term
   const filteredDocuments = sampleDocuments.filter(doc => {
-    const search = searchTerm.toLowerCase();
-    return (
-      doc.name.toLowerCase().includes(search) ||
-      doc.type.toLowerCase().includes(search) ||
-      doc.uploadedBy.toLowerCase().includes(search) ||
-      doc.contractTitle.toLowerCase().includes(search) ||
-      doc.contractId.toLowerCase().includes(search)
-    );
+    const matchesSearch = searchTerm === '' || 
+      doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.uploadedBy?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.contractTitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.contractId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.assignee?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesContract = selectedContracts.length === 0 || 
+      (doc.contractId && selectedContracts.includes(doc.contractId));
+
+    const matchesAssignee = selectedAssignees.length === 0 || 
+      (selectedAssignees.includes('__ME__') ? 
+        (doc.assignee === currentUserName) : 
+        (doc.assignee && selectedAssignees.includes(doc.assignee)));
+
+    return matchesSearch && matchesContract && matchesAssignee;
   });
+
+  // Get unique statuses from contracts
+  const availableStatuses = [
+    'All',
+    'Initiation',
+    'Preparation',
+    'Wire Details',
+    'In Review',
+    'Signatures',
+    'Funds Disbursed',
+    'Complete'
+  ];
 
   const getStatusBadgeStyle = (status: string) => {
     switch (status) {
@@ -414,8 +551,12 @@ const ContractsPage: React.FC = () => {
   const documentsBoxRef = useRef<HTMLDivElement>(null);
 
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [uploadContractId, setUploadContractId] = useState<string | null>(null);
   const [uploadModalFiles, setUploadModalFiles] = useState<File[]>([]);
+  const [uploadContractId, setUploadContractId] = useState<string | null>(null);
+  const [uploadModalAssignee, setUploadModalAssignee] = useState<string>('');
+  const [showUploadModalAssigneeDropdown, setShowUploadModalAssigneeDropdown] = useState(false);
+  const uploadModalAssigneeDropdownRef = useRef<HTMLDivElement>(null);
+  const uploadModalAssigneeInputRef = useRef<HTMLInputElement>(null);
 
   const [showPdfViewer, setShowPdfViewer] = useState(false);
   const [selectedPdf, setSelectedPdf] = useState<{ name: string; url: string; id?: string } | null>(null);
@@ -435,6 +576,24 @@ const ContractsPage: React.FC = () => {
   const contractTypeDropdownRef = useRef<HTMLDivElement>(null);
   const propertyTypeDropdownRef = useRef<HTMLDivElement>(null);
   const milestoneDropdownRef = useRef<HTMLDivElement>(null);
+
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
+  const [showContractModal, setShowContractModal] = useState(false);
+
+  const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false);
+  const documentDetailsAssigneeDropdownRef = useRef<HTMLDivElement>(null);
+  const documentDetailsAssigneeInputRef = useRef<HTMLInputElement>(null);
+
+  const { allAssignees } = useAssigneeStore();
+
+  const [docIdSortDirection, setDocIdSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [docNameSortDirection, setDocNameSortDirection] = useState<'asc' | 'desc' | null>(null);
+  const [docAssigneeSortDirection, setDocAssigneeSortDirection] = useState<'asc' | 'desc' | null>(null);
+  const [docUploadedBySortDirection, setDocUploadedBySortDirection] = useState<'asc' | 'desc' | null>(null);
+  const [docContractSortDirection, setDocContractSortDirection] = useState<'asc' | 'desc' | null>(null);
+  const [docContractIdSortDirection, setDocContractIdSortDirection] = useState<'asc' | 'desc' | null>(null);
+  const [docDateUploadedSortDirection, setDocDateUploadedSortDirection] = useState<'asc' | 'desc' | null>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -510,7 +669,7 @@ const ContractsPage: React.FC = () => {
 
   // Calculate total contract value
   const calculateTotalValue = () => {
-    return sampleContracts.reduce((total, contract) => {
+    return mockContracts.reduce((total, contract) => {
       // Remove '$' and ',' from value string and convert to number
       const value = parseFloat(contract.value?.replace(/[$,]/g, '') || '0');
       return total + value;
@@ -686,6 +845,217 @@ const ContractsPage: React.FC = () => {
     initializeTasks();
   }, [initializeTasks]);
 
+  // Add click-off behavior for upload modal assignee dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      const dropdown = uploadModalAssigneeDropdownRef.current;
+      const input = uploadModalAssigneeInputRef.current;
+
+      if (showUploadModalAssigneeDropdown && 
+          !dropdown?.contains(target) && 
+          !input?.contains(target)) {
+        setShowUploadModalAssigneeDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showUploadModalAssigneeDropdown]);
+
+  // Add click-outside handler for document details assignee dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      const dropdown = documentDetailsAssigneeDropdownRef.current;
+      const input = documentDetailsAssigneeInputRef.current;
+
+      if (showAssigneeDropdown && 
+          !dropdown?.contains(target) && 
+          !input?.contains(target)) {
+        setShowAssigneeDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showAssigneeDropdown]);
+
+  // Document sorting handlers
+  const handleDocIdSort = () => {
+    setDocIdSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setDocNameSortDirection(null);
+    setDocAssigneeSortDirection(null);
+    setDocUploadedBySortDirection(null);
+    setDocDateUploadedSortDirection(null);
+    setDocContractSortDirection(null);
+    setDocContractIdSortDirection(null);
+  };
+
+  const handleDocNameSort = () => {
+    setDocNameSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setDocIdSortDirection('asc');
+    setDocAssigneeSortDirection(null);
+    setDocUploadedBySortDirection(null);
+    setDocDateUploadedSortDirection(null);
+    setDocContractSortDirection(null);
+    setDocContractIdSortDirection(null);
+  };
+
+  const handleDocAssigneeSort = () => {
+    setDocAssigneeSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setDocIdSortDirection('asc');
+    setDocNameSortDirection(null);
+    setDocUploadedBySortDirection(null);
+    setDocDateUploadedSortDirection(null);
+    setDocContractSortDirection(null);
+    setDocContractIdSortDirection(null);
+  };
+
+  const handleDocUploadedBySort = () => {
+    setDocUploadedBySortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setDocIdSortDirection('asc');
+    setDocNameSortDirection(null);
+    setDocAssigneeSortDirection(null);
+    setDocContractSortDirection(null);
+    setDocContractIdSortDirection(null);
+  };
+
+  const handleDocContractSort = () => {
+    setDocContractSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setDocIdSortDirection('asc');
+    setDocNameSortDirection(null);
+    setDocAssigneeSortDirection(null);
+    setDocUploadedBySortDirection(null);
+    setDocContractIdSortDirection(null);
+  };
+
+  const handleDocContractIdSort = () => {
+    setDocContractIdSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setDocIdSortDirection('asc');
+    setDocNameSortDirection(null);
+    setDocAssigneeSortDirection(null);
+    setDocUploadedBySortDirection(null);
+    setDocContractSortDirection(null);
+  };
+
+  const handleDocDateUploadedSort = () => {
+    setDocDateUploadedSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setDocIdSortDirection('asc');
+    setDocNameSortDirection(null);
+    setDocAssigneeSortDirection(null);
+    setDocUploadedBySortDirection(null);
+    setDocContractSortDirection(null);
+    setDocContractIdSortDirection(null);
+  };
+
+  // Sort filteredDocuments based on selected sort direction
+  const sortedDocuments = [...filteredDocuments].sort((a, b) => {
+    if (docContractIdSortDirection) {
+      const aId = Number(a.contractId?.replace(/[^0-9]/g, '') || '0');
+      const bId = Number(b.contractId?.replace(/[^0-9]/g, '') || '0');
+      return docContractIdSortDirection === 'asc' ? aId - bId : bId - aId;
+    } else if (docContractSortDirection) {
+      const aTitle = (a.contractTitle || '').toLowerCase();
+      const bTitle = (b.contractTitle || '').toLowerCase();
+      return docContractSortDirection === 'asc' 
+        ? aTitle.localeCompare(bTitle)
+        : bTitle.localeCompare(aTitle);
+    } else if (docDateUploadedSortDirection) {
+      const aDate = new Date(a.dateUploaded || '').getTime();
+      const bDate = new Date(b.dateUploaded || '').getTime();
+      return docDateUploadedSortDirection === 'asc' ? aDate - bDate : bDate - aDate;
+    } else if (docUploadedBySortDirection) {
+      const aUploader = (a.uploadedBy || '').toLowerCase();
+      const bUploader = (b.uploadedBy || '').toLowerCase();
+      return docUploadedBySortDirection === 'asc'
+        ? aUploader.localeCompare(bUploader)
+        : bUploader.localeCompare(aUploader);
+    } else if (docAssigneeSortDirection) {
+      const aAssignee = (a.assignee || '').toLowerCase();
+      const bAssignee = (b.assignee || '').toLowerCase();
+      return docAssigneeSortDirection === 'asc'
+        ? aAssignee.localeCompare(bAssignee)
+        : bAssignee.localeCompare(aAssignee);
+    } else if (docNameSortDirection) {
+      const aName = a.name.toLowerCase();
+      const bName = b.name.toLowerCase();
+      return docNameSortDirection === 'asc'
+        ? aName.localeCompare(bName)
+        : bName.localeCompare(aName);
+    } else {
+      const aId = Number(a.id.replace(/[^0-9]/g, ''));
+      const bId = Number(b.id.replace(/[^0-9]/g, ''));
+      return docIdSortDirection === 'asc' ? aId - bId : bId - aId;
+    }
+  });
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      const dropdown = document.querySelector('.status-filter-dropdown');
+      const button = statusDropdownRef.current;
+
+      // Only close if clicking outside both the dropdown and button
+      if (showStatusDropdown && 
+          !dropdown?.contains(target) && 
+          !button?.contains(target)) {
+        setShowStatusDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showStatusDropdown]);
+
+  // Add click-outside handler for contract dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      const dropdown = document.querySelector('.contract-dropdown');
+      const button = contractButtonRef.current;
+
+      // Only close if clicking outside both the dropdown and button
+      if (openContractDropdown && 
+          !dropdown?.contains(target) && 
+          !button?.contains(target)) {
+        setOpenContractDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openContractDropdown]);
+
+  // Add click-outside handler for assignee dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      const dropdown = document.querySelector('.assignee-dropdown');
+      const button = assigneeButtonRef.current;
+
+      // Only close if clicking outside both the dropdown and button
+      if (openAssigneeDropdown && 
+          !dropdown?.contains(target) && 
+          !button?.contains(target)) {
+        setOpenAssigneeDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openAssigneeDropdown]);
+
   return (
     <>
       <div className="space-y-4">
@@ -789,7 +1159,7 @@ const ContractsPage: React.FC = () => {
           {/* Form Content */}
           <div className="space-y-6">
             {modalStep === 1 && (
-              <form onSubmit={e => { e.preventDefault(); setModalStep(2); }}>
+              <form onSubmit={handleSubmit} noValidate>
                 <div className="grid grid-cols-2 gap-6">
                   <div>
                     <label htmlFor="title" className="block text-xs font-medium text-gray-500 mb-1">Contract Title</label>
@@ -799,10 +1169,15 @@ const ContractsPage: React.FC = () => {
                       name="title"
                       value={modalForm.title}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs ${
+                        formErrors.title ? 'border-red-300' : 'border-gray-200'
+                      }`}
                       placeholder="Enter contract title"
                       required
                     />
+                    {formErrors.title && (
+                      <p className="mt-1 text-xs text-red-600 font-medium">Please fill out this field</p>
+                    )}
                   </div>
                   <div>
                     <label htmlFor="escrowNumber" className="block text-xs font-medium text-gray-500 mb-1">Escrow Number</label>
@@ -814,7 +1189,6 @@ const ContractsPage: React.FC = () => {
                       onChange={handleModalChange}
                       className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
                       placeholder="Enter escrow number"
-                      required
                     />
                   </div>
                   <div>
@@ -822,7 +1196,9 @@ const ContractsPage: React.FC = () => {
                     <div className="relative w-full" ref={contractTypeDropdownRef}>
                       <input
                         type="text"
-                        className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white"
+                        className={`w-full px-3 py-2 border-2 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white ${
+                          formErrors.type ? 'border-red-300' : 'border-gray-200'
+                        }`}
                         placeholder="Select contract type"
                         value={CONTRACT_TYPES.find(t => t === modalForm.type) || ''}
                         readOnly
@@ -839,6 +1215,7 @@ const ContractsPage: React.FC = () => {
                                 e.preventDefault();
                                 setModalForm(prev => ({ ...prev, type }));
                                 setShowContractTypeDropdown(false);
+                                setFormErrors(prev => ({ ...prev, type: false }));
                               }}
                             >
                               {type}
@@ -847,6 +1224,9 @@ const ContractsPage: React.FC = () => {
                         </div>
                       )}
                     </div>
+                    {formErrors.type && (
+                      <p className="mt-1 text-xs text-red-600 font-medium">Please select a contract type</p>
+                    )}
                   </div>
                   <div>
                     <label htmlFor="propertyType" className="block text-xs font-medium text-gray-500 mb-1">Property Type</label>
@@ -931,9 +1311,14 @@ const ContractsPage: React.FC = () => {
                       name="dueDate"
                       value={modalForm.dueDate}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 pr-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs text-black bg-white"
+                      className={`w-full px-4 py-2 pr-3 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs text-black bg-white ${
+                        formErrors.dueDate ? 'border-red-300' : 'border-gray-200'
+                      }`}
                       required
                     />
+                    {formErrors.dueDate && (
+                      <p className="mt-1 text-xs text-red-600 font-medium">Please select a due date</p>
+                    )}
                   </div>
                 </div>
                 <div className="mt-6">
@@ -946,7 +1331,6 @@ const ContractsPage: React.FC = () => {
                     onChange={handleModalChange}
                     className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
                     placeholder="Enter property address"
-                    required
                   />
                 </div>
                 <div className="mt-6">
@@ -967,7 +1351,7 @@ const ContractsPage: React.FC = () => {
             )}
 
             {modalStep === 2 && (
-              <form onSubmit={e => { e.preventDefault(); setModalStep(3); }}>
+              <form onSubmit={handleSubmit} noValidate>
                 <div className="grid grid-cols-2 gap-6">
                   <div>
                     <label htmlFor="buyer" className="block text-xs font-medium text-gray-500 mb-1">Buyer / Client</label>
@@ -977,10 +1361,15 @@ const ContractsPage: React.FC = () => {
                       name="buyer"
                       value={modalForm.buyer}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs ${
+                        formErrors.buyer ? 'border-red-300' : 'border-gray-200'
+                      }`}
                       placeholder="Enter buyer or client name"
                       required
                     />
+                    {formErrors.buyer && (
+                      <p className="mt-1 text-xs text-red-600 font-medium">Please fill out this field</p>
+                    )}
                   </div>
                   <div>
                     <label htmlFor="buyerEmail" className="block text-xs font-medium text-gray-500 mb-1">Buyer Email</label>
@@ -1008,10 +1397,15 @@ const ContractsPage: React.FC = () => {
                       name="seller"
                       value={modalForm.seller}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs ${
+                        formErrors.seller ? 'border-red-300' : 'border-gray-200'
+                      }`}
                       placeholder="Enter seller or provider name"
                       required
                     />
+                    {formErrors.seller && (
+                      <p className="mt-1 text-xs text-red-600 font-medium">Please fill out this field</p>
+                    )}
                   </div>
                   <div>
                     <label htmlFor="sellerEmail" className="block text-xs font-medium text-gray-500 mb-1">Seller Email</label>
@@ -1070,7 +1464,6 @@ const ContractsPage: React.FC = () => {
                       onChange={handleModalChange}
                       className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
                       placeholder="Enter lender name"
-                      required
                     />
                   </div>
                   <div>
@@ -1081,10 +1474,15 @@ const ContractsPage: React.FC = () => {
                       name="titleCompany"
                       value={modalForm.titleCompany}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs ${
+                        formErrors.titleCompany ? 'border-red-300' : 'border-gray-200'
+                      }`}
                       placeholder="Enter title company name"
                       required
                     />
+                    {formErrors.titleCompany && (
+                      <p className="mt-1 text-xs text-red-600 font-medium">Please fill out this field</p>
+                    )}
                   </div>
                   <div>
                     <label htmlFor="insuranceCompany" className="block text-xs font-medium text-gray-500 mb-1">Insurance Company</label>
@@ -1096,7 +1494,6 @@ const ContractsPage: React.FC = () => {
                       onChange={handleModalChange}
                       className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
                       placeholder="Enter insurance company name"
-                      required
                     />
                   </div>
                   <div>
@@ -1107,9 +1504,14 @@ const ContractsPage: React.FC = () => {
                       name="closingDate"
                       value={modalForm.closingDate}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 pr-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs text-black bg-white"
+                      className={`w-full px-4 py-2 pr-3 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs text-black bg-white ${
+                        formErrors.closingDate ? 'border-red-300' : 'border-gray-200'
+                      }`}
                       required
                     />
+                    {formErrors.closingDate && (
+                      <p className="mt-1 text-xs text-red-600 font-medium">Please select a closing date</p>
+                    )}
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-6 mt-6">
@@ -1123,7 +1525,6 @@ const ContractsPage: React.FC = () => {
                       onChange={handleModalChange}
                       className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
                       placeholder="Enter earnest money amount"
-                      required
                     />
                   </div>
                   <div>
@@ -1136,7 +1537,6 @@ const ContractsPage: React.FC = () => {
                       onChange={handleModalChange}
                       className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
                       placeholder="Enter down payment amount"
-                      required
                     />
                   </div>
                   <div>
@@ -1149,7 +1549,6 @@ const ContractsPage: React.FC = () => {
                       onChange={handleModalChange}
                       className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
                       placeholder="Enter loan amount"
-                      required
                     />
                   </div>
                   <div>
@@ -1162,7 +1561,6 @@ const ContractsPage: React.FC = () => {
                       onChange={handleModalChange}
                       className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
                       placeholder="Enter interest rate"
-                      required
                     />
                   </div>
                   <div>
@@ -1175,20 +1573,18 @@ const ContractsPage: React.FC = () => {
                       onChange={handleModalChange}
                       className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
                       placeholder="Enter loan term"
-                      required
                     />
                   </div>
                   <div>
                     <label htmlFor="inspectionPeriod" className="block text-xs font-medium text-gray-500 mb-1">Inspection Period (Days)</label>
-            <input
-              type="text"
+                    <input
+                      type="text"
                       id="inspectionPeriod"
                       name="inspectionPeriod"
                       value={modalForm.inspectionPeriod}
                       onChange={handleModalChange}
                       className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
                       placeholder="Enter inspection period"
-                      required
                     />
                   </div>
                 </div>
@@ -1201,7 +1597,6 @@ const ContractsPage: React.FC = () => {
                     onChange={handleModalChange}
                     className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs min-h-[80px]"
                     placeholder="Enter any contingencies for this contract"
-                    required
                   />
                 </div>
                 <div className="flex justify-between mt-6">
@@ -1212,7 +1607,7 @@ const ContractsPage: React.FC = () => {
             )}
 
             {modalStep === 3 && (
-              <form onSubmit={e => { e.preventDefault(); setShowNewContractForm(false); setModalStep(1); }}>
+              <form onSubmit={handleSubmit} noValidate>
                 <div className="space-y-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Upload Documents (Optional)</label>
@@ -1259,7 +1654,7 @@ const ContractsPage: React.FC = () => {
               </div>
               <div className="flex flex-col items-start h-full">
                 <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contracts</p>
-                <p className="text-2xl font-bold text-gray-900">{sampleContracts.length}</p>
+                <p className="text-2xl font-bold text-gray-900">{mockContracts.length}</p>
                 <p className="text-xs invisible">placeholder</p>
               </div>
             </div>
@@ -1270,7 +1665,7 @@ const ContractsPage: React.FC = () => {
               </div>
               <div className="flex flex-col items-start h-full">
                 <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Pending Signatures</p>
-                <p className="text-2xl font-bold text-gray-900">{sampleContracts.filter(contract => contract.status === 'Signatures').length}</p>
+                <p className="text-2xl font-bold text-gray-900">{mockContracts.filter(contract => contract.status === 'Signatures').length}</p>
                 <p className="text-xs text-gray-400">Requires action</p>
               </div>
             </div>
@@ -1281,7 +1676,7 @@ const ContractsPage: React.FC = () => {
               </div>
               <div className="flex flex-col items-start h-full">
                 <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Awaiting Wire Details</p>
-                <p className="text-2xl font-bold text-gray-900">{sampleContracts.filter(contract => contract.status === 'Wire Details').length}</p>
+                <p className="text-2xl font-bold text-gray-900">{mockContracts.filter(contract => contract.status === 'Wire Details').length}</p>
                 <p className="text-xs text-gray-400">Needs attention</p>
               </div>
             </div>
@@ -1327,59 +1722,226 @@ const ContractsPage: React.FC = () => {
             style={{ fontFamily: 'Avenir, sans-serif' }}
           />
         </div>
-        <button 
-          className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 relative" 
-          style={{ fontFamily: 'Avenir, sans-serif' }}
-          onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-          ref={statusDropdownRef as any}
-        >
-          <HiOutlineViewBoards className="text-gray-400 text-lg" />
-          <span>Status</span>
-          <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
-          
-          {showStatusDropdown && (
-            <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }} ref={statusDropdownRef}>
-              {availableStatuses.map((status) => (
-                <button
-                  key={status}
-                  className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
-                    selectedStatuses.includes(status) ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
-                  }`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (status === 'All') {
-                      setSelectedStatuses(['All']);
-                    } else {
-                      setSelectedStatuses(prev => {
-                        const newStatuses = prev.filter(s => s !== 'All');
-                        if (prev.includes(status)) {
-                          const filtered = newStatuses.filter(s => s !== status);
-                          return filtered.length === 0 ? ['All'] : filtered;
-                        } else {
-                          return [...newStatuses, status];
-                        }
-                      });
-                    }
-                  }}
+        {activeContentTab === 'contractList' && (
+          <button 
+            className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 relative" 
+            style={{ fontFamily: 'Avenir, sans-serif' }}
+            onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+            ref={statusDropdownRef as any}
+          >
+            <HiOutlineViewBoards className="text-gray-400 text-lg" />
+            <span>Status</span>
+            <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+            
+            {showStatusDropdown && (
+              <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }} ref={statusDropdownRef}>
+                {availableStatuses.map((status) => (
+                  <button
+                    key={status}
+                    className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
+                      selectedStatuses.includes(status) ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (status === 'All') {
+                        setSelectedStatuses(['All']);
+                      } else {
+                        setSelectedStatuses(prev => {
+                          const newStatuses = prev.filter(s => s !== 'All');
+                          if (prev.includes(status)) {
+                            const filtered = newStatuses.filter(s => s !== status);
+                            return filtered.length === 0 ? ['All'] : filtered;
+                          } else {
+                            return [...newStatuses, status];
+                          }
+                        });
+                      }
+                    }}
+                  >
+                    <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedStatuses.includes(status) ? 'bg-primary' : 'border border-gray-300'}`}>
+                      {selectedStatuses.includes(status) && (
+                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                    {status}
+                  </button>
+                ))}
+              </div>
+            )}
+          </button>
+        )}
+        {activeContentTab === 'documents' && (
+          <>
+            <div className="relative ml-1">
+              <button
+                ref={contractButtonRef}
+                className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px]"
+                style={{ fontFamily: 'Avenir, sans-serif' }}
+                onClick={() => { setOpenContractDropdown(v => !v); setOpenAssigneeDropdown(false); }}
+              >
+                <HiOutlineDocumentText className="text-gray-400 text-lg" />
+                <span>Contract</span>
+                <HiChevronDown className="text-gray-400 text-base" />
+              </button>
+              {openContractDropdown && (
+                <div 
+                  className="absolute left-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 min-w-[400px] w-96 contract-dropdown" 
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedStatuses.includes(status) ? 'bg-primary' : 'border border-gray-300'}`}>
-                    {selectedStatuses.includes(status) && (
-                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
+                  {/* Search Bar */}
+                  <div className="px-4 py-2 border-b border-gray-100">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Search contracts..."
+                        value={contractSearch}
+                        onChange={(e) => setContractSearch(e.target.value)}
+                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                      />
+                      <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    </div>
                   </div>
-                  {status}
-                </button>
-              ))}
+
+                  <button
+                    className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
+                      selectedContracts.length === 0 ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
+                    }`}
+                    onClick={() => setSelectedContracts([])}
+                  >
+                    <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedContracts.length === 0 ? 'bg-primary' : 'border border-gray-300'}`}>
+                      {selectedContracts.length === 0 && (
+                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                    All
+                  </button>
+                  {mockContracts
+                    .filter(contract => 
+                      contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
+                      contract.title.toLowerCase().includes(contractSearch.toLowerCase())
+                    )
+                    .map(contract => (
+                      <button
+                        key={contract.id}
+                        className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center whitespace-nowrap truncate ${
+                          selectedContracts.includes(String(contract.id)) ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
+                        }`}
+                        onClick={() => {
+                          setSelectedContracts(prev => {
+                            if (prev.includes(String(contract.id))) {
+                              return prev.filter(c => c !== String(contract.id));
+                            } else {
+                              return [...prev, String(contract.id)];
+                            }
+                          });
+                        }}
+                      >
+                        <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedContracts.includes(String(contract.id)) ? 'bg-primary' : 'border border-gray-300'}`}>
+                          {selectedContracts.includes(String(contract.id)) && (
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        {contract.id} - {contract.title}
+                      </button>
+                    ))}
+                </div>
+              )}
             </div>
-          )}
-        </button>
-        <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
-          <LuCalendarClock className="text-gray-400" size={18} />
-          <span>Last 30 days</span>
-          <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
-        </button>
+            <div className="relative ml-1">
+              <button
+                ref={assigneeButtonRef}
+                className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px]"
+                style={{ fontFamily: 'Avenir, sans-serif' }}
+                onClick={() => { setOpenAssigneeDropdown(v => !v); setOpenContractDropdown(false); }}
+              >
+                <BsPerson className="text-gray-400 text-lg" />
+                <span>Assignee</span>
+                <HiChevronDown className="text-gray-400 text-base" />
+              </button>
+              {openAssigneeDropdown && (
+                <div 
+                  className="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 assignee-dropdown" 
+                  style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                >
+                  <button
+                    className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
+                      selectedAssignees.length === 0 ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
+                    }`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setSelectedAssignees([]);
+                    }}
+                  >
+                    <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedAssignees.length === 0 ? 'bg-primary' : 'border border-gray-300'}`}>
+                      {selectedAssignees.length === 0 && (
+                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                    All
+                  </button>
+                  <button
+                    className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
+                      selectedAssignees.includes('__ME__') ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
+                    }`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setSelectedAssignees(['__ME__']);
+                    }}
+                  >
+                    <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedAssignees.includes('__ME__') ? 'bg-primary' : 'border border-gray-300'}`}>
+                      {selectedAssignees.includes('__ME__') && (
+                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                    Me
+                  </button>
+                  {Array.from(new Set(sampleDocuments.map(doc => doc.assignee).filter((assignee): assignee is string => assignee !== undefined))).sort().map(assignee => (
+                    <button
+                      key={assignee}
+                      className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
+                        selectedAssignees.includes(assignee) ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
+                      }`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedAssignees(prev => {
+                          if (prev.includes(assignee)) {
+                            return prev.filter(a => a !== assignee);
+                          } else {
+                            return [...prev, assignee];
+                          }
+                        });
+                      }}
+                    >
+                      <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedAssignees.includes(assignee) ? 'bg-primary' : 'border border-gray-300'}`}>
+                        {selectedAssignees.includes(assignee) && (
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </div>
+                      {assignee}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
         <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[150px] ml-1" style={{ fontFamily: 'Avenir, sans-serif' }}
           onClick={() => setLastUpdatedSort(prev => prev === 'desc' ? 'asc' : 'desc')}
         >
@@ -1391,49 +1953,51 @@ const ContractsPage: React.FC = () => {
 
       {/* Table Section with Tabs in Outlined Box */}
       <div className="bg-white border border-gray-200 rounded-xl p-6">
-        {/* Tabs Row */}
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0 w-full">
-          {/* Contracts/Documents Tabs */}
-          <div className="flex space-x-8 overflow-x-auto w-full md:w-auto">
-            {CONTENT_TABS.map((tab) => (
-              <button
-                key={tab.key}
-                className={`pb-2 text-sm font-semibold whitespace-nowrap ${
-                  activeContentTab === tab.key
-                    ? 'text-primary border-b-2 border-primary'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-                onClick={() => setActiveContentTab(tab.key)}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-          {/* Created by Me/Assigned to Me Tabs (styled like main tabs) */}
-          <div className="flex flex-col items-end w-full md:w-auto">
+        {/* Tabs Row with Divider */}
+        <div className="border-b border-gray-200">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0 w-full">
+            {/* Contracts/Documents Tabs */}
             <div className="flex space-x-8 overflow-x-auto w-full md:w-auto">
-              {TABS.filter(tab => tab.key !== 'allContracts').map(tab => (
-              <button
-                key={tab.key}
-                  className={`pb-2 text-sm font-semibold whitespace-nowrap ${
-                    activeTab === tab.key
-                    ? 'text-primary border-b-2 border-primary'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-                  onClick={() => setActiveTab(tab.key)}
-              >
-                {tab.label}
-              </button>
-            ))}
+              {CONTENT_TABS.map((tab) => (
+                <button
+                  key={tab.key}
+                  className={`pb-2 text-sm font-semibold whitespace-nowrap border-b-2 ${
+                    activeContentTab === tab.key
+                      ? 'text-primary border-primary'
+                      : 'text-gray-500 hover:text-gray-700 border-transparent'
+                  }`}
+                  onClick={() => setActiveContentTab(tab.key)}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
-            {activeContentTab === 'documents' && (
-              <></>
-            )}
+            {/* Created by Me/Assigned to Me Tabs (styled like main tabs) */}
+            <div className="flex flex-col items-end w-full md:w-auto">
+              <div className="flex space-x-8 overflow-x-auto w-full md:w-auto">
+                {TABS.filter(tab => tab.key !== 'allContracts').map(tab => (
+                  <button
+                    key={tab.key}
+                    className={`pb-2 text-sm font-semibold whitespace-nowrap border-b-2 ${
+                      activeTab === tab.key
+                        ? 'text-primary border-primary'
+                        : 'text-gray-500 hover:text-gray-700 border-transparent'
+                    }`}
+                    onClick={() => setActiveTab(tab.key)}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+              {activeContentTab === 'documents' && (
+                <></>
+              )}
+            </div>
           </div>
         </div>
         {/* Table */}
         {activeContentTab === 'contractList' && (
-          <div style={{ maxHeight: 'calc(100vh - 400px)', overflowY: 'scroll' }} className="relative overflow-x-auto mt-4">
+          <div style={{ height: 'calc(10 * 3.5rem)', minHeight: '350px' }} className="relative overflow-x-auto overflow-y-auto mt-4">
             <table className="min-w-full divide-y divide-gray-200">
               <thead>
                 <tr>
@@ -1524,24 +2088,67 @@ const ContractsPage: React.FC = () => {
             </table>
           </div>
         )}
-        {/* Documents tab/table remains unchanged for now */}
+        {/* Documents tab/table */}
         {activeContentTab === 'documents' && (
-          <div style={{ maxHeight: 'calc(100vh - 400px)', overflowY: 'scroll' }} className="relative overflow-x-auto mt-4">
+          <div style={{ height: 'calc(10 * 3.5rem)', minHeight: '350px' }} className="relative overflow-x-auto overflow-y-auto mt-4">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead>
+              <thead className="bg-gray-50">
                 <tr>
-                  <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                  <th className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">File Name</th>
-                  <th className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">UPLOADED BY</th>
-                  <th className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">DATE UPLOADED</th>
-                  <th className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Contract</th>
-                  <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">CONTRACT ID</th>
+                  <th 
+                    className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleDocIdSort}
+                  >
+                    ID
+                  </th>
+                  <th 
+                    className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleDocNameSort}
+                  >
+                    Document
+                  </th>
+                  <th 
+                    className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleDocAssigneeSort}
+                  >
+                    Assignee
+                  </th>
+                  <th 
+                    className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleDocUploadedBySort}
+                  >
+                    Uploaded By
+                  </th>
+                  <th 
+                    className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleDocDateUploadedSort}
+                  >
+                    Upload Date
+                  </th>
+                  <th 
+                    className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleDocContractSort}
+                  >
+                    Contract
+                  </th>
+                  <th 
+                    className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleDocContractIdSort}
+                  >
+                    Contract ID
+                  </th>
                   <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredDocuments.map((doc) => (
-                  <tr key={doc.id} className="hover:bg-gray-50">
+                {sortedDocuments.map((doc) => (
+                  <tr 
+                    key={doc.id} 
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={() => {
+                      setSelectedDocument(doc);
+                      setShowDocumentModal(true);
+                    }}
+                  >
                     <td className="px-6 py-2.5 whitespace-nowrap text-xs text-gray-900 text-center">
                       <span className="text-primary underline font-semibold cursor-pointer">{doc.id}</span>
                     </td>
@@ -1551,18 +2158,38 @@ const ContractsPage: React.FC = () => {
                         <span>{doc.type}</span>
                         <span>&bull;</span>
                         <span>{doc.size}</span>
-                      </div>
+                    </div>
                     </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-xs text-gray-500">{doc.assignee}</td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-xs">{doc.uploadedBy}</td>
-                    <td className="px-6 py-2.5 whitespace-nowrap text-xs text-gray-500">{doc.dateUploaded}</td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-xs text-gray-500 text-center">{doc.dateUploaded}</td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-xs font-bold text-gray-900">{doc.contractTitle}</td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
                       <a href={`#${doc.contractId}`} className="text-primary underline font-semibold cursor-pointer">{doc.contractId}</a>
                     </td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs font-medium">
                       <div className="flex items-center justify-center space-x-1">
-                        <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="View" onClick={() => { setSelectedPdf({ name: doc.name, url: `/documents/${doc.name}`, id: doc.id }); setShowPdfViewer(true); }}>
+                        <button 
+                          className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" 
+                          title="View" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedPdf({ name: doc.name, url: `/documents/${doc.name}`, id: doc.id });
+                            setShowPdfViewer(true);
+                          }}
+                        >
                           <HiOutlineEye className="h-4 w-4" />
+                        </button>
+                        <button 
+                          className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" 
+                          title="Edit"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedDocument(doc);
+                            setShowDocumentModal(true);
+                          }}
+                        >
+                          <HiOutlinePencilAlt className="h-4 w-4" />
                         </button>
                         <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Download">
                           <HiOutlineDownload className="h-4 w-4" />
@@ -1570,7 +2197,7 @@ const ContractsPage: React.FC = () => {
                         <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Delete">
                           <HiOutlineTrash className="h-4 w-4" />
                         </button>
-                      </div>
+                    </div>
                     </td>
                   </tr>
                 ))}
@@ -1578,8 +2205,8 @@ const ContractsPage: React.FC = () => {
             </table>
           </div>
         )}
-      </div>
-    </div>
+                    </div>
+                    </div>
     
 
     {/* Modal for contract details */}
@@ -1985,28 +2612,21 @@ const ContractsPage: React.FC = () => {
                       <h3 className="text-sm font-semibold text-gray-900 mb-4">Documents</h3>
                       <button 
                         onClick={() => { setShowUploadModal(true); setUploadContractId(selectedContract?.id || null); }}
-                        className="flex items-center gap-2 px-2 py-1 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors" style={{ fontFamily: 'Avenir, sans-serif' }}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors" style={{ fontFamily: 'Avenir, sans-serif' }}
                       >
-                        <span className="text-base font-bold text-primary">+</span> Upload
+                        <HiOutlineUpload className="text-base text-primary" /> Upload
                       </button>
                     </div>
                     <div className="flex flex-col gap-3 overflow-y-auto mt-4" style={{ maxHeight: '352px' }}>
-                      {/* Mock document list (7 items) */}
-                      {([
-                        { id: '1234', name: 'Wire_Authorization', date: '2025-05-18', size: '1.2 MB', type: 'PDF' },
-                        { id: '2345', name: 'Closing_Disclosure', date: '2025-05-15', size: '0.9 MB', type: 'PDF' },
-                        { id: '3456', name: 'Purchase_Agreement', date: '2025-05-12', size: '2.1 MB', type: 'PDF' },
-                        { id: '4567', name: 'Inspection_Report', date: '2025-05-10', size: '1.5 MB', type: 'PDF' },
-                        { id: '5678', name: 'Appraisal', date: '2025-05-08', size: '1.0 MB', type: 'PDF' },
-                        { id: '6789', name: 'Title_Insurance', date: '2025-05-05', size: '1.3 MB', type: 'PDF' },
-                        { id: '7890', name: 'Loan_Estimate', date: '2025-05-02', size: '0.8 MB', type: 'PDF' },
-                      ] as Document[]).map((doc: Document) => (
-                        <div key={doc.name} className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
+                      {filteredDocuments
+                        .filter(doc => doc.contractId === selectedContract.id)
+                        .map(doc => (
+                        <div key={doc.id} className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
                           <div className="flex items-center gap-3">
                             <HiOutlineDocumentText className="w-5 h-5 text-primary" />
                             <div>
                               <div className="font-semibold text-xs text-black cursor-pointer hover:underline">{doc.name}</div>
-                              <div className="text-xs text-gray-500">{doc.date} &bull; {doc.type} &bull; {doc.size}</div>
+                              <div className="text-xs text-gray-500">{doc.dateUploaded} &bull; {doc.type} &bull; {doc.size}</div>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
@@ -2093,10 +2713,10 @@ const ContractsPage: React.FC = () => {
 
                               {/* Due Date and Status */}
                               <div className="flex items-center justify-between mb-3">
-                                <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1">
                                   <LuCalendarClock className="text-gray-400 text-sm" />
                                   <span className="text-xs text-gray-500">{formatDatePretty(task.due)}</span>
-                                </div>
+                    </div>
                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${getTaskStatusBadgeStyle(task.status)}`}>
                                   {getTaskStatusLabel(task.status)}
                                 </span>
@@ -2275,13 +2895,13 @@ const ContractsPage: React.FC = () => {
                 </svg>
               </button>
             </div>
-          <div className="mb-2 text-sm text-gray-500">
+          <div className="mb-4 text-xs text-gray-500">
             {uploadContractId && (
               <span>
                 For Contract: <span className="font-semibold text-primary">#{uploadContractId}</span>
               </span>
-                              )}
-                            </div>
+            )}
+          </div>
           <form
             className="p-0"
             onSubmit={e => {
@@ -2290,13 +2910,13 @@ const ContractsPage: React.FC = () => {
               setUploadModalFiles([]);
             }}
           >
-            <label className="block text-sm font-medium text-gray-700 mb-2">Upload Documents (Optional)</label>
+            <label className="block text-xs font-medium text-gray-700 mb-2">Upload Documents (Optional)</label>
             <label htmlFor="upload-modal-file-upload" className="block cursor-pointer">
               <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 py-8 px-4 text-center transition hover:border-primary">
-                <HiOutlineUpload className="text-3xl text-gray-400 mb-2" />
-                <div className="text-gray-700 font-medium">Click to upload or drag and drop</div>
-                <div className="text-xs text-gray-400 mt-1">PDF, DOC, DOCX, or JPG (max. 10MB each)</div>
-                          <input
+                <HiOutlineUpload className="h-4 w-4 text-gray-400 mb-2" />
+                <div className="text-xs text-gray-700 font-medium">Click to upload or drag and drop</div>
+                <div className="text-[10px] text-gray-400 mt-1">PDF, DOC, DOCX, or JPG (max. 10MB each)</div>
+                <input
                   id="upload-modal-file-upload"
                   name="upload-modal-file-upload"
                   type="file"
@@ -2305,7 +2925,7 @@ const ContractsPage: React.FC = () => {
                   multiple
                   onChange={handleUploadModalFileChange}
                 />
-                          </div>
+              </div>
             </label>
             {uploadModalFiles.length > 0 && (
               <ul className="mt-3 text-sm text-gray-600">
@@ -2318,7 +2938,7 @@ const ContractsPage: React.FC = () => {
               Upload
             </button>
           </form>
-                      </div>
+        </div>
       </div>
     )}
 
@@ -2370,8 +2990,187 @@ const ContractsPage: React.FC = () => {
                           </div>
                           </div>
                         )}
+
+    {/* Document Details Modal */}
+    {showDocumentModal && selectedDocument && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+        <div className="relative bg-white rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden">
+          {/* Sticky Header with Document ID and Close buttons */}
+          <div className="sticky top-0 z-40 bg-white px-6 py-4">
+            <div className="flex items-start justify-between">
+              {/* Left: Document ID and Status */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-4 mb-4">
+                  <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20">
+                    # {selectedDocument.id}
+                  </span>
+                </div>
+              </div>
+              {/* Right: Close Button */}
+              <button
+                className="text-gray-400 hover:text-gray-600 p-2 rounded-full ml-4 mt-1"
+                onClick={() => setShowDocumentModal(false)}
+                aria-label="Close"
+              >
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-col flex-1 min-h-0">
+            <div className="overflow-y-auto p-6 flex-1">
+              {/* Document Details and File Information Grid */}
+              <div className="grid grid-cols-2 gap-6 mb-6">
+                {/* Document Details Box */}
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-4">Document Details</h3>
+                  <div className="grid grid-cols-2 gap-x-12 gap-y-4">
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">Document ID</div>
+                      <div className="text-xs text-black mb-4">{selectedDocument.id}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">Contract ID</div>
+                      <div className="text-xs text-black mb-4">{selectedDocument.contractId}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">Document Name</div>
+                      <input
+                        type="text"
+                        value={selectedDocument.name}
+                        onChange={(e) => {
+                          const updatedDoc = { ...selectedDocument, name: e.target.value };
+                          setSelectedDocument(updatedDoc);
+                        }}
+                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                      />
+                    </div>
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">Contract Name</div>
+                      <div className="text-xs text-black mb-4 pt-2">{selectedDocument.contractTitle}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">Document Hash</div>
+                      <div className="flex items-center">
+                        <span
+                          className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
+                          style={{ maxWidth: '120px' }}
+                          title={getContractHash(selectedDocument.id)}
+                        >
+                          0x{selectedDocument.id}...{selectedDocument.id.slice(-4)}
+                        </span>
+                        <div className="relative">
+                          <button 
+                            type="button"
+                            className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                            onClick={() => {
+                              navigator.clipboard.writeText(getContractHash(selectedDocument.id));
+                              setCopiedContractId(selectedDocument.id);
+                              setTimeout(() => setCopiedContractId(null), 1500);
+                            }}
+                            onMouseEnter={() => setHoveredContractId(selectedDocument.id)}
+                            onMouseLeave={() => setHoveredContractId(null)}
+                            aria-label="Copy document hash"
+                          >
+                            <HiOutlineDuplicate className="w-4 h-4" />
+                          </button>
+                          {copiedContractId === selectedDocument.id && (
+                            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded">
+                              Copied!
+                            </div>
+                          )}
+                          {hoveredContractId === selectedDocument.id && copiedContractId !== selectedDocument.id && (
+                            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded">
+                              Copy hash
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">Assignee</div>
+                      <div className="relative w-full" ref={documentDetailsAssigneeDropdownRef}>
+                        <input
+                          ref={documentDetailsAssigneeInputRef}
+                          type="text"
+                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                          placeholder={selectedDocument?.assignee || 'Select assignee...'}
+                          value={selectedDocument?.assignee || ''}
+                          onChange={(e) => {
+                            if (selectedDocument) {
+                              setSelectedDocument({ ...selectedDocument, assignee: e.target.value });
+                            }
+                          }}
+                          onFocus={() => setShowAssigneeDropdown(true)}
+                          style={{ fontFamily: 'Avenir, sans-serif' }}
+                          autoComplete="off"
+                        />
+                        {showAssigneeDropdown && (
+                          <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                            {allAssignees.length > 0 ? (
+                              allAssignees.map((assignee: string) => (
+                                <div
+                                  key={assignee}
+                                  className="px-4 py-2 text-xs cursor-pointer hover:bg-primary/10 hover:text-primary"
+                                  onClick={() => {
+                                    const updatedDoc = { ...selectedDocument, assignee };
+                                    setSelectedDocument(updatedDoc);
+                                    setShowAssigneeDropdown(false);
+                                  }}
+                                >
+                                  {assignee}
+                                </div>
+                              ))
+                            ) : (
+                              <div className="px-4 py-2 text-xs text-gray-400">No assignees found</div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* File Information Box */}
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-4">File Information</h3>
+                  <div className="grid grid-cols-2 gap-x-12 gap-y-4">
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">Type</div>
+                      <div className="text-xs text-black mb-4">{selectedDocument.type}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">Size</div>
+                      <div className="text-xs text-black mb-4">{selectedDocument.size}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">Uploaded By</div>
+                      <div className="text-xs text-black mb-4">{selectedDocument.uploadedBy}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">Date Uploaded</div>
+                      <div className="text-xs text-black mb-4">{selectedDocument.dateUploaded}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Document Preview Box - Full Width */}
+              <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
+                <h3 className="text-sm font-semibold text-gray-900 mb-4">Document Preview</h3>
+                <div className="w-full h-[600px] bg-gray-50 rounded-lg flex items-center justify-center">
+                  <span className="text-gray-400 text-lg">PDF Viewer will be implemented here</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
     </>
   );
 }
-
 export default ContractsPage;
