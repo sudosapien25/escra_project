@@ -6,6 +6,7 @@ import { Task } from '@/types/task';
 
 // Icons
 import { HiOutlineDocumentText, HiOutlineViewBoards, HiOutlineUpload, HiOutlineEye, HiOutlineDownload, HiOutlineTrash, HiPlus, HiChevronDown } from 'react-icons/hi';
+import { HiMiniChevronDown } from 'react-icons/hi2';
 import { CgPlayPauseR, CgPlayStopR } from 'react-icons/cg';
 import { BsPerson } from 'react-icons/bs';
 import { LuCalendarClock, LuSendHorizontal } from 'react-icons/lu';
@@ -605,14 +606,18 @@ export default function WorkflowsPage() {
               ref={assigneeButtonRef}
               className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px]"
               style={{ fontFamily: 'Avenir, sans-serif' }}
-              onClick={() => { setOpenAssigneeDropdown(v => !v); setOpenContractDropdown(false); }}
+              onClick={() => { setOpenAssigneeDropdown(v => !v); setOpenContractDropdown(false); setOpenStatusDropdown(false); }}
             >
               <BsPerson className="text-gray-400 text-lg" />
               <span>Assignee</span>
-              <HiChevronDown className="text-gray-400 text-base" />
+              <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
             </button>
             {openAssigneeDropdown && (
-              <div className="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 assignee-dropdown" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
+              <div 
+                className="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 assignee-dropdown" 
+                style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                onClick={(e) => e.stopPropagation()}
+              >
                 <button
                   className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
                     selectedAssignees.length === 0 ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
@@ -682,6 +687,92 @@ export default function WorkflowsPage() {
               </div>
             )}
           </div>
+
+          <div className="relative ml-1">
+            <button
+              ref={contractButtonRef}
+              className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px]"
+              style={{ fontFamily: 'Avenir, sans-serif' }}
+              onClick={() => { setOpenContractDropdown(v => !v); setOpenAssigneeDropdown(false); setOpenStatusDropdown(false); }}
+            >
+              <HiOutlineDocumentText className="text-gray-400 text-lg" />
+              <span>Contract</span>
+              <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+            </button>
+            {openContractDropdown && (
+              <div 
+                className="absolute left-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 contract-dropdown" 
+                style={{ minWidth: '400px', width: '24rem', fontFamily: 'Avenir, sans-serif' }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Search Bar */}
+                <div className="px-4 py-2 border-b border-gray-100">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search contracts..."
+                      value={contractSearch}
+                      onChange={(e) => setContractSearch(e.target.value)}
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                    />
+                    <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  </div>
+                </div>
+
+                {/* Contract List */}
+                <div className="max-h-[300px] overflow-y-auto">
+                  <button
+                    className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
+                      selectedContracts.length === 0 ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
+                    }`}
+                    onClick={() => setSelectedContracts([])}
+                  >
+                    <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedContracts.length === 0 ? 'bg-primary' : 'border border-gray-300'}`}>
+                      {selectedContracts.length === 0 && (
+                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                    All
+                  </button>
+                  {mockContracts
+                    .filter(contract => 
+                      contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
+                      contract.title.toLowerCase().includes(contractSearch.toLowerCase())
+                    )
+                    .map(contract => (
+                      <button
+                        key={contract.id}
+                        className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center whitespace-nowrap truncate ${
+                          selectedContracts.includes(String(contract.id)) ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
+                        }`}
+                        onClick={() => {
+                          setSelectedContracts(prev => {
+                            if (prev.includes(String(contract.id))) {
+                              return prev.filter(c => c !== String(contract.id));
+                            } else {
+                              return [...prev, String(contract.id)];
+                            }
+                          });
+                        }}
+                      >
+                        <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedContracts.includes(String(contract.id)) ? 'bg-primary' : 'border border-gray-300'}`}>
+                          {selectedContracts.includes(String(contract.id)) && (
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        {contract.id} - {contract.title}
+                      </button>
+                    ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="relative ml-1">
             <button
               ref={statusButtonRef}
@@ -691,7 +782,7 @@ export default function WorkflowsPage() {
             >
               <HiOutlineViewBoards className="text-gray-400 text-lg" />
               <span>Status</span>
-              <HiChevronDown className="text-gray-400 text-base" />
+              <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
             </button>
             {openStatusDropdown && (
               <div 

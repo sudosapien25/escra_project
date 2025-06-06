@@ -1,15 +1,21 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { FaSearch, FaUser, FaCheckCircle, FaFilter, FaSort } from 'react-icons/fa';
-import { HiOutlineEye, HiOutlineDownload, HiOutlineViewBoards, HiOutlineTrash } from 'react-icons/hi';
+import React, { useState, useRef, useEffect, RefObject, createRef } from 'react';
+import { FaSearch, FaUser, FaFilter, FaSort, FaCheckCircle, FaPlus, FaTimes, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { FaRegSquareCheck } from 'react-icons/fa6';
+import { HiOutlineEye, HiOutlineDownload, HiOutlineViewBoards, HiOutlineTrash, HiOutlineUpload, HiOutlineDocumentText } from 'react-icons/hi';
 import { HiMiniChevronUpDown, HiMiniChevronDown } from 'react-icons/hi2';
-import { LuPen, LuCalendarClock, LuBellRing } from 'react-icons/lu';
-import { MdOutlineEditCalendar, MdCancelPresentation } from 'react-icons/md';
+import { LuPen, LuCalendarClock, LuBellRing, LuPenLine } from 'react-icons/lu';
+import { MdCancelPresentation } from 'react-icons/md';
 import { FaRegClock } from 'react-icons/fa';
 import { BsPerson } from 'react-icons/bs';
+import { PiWarningDiamondBold } from 'react-icons/pi';
 import clsx from 'clsx';
 import { IconBaseProps } from 'react-icons';
+import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive } from 'react-icons/tb';
+import { SiBox } from 'react-icons/si';
+import { SlSocialDropbox } from 'react-icons/sl';
+import { TiUserAddOutline } from 'react-icons/ti';
 
 export default function SignaturesPage() {
   const [activeTab, setActiveTab] = useState('all');
@@ -33,8 +39,68 @@ export default function SignaturesPage() {
     dateSent: string;
     dueDate: string;
   } | null>(null);
+  const [showRequestSignatureModal, setShowRequestSignatureModal] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [showDocumentDropdown, setShowDocumentDropdown] = useState(false);
+  const [documentSearch, setDocumentSearch] = useState('');
+  const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const assigneeDropdownRef = useRef<HTMLDivElement>(null);
+  const documentDropdownRef = useRef<HTMLDivElement>(null);
+  const uploadDropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [showUploadDropdown, setShowUploadDropdown] = useState(false);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [showRecipientRoleDropdown, setShowRecipientRoleDropdown] = useState(false);
+  const recipientRoleButtonRef = useRef<HTMLButtonElement>(null);
+  const recipientRoleDropdownRef = useRef<HTMLDivElement>(null);
+  // State for dynamic recipient cards
+  type Recipient = {
+    name: string;
+    email: string;
+    role: string;
+    showRoleDropdown: boolean;
+    roleButtonRef: RefObject<HTMLButtonElement>;
+    roleDropdownRef: RefObject<HTMLDivElement>;
+  };
+  const [recipients, setRecipients] = useState<Recipient[]>([
+    {
+      name: '',
+      email: '',
+      role: 'Needs to Sign',
+      showRoleDropdown: false,
+      roleButtonRef: createRef<HTMLButtonElement>(),
+      roleDropdownRef: createRef<HTMLDivElement>(),
+    },
+  ]);
+
+  // Handler to add a new recipient card
+  const handleAddRecipient = () => {
+    setRecipients(prev => [
+      ...prev,
+      {
+        name: '',
+        email: '',
+        role: 'Needs to Sign',
+        showRoleDropdown: false,
+        roleButtonRef: createRef<HTMLButtonElement>(),
+        roleDropdownRef: createRef<HTMLDivElement>(),
+      },
+    ]);
+  };
+
+  // Handler to delete a recipient card
+  const handleDeleteRecipient = (idx: number) => {
+    setRecipients(prev => prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev);
+  };
+
+  // Mock data for stat boxes
+  const statBoxesData = {
+    actionRequired: 5,
+    waitingForOthers: 8,
+    expiringSoon: 3,
+    completed: 12
+  };
 
   // Available statuses for the dropdown
   const availableStatuses = [
@@ -118,6 +184,16 @@ export default function SignaturesPage() {
       if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target as Node)) {
         setShowStatusDropdown(false);
       }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
       if (assigneeDropdownRef.current && !assigneeDropdownRef.current.contains(event.target as Node)) {
         setShowAssigneeDropdown(false);
       }
@@ -128,6 +204,215 @@ export default function SignaturesPage() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (documentDropdownRef.current && !documentDropdownRef.current.contains(event.target as Node)) {
+        setShowDocumentDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (uploadDropdownRef.current && !uploadDropdownRef.current.contains(event.target as Node)) {
+        setShowUploadDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const files = Array.from(e.target.files);
+    // Only allow PDF, DOC, DOCX, JPG and max 10MB each
+    const validFiles = files.filter(file =>
+      ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "image/jpeg"].includes(file.type) && file.size <= 10 * 1024 * 1024
+    );
+    setUploadedFiles(validFiles);
+  };
+
+  // Sample documents data (same as contracts page)
+  const sampleDocuments = [
+    {
+      id: '1234',
+      name: 'Wire Authorization',
+      type: 'PDF',
+      size: '2.4 MB',
+      date: '2024-03-15',
+      uploadedBy: 'John Smith',
+      dateUploaded: '2024-03-15',
+      contractTitle: 'New Property Acquisition',
+      contractId: '9548',
+      assignee: 'John Smith'
+    },
+    {
+      id: '2345',
+      name: 'Closing Disclosure',
+      type: 'PDF',
+      size: '1.8 MB',
+      date: '2024-03-14',
+      uploadedBy: 'Sarah Johnson',
+      dateUploaded: '2024-03-14',
+      contractTitle: 'Land Development Contract',
+      contractId: '9550',
+      assignee: 'Sarah Johnson'
+    },
+    {
+      id: '3456',
+      name: 'Purchase Agreement',
+      type: 'PDF',
+      size: '2.1 MB',
+      date: '2024-03-13',
+      uploadedBy: 'Michael Brown',
+      dateUploaded: '2024-03-13',
+      contractTitle: 'Construction Escrow',
+      contractId: '9145',
+      assignee: 'Michael Brown'
+    },
+    {
+      id: '5678',
+      name: 'Title Insurance',
+      type: 'PDF',
+      size: '1.5 MB',
+      date: '2024-03-12',
+      uploadedBy: 'Emily Davis',
+      dateUploaded: '2024-03-12',
+      contractTitle: 'Property Sale Contract',
+      contractId: '8423',
+      assignee: 'Robert Chen'
+    },
+    {
+      id: '6789',
+      name: 'Appraisal',
+      type: 'PDF',
+      size: '1.0 MB',
+      date: '2024-03-11',
+      uploadedBy: 'Robert Wilson',
+      dateUploaded: '2024-03-11',
+      contractTitle: 'Investment Property Escrow',
+      contractId: '7804',
+      assignee: 'Sarah Miller'
+    },
+    {
+      id: '7890',
+      name: 'Appraisal Report',
+      type: 'PDF',
+      size: '1.3 MB',
+      date: '2024-03-10',
+      uploadedBy: 'Lisa Anderson',
+      dateUploaded: '2024-03-10',
+      contractTitle: 'Residential Sale Agreement',
+      contractId: '7234',
+      assignee: 'David Miller'
+    },
+    {
+      id: '8901',
+      name: 'Closing Disclosure',
+      type: 'PDF',
+      size: '0.8 MB',
+      date: '2024-03-09',
+      uploadedBy: 'David Taylor',
+      dateUploaded: '2024-03-09',
+      contractTitle: 'Office Building Purchase',
+      contractId: '6891',
+      assignee: 'Emily Davis'
+    },
+    {
+      id: '9012',
+      name: 'Loan Estimate',
+      type: 'PDF',
+      size: '1.2 MB',
+      date: '2024-03-08',
+      uploadedBy: 'Jennifer Martinez',
+      dateUploaded: '2024-03-08',
+      contractTitle: 'Retail Space Lease',
+      contractId: '6453',
+      assignee: 'Alex Johnson'
+    },
+    {
+      id: '0123',
+      name: 'Property Survey',
+      type: 'PDF',
+      size: '1.6 MB',
+      date: '2024-03-07',
+      uploadedBy: 'James Thompson',
+      dateUploaded: '2024-03-07',
+      contractTitle: 'Luxury Villa Purchase',
+      contractId: '10003',
+      assignee: 'Samantha Fox'
+    }
+  ];
+
+  // Filter documents based on search term
+  const filteredDocuments = sampleDocuments.filter(doc => {
+    const search = documentSearch.toLowerCase();
+    return (
+      doc.name.toLowerCase().includes(search) ||
+      doc.id.toLowerCase().includes(search) ||
+      doc.type.toLowerCase().includes(search) ||
+      doc.contractTitle?.toLowerCase().includes(search) ||
+      doc.contractId?.toLowerCase().includes(search)
+    );
+  });
+
+  const handleDocumentButtonClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowDocumentDropdown(!showDocumentDropdown);
+  };
+
+  const handleDocumentItemClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Don't close the dropdown when clicking on items
+  };
+
+  // Click-off behavior for recipient role dropdown
+  useEffect(() => {
+    if (!showRecipientRoleDropdown) return;
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+      if (
+        recipientRoleButtonRef.current?.contains(target) ||
+        recipientRoleDropdownRef.current?.contains(target)
+      ) {
+        // Click inside button or dropdown: do nothing (button handles its own toggle)
+        return;
+      }
+      setShowRecipientRoleDropdown(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showRecipientRoleDropdown]);
+
+  // Click-off behavior for each recipient role dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      recipients.forEach((recipient, idx) => {
+        const target = event.target as Node;
+        if (
+          recipient.roleButtonRef.current?.contains(target) ||
+          recipient.roleDropdownRef.current?.contains(target)
+        ) {
+          // Click inside button or dropdown: do nothing
+          return;
+        }
+        if (recipient.showRoleDropdown) {
+          setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showRoleDropdown: false } : r));
+        }
+      });
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [recipients]);
 
   return (
     <div className="space-y-4" style={{ fontFamily: 'Avenir, sans-serif' }}>
@@ -141,7 +426,11 @@ export default function SignaturesPage() {
         {/* Placeholder for potential button/actions */}
         <div className="flex items-center space-x-0 md:space-x-4 w-full md:w-auto">
           {/* Request Signature Button */}
-          <button className="flex items-center justify-center w-full md:w-auto px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>
+          <button 
+            className="flex items-center justify-center w-full md:w-auto px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold" 
+            style={{ fontFamily: 'Avenir, sans-serif' }}
+            onClick={() => setShowRequestSignatureModal(true)}
+          >
             <LuPen className="mr-2 text-base" />
             Request Signature
           </button>
@@ -214,6 +503,57 @@ export default function SignaturesPage() {
         </button>
       </div>
 
+      {/* Stat Boxes */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {/* Action Required */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
+          <div className="h-10 w-10 rounded-lg bg-orange-100 flex items-center justify-center border-2 border-orange-200">
+            <PiWarningDiamondBold size={20} color="#f97316" />
+          </div>
+          <div className="flex flex-col items-start h-full">
+            <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Action Required</p>
+            <p className="text-2xl font-bold text-gray-900">{statBoxesData.actionRequired}</p>
+            <p className="text-xs text-gray-400">Needs your attention</p>
+          </div>
+        </div>
+
+        {/* Waiting for Others */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
+          <div className="h-10 w-10 rounded-lg bg-yellow-100 flex items-center justify-center border-2 border-yellow-200">
+            <FaRegClock size={18} color="#f59e0b" />
+          </div>
+          <div className="flex flex-col items-start h-full">
+            <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Waiting for Others</p>
+            <p className="text-2xl font-bold text-gray-900">{statBoxesData.waitingForOthers}</p>
+            <p className="text-xs text-gray-400">Pending signatures</p>
+          </div>
+        </div>
+
+        {/* Expiring Soon */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
+          <div className="h-10 w-10 rounded-lg bg-red-100 flex items-center justify-center border-2 border-red-200">
+            <LuCalendarClock size={18} color="#ef4444" />
+          </div>
+          <div className="flex flex-col items-start h-full">
+            <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Expiring Soon</p>
+            <p className="text-2xl font-bold text-gray-900">{statBoxesData.expiringSoon}</p>
+            <p className="text-xs text-gray-400">Within 3 days</p>
+          </div>
+        </div>
+
+        {/* Completed */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
+          <div className="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center border-2 border-green-200">
+            <FaRegSquareCheck size={18} color="#22c55e" />
+          </div>
+          <div className="flex flex-col items-start h-full">
+            <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Completed</p>
+            <p className="text-2xl font-bold text-gray-900">{statBoxesData.completed}</p>
+            <p className="text-xs text-gray-400">This month</p>
+          </div>
+        </div>
+      </div>
+
       {/* Search/Filter Bar - outlined box (identical to contracts page) */}
       <div className="bg-white border border-gray-200 rounded-xl px-4 py-4 mb-6 flex items-center w-full mt-2">
         <div className="flex items-center flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2 min-w-0">
@@ -230,7 +570,14 @@ export default function SignaturesPage() {
         <button 
           className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 relative" 
           style={{ fontFamily: 'Avenir, sans-serif' }}
-          onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+          onClick={() => {
+            if (showStatusDropdown) {
+              setShowStatusDropdown(false);
+            } else {
+              setShowStatusDropdown(true);
+              setShowAssigneeDropdown(false);
+            }
+          }}
           ref={statusDropdownRef as any}
         >
           <HiOutlineViewBoards className="text-gray-400 text-lg" />
@@ -276,10 +623,17 @@ export default function SignaturesPage() {
             </div>
           )}
         </button>
-        <button 
+        <button
           className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 relative" 
           style={{ fontFamily: 'Avenir, sans-serif' }}
-          onClick={() => setShowAssigneeDropdown(!showAssigneeDropdown)}
+          onClick={() => {
+            if (showAssigneeDropdown) {
+              setShowAssigneeDropdown(false);
+            } else {
+              setShowAssigneeDropdown(true);
+              setShowStatusDropdown(false);
+            }
+          }}
           ref={assigneeDropdownRef as any}
         >
           <BsPerson className="text-gray-400 text-lg" />
@@ -363,7 +717,7 @@ export default function SignaturesPage() {
           <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
         </button>
         <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[150px] ml-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
-          <MdOutlineEditCalendar className="text-gray-400" size={18} />
+          <MdCancelPresentation className="text-gray-400" size={18} />
           <span>Recently Updated</span>
           <HiMiniChevronUpDown className="ml-1 text-gray-400" size={16} />
         </button>
@@ -544,9 +898,9 @@ export default function SignaturesPage() {
                     })}
                   >
                     <div className="text-center">
-                      <span className="text-primary underline font-semibold cursor-pointer">1234</span>
+                      <span className="text-xs text-primary underline font-semibold cursor-pointer">1234</span>
                     </div>
-                    <div className="font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Purchase Agreement</div>
+                    <div className="text-xs font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Purchase Agreement</div>
                     <div className="flex flex-col space-y-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
                       <div>Robert Chen</div>
                       <div>Eastside Properties</div>
@@ -556,10 +910,10 @@ export default function SignaturesPage() {
                     </div>
                     <div className="text-center text-gray-600">1 of 2</div>
                     <div className="text-center">
-                      <span className="text-primary underline font-semibold cursor-pointer">9548</span>
+                      <span className="text-xs text-primary underline font-semibold cursor-pointer">9548</span>
                     </div>
                     <div>
-                      <p className="font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>New Property Acquisition</p>
+                      <p className="text-xs font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>New Property Acquisition</p>
                     </div>
                     <div className="text-left" style={{ fontFamily: 'Avenir, sans-serif' }}>John Smith</div>
                     <div className="text-center" style={{ fontFamily: 'Avenir, sans-serif' }}>2024-03-15</div>
@@ -634,9 +988,9 @@ export default function SignaturesPage() {
                     })}
                   >
                     <div className="text-center">
-                      <span className="text-primary underline font-semibold cursor-pointer">2345</span>
+                      <span className="text-xs text-primary underline font-semibold cursor-pointer">2345</span>
                     </div>
-                    <div className="font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Property Survey</div>
+                    <div className="text-xs font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Property Survey</div>
                     <div className="flex flex-col space-y-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
                       <div>GreenSpace Developers</div>
                     </div>
@@ -645,10 +999,10 @@ export default function SignaturesPage() {
                     </div>
                     <div className="text-center text-gray-600">1 of 1</div>
                     <div className="text-center">
-                      <span className="text-primary underline font-semibold cursor-pointer">9550</span>
+                      <span className="text-xs text-primary underline font-semibold cursor-pointer">9550</span>
                     </div>
                     <div>
-                      <p className="font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Land Development Contract</p>
+                      <p className="text-xs font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Land Development Contract</p>
                     </div>
                     <div className="text-left" style={{ fontFamily: 'Avenir, sans-serif' }}>Sarah Johnson</div>
                     <div className="text-center" style={{ fontFamily: 'Avenir, sans-serif' }}>2024-03-14</div>
@@ -703,9 +1057,9 @@ export default function SignaturesPage() {
                     })}
                   >
                     <div className="text-center">
-                      <span className="text-primary underline font-semibold cursor-pointer">3456</span>
+                      <span className="text-xs text-primary underline font-semibold cursor-pointer">3456</span>
                     </div>
-                    <div className="font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Inspection Report</div>
+                    <div className="text-xs font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Inspection Report</div>
                     <div className="flex flex-col space-y-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
                       <div>BuildRight</div>
                       <div>Horizon Developers</div>
@@ -715,10 +1069,10 @@ export default function SignaturesPage() {
                     </div>
                     <div className="text-center text-gray-600">0 of 2</div>
                     <div className="text-center">
-                      <span className="text-primary underline font-semibold cursor-pointer">9145</span>
+                      <span className="text-xs text-primary underline font-semibold cursor-pointer">9145</span>
                     </div>
                     <div>
-                      <p className="font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Construction Escrow</p>
+                      <p className="text-xs font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Construction Escrow</p>
                     </div>
                     <div className="text-left" style={{ fontFamily: 'Avenir, sans-serif' }}>Michael Brown</div>
                     <div className="text-center" style={{ fontFamily: 'Avenir, sans-serif' }}>2024-03-13</div>
@@ -773,9 +1127,9 @@ export default function SignaturesPage() {
                     })}
                   >
                     <div className="text-center">
-                      <span className="text-primary underline font-semibold cursor-pointer">4567</span>
+                      <span className="text-xs text-primary underline font-semibold cursor-pointer">4567</span>
                     </div>
-                    <div className="font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Lease Agreement</div>
+                    <div className="text-xs font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Lease Agreement</div>
                     <div className="flex flex-col space-y-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
                       <div>Pacific Properties</div>
                     </div>
@@ -784,10 +1138,10 @@ export default function SignaturesPage() {
                     </div>
                     <div className="text-center text-gray-600">0 of 1</div>
                     <div className="text-center">
-                      <span className="text-primary underline font-semibold cursor-pointer">8784</span>
+                      <span className="text-xs text-primary underline font-semibold cursor-pointer">8784</span>
                     </div>
                     <div>
-                      <p className="font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Commercial Lease Amendment</p>
+                      <p className="text-xs font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Commercial Lease Amendment</p>
                     </div>
                     <div className="text-left" style={{ fontFamily: 'Avenir, sans-serif' }}>Emma Johnson</div>
                     <div className="text-center" style={{ fontFamily: 'Avenir, sans-serif' }}>2024-03-12</div>
@@ -842,9 +1196,9 @@ export default function SignaturesPage() {
                     })}
                   >
                     <div className="text-center">
-                      <span className="text-primary underline font-semibold cursor-pointer">5678</span>
+                      <span className="text-xs text-primary underline font-semibold cursor-pointer">5678</span>
                     </div>
-                    <div className="font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Title Insurance</div>
+                    <div className="text-xs font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Title Insurance</div>
                     <div className="flex flex-col space-y-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
                       <div>John Smith</div>
                       <div>Emma Johnson</div>
@@ -854,10 +1208,10 @@ export default function SignaturesPage() {
                     </div>
                     <div className="text-center text-gray-600">1 of 2</div>
                     <div className="text-center">
-                      <span className="text-primary underline font-semibold cursor-pointer">8423</span>
+                      <span className="text-xs text-primary underline font-semibold cursor-pointer">8423</span>
                     </div>
                     <div>
-                      <p className="font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Property Sale Contract</p>
+                      <p className="text-xs font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Property Sale Contract</p>
                     </div>
                     <div className="text-left" style={{ fontFamily: 'Avenir, sans-serif' }}>Robert Chen</div>
                     <div className="text-center" style={{ fontFamily: 'Avenir, sans-serif' }}>2024-03-11</div>
@@ -932,9 +1286,9 @@ export default function SignaturesPage() {
                     })}
                   >
                     <div className="text-center">
-                      <span className="text-primary underline font-semibold cursor-pointer">6789</span>
+                      <span className="text-xs text-primary underline font-semibold cursor-pointer">6789</span>
                     </div>
-                    <div className="font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Wire Authorization</div>
+                    <div className="text-xs font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Wire Authorization</div>
                     <div className="flex flex-col space-y-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
                       <div>Global Investors Group</div>
                     </div>
@@ -943,10 +1297,10 @@ export default function SignaturesPage() {
                     </div>
                     <div className="text-center text-gray-600">1 of 1</div>
                     <div className="text-center">
-                      <span className="text-primary underline font-semibold cursor-pointer">7804</span>
+                      <span className="text-xs text-primary underline font-semibold cursor-pointer">7804</span>
                     </div>
                     <div>
-                      <p className="font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Investment Property Escrow</p>
+                      <p className="text-xs font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Investment Property Escrow</p>
                     </div>
                     <div className="text-left" style={{ fontFamily: 'Avenir, sans-serif' }}>Sarah Miller</div>
                     <div className="text-center" style={{ fontFamily: 'Avenir, sans-serif' }}>2024-03-10</div>
@@ -1001,9 +1355,9 @@ export default function SignaturesPage() {
                     })}
                   >
                     <div className="text-center">
-                      <span className="text-primary underline font-semibold cursor-pointer">7890</span>
+                      <span className="text-xs text-primary underline font-semibold cursor-pointer">7890</span>
                     </div>
-                    <div className="font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Appraisal Report</div>
+                    <div className="text-xs font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Appraisal Report</div>
                     <div className="flex flex-col space-y-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
                       <div>David Miller</div>
                       <div>Sarah Thompson</div>
@@ -1013,10 +1367,10 @@ export default function SignaturesPage() {
                     </div>
                     <div className="text-center text-gray-600">1 of 2</div>
                     <div className="text-center">
-                      <span className="text-primary underline font-semibold cursor-pointer">7234</span>
+                      <span className="text-xs text-primary underline font-semibold cursor-pointer">7234</span>
                     </div>
                     <div>
-                      <p className="font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Residential Sale Agreement</p>
+                      <p className="text-xs font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Residential Sale Agreement</p>
                     </div>
                     <div className="text-left" style={{ fontFamily: 'Avenir, sans-serif' }}>David Miller</div>
                     <div className="text-center" style={{ fontFamily: 'Avenir, sans-serif' }}>2024-03-09</div>
@@ -1091,9 +1445,9 @@ export default function SignaturesPage() {
                     })}
                   >
                     <div className="text-center">
-                      <span className="text-primary underline font-semibold cursor-pointer">8901</span>
+                      <span className="text-xs text-primary underline font-semibold cursor-pointer">8901</span>
                     </div>
-                    <div className="font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Closing Disclosure</div>
+                    <div className="text-xs font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Closing Disclosure</div>
                     <div className="flex flex-col space-y-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
                       <div>Riverfront Ventures</div>
                     </div>
@@ -1102,10 +1456,10 @@ export default function SignaturesPage() {
                     </div>
                     <div className="text-center text-gray-600">1 of 1</div>
                     <div className="text-center">
-                      <span className="text-primary underline font-semibold cursor-pointer">6891</span>
+                      <span className="text-xs text-primary underline font-semibold cursor-pointer">6891</span>
                     </div>
                     <div>
-                      <p className="font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Office Building Purchase</p>
+                      <p className="text-xs font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Office Building Purchase</p>
                     </div>
                     <div className="text-left" style={{ fontFamily: 'Avenir, sans-serif' }}>Emily Davis</div>
                     <div className="text-center" style={{ fontFamily: 'Avenir, sans-serif' }}>2024-03-08</div>
@@ -1160,9 +1514,9 @@ export default function SignaturesPage() {
                     })}
                   >
                     <div className="text-center">
-                      <span className="text-primary underline font-semibold cursor-pointer">9012</span>
+                      <span className="text-xs text-primary underline font-semibold cursor-pointer">9012</span>
                     </div>
-                    <div className="font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Loan Estimate</div>
+                    <div className="text-xs font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Loan Estimate</div>
                     <div className="flex flex-col space-y-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
                       <div>Urban Outfitters Co.</div>
                     </div>
@@ -1171,10 +1525,10 @@ export default function SignaturesPage() {
                     </div>
                     <div className="text-center text-gray-600">1 of 1</div>
                     <div className="text-center">
-                      <span className="text-primary underline font-semibold cursor-pointer">6453</span>
+                      <span className="text-xs text-primary underline font-semibold cursor-pointer">6453</span>
                     </div>
                     <div>
-                      <p className="font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Retail Space Lease</p>
+                      <p className="text-xs font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Retail Space Lease</p>
                     </div>
                     <div className="text-left" style={{ fontFamily: 'Avenir, sans-serif' }}>Alex Johnson</div>
                     <div className="text-center" style={{ fontFamily: 'Avenir, sans-serif' }}>2024-03-07</div>
@@ -1229,9 +1583,9 @@ export default function SignaturesPage() {
                     })}
                   >
                     <div className="text-center">
-                      <span className="text-primary underline font-semibold cursor-pointer">0123</span>
+                      <span className="text-xs text-primary underline font-semibold cursor-pointer">0123</span>
                     </div>
-                    <div className="font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Deed Transfer</div>
+                    <div className="text-xs font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Deed Transfer</div>
                     <div className="flex flex-col space-y-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
                       <div>Samantha Fox</div>
                       <div>Elite Estates</div>
@@ -1241,10 +1595,10 @@ export default function SignaturesPage() {
                     </div>
                     <div className="text-center text-gray-600">1 of 2</div>
                     <div className="text-center">
-                      <span className="text-primary underline font-semibold cursor-pointer">10003</span>
+                      <span className="text-xs text-primary underline font-semibold cursor-pointer">10003</span>
                     </div>
                     <div>
-                      <p className="font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Luxury Villa Purchase</p>
+                      <p className="text-xs font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Luxury Villa Purchase</p>
                     </div>
                     <div className="text-left" style={{ fontFamily: 'Avenir, sans-serif' }}>Samantha Fox</div>
                     <div className="text-center" style={{ fontFamily: 'Avenir, sans-serif' }}>2024-03-06</div>
@@ -1481,6 +1835,326 @@ export default function SignaturesPage() {
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Request Signature Modal */}
+      {showRequestSignatureModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="relative bg-white rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden">
+            {/* Sticky Header */}
+            <div className="sticky top-0 z-40 bg-white px-6 py-4">
+              <div className="flex items-start justify-between">
+                <h2 className="text-lg font-bold text-gray-900" style={{ fontFamily: 'Avenir, sans-serif' }}>Request Signature</h2>
+                <button
+                  className="text-gray-400 hover:text-gray-600 p-2 rounded-full ml-4 mt-1"
+                  onClick={() => { setShowRequestSignatureModal(false); setUploadedFiles([]); }}
+                  aria-label="Close"
+                >
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-col flex-1 min-h-0">
+              <div className="overflow-y-auto p-6 flex-1">
+                <form onSubmit={(e) => { e.preventDefault(); setShowRequestSignatureModal(false); setUploadedFiles([]); }}>
+                  <div className="space-y-6">
+                    {/* Upload Area Box */}
+                    <div 
+                      className="bg-white border border-gray-200 rounded-lg p-6 relative"
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setIsDraggingOver(true);
+                      }}
+                      onDragLeave={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setIsDraggingOver(false);
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setIsDraggingOver(false);
+                        const files = Array.from(e.dataTransfer.files);
+                        setUploadedFiles(prev => [...prev, ...files]);
+                      }}
+                    >
+                      <h3 className="text-sm font-semibold text-gray-900 mb-4 relative z-10" style={{ fontFamily: 'Avenir, sans-serif' }}>Add Documents</h3>
+                      <div className="flex flex-col items-center mb-4">
+                        <div className="h-11 w-11 rounded-lg bg-teal-50 flex items-center justify-center border-2 border-teal-200 mb-2">
+                          <HiOutlineDocumentText size={22} color="#06b6d4" />
+                        </div>
+                        <div className="text-xs text-gray-700 font-semibold">Drop your files here or...</div>
+                        {isDraggingOver && (
+                          <div className="absolute inset-x-0 flex flex-col items-center justify-center" style={{ top: '0', height: '100%' }}>
+                            <div className="h-full w-full flex flex-col items-center justify-center bg-white/95 rounded-lg" style={{ marginTop: '1px' }}>
+                              <div className="h-11 w-11 rounded-lg bg-teal-50 flex items-center justify-center border-2 border-teal-200 mb-1.5">
+                                <HiOutlineUpload size={22} color="#06b6d4" />
+                              </div>
+                              <div className="text-xs text-gray-700 font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                Supported Formats: PDF, DOC, DOCX, OR JPG (max. 10 MB each)
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <div className={`flex justify-center gap-1 ${isDraggingOver ? 'blur-sm' : ''}`}>
+                        <div className="relative" ref={documentDropdownRef}>
+                          <button
+                            type="button"
+                            onClick={handleDocumentButtonClick}
+                            className="flex items-center gap-2 px-4 py-[10.75px] bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-xs font-semibold"
+                          >
+                            Select
+                            <HiMiniChevronDown size={17} className="text-white -mt-[1px]" />
+                          </button>
+                          {showDocumentDropdown && (
+                            <div className="absolute z-50 mt-1 w-[300px] bg-white rounded-lg shadow-lg border border-gray-200">
+                              <div className="p-2">
+                                <input
+                                  type="text"
+                                  placeholder="Search documents..."
+                                  value={documentSearch}
+                                  onChange={(e) => setDocumentSearch(e.target.value)}
+                                  className="w-full px-3 py-2 text-xs border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              </div>
+                              <div className="max-h-[300px] overflow-y-auto">
+                                {filteredDocuments.map((doc) => (
+                                  <button
+                                    key={doc.id}
+                                    onClick={handleDocumentItemClick}
+                                    className="w-full px-4 py-2 text-left hover:bg-primary/10 hover:text-primary flex flex-col"
+                                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                                  >
+                                    <div className="flex items-center">
+                                      <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedDocuments.includes(doc.id) ? 'bg-primary' : 'border border-gray-300'}`}>
+                                        {selectedDocuments.includes(doc.id) && (
+                                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                          </svg>
+                                        )}
+                                      </div>
+                                      <span className="text-xs font-medium">{doc.name}</span>
+                                    </div>
+                                    <div className="ml-5 text-gray-500 text-[10px]">{doc.contractTitle} ({doc.contractId})</div>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <div className="relative" ref={uploadDropdownRef}>
+                          <button
+                            type="button"
+                            onClick={() => setShowUploadDropdown(!showUploadDropdown)}
+                            className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors"
+                            style={{ fontFamily: 'Avenir, sans-serif' }}
+                          >
+                            <HiOutlineUpload className="text-base text-primary" /> Upload
+                          </button>
+                          {showUploadDropdown && (
+                            <div className="absolute z-50 mt-1 w-[200px] bg-white rounded-lg shadow-lg border border-gray-200">
+                              <div className="py-1">
+                                <label htmlFor="file-upload" className="block px-4 py-2 text-left hover:bg-primary/10 hover:text-primary cursor-pointer">
+                                  <div className="flex items-center gap-2">
+                                    <TbDeviceDesktopPlus className="text-base text-primary" />
+                                    <span className="text-xs">Desktop</span>
+                                  </div>
+                                </label>
+                                <input
+                                  id="file-upload"
+                                  name="file-upload"
+                                  type="file"
+                                  accept=".pdf,.doc,.docx,.jpg,.jpeg"
+                                  className="hidden"
+                                  multiple
+                                  onChange={handleFileChange}
+                                />
+                                <button className="w-full px-4 py-2 text-left hover:bg-primary/10 hover:text-primary flex items-center gap-2">
+                                  <SiBox className="text-base text-primary" />
+                                  <span className="text-xs">Box</span>
+                                </button>
+                                <button className="w-full px-4 py-2 text-left hover:bg-primary/10 hover:text-primary flex items-center gap-2">
+                                  <SlSocialDropbox className="text-base text-primary" />
+                                  <span className="text-xs">Dropbox</span>
+                                </button>
+                                <button className="w-full px-4 py-2 text-left hover:bg-primary/10 hover:text-primary flex items-center gap-2">
+                                  <TbBrandGoogleDrive className="text-base text-primary" />
+                                  <span className="text-xs">Google Drive</span>
+                                </button>
+                                <button className="w-full px-4 py-2 text-left hover:bg-primary/10 hover:text-primary flex items-center gap-2">
+                                  <TbBrandOnedrive className="text-base text-primary" />
+                                  <span className="text-xs">OneDrive</span>
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {/* Show selected documents */}
+                      {selectedDocuments.length > 0 && (
+                        <ul className="mt-3 text-sm text-gray-600">
+                          {selectedDocuments.map(docId => {
+                            const doc = sampleDocuments.find(d => d.id === docId);
+                            return doc ? (
+                              <li key={docId} className="truncate">{doc.name} ({doc.contractTitle})</li>
+                            ) : null;
+                          })}
+                        </ul>
+                      )}
+                      {/* Show uploaded files */}
+                      {uploadedFiles.length > 0 && (
+                        <ul className="mt-3 text-sm text-gray-600">
+                          {uploadedFiles.map((file, idx) => (
+                            <li key={idx} className="truncate">{file.name}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+
+                    {/* Add Recipients Box */}
+                    <div className="bg-white border border-gray-200 rounded-lg p-6">
+                      <h3 className="text-sm font-semibold text-gray-900 mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>Add Recipients</h3>
+                      <div className="space-y-4">
+                        {/* Render all recipient cards */}
+                        {recipients.map((recipient, idx) => (
+                          <div key={idx} className="relative bg-white border border-gray-200 rounded-lg p-6 shadow-sm flex flex-col md:flex-row md:items-start" style={{ borderLeft: '3px solid #e5e7eb' }}>
+                            <div className="flex-1 space-y-4 max-w-[30%]">
+                              <div>
+                                <div className="relative w-[800px]">
+                                  <label className="block text-xs font-medium text-gray-700 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                    Name <span className="text-primary">*</span>
+                                  </label>
+                                  {/* Invisible button for role selection */}
+                                  <button
+                                    ref={recipient.roleButtonRef}
+                                    type="button"
+                                    className="absolute top-0 left-[504px] flex items-center gap-1 focus:outline-none"
+                                    style={{ background: 'none', border: 'none', padding: 0, margin: 0, boxShadow: 'none', cursor: 'pointer' }}
+                                    onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showRoleDropdown: !r.showRoleDropdown } : r))}
+                                    tabIndex={0}
+                                  >
+                                    <LuPen className="w-3.5 h-3.5 text-gray-500" />
+                                    <span className="text-xs text-gray-500">{recipient.role}</span>
+                                    <HiMiniChevronDown size={16} className="inline-block align-middle -mt-[3px] text-gray-500" />
+                                  </button>
+                                  {recipient.showRoleDropdown && (
+                                    <div
+                                      ref={recipient.roleDropdownRef}
+                                      className="absolute left-[504px] top-6 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[180px]"
+                                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                                    >
+                                      {['Needs to Sign', 'In Person Signer', 'Receives a Copy', 'Needs to View'].map((role) => (
+                                        <button
+                                          key={role}
+                                          className="w-full px-4 py-2 text-left text-xs hover:bg-primary/10 hover:text-primary text-gray-700"
+                                          style={{ background: 'none', border: 'none', boxShadow: 'none' }}
+                                          onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, role, showRoleDropdown: false } : r))}
+                                        >
+                                          {role}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                  <span className="absolute top-0 left-[638px] text-xs text-gray-500">Customize <HiMiniChevronDown size={16} className="inline-block align-middle -mt-[3px]" /></span>
+                                  <button className="absolute top-0 left-[756px] text-gray-400 hover:text-gray-600 transition-colors" onClick={() => handleDeleteRecipient(idx)} disabled={recipients.length === 1}>
+                                    <HiOutlineTrash className="w-4 h-4" />
+                                  </button>
+                                </div>
+                                <div className="relative">
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                                  </span>
+                                  <input
+                                    type="text"
+                                    className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                                    placeholder="Enter recipient's name..."
+                                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                                    value={recipient.name}
+                                    onChange={e => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, name: e.target.value } : r))}
+                                  />
+                                </div>
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                  Email <span className="text-primary">*</span>
+                                </label>
+                                <input
+                                  type="email"
+                                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                                  placeholder="Enter recipient's email address..."
+                                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                                  value={recipient.email}
+                                  onChange={e => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, email: e.target.value } : r))}
+                                />
+                              </div>
+                            </div>
+                            {/* Right-side buttons remain unchanged for now */}
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          className="flex items-center gap-2 px-4 py-[9.5px] bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-xs font-semibold mt-2"
+                          style={{ fontFamily: 'Avenir, sans-serif' }}
+                          onClick={handleAddRecipient}
+                        >
+                          <TiUserAddOutline className="text-[1.125rem]" />
+                          <span className="mt-[1px]">Add Recipient</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Due Date Field */}
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Due Date</div>
+                      <div className="relative flex items-center" style={{ width: '115px', minWidth: '115px' }}>
+                        <input
+                          type="date"
+                          className="pl-3 pr-2 py-2 border-2 border-gray-200 rounded-lg text-xs text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors w-full"
+                          style={{ fontFamily: 'Avenir, sans-serif' }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Message Field */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2" style={{ fontFamily: 'Avenir, sans-serif' }}>Message to Recipients</label>
+                      <textarea
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                        rows={4}
+                        placeholder="Enter a message for the recipients"
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                      />
+                    </div>
+
+                    <div className="flex justify-end gap-1">
+                      <button
+                        type="button"
+                        onClick={() => { setShowRequestSignatureModal(false); setUploadedFiles([]); }}
+                        className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm font-semibold"
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                      >
+                        Request Signature
+                      </button>
+                    </div>
+                  </div>
+                </form>
               </div>
             </div>
           </div>

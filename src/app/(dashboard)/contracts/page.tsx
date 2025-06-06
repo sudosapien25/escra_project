@@ -2,12 +2,13 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { FaSearch, FaClock, FaSort, FaPlus, FaDollarSign, FaTimes, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { FaSearch, FaClock, FaSort, FaPlus, FaDollarSign, FaTimes, FaChevronDown, FaChevronUp, FaRegClock } from 'react-icons/fa';
 import { FaArrowUpRightFromSquare } from 'react-icons/fa6';
 import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutlineTrash, HiOutlinePencilAlt, HiOutlineUpload, HiOutlineEye, HiOutlineClipboardList, HiOutlineExclamation, HiChevronDown } from 'react-icons/hi';
 import { HiOutlineViewBoards } from 'react-icons/hi';
 import { LuCalendarClock } from 'react-icons/lu';
 import { BiDotsHorizontal } from 'react-icons/bi';
+import { TbWorldDollar } from 'react-icons/tb';
 import { Logo } from '@/components/common/Logo';
 import { mockContracts } from '@/data/mockContracts';
 import { useEditor } from '@tiptap/react';
@@ -28,6 +29,12 @@ import { useTaskStore } from '@/data/taskStore';
 import { X } from 'lucide-react';
 import { useAssigneeStore } from '@/data/assigneeStore';
 import { useAuth } from '@/context/AuthContext';
+import { PiMoneyWavyBold, PiBankBold } from 'react-icons/pi';
+import { TbDeviceDesktopPlus } from 'react-icons/tb';
+import { SiBox } from 'react-icons/si';
+import { SlSocialDropbox } from 'react-icons/sl';
+import { TbBrandGoogleDrive } from 'react-icons/tb';
+import { TbBrandOnedrive } from 'react-icons/tb';
 
 // Add date formatting utilities
 function formatDatePretty(dateStr: string): string {
@@ -557,6 +564,8 @@ const ContractsPage: React.FC = () => {
   const [showUploadModalAssigneeDropdown, setShowUploadModalAssigneeDropdown] = useState(false);
   const uploadModalAssigneeDropdownRef = useRef<HTMLDivElement>(null);
   const uploadModalAssigneeInputRef = useRef<HTMLInputElement>(null);
+  const [showUploadDropdown, setShowUploadDropdown] = useState(false);
+  const uploadDropdownRef = useRef<HTMLDivElement>(null);
 
   const [showPdfViewer, setShowPdfViewer] = useState(false);
   const [selectedPdf, setSelectedPdf] = useState<{ name: string; url: string; id?: string } | null>(null);
@@ -637,6 +646,34 @@ const ContractsPage: React.FC = () => {
       window.removeEventListener('resize', updateHeight);
     };
   }, []);
+
+  // Add click outside handler for upload dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      const dropdown = uploadDropdownRef.current;
+      
+      // If clicking inside the dropdown list, don't close
+      if (dropdown?.querySelector('.dropdown-list')?.contains(target)) {
+        return;
+      }
+      
+      // If clicking the select button, don't handle here (let the button's onClick handle it)
+      if (dropdown?.querySelector('button')?.contains(target)) {
+        return;
+      }
+      
+      // If clicking anywhere else, close the dropdown
+      setShowUploadDropdown(false);
+    }
+
+    if (showUploadDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showUploadDropdown]);
 
   // Update editableTitle and selectedType when a contract is selected
   useEffect(() => {
@@ -1672,7 +1709,7 @@ const ContractsPage: React.FC = () => {
             {/* Awaiting Wire Instructions */}
             <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
               <div className="h-10 w-10 rounded-lg bg-yellow-100 flex items-center justify-center border-2 border-yellow-200">
-                <HiOutlineExclamation size={20} color="#f59e42" />
+                <PiBankBold size={19} color="#f59e42" />
               </div>
               <div className="flex flex-col items-start h-full">
                 <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Awaiting Wire Details</p>
@@ -1683,7 +1720,7 @@ const ContractsPage: React.FC = () => {
             {/* Avg. Completion Time */}
             <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
               <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center border-2 border-blue-200">
-                <FaClock size={18} color="#3b82f6" />
+                <FaRegClock size={18} color="#3b82f6" />
               </div>
               <div className="flex flex-col items-start h-full">
                 <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Avg. Completion Time</p>
@@ -1696,13 +1733,13 @@ const ContractsPage: React.FC = () => {
           {/* Total Contract Value Box */}
           <div className="mb-6 bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
             <div className="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center border-2 border-teal-200">
-              <FaDollarSign size={18} color="#06b6d4" />
-        </div>
+              <TbWorldDollar size={18} color="#06b6d4" />
+            </div>
             <div className="flex flex-col items-start h-full">
               <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contract Value</p>
               <p className="text-2xl font-bold text-primary">{calculateTotalValue()}</p>
               <p className="text-xs text-green-600 font-semibold">↑ 12% from last month</p>
-      </div>
+            </div>
           </div>
         </>
       )}
@@ -1779,11 +1816,11 @@ const ContractsPage: React.FC = () => {
                 ref={contractButtonRef}
                 className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px]"
                 style={{ fontFamily: 'Avenir, sans-serif' }}
-                onClick={() => { setOpenContractDropdown(v => !v); setOpenAssigneeDropdown(false); }}
+                onClick={() => { setOpenContractDropdown(v => !v); setOpenAssigneeDropdown(false); setShowStatusDropdown(false); }}
               >
                 <HiOutlineDocumentText className="text-gray-400 text-lg" />
                 <span>Contract</span>
-                <HiChevronDown className="text-gray-400 text-base" />
+                <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
               </button>
               {openContractDropdown && (
                 <div 
@@ -1860,11 +1897,11 @@ const ContractsPage: React.FC = () => {
                 ref={assigneeButtonRef}
                 className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px]"
                 style={{ fontFamily: 'Avenir, sans-serif' }}
-                onClick={() => { setOpenAssigneeDropdown(v => !v); setOpenContractDropdown(false); }}
+                onClick={() => { setOpenAssigneeDropdown(v => !v); setOpenContractDropdown(false); setShowStatusDropdown(false); }}
               >
                 <BsPerson className="text-gray-400 text-lg" />
                 <span>Assignee</span>
-                <HiChevronDown className="text-gray-400 text-base" />
+                <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
               </button>
               {openAssigneeDropdown && (
                 <div 
@@ -2659,7 +2696,7 @@ const ContractsPage: React.FC = () => {
                             <div className="font-semibold text-gray-900 text-sm">{sig.name}</div>
                             <div className="text-xs text-gray-500">{sig.role}</div>
                           </div>
-                          <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-4">
                             {sig.status === 'Signed' ? (
                               <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
                                 <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
@@ -2882,7 +2919,7 @@ const ContractsPage: React.FC = () => {
     )}
     
     {showUploadModal && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 upload-modal">
         <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-bold text-gray-900">Upload Documents</h2>
@@ -2910,11 +2947,57 @@ const ContractsPage: React.FC = () => {
               setUploadModalFiles([]);
             }}
           >
-            <label className="block text-xs font-medium text-gray-700 mb-2">Upload Documents (Optional)</label>
+            <div className="flex flex-col gap-4 mb-4">
+              <div className="relative" ref={uploadDropdownRef}>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowUploadDropdown(!showUploadDropdown);
+                  }}
+                  className="flex items-center gap-2 px-4 py-[9.5px] rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors"
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                >
+                  <span className="mt-[1px]">Select</span>
+                  <HiMiniChevronDown className="text-primary" size={18} />
+                </button>
+                {showUploadDropdown && (
+                  <div 
+                    className="absolute z-50 mt-1 w-[200px] bg-white rounded-lg shadow-lg border border-gray-200 dropdown-list"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="py-1">
+                      <label htmlFor="upload-modal-file-upload" className="block px-4 py-2 text-left hover:bg-primary/10 hover:text-primary cursor-pointer">
+                        <div className="flex items-center gap-2">
+                          <TbDeviceDesktopPlus className="text-base text-primary" />
+                          <span className="text-xs">Desktop</span>
+                        </div>
+                      </label>
+                      <button className="w-full px-4 py-2 text-left hover:bg-primary/10 hover:text-primary flex items-center gap-2">
+                        <SiBox className="text-base text-primary" />
+                        <span className="text-xs">Box</span>
+                      </button>
+                      <button className="w-full px-4 py-2 text-left hover:bg-primary/10 hover:text-primary flex items-center gap-2">
+                        <SlSocialDropbox className="text-base text-primary" />
+                        <span className="text-xs">Dropbox</span>
+                      </button>
+                      <button className="w-full px-4 py-2 text-left hover:bg-primary/10 hover:text-primary flex items-center gap-2">
+                        <TbBrandGoogleDrive className="text-base text-primary" />
+                        <span className="text-xs">Google Drive</span>
+                      </button>
+                      <button className="w-full px-4 py-2 text-left hover:bg-primary/10 hover:text-primary flex items-center gap-2">
+                        <TbBrandOnedrive className="text-base text-primary" />
+                        <span className="text-xs">OneDrive</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
             <label htmlFor="upload-modal-file-upload" className="block cursor-pointer">
               <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 py-8 px-4 text-center transition hover:border-primary">
                 <HiOutlineUpload className="h-4 w-4 text-gray-400 mb-2" />
-                <div className="text-xs text-gray-700 font-medium">Click to upload or drag and drop</div>
+                <div className="text-xs text-gray-700 font-semibold">Click to upload or drag and drop</div>
                 <div className="text-[10px] text-gray-400 mt-1">PDF, DOC, DOCX, or JPG (max. 10MB each)</div>
                 <input
                   id="upload-modal-file-upload"
@@ -3027,14 +3110,14 @@ const ContractsPage: React.FC = () => {
                 <div className="bg-white border border-gray-200 rounded-lg p-6">
                   <h3 className="text-sm font-semibold text-gray-900 mb-4">Document Details</h3>
                   <div className="grid grid-cols-2 gap-x-12 gap-y-4">
-                    <div>
+                            <div>
                       <div className="text-gray-500 text-xs mb-1">Document ID</div>
                       <div className="text-xs text-black mb-4">{selectedDocument.id}</div>
-                    </div>
+                            </div>
                     <div>
                       <div className="text-gray-500 text-xs mb-1">Contract ID</div>
                       <div className="text-xs text-black mb-4">{selectedDocument.contractId}</div>
-                    </div>
+                          </div>
                     <div>
                       <div className="text-gray-500 text-xs mb-1">Document Name</div>
                       <input
