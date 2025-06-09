@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { HiOutlineDocumentText, HiOutlineBell, HiOutlineCog } from 'react-icons/hi';
 import { RiLayoutColumnLine, RiDashboardLine, RiBox3Line } from 'react-icons/ri';
 import { FaSignature } from 'react-icons/fa';
@@ -9,7 +9,7 @@ import { IconBaseProps } from 'react-icons';
 import clsx from 'clsx';
 import { HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight } from 'react-icons/hi';
 import { MdOutlineLightMode, MdOutlineDarkMode } from 'react-icons/md';
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 interface NavItem {
   name: string;
@@ -40,11 +40,31 @@ const IconWrapper: React.FC<{ icon: React.ComponentType<IconBaseProps>; classNam
 };
 
 export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSidebar, theme, setTheme }) => {
-  const pathname = usePathname();
+  const rawPathname = usePathname();
+  const pathname = rawPathname || '';
+  const router = useRouter();
 
   const toggleTheme = () => {
     setTheme(prev => ({ isDark: !prev.isDark }));
   };
+
+  // State for Signatures sub-menu
+  const [signaturesOpen, setSignaturesOpen] = React.useState(false);
+
+  // Effect: Auto-open list when on signatures pages, auto-close when leaving
+  useEffect(() => {
+    if (pathname === '/signatures' || pathname.startsWith('/signatures/')) {
+      setSignaturesOpen(true);
+    } else {
+      setSignaturesOpen(false);
+    }
+  }, [pathname]);
+
+  // Helper: is signatures main page
+  const isSignaturesMainPage = pathname === '/signatures';
+  
+  // Helper: is any signatures page (main or subpage)
+  const isSignaturesPage = pathname === '/signatures' || pathname.startsWith('/signatures/');
 
   const navItems: NavItem[] = [
     { name: 'Dashboard', href: '/dashboard', icon: RiDashboardLine },
@@ -64,19 +84,72 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
       <nav className="flex-grow">
         <ul>
           {navItems.map((item) => (
-            <li key={item.href} className="mb-2">
-              <Link
-                href={item.href}
-                className={clsx(
-                  'flex items-center p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150',
-                  pathname === item.href ? 'bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-400' : '',
-                  isCollapsed ? 'justify-center' : ''
+            <React.Fragment key={item.href}>
+              <li className="mb-2">
+                {item.name === 'Signatures' && !isCollapsed ? (
+                  <div className="relative w-full">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!isSignaturesPage) {
+                          // Navigating from non-signatures page: navigate to main page
+                          router.push('/signatures');
+                        } else if (isSignaturesMainPage) {
+                          // On main page: toggle dropdown
+                          setSignaturesOpen((open) => !open);
+                        } else {
+                          // On subpage: navigate to main page, keep list open
+                          router.push('/signatures');
+                        }
+                      }}
+                      className={clsx(
+                        'flex items-center w-full p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150',
+                        isSignaturesPage ? 'bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-400' : '',
+                      )}
+                    >
+                      <IconWrapper icon={item.icon} className={clsx('w-5 h-5 flex-shrink-0', 'mr-2')} />
+                      <span className="flex-1 text-left">{item.name}</span>
+                    </button>
+                  </div>
+                ) : (
+                  <Link
+                    href={item.href}
+                    className={clsx(
+                      'flex items-center p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150',
+                      pathname === item.href ? 'bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-400' : '',
+                      isCollapsed ? 'justify-center' : ''
+                    )}
+                  >
+                    <IconWrapper icon={item.icon} className={clsx('w-5 h-5 flex-shrink-0', !isCollapsed && 'mr-2')} />
+                    {!isCollapsed && item.name}
+                  </Link>
                 )}
-              >
-                <IconWrapper icon={item.icon} className={clsx('w-5 h-5 flex-shrink-0', !isCollapsed && 'mr-2')} />
-                {!isCollapsed && item.name}
-              </Link>
-            </li>
+              </li>
+              {/* Add sub-options under Signatures */}
+              {item.name === 'Signatures' && !isCollapsed && signaturesOpen && (
+                <ul className="ml-8 mb-2">
+                  {[
+                    { name: 'Inbox', href: '/signatures/inbox' },
+                    { name: 'Outbox', href: '/signatures/sent' },
+                    { name: 'Drafts', href: '/signatures/drafts' },
+                    { name: 'Completed', href: '/signatures/completed' },
+                    { name: 'Cancelled', href: '/signatures/cancelled' },
+                  ].map((sub) => (
+                    <li key={sub.href} className="mb-1">
+                      <Link
+                        href={sub.href}
+                        className={clsx(
+                          'block pl-4 py-1 rounded-md text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors',
+                          pathname === sub.href ? 'bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 font-semibold' : 'text-gray-600 dark:text-gray-300'
+                        )}
+                      >
+                        {sub.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </React.Fragment>
           ))}
         </ul>
         <hr className="my-4 border-gray-200 dark:border-gray-700" />

@@ -254,6 +254,7 @@ const ContractsPage: React.FC = () => {
   });
 
   const CONTRACT_TYPES = [
+    'Standard Agreement',
     'Residential – Cash',
     'Residential – Financed',
     'Commercial – Cash or Financed',
