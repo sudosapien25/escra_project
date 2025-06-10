@@ -30,11 +30,10 @@ import { X } from 'lucide-react';
 import { useAssigneeStore } from '@/data/assigneeStore';
 import { useAuth } from '@/context/AuthContext';
 import { PiMoneyWavyBold, PiBankBold } from 'react-icons/pi';
-import { TbDeviceDesktopPlus } from 'react-icons/tb';
+import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
-import { TbBrandGoogleDrive } from 'react-icons/tb';
-import { TbBrandOnedrive } from 'react-icons/tb';
+import { FaCheckCircle } from 'react-icons/fa';
 
 // Add date formatting utilities
 function formatDatePretty(dateStr: string): string {
@@ -604,6 +603,9 @@ const ContractsPage: React.FC = () => {
   const [docContractSortDirection, setDocContractSortDirection] = useState<'asc' | 'desc' | null>(null);
   const [docContractIdSortDirection, setDocContractIdSortDirection] = useState<'asc' | 'desc' | null>(null);
   const [docDateUploadedSortDirection, setDocDateUploadedSortDirection] = useState<'asc' | 'desc' | null>(null);
+
+  // Add state at the top of the component:
+  const [selectedUploadSource, setSelectedUploadSource] = useState<string | null>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -1242,7 +1244,7 @@ const ContractsPage: React.FC = () => {
                         readOnly
                         onClick={() => setShowContractTypeDropdown(true)}
                       />
-                      <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                       {showContractTypeDropdown && (
                         <div className="absolute left-0 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                           {CONTRACT_TYPES.map(type => (
@@ -1277,7 +1279,7 @@ const ContractsPage: React.FC = () => {
                         readOnly
                         onClick={() => setShowPropertyTypeDropdown(true)}
                       />
-                      <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                       {showPropertyTypeDropdown && (
                         <div className="absolute left-0 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                           {PROPERTY_TYPES.map(type => (
@@ -1308,7 +1310,7 @@ const ContractsPage: React.FC = () => {
                         readOnly
                         onClick={() => setShowMilestoneDropdown(true)}
                       />
-                      <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                       {showMilestoneDropdown && (
                         <div className="absolute left-0 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                           {MILESTONE_TEMPLATES.map(template => (
@@ -1761,25 +1763,36 @@ const ContractsPage: React.FC = () => {
           />
         </div>
         {activeContentTab === 'contractList' && (
-          <button 
-            className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 relative" 
-            style={{ fontFamily: 'Avenir, sans-serif' }}
-            onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-            ref={statusDropdownRef as any}
-          >
-            <HiOutlineViewBoards className="text-gray-400 text-lg" />
-            <span>Status</span>
-            <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
-            
+          <div className="relative ml-1">
+            <button
+              ref={statusDropdownRef as any}
+              className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
+              style={{ fontFamily: 'Avenir, sans-serif' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowStatusDropdown(prev => !prev);
+                if (!showStatusDropdown) {
+                  setOpenContractDropdown(false);
+                  setOpenAssigneeDropdown(false);
+                }
+              }}
+            >
+              <HiOutlineViewBoards className="text-gray-400 text-lg" />
+              <span>Status</span>
+              <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+            </button>
             {showStatusDropdown && (
-              <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }} ref={statusDropdownRef}>
+              <div 
+                className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 status-filter-dropdown" 
+                style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+              >
                 {availableStatuses.map((status) => (
                   <button
                     key={status}
-                    className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
-                      selectedStatuses.includes(status) ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
-                    }`}
+                    className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
                     onClick={(e) => {
+                      e.preventDefault();
                       e.stopPropagation();
                       if (status === 'All') {
                         setSelectedStatuses(['All']);
@@ -1787,8 +1800,7 @@ const ContractsPage: React.FC = () => {
                         setSelectedStatuses(prev => {
                           const newStatuses = prev.filter(s => s !== 'All');
                           if (prev.includes(status)) {
-                            const filtered = newStatuses.filter(s => s !== status);
-                            return filtered.length === 0 ? ['All'] : filtered;
+                            return newStatuses.filter(s => s !== status);
                           } else {
                             return [...newStatuses, status];
                           }
@@ -1796,11 +1808,9 @@ const ContractsPage: React.FC = () => {
                       }
                     }}
                   >
-                    <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedStatuses.includes(status) ? 'bg-primary' : 'border border-gray-300'}`}>
+                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                       {selectedStatuses.includes(status) && (
-                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                        </svg>
+                        <FaCheckCircle className="text-primary" size={12} />
                       )}
                     </div>
                     {status}
@@ -1808,7 +1818,7 @@ const ContractsPage: React.FC = () => {
                 ))}
               </div>
             )}
-          </button>
+          </div>
         )}
         {activeContentTab === 'documents' && (
           <>
@@ -1845,16 +1855,12 @@ const ContractsPage: React.FC = () => {
                   </div>
 
                   <button
-                    className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
-                      selectedContracts.length === 0 ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
-                    }`}
+                    className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center"
                     onClick={() => setSelectedContracts([])}
                   >
-                    <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedContracts.length === 0 ? 'bg-primary' : 'border border-gray-300'}`}>
+                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                       {selectedContracts.length === 0 && (
-                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                        </svg>
+                        <FaCheckCircle className="text-primary" size={12} />
                       )}
                     </div>
                     All
@@ -1867,9 +1873,7 @@ const ContractsPage: React.FC = () => {
                     .map(contract => (
                       <button
                         key={contract.id}
-                        className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center whitespace-nowrap truncate ${
-                          selectedContracts.includes(String(contract.id)) ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
-                        }`}
+                        className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center whitespace-nowrap truncate"
                         onClick={() => {
                           setSelectedContracts(prev => {
                             if (prev.includes(String(contract.id))) {
@@ -1880,11 +1884,9 @@ const ContractsPage: React.FC = () => {
                           });
                         }}
                       >
-                        <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedContracts.includes(String(contract.id)) ? 'bg-primary' : 'border border-gray-300'}`}>
+                        <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                           {selectedContracts.includes(String(contract.id)) && (
-                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                            </svg>
+                            <FaCheckCircle className="text-primary" size={12} />
                           )}
                         </div>
                         {contract.id} - {contract.title}
@@ -1896,53 +1898,45 @@ const ContractsPage: React.FC = () => {
             <div className="relative ml-1">
               <button
                 ref={assigneeButtonRef}
-                className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px]"
+                className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
                 style={{ fontFamily: 'Avenir, sans-serif' }}
                 onClick={() => { setOpenAssigneeDropdown(v => !v); setOpenContractDropdown(false); setShowStatusDropdown(false); }}
               >
-                <BsPerson className="text-gray-400 text-lg" />
+                <HiOutlineViewBoards className="text-gray-400 text-lg" />
                 <span>Assignee</span>
                 <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
               </button>
               {openAssigneeDropdown && (
                 <div 
-                  className="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 assignee-dropdown" 
+                  className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 assignee-dropdown" 
                   style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
                 >
                   <button
-                    className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
-                      selectedAssignees.length === 0 ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
-                    }`}
+                    className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
                       setSelectedAssignees([]);
                     }}
                   >
-                    <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedAssignees.length === 0 ? 'bg-primary' : 'border border-gray-300'}`}>
+                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                       {selectedAssignees.length === 0 && (
-                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                        </svg>
+                        <FaCheckCircle className="text-primary" size={12} />
                       )}
                     </div>
                     All
                   </button>
                   <button
-                    className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
-                      selectedAssignees.includes('__ME__') ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
-                    }`}
+                    className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
                       setSelectedAssignees(['__ME__']);
                     }}
                   >
-                    <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedAssignees.includes('__ME__') ? 'bg-primary' : 'border border-gray-300'}`}>
+                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                       {selectedAssignees.includes('__ME__') && (
-                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                        </svg>
+                        <FaCheckCircle className="text-primary" size={12} />
                       )}
                     </div>
                     Me
@@ -1950,9 +1944,7 @@ const ContractsPage: React.FC = () => {
                   {Array.from(new Set(sampleDocuments.map(doc => doc.assignee).filter((assignee): assignee is string => assignee !== undefined))).sort().map(assignee => (
                     <button
                       key={assignee}
-                      className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
-                        selectedAssignees.includes(assignee) ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
-                      }`}
+                      className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -1965,11 +1957,9 @@ const ContractsPage: React.FC = () => {
                         });
                       }}
                     >
-                      <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedAssignees.includes(assignee) ? 'bg-primary' : 'border border-gray-300'}`}>
+                      <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                         {selectedAssignees.includes(assignee) && (
-                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                          </svg>
+                          <FaCheckCircle className="text-primary" size={12} />
                         )}
                       </div>
                       {assignee}
@@ -1995,7 +1985,7 @@ const ContractsPage: React.FC = () => {
         <div className="border-b border-gray-200">
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0 w-full">
             {/* Contracts/Documents Tabs */}
-            <div className="flex space-x-8 overflow-x-auto w-full md:w-auto">
+            <div className="flex space-x-4 overflow-x-auto w-full md:w-auto">
               {CONTENT_TABS.map((tab) => (
                 <button
                   key={tab.key}
@@ -2921,7 +2911,7 @@ const ContractsPage: React.FC = () => {
     
     {showUploadModal && (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 upload-modal">
-        <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-bold text-gray-900">Upload Documents</h2>
               <button
@@ -2949,50 +2939,124 @@ const ContractsPage: React.FC = () => {
             }}
           >
             <div className="flex flex-col gap-4 mb-4">
-              <div className="relative" ref={uploadDropdownRef}>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowUploadDropdown(!showUploadDropdown);
-                  }}
-                  className="flex items-center gap-2 px-4 py-[9.5px] rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors"
-                  style={{ fontFamily: 'Avenir, sans-serif' }}
-                >
-                  <span className="mt-[1px]">Select</span>
-                  <HiMiniChevronDown className="text-primary" size={18} />
-                </button>
-                {showUploadDropdown && (
-                  <div 
-                    className="absolute z-50 mt-1 w-[200px] bg-white rounded-lg shadow-lg border border-gray-200 dropdown-list"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="py-1">
-                      <label htmlFor="upload-modal-file-upload" className="block px-4 py-2 text-left hover:bg-primary/10 hover:text-primary cursor-pointer">
-                        <div className="flex items-center gap-2">
-                          <TbDeviceDesktopPlus className="text-base text-primary" />
-                          <span className="text-xs">Desktop</span>
+              <div className="flex gap-4">
+                <div className="flex-1 w-0">
+                  <div className="text-gray-500 text-xs mb-1">File Source</div>
+                  <div className="relative" ref={uploadDropdownRef}>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowUploadDropdown(!showUploadDropdown);
+                      }}
+                      className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 bg-white text-gray-900 text-xs focus:ring-0 focus:ring-primary focus:border-primary transition-colors flex items-center justify-end relative"
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                    >
+                      {selectedUploadSource ? (
+                        <span className="flex items-center gap-2 absolute left-4">
+                          {selectedUploadSource === 'Desktop' && <TbDeviceDesktopPlus className="text-base text-primary" />}
+                          {selectedUploadSource === 'Box' && <SiBox className="text-base text-primary" />}
+                          {selectedUploadSource === 'Dropbox' && <SlSocialDropbox className="text-base text-primary" />}
+                          {selectedUploadSource === 'Google Drive' && <TbBrandGoogleDrive className="text-base text-primary" />}
+                          {selectedUploadSource === 'OneDrive' && <TbBrandOnedrive className="text-base text-primary" />}
+                          <span className="text-xs text-gray-900">{selectedUploadSource}</span>
+                        </span>
+                      ) : (
+                        <span className="absolute left-4 text-xs text-gray-400">Choose a source...</span>
+                      )}
+                      <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    </button>
+                    {showUploadDropdown && (
+                      <div className="absolute z-50 mt-1 w-full bg-white rounded-lg shadow-lg border border-gray-200">
+                        <div className="py-1">
+                          <label htmlFor="file-upload" className="block px-4 py-2 text-left hover:bg-primary/10 hover:text-primary cursor-pointer" onClick={() => { setSelectedUploadSource('Desktop'); setShowUploadDropdown(false); }}>
+                            <div className="flex items-center gap-2">
+                              <TbDeviceDesktopPlus className="text-base text-primary" />
+                              <span className="text-xs">Desktop</span>
+                            </div>
+                          </label>
+                          <input
+                            id="file-upload"
+                            name="file-upload"
+                            type="file"
+                            accept=".pdf,.doc,.docx,.jpg,.jpeg"
+                            className="hidden"
+                            multiple
+                            onChange={handleFileChange}
+                          />
+                          <button className="w-full px-4 py-2 text-left hover:bg-primary/10 hover:text-primary flex items-center gap-2">
+                            <SiBox className="text-base text-primary" />
+                            <span className="text-xs">Box</span>
+                          </button>
+                          <button className="w-full px-4 py-2 text-left hover:bg-primary/10 hover:text-primary flex items-center gap-2" onClick={() => { setSelectedUploadSource('Box'); setShowUploadDropdown(false); }}>
+                            <SiBox className="text-base text-primary" />
+                            <span className="text-xs">Box</span>
+                          </button>
+                          <button className="w-full px-4 py-2 text-left hover:bg-primary/10 hover:text-primary flex items-center gap-2" onClick={() => { setSelectedUploadSource('Dropbox'); setShowUploadDropdown(false); }}>
+                            <SlSocialDropbox className="text-base text-primary" />
+                            <span className="text-xs">Dropbox</span>
+                          </button>
+                          <button className="w-full px-4 py-2 text-left hover:bg-primary/10 hover:text-primary flex items-center gap-2" onClick={() => { setSelectedUploadSource('Google Drive'); setShowUploadDropdown(false); }}>
+                            <TbBrandGoogleDrive className="text-base text-primary" />
+                            <span className="text-xs">Google Drive</span>
+                          </button>
+                          <button className="w-full px-4 py-2 text-left hover:bg-primary/10 hover:text-primary flex items-center gap-2" onClick={() => { setSelectedUploadSource('OneDrive'); setShowUploadDropdown(false); }}>
+                            <TbBrandOnedrive className="text-base text-primary" />
+                            <span className="text-xs">OneDrive</span>
+                          </button>
                         </div>
-                      </label>
-                      <button className="w-full px-4 py-2 text-left hover:bg-primary/10 hover:text-primary flex items-center gap-2">
-                        <SiBox className="text-base text-primary" />
-                        <span className="text-xs">Box</span>
-                      </button>
-                      <button className="w-full px-4 py-2 text-left hover:bg-primary/10 hover:text-primary flex items-center gap-2">
-                        <SlSocialDropbox className="text-base text-primary" />
-                        <span className="text-xs">Dropbox</span>
-                      </button>
-                      <button className="w-full px-4 py-2 text-left hover:bg-primary/10 hover:text-primary flex items-center gap-2">
-                        <TbBrandGoogleDrive className="text-base text-primary" />
-                        <span className="text-xs">Google Drive</span>
-                      </button>
-                      <button className="w-full px-4 py-2 text-left hover:bg-primary/10 hover:text-primary flex items-center gap-2">
-                        <TbBrandOnedrive className="text-base text-primary" />
-                        <span className="text-xs">OneDrive</span>
-                      </button>
-                    </div>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
+                <div className="flex-1 w-0" />
+              </div>
+              <div className="flex gap-4">
+                <div className="flex-1 w-0">
+                  <label className="block text-xs text-gray-500 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Document Name</label>
+                  <input
+                    type="text"
+                    placeholder="Enter document name..."
+                    className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 bg-white text-gray-900 text-xs focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                  />
+                </div>
+                <div className="flex-1 w-0">
+                  <label className="block text-xs text-gray-500 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Assignee</label>
+                  <div className="relative" ref={uploadModalAssigneeDropdownRef}>
+                    <input
+                      ref={uploadModalAssigneeInputRef}
+                      type="text"
+                      className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 bg-white text-gray-900 text-xs focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                      placeholder="Choose an assignee..."
+                      value={uploadModalAssignee}
+                      onChange={(e) => setUploadModalAssignee(e.target.value)}
+                      onFocus={() => setShowUploadModalAssigneeDropdown(true)}
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                      autoComplete="off"
+                    />
+                    {showUploadModalAssigneeDropdown && (
+                      <div className="absolute left-0 right-0 mt-1 bg-white border-2 border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                        {allAssignees.length > 0 ? (
+                          allAssignees.map((assignee: string) => (
+                            <div
+                              key={assignee}
+                              className="px-4 py-2 text-xs cursor-pointer hover:bg-primary/10 hover:text-primary"
+                              onClick={() => {
+                                setUploadModalAssignee(assignee);
+                                setShowUploadModalAssigneeDropdown(false);
+                              }}
+                            >
+                              {assignee}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-4 py-2 text-xs text-gray-400">No assignees found</div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
             <label htmlFor="upload-modal-file-upload" className="block cursor-pointer">

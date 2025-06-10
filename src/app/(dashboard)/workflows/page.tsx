@@ -10,7 +10,7 @@ import { HiMiniChevronDown } from 'react-icons/hi2';
 import { CgPlayPauseR, CgPlayStopR } from 'react-icons/cg';
 import { BsPerson } from 'react-icons/bs';
 import { LuCalendarClock, LuSendHorizontal } from 'react-icons/lu';
-import { FaPlus, FaSearch, FaRetweet } from 'react-icons/fa';
+import { FaPlus, FaSearch, FaRetweet, FaCheckCircle } from 'react-icons/fa';
 import { PiListMagnifyingGlassBold, PiListPlusBold, PiDotsThreeOutline } from 'react-icons/pi';
 import { FaRegSquareCheck } from 'react-icons/fa6';
 import { BiDotsHorizontal } from 'react-icons/bi';
@@ -619,39 +619,31 @@ export default function WorkflowsPage() {
                 onClick={(e) => e.stopPropagation()}
               >
                 <button
-                  className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
-                    selectedAssignees.length === 0 ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
-                  }`}
+                  className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     setSelectedAssignees([]);
                   }}
                 >
-                  <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedAssignees.length === 0 ? 'bg-primary' : 'border border-gray-300'}`}>
+                  <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                     {selectedAssignees.length === 0 && (
-                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                      </svg>
+                      <FaCheckCircle className="text-primary" size={12} />
                     )}
                   </div>
                   All
                 </button>
                 <button
-                  className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
-                    selectedAssignees.includes('__ME__') ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
-                  }`}
+                  className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     setSelectedAssignees(['__ME__']);
                   }}
                 >
-                  <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedAssignees.includes('__ME__') ? 'bg-primary' : 'border border-gray-300'}`}>
+                  <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                     {selectedAssignees.includes('__ME__') && (
-                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                      </svg>
+                      <FaCheckCircle className="text-primary" size={12} />
                     )}
                   </div>
                   Me
@@ -659,9 +651,7 @@ export default function WorkflowsPage() {
                 {uniqueAssignees.map(assignee => (
                   <button
                     key={assignee}
-                    className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
-                      selectedAssignees.includes(assignee) ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
-                    }`}
+                    className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
@@ -674,11 +664,9 @@ export default function WorkflowsPage() {
                       });
                     }}
                   >
-                    <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedAssignees.includes(assignee) ? 'bg-primary' : 'border border-gray-300'}`}>
+                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                       {selectedAssignees.includes(assignee) && (
-                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                        </svg>
+                        <FaCheckCircle className="text-primary" size={12} />
                       )}
                     </div>
                     {assignee}
@@ -723,16 +711,12 @@ export default function WorkflowsPage() {
                 {/* Contract List */}
                 <div className="max-h-[300px] overflow-y-auto">
                   <button
-                    className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
-                      selectedContracts.length === 0 ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
-                    }`}
+                    className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center"
                     onClick={() => setSelectedContracts([])}
                   >
-                    <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedContracts.length === 0 ? 'bg-primary' : 'border border-gray-300'}`}>
+                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                       {selectedContracts.length === 0 && (
-                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                        </svg>
+                        <FaCheckCircle className="text-primary" size={12} />
                       )}
                     </div>
                     All
@@ -745,9 +729,7 @@ export default function WorkflowsPage() {
                     .map(contract => (
                       <button
                         key={contract.id}
-                        className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center whitespace-nowrap truncate ${
-                          selectedContracts.includes(String(contract.id)) ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
-                        }`}
+                        className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center whitespace-nowrap truncate"
                         onClick={() => {
                           setSelectedContracts(prev => {
                             if (prev.includes(String(contract.id))) {
@@ -758,11 +740,9 @@ export default function WorkflowsPage() {
                           });
                         }}
                       >
-                        <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedContracts.includes(String(contract.id)) ? 'bg-primary' : 'border border-gray-300'}`}>
+                        <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                           {selectedContracts.includes(String(contract.id)) && (
-                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                            </svg>
+                            <FaCheckCircle className="text-primary" size={12} />
                           )}
                         </div>
                         {contract.id} - {contract.title}
@@ -776,7 +756,7 @@ export default function WorkflowsPage() {
           <div className="relative ml-1">
             <button
               ref={statusButtonRef}
-              className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px]"
+              className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
               style={{ fontFamily: 'Avenir, sans-serif' }}
               onClick={() => { setOpenStatusDropdown(v => !v); setOpenAssigneeDropdown(false); setOpenContractDropdown(false); }}
             >
@@ -786,25 +766,20 @@ export default function WorkflowsPage() {
             </button>
             {openStatusDropdown && (
               <div 
-                className="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 status-filter-dropdown" 
+                className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 status-filter-dropdown" 
                 style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
-                onClick={(e) => e.stopPropagation()}
               >
                 <button
-                  className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
-                    selectedStatuses.length === 0 ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
-                  }`}
+                  className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     setSelectedStatuses([]);
                   }}
                 >
-                  <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedStatuses.length === 0 ? 'bg-primary' : 'border border-gray-300'}`}>
+                  <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                     {selectedStatuses.length === 0 && (
-                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                      </svg>
+                      <FaCheckCircle className="text-primary" size={12} />
                     )}
                   </div>
                   All
@@ -812,9 +787,7 @@ export default function WorkflowsPage() {
                 {statusOptions.map(status => (
                   <button
                     key={status.key}
-                    className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center ${
-                      selectedStatuses.includes(status.key) ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
-                    }`}
+                    className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
@@ -827,11 +800,9 @@ export default function WorkflowsPage() {
                       });
                     }}
                   >
-                    <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedStatuses.includes(status.key) ? 'bg-primary' : 'border border-gray-300'}`}>
+                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                       {selectedStatuses.includes(status.key) && (
-                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                        </svg>
+                        <FaCheckCircle className="text-primary" size={12} />
                       )}
                     </div>
                     {status.title}
