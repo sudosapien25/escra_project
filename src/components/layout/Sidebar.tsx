@@ -69,7 +69,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
   const navItems: NavItem[] = [
     { name: 'Dashboard', href: '/dashboard', icon: RiDashboardLine },
     { name: 'Contracts', href: '/contracts', icon: HiOutlineDocumentText },
-    { name: 'Workflows', href: '/workflows', icon: RiLayoutColumnLine },
+    { name: 'Tasks', href: '/workflows', icon: RiLayoutColumnLine },
     { name: 'Signatures', href: '/signatures', icon: FaSignature },
     { name: 'Blockchain', href: '/blockchain', icon: RiBox3Line },
   ];

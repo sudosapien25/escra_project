@@ -2158,7 +2158,7 @@ export default function SignaturesPage() {
                                     </div>
                                   )}
                                   <span className="absolute top-0 left-[638px] text-xs text-gray-500">Customize <HiMiniChevronDown size={16} className="inline-block align-middle -mt-[3px]" /></span>
-                                  <button className="absolute top-0 left-[756px] text-gray-400 hover:text-gray-600 transition-colors" onClick={() => handleDeleteRecipient(idx)} disabled={recipients.length === 1}>
+                                  <button className="absolute top-0 left-[1220px] text-gray-400 hover:text-gray-600 transition-colors" onClick={() => handleDeleteRecipient(idx)} disabled={recipients.length === 1}>
                                     <HiOutlineTrash className="w-4 h-4" />
                                   </button>
                                 </div>
