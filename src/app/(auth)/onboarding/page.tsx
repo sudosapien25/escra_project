@@ -6,6 +6,19 @@ import { Input } from '@/components/common/Input';
 import { Select, SelectOption } from '@/components/common/Select';
 import { Logo } from '@/components/common/Logo';
 import { HiMiniChevronDown } from 'react-icons/hi2';
+import { FaCheck } from 'react-icons/fa';
+import { TbBuildingEstate, TbShoppingBagEdit, TbWorld } from 'react-icons/tb';
+import { MdOutlineSportsFootball, MdOutlineMovieFilter, MdOutlineHealthAndSafety } from 'react-icons/md';
+import { LuConstruction, LuBriefcaseBusiness } from 'react-icons/lu';
+import { GrMoney, GrUserWorker } from 'react-icons/gr';
+import { VscLaw } from 'react-icons/vsc';
+import { LiaToolsSolid } from 'react-icons/lia';
+import { HiOutlineChip } from 'react-icons/hi';
+import { IconType } from 'react-icons';
+
+interface IndustryOption extends SelectOption {
+  icon: IconType;
+}
 
 const COMPANY_TYPES: SelectOption[] = [
   { value: 'sole_proprietorship', label: 'Sole Proprietorship' },
@@ -15,20 +28,20 @@ const COMPANY_TYPES: SelectOption[] = [
   { value: 'other', label: 'Other' }
 ];
 
-const INDUSTRIES: SelectOption[] = [
-  { value: 'real_estate', label: 'Real Estate' },
-  { value: 'athletics', label: 'Athletics' },
-  { value: 'construction', label: 'Construction' },
-  { value: 'entertainment', label: 'Entertainment' },
-  { value: 'finance', label: 'Finance' },
-  { value: 'healthcare', label: 'Healthcare' },
-  { value: 'labor', label: 'Labor' },
-  { value: 'legal', label: 'Legal' },
-  { value: 'manufacturing', label: 'Manufacturing' },
-  { value: 'retail', label: 'Retail' },
-  { value: 'supply_chain', label: 'Logistics' },
-  { value: 'technology', label: 'Technology' },
-  { value: 'other', label: 'Other' }
+const INDUSTRIES: IndustryOption[] = [
+  { value: 'real_estate', label: 'Real Estate', icon: TbBuildingEstate },
+  { value: 'athletics', label: 'Athletics', icon: MdOutlineSportsFootball },
+  { value: 'construction', label: 'Construction', icon: LuConstruction },
+  { value: 'entertainment', label: 'Entertainment', icon: MdOutlineMovieFilter },
+  { value: 'finance', label: 'Finance', icon: GrMoney },
+  { value: 'healthcare', label: 'Healthcare', icon: MdOutlineHealthAndSafety },
+  { value: 'labor', label: 'Labor', icon: GrUserWorker },
+  { value: 'legal', label: 'Legal', icon: VscLaw },
+  { value: 'manufacturing', label: 'Manufacturing', icon: LiaToolsSolid },
+  { value: 'retail', label: 'Retail', icon: TbShoppingBagEdit },
+  { value: 'supply_chain', label: 'Logistics', icon: TbWorld },
+  { value: 'technology', label: 'Technology', icon: HiOutlineChip },
+  { value: 'other', label: 'Other', icon: LuBriefcaseBusiness }
 ];
 
 const COUNTRIES: SelectOption[] = [
@@ -284,6 +297,7 @@ export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [tab, setTab] = useState<'personal' | 'business'>('business');
+  const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     companyName: '',
     companyType: '',
@@ -341,6 +355,15 @@ export default function OnboardingPage() {
     setFormErrors(prev => ({ ...prev, [name]: '' }));
   };
 
+  const handleIndustryToggle = (industryValue: string) => {
+    setSelectedIndustries(prev => {
+      if (prev.includes(industryValue)) {
+        return prev.filter(i => i !== industryValue);
+      }
+      return [...prev, industryValue];
+    });
+  };
+
   const validateForm = () => {
     const errors: Record<string, string> = {};
     let isValid = true;
@@ -377,6 +400,12 @@ export default function OnboardingPage() {
         errors.website = 'Please enter a valid website URL';
         isValid = false;
       }
+
+      // Industry selection validation for step 2
+      if (step === 2 && selectedIndustries.length === 0) {
+        errors.industrySelection = 'Please select at least one industry';
+        isValid = false;
+      }
     } else {
       // Personal tab required fields
       const requiredFields = [
@@ -411,7 +440,7 @@ export default function OnboardingPage() {
     const isValid = validateForm();
     
     if (isValid) {
-      // TODO: Submit form data
+      // TODO: Submit form data with selectedIndustries
       router.push('/dashboard');
     }
   };
@@ -508,38 +537,6 @@ export default function OnboardingPage() {
                     )}
                   </div>
                   {formErrors.companyType && <p className="text-xs text-red-600 mt-1">{formErrors.companyType}</p>}
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Industry</label>
-                  <div className="relative w-full" ref={industryDropdownRef}>
-                    <input
-                      type="text"
-                      className={`w-full px-3 py-2 border-2 ${formErrors.industry ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : 'border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary'} rounded-lg text-xs font-medium text-black transition-colors pr-10 cursor-pointer bg-white`}
-                      placeholder="Select industry"
-                      value={INDUSTRIES.find(i => i.value === formData.industry)?.label || ''}
-                      readOnly
-                      onClick={() => setShowIndustryDropdown(true)}
-                    />
-                    <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    {showIndustryDropdown && (
-                      <div className="absolute left-0 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                        {INDUSTRIES.map(industry => (
-                          <button
-                            key={industry.value}
-                            className={`w-full text-left px-3 py-0.5 text-xs font-medium ${formData.industry === industry.value ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`}
-                            onClick={e => {
-                              e.preventDefault();
-                              setFormData(prev => ({ ...prev, industry: industry.value }));
-                              setShowIndustryDropdown(false);
-                            }}
-                          >
-                            {industry.label}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  {formErrors.industry && <p className="text-xs text-red-600 mt-1">{formErrors.industry}</p>}
                 </div>
               </div>
               <div>
@@ -687,33 +684,40 @@ export default function OnboardingPage() {
             </>
           ) : tab === 'business' && step === 2 ? (
             <>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">City</label>
-                  <Input
-                    type="text"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleChange}
-                    placeholder="City"
-                    className={`py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 ${formErrors.city ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
-                    required
-                  />
-                  {formErrors.city && <p className="text-xs text-red-600 mt-1">{formErrors.city}</p>}
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">Select Your Industries</h3>
+                <p className="text-xs text-gray-500 mb-4">Choose all industries that apply to your business</p>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {INDUSTRIES.map(industry => (
+                    <button
+                      key={industry.value}
+                      type="button"
+                      onClick={() => handleIndustryToggle(industry.value)}
+                      className={`flex items-center justify-between p-3 rounded-lg border-2 transition-all ${
+                        selectedIndustries.includes(industry.value)
+                          ? 'border-primary bg-primary/5'
+                          : 'border-gray-200 hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="flex items-center">
+                        <div className="w-4 h-4 border border-gray-300 rounded mr-3 flex-shrink-0 flex items-center justify-center">
+                          {selectedIndustries.includes(industry.value) && (
+                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                              <FaCheck className="text-white" size={8} />
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-xs font-medium text-gray-900">{industry.label}</span>
+                      </div>
+                      <div className="ml-3 text-gray-500">
+                        {industry.icon && <industry.icon size={20} />}
+                      </div>
+                    </button>
+                  ))}
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">State</label>
-                  <Input
-                    type="text"
-                    name="state"
-                    value={formData.state}
-                    onChange={handleChange}
-                    placeholder="State"
-                    className={`py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 ${formErrors.state ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
-                    required
-                  />
-                  {formErrors.state && <p className="text-xs text-red-600 mt-1">{formErrors.state}</p>}
-                </div>
+                {formErrors.industrySelection && (
+                  <p className="text-xs text-red-600 mt-2">{formErrors.industrySelection}</p>
+                )}
               </div>
               <div className="flex gap-3">
                 <button

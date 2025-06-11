@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { FaUser } from 'react-icons/fa';
 import { IoMailOutline } from 'react-icons/io5';
 import { RxLockClosed } from 'react-icons/rx';
@@ -219,8 +219,11 @@ const COUNTRIES: SelectOption[] = [
 
 export default function AuthPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login } = useAuth();
-  const [tab, setTab] = useState<'login' | 'register'>('login');
+  const [tab, setTab] = useState<'login' | 'register'>(() => {
+    return searchParams?.get('tab') === 'register' ? 'register' : 'login';
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [showRegPassword, setShowRegPassword] = useState(false);
   const [showRegConfirm, setShowRegConfirm] = useState(false);

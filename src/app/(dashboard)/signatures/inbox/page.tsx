@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import clsx from "clsx";
-import { FaSearch, FaCheckCircle } from "react-icons/fa";
+import { FaSearch, FaCheckCircle, FaCheck } from "react-icons/fa";
 import { HiMiniChevronDown } from "react-icons/hi2";
 import { HiOutlineEye, HiOutlineDownload, HiOutlineViewBoards } from "react-icons/hi";
 import { LuBellRing } from "react-icons/lu";
@@ -11,6 +11,8 @@ import { FaRegClock } from "react-icons/fa";
 import { PiWarningDiamondBold } from "react-icons/pi";
 import { FaRegSquareCheck } from "react-icons/fa6";
 import { BsPerson } from 'react-icons/bs';
+import { RiUserSharedLine, RiUserSearchLine } from 'react-icons/ri';
+import { TbClockPin } from 'react-icons/tb';
 
 const inboxRows = [
   // Example data, should match the inbox filter from the main signatures page
@@ -280,7 +282,9 @@ export default function InboxPage() {
                 >
                   <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                     {selectedStatuses.includes(status) && (
-                      <FaCheckCircle className="text-primary" size={12} />
+                      <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                        <FaCheck className="text-white" size={8} />
+                      </div>
                     )}
                   </div>
                   {status}
@@ -305,7 +309,7 @@ export default function InboxPage() {
           }}
           ref={senderDropdownRef as any}
         >
-          <HiOutlineViewBoards className="text-gray-400 text-lg" />
+          <RiUserSharedLine className="text-gray-400 w-4 h-4" />
           <span>Sender</span>
           <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
           
@@ -324,7 +328,9 @@ export default function InboxPage() {
                 >
                   <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                     {selectedSender === sender && (
-                      <FaCheckCircle className="text-primary" size={12} />
+                      <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                        <FaCheck className="text-white" size={8} />
+                      </div>
                     )}
                   </div>
                   {sender}
@@ -349,7 +355,7 @@ export default function InboxPage() {
           }}
           ref={assigneeDropdownRef as any}
         >
-          <BsPerson className="text-gray-400 text-lg" />
+          <RiUserSearchLine className="text-gray-400 w-4 h-4" />
           <span>Assignee</span>
           <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
           
@@ -365,7 +371,9 @@ export default function InboxPage() {
               >
                 <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                   {selectedAssignees.length === 0 && (
-                    <FaCheckCircle className="text-primary" size={12} />
+                    <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                      <FaCheck className="text-white" size={8} />
+                    </div>
                   )}
                 </div>
                 All
@@ -384,7 +392,9 @@ export default function InboxPage() {
               >
                 <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                   {selectedAssignees.includes('__ME__') && (
-                    <FaCheckCircle className="text-primary" size={12} />
+                    <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                      <FaCheck className="text-white" size={8} />
+                    </div>
                   )}
                 </div>
                 Me
@@ -405,7 +415,9 @@ export default function InboxPage() {
                 >
                   <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                     {selectedAssignees.includes(assignee) && (
-                      <FaCheckCircle className="text-primary" size={12} />
+                      <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                        <FaCheck className="text-white" size={8} />
+                      </div>
                     )}
                   </div>
                   {assignee}
@@ -417,7 +429,7 @@ export default function InboxPage() {
 
         {/* Last 30 Days Filter */}
         <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 whitespace-nowrap" style={{ fontFamily: 'Avenir, sans-serif' }}>
-          <FaRegClock className="text-gray-400" size={18} />
+          <TbClockPin className="text-gray-400 w-4 h-4" />
           <span>Last 30 Days</span>
           <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
         </button>

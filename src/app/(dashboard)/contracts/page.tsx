@@ -2,9 +2,9 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { FaSearch, FaClock, FaSort, FaPlus, FaDollarSign, FaTimes, FaChevronDown, FaChevronUp, FaRegClock } from 'react-icons/fa';
+import { FaSearch, FaClock, FaSort, FaPlus, FaDollarSign, FaTimes, FaChevronDown, FaChevronUp, FaRegClock, FaCheck } from 'react-icons/fa';
 import { FaArrowUpRightFromSquare } from 'react-icons/fa6';
-import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutlineTrash, HiOutlinePencilAlt, HiOutlineUpload, HiOutlineEye, HiOutlineClipboardList, HiOutlineExclamation, HiChevronDown } from 'react-icons/hi';
+import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutlineTrash, HiOutlinePencilAlt, HiOutlineUpload, HiOutlineEye, HiOutlineClipboardList, HiOutlineExclamation, HiChevronDown, HiOutlineDocumentSearch } from 'react-icons/hi';
 import { HiOutlineViewBoards } from 'react-icons/hi';
 import { LuCalendarClock } from 'react-icons/lu';
 import { BiDotsHorizontal } from 'react-icons/bi';
@@ -22,7 +22,7 @@ import { EditorContent } from '@tiptap/react';
 import { BsPerson } from 'react-icons/bs';
 import { LuSendHorizontal } from 'react-icons/lu';
 import { RxCaretSort } from 'react-icons/rx';
-import { MdOutlineEditCalendar } from 'react-icons/md';
+import { MdOutlineEditCalendar, MdOutlineUpdate } from 'react-icons/md';
 import { RiArrowDropDownLine } from 'react-icons/ri';
 import { HiMiniChevronUpDown, HiMiniChevronDown } from 'react-icons/hi2';
 import { useTaskStore } from '@/data/taskStore';
@@ -34,6 +34,7 @@ import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive } from 'react-
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
 import { FaCheckCircle } from 'react-icons/fa';
+import { RiUserSearchLine } from 'react-icons/ri';
 
 // Add date formatting utilities
 function formatDatePretty(dateStr: string): string {
@@ -1778,7 +1779,7 @@ const ContractsPage: React.FC = () => {
                 }
               }}
             >
-              <HiOutlineViewBoards className="text-gray-400 text-lg" />
+              <HiOutlineViewBoards className="text-gray-400 w-4 h-4" />
               <span>Status</span>
               <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
             </button>
@@ -1787,7 +1788,20 @@ const ContractsPage: React.FC = () => {
                 className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 status-filter-dropdown" 
                 style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
               >
-                {availableStatuses.map((status) => (
+                <button
+                  className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                  onClick={() => setSelectedStatuses(['All'])}
+                >
+                  <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                    {selectedStatuses.includes('All') && (
+                      <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                        <FaCheck className="text-white" size={8} />
+                      </div>
+                    )}
+                  </div>
+                  All
+                </button>
+                {availableStatuses.filter(status => status !== 'All').map(status => (
                   <button
                     key={status}
                     className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
@@ -1810,7 +1824,9 @@ const ContractsPage: React.FC = () => {
                   >
                     <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                       {selectedStatuses.includes(status) && (
-                        <FaCheckCircle className="text-primary" size={12} />
+                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                          <FaCheck className="text-white" size={8} />
+                        </div>
                       )}
                     </div>
                     {status}
@@ -1825,11 +1841,11 @@ const ContractsPage: React.FC = () => {
             <div className="relative ml-1">
               <button
                 ref={contractButtonRef}
-                className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px]"
+                className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
                 style={{ fontFamily: 'Avenir, sans-serif' }}
                 onClick={() => { setOpenContractDropdown(v => !v); setOpenAssigneeDropdown(false); setShowStatusDropdown(false); }}
               >
-                <HiOutlineDocumentText className="text-gray-400 text-lg" />
+                <HiOutlineDocumentSearch className="text-gray-400 w-4 h-4" />
                 <span>Contract</span>
                 <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
               </button>
@@ -1860,7 +1876,9 @@ const ContractsPage: React.FC = () => {
                   >
                     <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                       {selectedContracts.length === 0 && (
-                        <FaCheckCircle className="text-primary" size={12} />
+                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                          <FaCheck className="text-white" size={8} />
+                        </div>
                       )}
                     </div>
                     All
@@ -1886,7 +1904,9 @@ const ContractsPage: React.FC = () => {
                       >
                         <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                           {selectedContracts.includes(String(contract.id)) && (
-                            <FaCheckCircle className="text-primary" size={12} />
+                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                              <FaCheck className="text-white" size={8} />
+                            </div>
                           )}
                         </div>
                         {contract.id} - {contract.title}
@@ -1902,7 +1922,7 @@ const ContractsPage: React.FC = () => {
                 style={{ fontFamily: 'Avenir, sans-serif' }}
                 onClick={() => { setOpenAssigneeDropdown(v => !v); setOpenContractDropdown(false); setShowStatusDropdown(false); }}
               >
-                <HiOutlineViewBoards className="text-gray-400 text-lg" />
+                <RiUserSearchLine className="text-gray-400 w-4 h-4" />
                 <span>Assignee</span>
                 <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
               </button>
@@ -1921,22 +1941,30 @@ const ContractsPage: React.FC = () => {
                   >
                     <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                       {selectedAssignees.length === 0 && (
-                        <FaCheckCircle className="text-primary" size={12} />
+                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                          <FaCheck className="text-white" size={8} />
+                        </div>
                       )}
                     </div>
                     All
                   </button>
                   <button
                     className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setSelectedAssignees(['__ME__']);
+                    onClick={() => {
+                      setSelectedAssignees(prev => {
+                        if (prev.includes('__ME__')) {
+                          return prev.filter(a => a !== '__ME__');
+                        } else {
+                          return [...prev, '__ME__'];
+                        }
+                      });
                     }}
                   >
                     <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                       {selectedAssignees.includes('__ME__') && (
-                        <FaCheckCircle className="text-primary" size={12} />
+                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                          <FaCheck className="text-white" size={8} />
+                        </div>
                       )}
                     </div>
                     Me
@@ -1959,7 +1987,9 @@ const ContractsPage: React.FC = () => {
                     >
                       <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                         {selectedAssignees.includes(assignee) && (
-                          <FaCheckCircle className="text-primary" size={12} />
+                          <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                            <FaCheck className="text-white" size={8} />
+                          </div>
                         )}
                       </div>
                       {assignee}
@@ -1973,7 +2003,7 @@ const ContractsPage: React.FC = () => {
         <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[150px] ml-1" style={{ fontFamily: 'Avenir, sans-serif' }}
           onClick={() => setLastUpdatedSort(prev => prev === 'desc' ? 'asc' : 'desc')}
         >
-          <MdOutlineEditCalendar className="text-gray-400" size={18} />
+          <MdOutlineUpdate className="text-gray-400 w-4 h-4" />
           <span>Recently Updated</span>
           <HiMiniChevronUpDown className="ml-1 inline-block align-middle text-gray-400 transition-transform duration-200" style={{ transform: lastUpdatedSort === 'asc' ? 'rotate(180deg)' : 'rotate(0deg)' }} size={16} />
         </button>
@@ -2153,16 +2183,16 @@ const ContractsPage: React.FC = () => {
                     Upload Date
                   </th>
                   <th 
-                    className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
-                    onClick={handleDocContractSort}
-                  >
-                    Contract
-                  </th>
-                  <th 
                     className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
                     onClick={handleDocContractIdSort}
                   >
                     Contract ID
+                  </th>
+                  <th 
+                    className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleDocContractSort}
+                  >
+                    Contract
                   </th>
                   <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
@@ -2191,10 +2221,10 @@ const ContractsPage: React.FC = () => {
                     <td className="px-6 py-2.5 whitespace-nowrap text-xs text-gray-500">{doc.assignee}</td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-xs">{doc.uploadedBy}</td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-xs text-gray-500 text-center">{doc.dateUploaded}</td>
-                    <td className="px-6 py-2.5 whitespace-nowrap text-xs font-bold text-gray-900">{doc.contractTitle}</td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
                       <a href={`#${doc.contractId}`} className="text-primary underline font-semibold cursor-pointer">{doc.contractId}</a>
                     </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-xs font-bold text-gray-900">{doc.contractTitle}</td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs font-medium">
                       <div className="flex items-center justify-center space-x-1">
                         <button 
@@ -2370,10 +2400,15 @@ const ContractsPage: React.FC = () => {
                             >
                               <HiOutlineDuplicate className="w-4 h-4" />
                             </button>
-                            {(hoveredContractId === selectedContract.id || copiedContractId === selectedContract.id) && (
-                              <span className="absolute left-1/2 -translate-x-1/2 mt-2 px-2 py-1 rounded bg-gray-800 text-white text-xs whitespace-nowrap z-20 pointer-events-none">
-                                {copiedContractId === selectedContract.id ? 'Copied' : 'Copy'}
-                              </span>
+                            {copiedContractId === selectedContract.id && (
+                              <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded">
+                                Copied!
+                              </div>
+                            )}
+                            {hoveredContractId === selectedContract.id && copiedContractId !== selectedContract.id && (
+                              <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded">
+                                Copy
+                              </div>
                             )}
                           </div>
                         </div>
@@ -3226,13 +3261,13 @@ const ContractsPage: React.FC = () => {
                             <HiOutlineDuplicate className="w-4 h-4" />
                           </button>
                           {copiedContractId === selectedDocument.id && (
-                            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded">
+                            <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded">
                               Copied!
                             </div>
                           )}
                           {hoveredContractId === selectedDocument.id && copiedContractId !== selectedDocument.id && (
-                            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded">
-                              Copy hash
+                            <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded">
+                              Copy
                             </div>
                           )}
                         </div>

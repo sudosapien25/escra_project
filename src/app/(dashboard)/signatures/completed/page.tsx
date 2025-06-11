@@ -2,13 +2,13 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import clsx from "clsx";
-import { FaSearch, FaCheckCircle } from "react-icons/fa";
+import { FaSearch, FaCheckCircle, FaCheck } from "react-icons/fa";
 import { HiMiniChevronDown } from "react-icons/hi2";
 import { HiOutlineEye, HiOutlineDownload, HiOutlineViewBoards } from "react-icons/hi";
 import { LuBellRing } from "react-icons/lu";
 import { MdCancelPresentation } from "react-icons/md";
-import { FaRegClock } from "react-icons/fa";
-import { BsPerson } from 'react-icons/bs';
+import { TbClockPin } from "react-icons/tb";
+import { RiUserSearchLine } from 'react-icons/ri';
 
 const completedRows = [
   // Example data, should match the 'Completed' filter from the main signatures page
@@ -57,8 +57,12 @@ export default function CompletedPage() {
   const [selectedSender, setSelectedSender] = useState('Sent by anyone');
   const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false);
   const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const [showLast30DaysDropdown, setShowLast30DaysDropdown] = useState(false);
   const senderDropdownRef = useRef<HTMLDivElement>(null);
   const assigneeDropdownRef = useRef<HTMLDivElement>(null);
+  const statusDropdownRef = useRef<HTMLDivElement>(null);
+  const last30DaysDropdownRef = useRef<HTMLDivElement>(null);
 
   // Available sender options for the dropdown
   const availableSenders = [
@@ -157,7 +161,7 @@ export default function CompletedPage() {
       <hr className="my-6 border-gray-300" />
       {/* Search Bar and Filters */}
       <div className="bg-white border border-gray-200 rounded-xl px-4 py-4 mb-6 flex items-center w-full mt-2">
-        <div className="flex items-center bg-white border border-gray-200 rounded-xl px-4 py-2 min-w-0" style={{ width: 'calc(100% - 520px)' }}>
+        <div className="flex items-center bg-white border border-gray-200 rounded-xl px-4 py-2 min-w-0 flex-1 mr-4">
           <FaSearch className="text-gray-400 mr-2" size={18} />
           <input
             type="text"
@@ -201,7 +205,9 @@ export default function CompletedPage() {
                 >
                   <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                     {selectedSender === sender && (
-                      <FaCheckCircle className="text-primary" size={12} />
+                      <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                        <FaCheck className="text-white" size={8} />
+                      </div>
                     )}
                   </div>
                   {sender}
@@ -219,13 +225,10 @@ export default function CompletedPage() {
             e.preventDefault();
             e.stopPropagation();
             setShowAssigneeDropdown(prev => !prev);
-            if (!showAssigneeDropdown) {
-              setShowSenderDropdown(false);
-            }
           }}
           ref={assigneeDropdownRef as any}
         >
-          <BsPerson className="text-gray-400 text-lg" />
+          <RiUserSearchLine className="text-gray-400 w-4 h-4" />
           <span>Assignee</span>
           <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
           
@@ -241,7 +244,9 @@ export default function CompletedPage() {
               >
                 <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                   {selectedAssignees.length === 0 && (
-                    <FaCheckCircle className="text-primary" size={12} />
+                    <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                      <FaCheck className="text-white" size={8} />
+                    </div>
                   )}
                 </div>
                 All
@@ -260,7 +265,9 @@ export default function CompletedPage() {
               >
                 <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                   {selectedAssignees.includes('__ME__') && (
-                    <FaCheckCircle className="text-primary" size={12} />
+                    <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                      <FaCheck className="text-white" size={8} />
+                    </div>
                   )}
                 </div>
                 Me
@@ -281,7 +288,9 @@ export default function CompletedPage() {
                 >
                   <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                     {selectedAssignees.includes(assignee) && (
-                      <FaCheckCircle className="text-primary" size={12} />
+                      <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                        <FaCheck className="text-white" size={8} />
+                      </div>
                     )}
                   </div>
                   {assignee}
@@ -292,8 +301,17 @@ export default function CompletedPage() {
         </button>
 
         {/* Last 30 Days Filter */}
-        <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
-          <FaRegClock className="text-gray-400" size={18} />
+        <button
+          className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 relative whitespace-nowrap" 
+          style={{ fontFamily: 'Avenir, sans-serif' }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setShowLast30DaysDropdown((prev: boolean) => !prev);
+          }}
+          ref={last30DaysDropdownRef as any}
+        >
+          <TbClockPin className="text-gray-400 w-4 h-4" />
           <span>Last 30 Days</span>
           <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
         </button>

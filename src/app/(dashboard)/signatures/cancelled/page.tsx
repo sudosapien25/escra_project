@@ -2,13 +2,13 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import clsx from "clsx";
-import { FaSearch, FaCheckCircle } from "react-icons/fa";
+import { FaSearch, FaCheckCircle, FaCheck } from "react-icons/fa";
 import { HiMiniChevronDown } from "react-icons/hi2";
 import { HiOutlineEye, HiOutlineDownload, HiOutlineViewBoards } from "react-icons/hi";
 import { LuBellRing } from "react-icons/lu";
 import { MdCancelPresentation } from "react-icons/md";
-import { FaRegClock } from "react-icons/fa";
-import { BsPerson } from 'react-icons/bs';
+import { TbClockPin } from "react-icons/tb";
+import { RiUserSearchLine } from 'react-icons/ri';
 
 const cancelledRows = [
   // Example data, should match the 'Cancelled' filter from the main signatures page
@@ -60,7 +60,11 @@ export default function CancelledPage() {
   const [selectedStatuses, setSelectedStatuses] = useState(['Rejected', 'Expired', 'Voided']);
   const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false);
   const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
+  const [showLast30DaysDropdown, setShowLast30DaysDropdown] = useState(false);
+
+  const statusDropdownRef = useRef<HTMLDivElement>(null);
   const assigneeDropdownRef = useRef<HTMLDivElement>(null);
+  const last30DaysDropdownRef = useRef<HTMLDivElement>(null);
 
   // Available statuses for the dropdown
   const availableStatuses = [
@@ -215,7 +219,7 @@ export default function CancelledPage() {
           }}
           ref={assigneeDropdownRef as any}
         >
-          <BsPerson className="text-gray-400 text-lg" />
+          <RiUserSearchLine className="text-gray-400 w-4 h-4" />
           <span>Assignee</span>
           <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
           
@@ -231,7 +235,9 @@ export default function CancelledPage() {
               >
                 <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                   {selectedAssignees.length === 0 && (
-                    <FaCheckCircle className="text-primary" size={12} />
+                    <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                      <FaCheck className="text-white" size={8} />
+                    </div>
                   )}
                 </div>
                 All
@@ -250,7 +256,9 @@ export default function CancelledPage() {
               >
                 <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                   {selectedAssignees.includes('__ME__') && (
-                    <FaCheckCircle className="text-primary" size={12} />
+                    <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                      <FaCheck className="text-white" size={8} />
+                    </div>
                   )}
                 </div>
                 Me
@@ -271,7 +279,9 @@ export default function CancelledPage() {
                 >
                   <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                     {selectedAssignees.includes(assignee) && (
-                      <FaCheckCircle className="text-primary" size={12} />
+                      <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                        <FaCheck className="text-white" size={8} />
+                      </div>
                     )}
                   </div>
                   {assignee}
@@ -282,8 +292,17 @@ export default function CancelledPage() {
         </button>
 
         {/* Last 30 Days Filter */}
-        <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
-          <FaRegClock className="text-gray-400" size={18} />
+        <button
+          className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 relative whitespace-nowrap" 
+          style={{ fontFamily: 'Avenir, sans-serif' }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setShowLast30DaysDropdown((prev: boolean) => !prev);
+          }}
+          ref={last30DaysDropdownRef as any}
+        >
+          <TbClockPin className="text-gray-400 w-4 h-4" />
           <span>Last 30 Days</span>
           <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
         </button>

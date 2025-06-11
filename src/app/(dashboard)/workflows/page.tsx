@@ -10,12 +10,14 @@ import { HiMiniChevronDown } from 'react-icons/hi2';
 import { CgPlayPauseR, CgPlayStopR } from 'react-icons/cg';
 import { BsPerson } from 'react-icons/bs';
 import { LuCalendarClock, LuSendHorizontal } from 'react-icons/lu';
-import { FaPlus, FaSearch, FaRetweet, FaCheckCircle } from 'react-icons/fa';
+import { FaPlus, FaSearch, FaRetweet, FaCheckCircle, FaCheck } from 'react-icons/fa';
 import { PiListMagnifyingGlassBold, PiListPlusBold, PiDotsThreeOutline } from 'react-icons/pi';
 import { FaRegSquareCheck } from 'react-icons/fa6';
 import { BiDotsHorizontal } from 'react-icons/bi';
 import { MdCancelPresentation } from 'react-icons/md';
 import { MdOutlineLightMode, MdOutlineDarkMode } from 'react-icons/md';
+import { RiUserSearchLine } from 'react-icons/ri';
+import { HiOutlineDocumentSearch } from 'react-icons/hi';
 
 // TipTap
 import { useEditor, EditorContent, BubbleMenu } from '@tiptap/react';
@@ -608,7 +610,7 @@ export default function WorkflowsPage() {
               style={{ fontFamily: 'Avenir, sans-serif' }}
               onClick={() => { setOpenAssigneeDropdown(v => !v); setOpenContractDropdown(false); setOpenStatusDropdown(false); }}
             >
-              <BsPerson className="text-gray-400 text-lg" />
+              <RiUserSearchLine className="text-gray-400 w-4 h-4" />
               <span>Assignee</span>
               <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
             </button>
@@ -628,7 +630,9 @@ export default function WorkflowsPage() {
                 >
                   <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                     {selectedAssignees.length === 0 && (
-                      <FaCheckCircle className="text-primary" size={12} />
+                      <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                        <FaCheck className="text-white" size={8} />
+                      </div>
                     )}
                   </div>
                   All
@@ -643,7 +647,9 @@ export default function WorkflowsPage() {
                 >
                   <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                     {selectedAssignees.includes('__ME__') && (
-                      <FaCheckCircle className="text-primary" size={12} />
+                      <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                        <FaCheck className="text-white" size={8} />
+                      </div>
                     )}
                   </div>
                   Me
@@ -666,7 +672,9 @@ export default function WorkflowsPage() {
                   >
                     <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                       {selectedAssignees.includes(assignee) && (
-                        <FaCheckCircle className="text-primary" size={12} />
+                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                          <FaCheck className="text-white" size={8} />
+                        </div>
                       )}
                     </div>
                     {assignee}
@@ -683,7 +691,7 @@ export default function WorkflowsPage() {
               style={{ fontFamily: 'Avenir, sans-serif' }}
               onClick={() => { setOpenContractDropdown(v => !v); setOpenAssigneeDropdown(false); setOpenStatusDropdown(false); }}
             >
-              <HiOutlineDocumentText className="text-gray-400 text-lg" />
+              <HiOutlineDocumentSearch className="text-gray-400 w-4 h-4" />
               <span>Contract</span>
               <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
             </button>
@@ -716,7 +724,9 @@ export default function WorkflowsPage() {
                   >
                     <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                       {selectedContracts.length === 0 && (
-                        <FaCheckCircle className="text-primary" size={12} />
+                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                          <FaCheck className="text-white" size={8} />
+                        </div>
                       )}
                     </div>
                     All
@@ -742,7 +752,9 @@ export default function WorkflowsPage() {
                       >
                         <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                           {selectedContracts.includes(String(contract.id)) && (
-                            <FaCheckCircle className="text-primary" size={12} />
+                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                              <FaCheck className="text-white" size={8} />
+                            </div>
                           )}
                         </div>
                         {contract.id} - {contract.title}
@@ -760,7 +772,7 @@ export default function WorkflowsPage() {
               style={{ fontFamily: 'Avenir, sans-serif' }}
               onClick={() => { setOpenStatusDropdown(v => !v); setOpenAssigneeDropdown(false); setOpenContractDropdown(false); }}
             >
-              <HiOutlineViewBoards className="text-gray-400 text-lg" />
+              <HiOutlineViewBoards className="text-gray-400 w-4 h-4" />
               <span>Status</span>
               <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
             </button>
@@ -779,7 +791,9 @@ export default function WorkflowsPage() {
                 >
                   <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                     {selectedStatuses.length === 0 && (
-                      <FaCheckCircle className="text-primary" size={12} />
+                      <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                        <FaCheck className="text-white" size={8} />
+                      </div>
                     )}
                   </div>
                   All
@@ -802,7 +816,9 @@ export default function WorkflowsPage() {
                   >
                     <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                       {selectedStatuses.includes(status.key) && (
-                        <FaCheckCircle className="text-primary" size={12} />
+                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                          <FaCheck className="text-white" size={8} />
+                        </div>
                       )}
                     </div>
                     {status.title}
