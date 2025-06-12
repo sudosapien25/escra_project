@@ -13,6 +13,10 @@ import { FaRegSquareCheck } from "react-icons/fa6";
 import { BsPerson } from 'react-icons/bs';
 import { RiUserSharedLine, RiUserSearchLine } from 'react-icons/ri';
 import { TbClockPin } from 'react-icons/tb';
+import { TbPencilShare, TbPencilX } from 'react-icons/tb';
+import { Modal } from '@/components/common/Modal';
+import { FaDochub } from 'react-icons/fa6';
+import { SiAdobe } from 'react-icons/si';
 
 const inboxRows = [
   // Example data, should match the inbox filter from the main signatures page
@@ -53,6 +57,7 @@ export default function InboxPage() {
   const [selectedSender, setSelectedSender] = useState('Sent by anyone');
   const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false);
   const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
+  const [showToolSelectorModal, setShowToolSelectorModal] = useState(false);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const senderDropdownRef = useRef<HTMLDivElement>(null);
   const assigneeDropdownRef = useRef<HTMLDivElement>(null);
@@ -435,86 +440,173 @@ export default function InboxPage() {
         </button>
       </div>
       {/* Table */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-        {/* Table Header */}
-        <div className="grid grid-cols-[60px_180px_200px_120px_100px_100px_180px_120px_120px_120px_220px] gap-4 items-center px-2 py-4 border-b border-gray-200 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider" style={{ fontFamily: 'Avenir, sans-serif' }}>
-          <div className="text-center">ID</div>
-          <div>Document</div>
-          <div>Parties</div>
-          <div className="text-center">Status</div>
-          <div className="text-center">Signatures</div>
-          <div className="text-center">Contract ID</div>
-          <div>Contract</div>
-          <div>Assignee</div>
-          <div className="text-center">Date Sent</div>
-          <div className="text-center">Due Date</div>
-          <div className="text-center">Actions</div>
-        </div>
-
-        {/* Table Body */}
-        <div className="divide-y divide-gray-200">
-          {filteredRows.length === 0 ? (
-            <div className="text-center text-gray-400 py-8 col-span-11">No results found.</div>
-          ) : (
-            filteredRows.map((row) => (
-              <div
-                key={row.id}
-                className="grid grid-cols-[60px_180px_200px_120px_100px_100px_180px_120px_120px_120px_220px] gap-4 items-start px-2 py-4 border-b border-gray-200 text-xs text-gray-800 whitespace-nowrap hover:bg-gray-50 cursor-pointer"
-                style={{ fontFamily: 'Avenir, sans-serif' }}
-              >
-                <div className="text-center">
-                  <span className="text-xs text-primary underline font-semibold cursor-pointer">{row.id}</span>
-                </div>
-                <div className="text-xs font-semibold">{row.document}</div>
-                <div className="flex flex-col space-y-1">
-                  {row.parties.map((party, idx) => (
-                    <div key={idx}>{party}</div>
-                  ))}
-                </div>
-                <div className="text-center">
-                  <span className="text-xs font-semibold px-2 py-1 rounded-full bg-yellow-100 text-yellow-800 border border-yellow-500">{row.status}</span>
-                </div>
-                <div className="text-center text-gray-600">{row.signatures}</div>
-                <div className="text-center">
-                  <span className="text-xs text-primary underline font-semibold cursor-pointer">{row.contractId}</span>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold">{row.contract}</p>
-                </div>
-                <div className="text-left">{row.assignee}</div>
-                <div className="text-center">{row.dateSent}</div>
-                <div className="text-center">{row.dueDate}</div>
-                <div className="flex space-x-1 justify-center">
-                  <button
-                    className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors"
-                    title="View"
+      <div className="bg-white border border-gray-200 rounded-xl overflow-x-auto">
+        <div className="min-w-[1400px]">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '60px' }}>Document ID</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-left" style={{ minWidth: '180px' }}>Document</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-left" style={{ minWidth: '200px' }}>Parties</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '120px' }}>Status</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '100px' }}>Signatures</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '100px' }}>Contract ID</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-left" style={{ minWidth: '180px' }}>Contract</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-left" style={{ minWidth: '120px' }}>Assignee</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '120px' }}>Date Sent</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '120px' }}>Due Date</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '220px' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredRows.length === 0 ? (
+                <tr>
+                  <td colSpan={11} className="text-center text-gray-400 py-8">No results found.</td>
+                </tr>
+              ) : (
+                filteredRows.map((row) => (
+                  <tr
+                    key={row.id}
+                    className="hover:bg-gray-50 cursor-pointer"
                   >
-                    <HiOutlineEye className="h-4 w-4" />
-                  </button>
-                  <button
-                    className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors"
-                    title="Send Reminder"
-                  >
-                    <LuBellRing className="h-4 w-4" />
-                  </button>
-                  <button
-                    className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors"
-                    title="Download"
-                  >
-                    <HiOutlineDownload className="h-4 w-4" />
-                  </button>
-                  <button
-                    className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors"
-                    title="Void"
-                  >
-                    <MdCancelPresentation className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                      <span className="text-primary underline font-semibold cursor-pointer">{row.id}</span>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-sm">
+                      <div className="text-xs font-bold text-gray-900">{row.document}</div>
+                    </td>
+                    <td className="px-6 py-2.5 text-xs">
+                      <div className="flex flex-col space-y-1">
+                        {row.parties.map((party, idx) => (
+                          <div key={idx} className="text-gray-900">{party}</div>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                      <span className="text-xs font-semibold px-2 py-1 rounded-full bg-yellow-100 text-yellow-800 border border-yellow-500">{row.status}</span>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs text-gray-600">{row.signatures}</td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                      <span className="text-primary underline font-semibold cursor-pointer">{row.contractId}</span>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-sm">
+                      <div className="text-xs font-bold text-gray-900">{row.contract}</div>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-sm">
+                      <div className="text-xs text-gray-900">{row.assignee}</div>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">{row.dateSent}</td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">{row.dueDate}</td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center">
+                      <div className="flex items-center justify-center space-x-1">
+                        <button
+                          className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors"
+                          title="View"
+                        >
+                          <HiOutlineEye className="h-4 w-4" />
+                        </button>
+                        <button
+                          className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors"
+                          title="Sign"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setShowToolSelectorModal(true);
+                          }}
+                        >
+                          <TbPencilShare className="h-4 w-4" />
+                        </button>
+                        <button
+                          className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors"
+                          title="Download"
+                        >
+                          <HiOutlineDownload className="h-4 w-4" />
+                        </button>
+                        <button
+                          className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-red-500 hover:text-red-500 transition-colors"
+                          title="Reject"
+                        >
+                          <TbPencilX className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
+
+      {/* Tool Selector Modal */}
+      <Modal
+        isOpen={showToolSelectorModal}
+        onClose={() => setShowToolSelectorModal(false)}
+        title="Select your signing method..."
+        description="Choose your preferred electronic signature platform"
+        size="xl"
+        className="font-avenir"
+      >
+        <div className="flex flex-col items-center gap-6">
+          <div className="flex flex-row gap-6 w-full justify-center">
+            {/* Escra Native */}
+            <button
+              className="flex flex-col items-center border border-gray-200 rounded-xl p-6 w-64 bg-white hover:shadow-lg transition-shadow focus:outline-none"
+              onClick={() => {
+                setShowToolSelectorModal(false);
+                // TODO: Add Escra signing logic here
+              }}
+            >
+              <div className="h-14 w-14 rounded-full bg-teal-50 flex items-center justify-center mb-4">
+                <img 
+                  src="/assets/logos/escra-logo-teal.png" 
+                  alt="Escra Logo" 
+                  className="w-9 h-9 object-contain"
+                />
+              </div>
+              <div className="text-lg font-semibold mb-1">Escra</div>
+              <div className="text-xs text-gray-500 mb-2 text-center">Native signature solution with blockchain security</div>
+              <span className="text-xs bg-teal-50 text-teal-500 px-3 py-1 rounded-full font-semibold">Recommended</span>
+            </button>
+            {/* DocuSign */}
+            <button
+              className="flex flex-col items-center border border-gray-200 rounded-xl p-6 w-64 bg-white hover:shadow-lg transition-shadow focus:outline-none"
+              onClick={() => {
+                setShowToolSelectorModal(false);
+                // TODO: Add DocuSign logic here
+              }}
+            >
+              <div className="h-14 w-14 rounded-full bg-blue-50 flex items-center justify-center mb-4">
+                <FaDochub className="w-8 h-8 text-blue-500 transform translate-x-[2px]" />
+              </div>
+              <div className="text-lg font-semibold mb-1">DocuSign</div>
+              <div className="text-xs text-gray-500 mb-2 text-center">
+                Industry-leading<br />
+                e-signature platform
+              </div>
+              <span className="text-xs bg-gray-100 text-gray-700 px-3 py-1 rounded-full font-semibold">External</span>
+            </button>
+            {/* Adobe Sign */}
+            <button
+              className="flex flex-col items-center border border-gray-200 rounded-xl p-6 w-64 bg-white hover:shadow-lg transition-shadow focus:outline-none"
+              onClick={() => {
+                setShowToolSelectorModal(false);
+                // TODO: Add Adobe Sign logic here
+              }}
+            >
+              <div className="h-14 w-14 rounded-full bg-red-50 flex items-center justify-center mb-4">
+                <SiAdobe className="w-8 h-8 text-red-400" />
+              </div>
+              <div className="text-lg font-semibold mb-1">Adobe Sign</div>
+              <div className="text-xs text-gray-500 mb-2 text-center">
+                Professional<br />
+                PDF Signing Solution
+              </div>
+              <span className="text-xs bg-gray-100 text-gray-700 px-3 py-1 rounded-full font-semibold">External</span>
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 } 

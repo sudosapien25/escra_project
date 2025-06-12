@@ -2135,7 +2135,7 @@ const ContractsPage: React.FC = () => {
                         <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Upload" onClick={e => { e.stopPropagation(); setShowUploadModal(true); setUploadContractId(contract.id); }}>
                           <HiOutlineUpload className="h-4 w-4" />
                         </button>
-                        <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Delete" onClick={e => { e.stopPropagation(); /* Add your delete logic or confirmation modal here */ }}>
+                        <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-red-500 hover:text-red-500 transition-colors" title="Delete" onClick={e => { e.stopPropagation(); /* Add your delete logic or confirmation modal here */ }}>
                           <HiOutlineTrash className="h-4 w-4" />
                         </button>
                       </div>
@@ -2252,7 +2252,7 @@ const ContractsPage: React.FC = () => {
                         <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Download">
                           <HiOutlineDownload className="h-4 w-4" />
                         </button>
-                        <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Delete">
+                        <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-red-500 hover:text-red-500 transition-colors" title="Delete">
                           <HiOutlineTrash className="h-4 w-4" />
                         </button>
                     </div>
@@ -2699,7 +2699,7 @@ const ContractsPage: React.FC = () => {
                             <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Download">
                               <HiOutlineDownload className="h-4 w-4" />
                             </button>
-                            <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Delete">
+                            <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-red-500 hover:text-red-500 transition-colors" title="Delete">
                               <HiOutlineTrash className="h-4 w-4" />
                             </button>
                           </div>

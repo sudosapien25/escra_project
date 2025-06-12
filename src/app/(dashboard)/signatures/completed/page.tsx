@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import clsx from "clsx";
 import { FaSearch, FaCheckCircle, FaCheck } from "react-icons/fa";
-import { HiMiniChevronDown } from "react-icons/hi2";
+import { HiMiniChevronDown, HiMiniChevronUp } from "react-icons/hi2";
 import { HiOutlineEye, HiOutlineDownload, HiOutlineViewBoards } from "react-icons/hi";
 import { LuBellRing } from "react-icons/lu";
 import { MdCancelPresentation } from "react-icons/md";
@@ -63,6 +63,10 @@ export default function CompletedPage() {
   const assigneeDropdownRef = useRef<HTMLDivElement>(null);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const last30DaysDropdownRef = useRef<HTMLDivElement>(null);
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: 'asc' | 'desc';
+  }>({ key: 'dateSent', direction: 'desc' });
 
   // Available sender options for the dropdown
   const availableSenders = [
@@ -140,7 +144,23 @@ export default function CompletedPage() {
     };
   }, []);
 
-  const filteredRows = completedRows.filter((row) => {
+  const handleSort = (key: string) => {
+    setSortConfig(prevConfig => ({
+      key,
+      direction: prevConfig.key === key && prevConfig.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  const getSortedData = () => {
+    return [...completedRows].sort((a, b) => {
+      if (sortConfig.direction === 'asc') {
+        return a[sortConfig.key as keyof typeof a] > b[sortConfig.key as keyof typeof b] ? 1 : -1;
+      }
+      return a[sortConfig.key as keyof typeof a] < b[sortConfig.key as keyof typeof b] ? 1 : -1;
+    });
+  };
+
+  const filteredRows = getSortedData().filter((row) => {
     if (!searchTerm) return true;
     const searchLower = searchTerm.toLowerCase();
     return (
@@ -161,7 +181,7 @@ export default function CompletedPage() {
       <hr className="my-6 border-gray-300" />
       {/* Search Bar and Filters */}
       <div className="bg-white border border-gray-200 rounded-xl px-4 py-4 mb-6 flex items-center w-full mt-2">
-        <div className="flex items-center bg-white border border-gray-200 rounded-xl px-4 py-2 min-w-0 flex-1 mr-4">
+        <div className="flex items-center bg-white border border-gray-200 rounded-xl px-4 py-2 min-w-0 flex-1 mr-1">
           <FaSearch className="text-gray-400 mr-2" size={18} />
           <input
             type="text"
@@ -318,69 +338,83 @@ export default function CompletedPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-        {/* Table Header */}
-        <div className="grid grid-cols-[60px_180px_200px_120px_100px_100px_180px_120px_120px_120px_220px] gap-4 items-center px-2 py-4 border-b border-gray-200 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider" style={{ fontFamily: 'Avenir, sans-serif' }}>
-          <div className="text-center">ID</div>
-          <div>Document</div>
-          <div>Parties</div>
-          <div className="text-center">Status</div>
-          <div className="text-center">Signatures</div>
-          <div className="text-center">Contract ID</div>
-          <div>Contract</div>
-          <div>Assignee</div>
-          <div className="text-center">Date Sent</div>
-          <div className="text-center">Due Date</div>
-          <div className="text-center">Actions</div>
-        </div>
-
-        {/* Table Body */}
-        <div className="divide-y divide-gray-200">
-          {filteredRows.length === 0 ? (
-            <div className="text-center text-gray-400 py-8 col-span-11">No results found.</div>
-          ) : (
-            filteredRows.map((row) => (
-              <div
-                key={row.id}
-                className="grid grid-cols-[60px_180px_200px_120px_100px_100px_180px_120px_120px_120px_220px] gap-4 items-start px-2 py-4 border-b border-gray-200 text-xs text-gray-800 whitespace-nowrap hover:bg-gray-50 cursor-pointer"
-                style={{ fontFamily: 'Avenir, sans-serif' }}
-              >
-                <div className="text-center">
-                  <span className="text-xs text-primary underline font-semibold cursor-pointer">{row.id}</span>
-                </div>
-                <div className="text-xs font-semibold">{row.document}</div>
-                <div className="flex flex-col space-y-1">
-                  {row.parties.map((party, idx) => (
-                    <div key={idx}>{party}</div>
-                  ))}
-                </div>
-                <div className="text-center">
-                  <span className="text-xs font-semibold px-2 py-1 rounded-full bg-green-100 text-green-800 border border-green-500">{row.status}</span>
-                </div>
-                <div className="text-center text-gray-600">{row.signatures}</div>
-                <div className="text-center">
-                  <span className="text-xs text-primary underline font-semibold cursor-pointer">{row.contractId}</span>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold">{row.contract}</p>
-                </div>
-                <div className="text-left">{row.assignee}</div>
-                <div className="text-center">{row.dateSent}</div>
-                <div className="text-center">{row.dueDate}</div>
-                <div className="flex items-center justify-center space-x-2">
-                  <button className="p-1 hover:bg-gray-100 rounded-lg" title="View">
-                    <HiOutlineEye className="text-gray-500" size={18} />
-                  </button>
-                  <button className="p-1 hover:bg-gray-100 rounded-lg" title="Download">
-                    <HiOutlineDownload className="text-gray-500" size={18} />
-                  </button>
-                  <button className="p-1 hover:bg-gray-100 rounded-lg" title="View Details">
-                    <HiOutlineViewBoards className="text-gray-500" size={18} />
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
+      <div className="bg-white border border-gray-200 rounded-xl overflow-x-auto">
+        <div className="min-w-[1400px]">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '60px' }}>Document ID</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-left" style={{ minWidth: '180px' }}>Document</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-left" style={{ minWidth: '200px' }}>Parties</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '120px' }}>Status</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '100px' }}>Signatures</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '100px' }}>Contract ID</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-left" style={{ minWidth: '180px' }}>Contract</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-left" style={{ minWidth: '120px' }}>Assignee</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '120px' }}>Date Sent</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '120px' }}>Due Date</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '120px' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredRows.length === 0 ? (
+                <tr>
+                  <td colSpan={11} className="text-center text-gray-400 py-8">No results found.</td>
+                </tr>
+              ) : (
+                filteredRows.map((row) => (
+                  <tr key={row.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                      <span className="text-primary underline font-semibold cursor-pointer">{row.id}</span>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-sm">
+                      <div className="text-xs font-bold text-gray-900">{row.document}</div>
+                    </td>
+                    <td className="px-6 py-2.5 text-xs">
+                      <div className="flex flex-col space-y-1">
+                        {row.parties.map((party, index) => (
+                          <div key={index} className="text-gray-900">{party}</div>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                      <span className="inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full border bg-green-100 text-green-800 border-green-500">
+                        {row.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs text-gray-600">{row.signatures}</td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                      <span className="text-primary underline font-semibold cursor-pointer">{row.contractId}</span>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-sm">
+                      <div className="text-xs font-bold text-gray-900">{row.contract}</div>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-sm">
+                      <div className="text-xs text-gray-900">{row.assignee}</div>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">{row.dateSent}</td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">{row.dueDate}</td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center">
+                      <div className="flex items-center justify-center space-x-1">
+                        <button
+                          className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors"
+                          title="View"
+                        >
+                          <HiOutlineEye className="h-4 w-4" />
+                        </button>
+                        <button
+                          className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors"
+                          title="Download"
+                        >
+                          <HiOutlineDownload className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

@@ -373,7 +373,6 @@ export default function OnboardingPage() {
       const requiredFields = [
         'companyName',
         'companyType',
-        'industry',
         'address',
         'city',
         'state',
@@ -462,7 +461,7 @@ export default function OnboardingPage() {
 
       <div className={`w-full ${tab === 'business' ? 'max-w-3xl' : 'max-w-md'} bg-white dark:bg-gray-800 rounded-2xl p-4 transition-all duration-300`} style={{ boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
         <div className="mb-2">
-          <h2 className="text-lg font-bold text-center text-gray-900 dark:text-white mb-1">Complete Your Profile</h2>
+          <h2 className="text-lg font-bold text-center text-gray-900 dark:text-white mb-1">Complete your profile</h2>
           <p className="text-center text-gray-500 dark:text-gray-300 text-sm mb-3">Tell us more about your business</p>
           <div className="flex rounded-lg bg-gray-100 dark:bg-gray-700 overflow-hidden mb-3 border border-gray-200 dark:border-gray-700">
             <button
@@ -685,8 +684,8 @@ export default function OnboardingPage() {
           ) : tab === 'business' && step === 2 ? (
             <>
               <div className="mb-4">
-                <h3 className="text-sm font-semibold text-gray-900 mb-2">Select Your Industries</h3>
-                <p className="text-xs text-gray-500 mb-4">Choose all industries that apply to your business</p>
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">Personalize your experience...</h3>
+                <p className="text-xs text-gray-500 mb-4">Choose additional industries to see more contract templates</p>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {INDUSTRIES.map(industry => (
                     <button
@@ -718,6 +717,7 @@ export default function OnboardingPage() {
                 {formErrors.industrySelection && (
                   <p className="text-xs text-red-600 mt-2">{formErrors.industrySelection}</p>
                 )}
+                <p className="text-xs text-gray-500 mt-2">*You can change this later.</p>
               </div>
               <div className="flex gap-3">
                 <button

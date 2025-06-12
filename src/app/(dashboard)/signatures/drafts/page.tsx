@@ -2,8 +2,9 @@
 
 import React, { useState } from 'react';
 import { FaSearch } from 'react-icons/fa';
-import { HiOutlineEye, HiOutlineDownload, HiOutlineTrash } from 'react-icons/hi';
+import { HiOutlineEye, HiOutlineTrash } from 'react-icons/hi';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { TbEdit, TbPencilShare } from 'react-icons/tb';
 
 export default function DraftsPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -49,64 +50,72 @@ export default function DraftsPage() {
       {/* Table */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
-          {/* Table Header */}
-          <div className="grid grid-cols-[90px_210px_210px_130px_210px_130px_140px_110px_150px] gap-4 items-center px-2 py-4 border-b border-gray-200 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider" style={{ fontFamily: 'Avenir, sans-serif' }}>
-            <div className="text-center">ID</div>
-            <div>Document</div>
-            <div>Parties</div>
-            <div className="text-center">Contract ID</div>
-            <div>Contract</div>
-            <div className="text-center">Status</div>
-            <div>Assignee</div>
-            <div className="text-center">Last Modified</div>
-            <div className="text-center">Actions</div>
-          </div>
-          {/* Table Body */}
-          <div className="divide-y divide-gray-200">
-            <div className="grid grid-cols-[90px_210px_210px_130px_210px_130px_140px_110px_150px] gap-4 items-start px-2 py-4 border-b border-gray-200 text-xs text-gray-800 whitespace-nowrap hover:bg-gray-50" style={{ fontFamily: 'Avenir, sans-serif' }}>
-              <div className="text-center">
-                <span className="text-xs text-primary underline font-semibold cursor-pointer">1234</span>
-              </div>
-              <div className="text-xs font-semibold">Purchase Agreement</div>
-              <div className="flex flex-col space-y-1">
-                <span className="text-xs">Robert Chen</span>
-                <span className="text-xs">Eastside Properties</span>
-              </div>
-              <div className="text-center">
-                <span className="text-xs text-primary underline font-semibold cursor-pointer">9548</span>
-              </div>
-              <div className="text-xs font-semibold">New Property Acquisition</div>
-              <div className="text-center">
-                <span className="text-xs font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-800 border border-gray-500">Draft</span>
-              </div>
-              <div className="text-left">
-                <span className="text-xs">John Smith</span>
-              </div>
-              <div className="text-center">
-                <span className="text-xs">2024-03-15</span>
-              </div>
-              <div className="flex space-x-1 justify-center">
-                <button
-                  className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors"
-                  title="View"
-                >
-                  <HiOutlineEye className="h-4 w-4" />
-                </button>
-                <button
-                  className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors"
-                  title="Download"
-                >
-                  <HiOutlineDownload className="h-4 w-4" />
-                </button>
-                <button
-                  className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors"
-                  title="Delete"
-                >
-                  <HiOutlineTrash className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          </div>
+          <table className="w-full">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="px-6 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider text-center whitespace-nowrap" style={{ minWidth: '100px' }}>Document ID</th>
+                <th className="px-6 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider text-left" style={{ minWidth: '200px' }}>Document</th>
+                <th className="px-6 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider text-left" style={{ minWidth: '200px' }}>Parties</th>
+                <th className="px-6 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider text-center" style={{ minWidth: '120px' }}>Contract ID</th>
+                <th className="px-6 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider text-left" style={{ minWidth: '180px' }}>Contract</th>
+                <th className="px-6 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider text-center" style={{ minWidth: '120px' }}>Status</th>
+                <th className="px-6 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider text-left" style={{ minWidth: '150px' }}>Assignee</th>
+                <th className="px-6 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider text-center" style={{ minWidth: '120px' }}>Last Modified</th>
+                <th className="px-6 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider text-center" style={{ minWidth: '150px' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              <tr className="hover:bg-gray-50">
+                <td className="px-6 py-2.5 text-xs text-center whitespace-nowrap">
+                  <span className="text-primary underline font-semibold cursor-pointer">1234</span>
+                </td>
+                <td className="px-6 py-2.5 text-xs font-semibold whitespace-nowrap">Purchase Agreement</td>
+                <td className="px-6 py-2.5 text-xs whitespace-nowrap">
+                  <div className="flex flex-col space-y-1">
+                    <span>Robert Chen</span>
+                    <span>Eastside Properties</span>
+                  </div>
+                </td>
+                <td className="px-6 py-2.5 text-xs text-center whitespace-nowrap">
+                  <span className="text-primary underline font-semibold cursor-pointer">9548</span>
+                </td>
+                <td className="px-6 py-2.5 text-xs font-semibold whitespace-nowrap">New Property Acquisition</td>
+                <td className="px-6 py-2.5 text-xs text-center whitespace-nowrap">
+                  <span className="px-2 py-1 rounded-full bg-gray-100 text-gray-800 border border-gray-500 font-semibold">Draft</span>
+                </td>
+                <td className="px-6 py-2.5 text-xs whitespace-nowrap">John Smith</td>
+                <td className="px-6 py-2.5 text-xs text-center whitespace-nowrap">2024-03-15</td>
+                <td className="px-6 py-2.5 text-xs text-center whitespace-nowrap">
+                  <div className="flex items-center justify-center space-x-1">
+                    <button
+                      className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors"
+                      title="View"
+                    >
+                      <HiOutlineEye className="h-4 w-4" />
+                    </button>
+                    <button
+                      className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors"
+                      title="Edit"
+                    >
+                      <TbEdit className="h-4 w-4" />
+                    </button>
+                    <button
+                      className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors"
+                      title="Send"
+                    >
+                      <TbPencilShare className="h-4 w-4" />
+                    </button>
+                    <button
+                      className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors"
+                      title="Delete"
+                    >
+                      <HiOutlineTrash className="h-4 w-4" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

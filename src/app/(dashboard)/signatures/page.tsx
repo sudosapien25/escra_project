@@ -1408,6 +1408,17 @@ export default function SignaturesPage() {
                             >
                               <HiOutlineDownload className="h-4 w-4" />
                             </button>
+                            <button 
+                              className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-red-500 hover:text-red-500 transition-colors" 
+                              title="Void"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                // Add void action here
+                              }}
+                            >
+                              <MdCancelPresentation className="h-4 w-4" />
+                            </button>
                           </div>
                         </td>
                       </tr>
