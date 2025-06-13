@@ -67,8 +67,8 @@ type TaskStatus = 'To Do' | 'Blocked' | 'On Hold' | 'In Progress' | 'In Review' 
 type StatusOption = TaskStatus | 'All';
 
 export default function WorkflowsPage() {
-  const [kanbanTab, setKanbanTab] = React.useState('All Tasks');
-  const kanbanTabs = ['All Tasks', 'Active Tasks', 'Upcoming'];
+  const [kanbanTab, setKanbanTab] = React.useState('All');
+  const kanbanTabs = ['All', 'Active', 'Upcoming'];
   const [taskSearchTerm, setTaskSearchTerm] = React.useState('');
   const [openMenuTask, setOpenMenuTask] = React.useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -559,9 +559,9 @@ export default function WorkflowsPage() {
             <button
               key={tab}
               onClick={() => setKanbanTab(tab)}
-              className={`px-4 py-2 rounded-lg text-xs font-medium transition-all duration-300 font-sans flex items-center justify-center ${
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all duration-300 font-sans flex items-center justify-center ${
                 kanbanTab === tab 
-                  ? 'bg-white dark:bg-gray-800 text-teal-500 dark:text-teal-400 min-w-[130px] border-2 border-gray-200 dark:border-gray-700' 
+                  ? 'bg-white dark:bg-gray-800 text-teal-500 dark:text-teal-400 min-w-[90px] border-2 border-gray-200 dark:border-gray-700' 
                   : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 w-fit border border-gray-200 dark:border-gray-700'
               }`}
             >
@@ -869,7 +869,7 @@ export default function WorkflowsPage() {
       <hr className="my-6 border-gray-300" />
 
       {/* Kanban Board Section (filtered by tab) */}
-      {kanbanTab === 'All Tasks' && (
+      {kanbanTab === 'All' && (
         <DragDropContext onDragEnd={onDragEnd}>
           <div className="flex flex-grow overflow-x-auto space-x-6 p-4 rounded-lg">
             {kanbanColumns
@@ -996,11 +996,11 @@ export default function WorkflowsPage() {
           </div>
         </DragDropContext>
       )}
-      {kanbanTab === 'Active Tasks' && (
+      {kanbanTab === 'Active' && (
         <DragDropContext onDragEnd={onDragEnd}>
           <div className="flex flex-grow overflow-x-auto space-x-6 p-4 rounded-lg">
             {kanbanColumns
-              .filter(col => col.key !== 'Done' && col.key !== 'Canceled' && (selectedStatuses.length === 0 || selectedStatuses.includes(col.key as TaskStatus)))
+              .filter(col => col.key !== 'Done' && col.key !== 'Canceled')
               .map((col) => (
                 <Droppable droppableId={col.key} key={col.key}>
                   {(provided) => (

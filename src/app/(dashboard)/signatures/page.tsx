@@ -12,7 +12,7 @@ import { BsPerson } from 'react-icons/bs';
 import { PiWarningDiamondBold } from 'react-icons/pi';
 import clsx from 'clsx';
 import { IconBaseProps } from 'react-icons';
-import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbClockPin, TbPencilShare, TbPencilPlus } from 'react-icons/tb';
+import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbClockPin, TbPencilShare, TbPencilPlus, TbClockEdit } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
 import { TiUserAddOutline } from 'react-icons/ti';
@@ -794,12 +794,12 @@ export default function SignaturesPage() {
         {/* Waiting for Others */}
         <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
           <div className="h-10 w-10 rounded-lg bg-yellow-100 flex items-center justify-center border-2 border-yellow-200">
-            <FaRegClock size={18} color="#f59e0b" />
+            <TbClockEdit size={20} color="#f59e0b" />
           </div>
           <div className="flex flex-col items-start h-full">
             <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Waiting on Others</p>
-            <p className="text-2xl font-bold text-gray-900">{statBoxesData.waitingForOthers}</p>
-            <p className="text-xs text-gray-400">Pending signatures</p>
+            <p className="text-2xl font-bold text-gray-900">{signaturesData.filter(sig => sig.status === 'Pending' && sig.signatures.split(' of ')[0] !== '0').length}</p>
+            <p className="text-xs text-gray-400">Requires action</p>
           </div>
         </div>
 

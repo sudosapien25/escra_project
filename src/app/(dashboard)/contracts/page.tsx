@@ -8,7 +8,7 @@ import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutline
 import { HiOutlineViewBoards } from 'react-icons/hi';
 import { LuCalendarClock } from 'react-icons/lu';
 import { BiDotsHorizontal } from 'react-icons/bi';
-import { TbWorldDollar, TbEdit } from 'react-icons/tb';
+import { TbWorldDollar, TbEdit, TbClockUp } from 'react-icons/tb';
 import { Logo } from '@/components/common/Logo';
 import { mockContracts } from '@/data/mockContracts';
 import { useEditor } from '@tiptap/react';
@@ -29,12 +29,13 @@ import { useTaskStore } from '@/data/taskStore';
 import { X } from 'lucide-react';
 import { useAssigneeStore } from '@/data/assigneeStore';
 import { useAuth } from '@/context/AuthContext';
-import { PiMoneyWavyBold, PiBankBold } from 'react-icons/pi';
+import { PiMoneyWavyBold, PiBankBold, PiSignatureBold } from 'react-icons/pi';
 import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
 import { FaCheckCircle } from 'react-icons/fa';
 import { RiUserSearchLine } from 'react-icons/ri';
+import { GrMoney } from 'react-icons/gr';
 
 // Add date formatting utilities
 function formatDatePretty(dateStr: string): string {
@@ -1702,7 +1703,7 @@ const ContractsPage: React.FC = () => {
             {/* Pending Signatures */}
             <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
               <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center border-2 border-purple-200">
-                <TbEdit size={18} color="#7c3aed" />
+                <TbEdit size={20} color="#7c3aed" />
               </div>
               <div className="flex flex-col items-start h-full">
                 <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Pending Signatures</p>
@@ -1712,8 +1713,8 @@ const ContractsPage: React.FC = () => {
             </div>
             {/* Awaiting Wire Instructions */}
             <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
-              <div className="h-10 w-10 rounded-lg bg-yellow-100 flex items-center justify-center border-2 border-yellow-200">
-                <PiBankBold size={19} color="#f59e42" />
+              <div className="h-10 w-10 rounded-lg bg-orange-100 flex items-center justify-center border-2 border-orange-200">
+                <PiBankBold size={20} color="#ea580c" />
               </div>
               <div className="flex flex-col items-start h-full">
                 <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Awaiting Wire Details</p>
@@ -1723,13 +1724,13 @@ const ContractsPage: React.FC = () => {
             </div>
             {/* Avg. Completion Time */}
             <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
-              <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center border-2 border-blue-200">
-                <FaRegClock size={18} color="#3b82f6" />
+              <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center border-2 border-blue-200">
+                <TbClockUp size={20} color="#3b82f6" />
               </div>
               <div className="flex flex-col items-start h-full">
-                <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Avg. Completion Time</p>
-                <p className="text-2xl font-bold text-gray-900">9.2 days</p>
-                <p className="text-xs text-green-600 font-semibold">↓ 1.3 days faster</p>
+                <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Average Completion Time</p>
+                <p className="text-2xl font-bold text-gray-900">3.2 days</p>
+                <p className="text-xs text-gray-400">Last 30 days</p>
               </div>
             </div>
 
@@ -1737,7 +1738,7 @@ const ContractsPage: React.FC = () => {
           {/* Total Contract Value Box */}
           <div className="mb-6 bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
             <div className="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center border-2 border-teal-200">
-              <TbWorldDollar size={18} color="#06b6d4" />
+              <GrMoney size={20} color="#06b6d4" />
             </div>
             <div className="flex flex-col items-start h-full">
               <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contract Value</p>

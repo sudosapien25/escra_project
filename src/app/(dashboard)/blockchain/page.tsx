@@ -2,8 +2,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/common/Card';
-import { FaPlus, FaCopy, FaWallet, FaNetworkWired, FaBook, FaExternalLinkAlt, FaCogs, FaFaucet, FaShieldAlt, FaArrowRight, FaSearch, FaCheck } from 'react-icons/fa';
-import { FaTimeline } from 'react-icons/fa6';
+import { FaPlus, FaCopy, FaWallet, FaNetworkWired, FaBook, FaExternalLinkAlt, FaCogs, FaArrowRight, FaSearch, FaCheck } from 'react-icons/fa';
+import { FaTimeline, FaFaucetDrip } from 'react-icons/fa6';
 import { HiOutlineExternalLink, HiOutlineBookOpen, HiOutlineDuplicate, HiOutlineViewBoards, HiOutlineDocumentSearch } from 'react-icons/hi';
 import { HiMiniChevronDown } from 'react-icons/hi2';
 import { FaRegCalendarAlt, FaRegCheckCircle, FaRegFileAlt, FaCodeBranch, FaHashtag, FaCoins } from 'react-icons/fa';
@@ -12,8 +12,9 @@ import NewContractModal from '@/components/common/NewContractModal';
 import { MdOutlineAddToPhotos, MdOutlineUpdate } from 'react-icons/md';
 import { mockContracts } from '@/data/mockContracts';
 import Image from 'next/image';
-import { LuSquareArrowOutUpRight } from 'react-icons/lu';
-import { TbClockPin } from 'react-icons/tb';
+import { LuSquareArrowOutUpRight, LuFileTerminal } from 'react-icons/lu';
+import { TbClockPin, TbShieldLock, TbDropletFilled } from 'react-icons/tb';
+import { CgTerminal } from 'react-icons/cg';
 
 // Helper function to generate contract hash
 const getContractHash = (id: string) => `0x${id}${'0'.repeat(66 - 2 - id.length)}`;
@@ -263,7 +264,7 @@ export default function BlockchainPage() {
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0">
         <div className="pb-1">
           <h1 className="text-[24px] md:text-[30px] font-bold text-black mb-0">Blockchain</h1>
-          <p className="text-gray-500 text-[15px] md:text-[16px] mt-0">View smart contracts, on-chain activity, & explorer integrations</p>
+          <p className="text-gray-500 text-[15px] md:text-[16px] mt-0">Review your smart contracts, on-chain activity & explorer integrations</p>
         </div>
         <button
           className="flex items-center justify-center w-full md:w-auto px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
@@ -288,7 +289,7 @@ export default function BlockchainPage() {
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2 rounded-lg text-xs font-medium transition-all duration-300 font-sans flex items-center justify-center ${
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all duration-300 font-sans flex items-center justify-center ${
               activeTab === tab.key 
                 ? 'bg-white dark:bg-gray-800 text-teal-500 dark:text-teal-400 min-w-[130px] border-2 border-gray-200 dark:border-gray-700' 
                 : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 w-fit border border-gray-200 dark:border-gray-700'
@@ -526,7 +527,7 @@ export default function BlockchainPage() {
                     )}
                   </div>
                 </div>
-                <p className="text-[12px] text-gray-600 mb-3 truncate" style={{ fontFamily: 'Avenir, sans-serif' }} title={contract.description}>{contract.description}</p>
+                <p className="text-[12px] text-gray-600 mb-3 truncate italic" style={{ fontFamily: 'Avenir, sans-serif' }} title={contract.description}>{contract.description}</p>
                 <div className="flex items-center text-[11px] text-gray-500 mb-2" style={{ fontFamily: 'Avenir, sans-serif' }}>
                   <span className="mr-4 flex items-center truncate"><MdOutlineUpdate className="mr-1 text-gray-400 flex-shrink-0 text-base" />Last Updated: {contract.deployed}</span>
                   <span className="flex items-center truncate"><FaTimeline className="mr-1 text-gray-400 flex-shrink-0 text-base" />{contract.transactions} Transactions</span>
@@ -772,8 +773,14 @@ export default function BlockchainPage() {
             {/* Allo Explorer (moved to first) */}
             <Card className="rounded-xl border border-gray-200 p-6 flex flex-col h-full">
               <div className="flex items-center mb-2">
-                <span className="w-8 h-8 flex items-center justify-center rounded bg-green-100 mr-3">
-                  <FaCogs className="text-green-400 text-xl" />
+                <span className="h-10 w-10 rounded-lg bg-purple-50 flex items-center justify-center border-2 border-purple-200 mr-3">
+                  <Image
+                    src="/assets/Allo.info_idEm-oc6nE_0.png"
+                    alt="Allo.info"
+                    width={28}
+                    height={28}
+                    className="object-contain"
+                  />
                 </span>
                 <span className="text-lg font-semibold text-black">Allo Explorer</span>
               </div>
@@ -794,8 +801,14 @@ export default function BlockchainPage() {
             {/* Pera Explorer (was AlgoExplorer) */}
             <Card className="rounded-xl border border-gray-200 p-6 flex flex-col h-full">
               <div className="flex items-center mb-2">
-                <span className="w-8 h-8 flex items-center justify-center rounded bg-blue-100 mr-3">
-                  <FaNetworkWired className="text-blue-400 text-xl" />
+                <span className="h-10 w-10 rounded-lg bg-yellow-50 flex items-center justify-center border-2 border-yellow-200 mr-3">
+                  <Image
+                    src="/assets/newperalogo.png"
+                    alt="Pera"
+                    width={24}
+                    height={24}
+                    className="object-contain"
+                  />
                 </span>
                 <span className="text-lg font-semibold text-black">Pera Explorer</span>
               </div>
@@ -816,8 +829,14 @@ export default function BlockchainPage() {
             {/* Pera Wallet (unchanged) */}
             <Card className="rounded-xl border border-gray-200 p-6 flex flex-col h-full">
               <div className="flex items-center mb-2">
-                <span className="w-8 h-8 flex items-center justify-center rounded bg-purple-100 mr-3">
-                  <FaWallet className="text-purple-400 text-xl" />
+                <span className="h-10 w-10 rounded-lg bg-yellow-50 flex items-center justify-center border-2 border-yellow-200 mr-3">
+                  <Image
+                    src="/assets/newperalogo.png"
+                    alt="Pera"
+                    width={24}
+                    height={24}
+                    className="object-contain"
+                  />
                 </span>
                 <span className="text-lg font-semibold text-black">Pera Wallet</span>
               </div>
@@ -843,8 +862,8 @@ export default function BlockchainPage() {
               {/* Smart Contract SDK */}
               <Card className="rounded-xl border border-gray-200 p-5 flex flex-col h-full">
                 <div className="flex items-center mb-2">
-                  <span className="w-8 h-8 flex items-center justify-center rounded bg-teal-100 mr-3">
-                    <span className="text-teal-500 text-lg">&gt;_</span>
+                  <span className="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center border-2 border-teal-200 mr-3">
+                    <LuFileTerminal className="w-10 h-6 text-black" />
                   </span>
                   <span className="text-base font-semibold text-black">Smart Contract SDK</span>
                 </div>
@@ -854,13 +873,13 @@ export default function BlockchainPage() {
                   View Documentation
                 </button>
               </Card>
-              {/* Escra TestNet Faucet */}
-              <Card className="rounded-xl border border-gray-200 p-5 flex flex-col h-full">
+              {/* Faucet */}
+              <Card className="rounded-xl border border-gray-200 p-6 flex flex-col h-full">
                 <div className="flex items-center mb-2">
-                  <span className="w-8 h-8 flex items-center justify-center rounded bg-cyan-100 mr-3">
-                    <FaFaucet className="text-cyan-500 text-lg" />
+                  <span className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center border-2 border-blue-200 mr-3">
+                    <FaFaucetDrip className="w-5 h-5 text-black" />
                   </span>
-                  <span className="text-base font-semibold text-black">Escra TestNet Faucet</span>
+                  <span className="text-lg font-semibold text-black">Faucet</span>
                 </div>
                 <p className="text-gray-500 text-xs mb-4">Get test tokens to interact with Escra's TestNet environment</p>
                 <button className="flex items-center justify-center px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-xs font-medium hover:bg-gray-50 mt-auto">
@@ -871,10 +890,10 @@ export default function BlockchainPage() {
               {/* Security Audits */}
               <Card className="rounded-xl border border-gray-200 p-5 flex flex-col h-full">
                 <div className="flex items-center mb-2">
-                  <span className="w-8 h-8 flex items-center justify-center rounded bg-cyan-100 mr-3">
-                    <FaShieldAlt className="text-cyan-500 text-lg" />
+                  <span className="h-10 w-10 rounded-lg bg-gray-50 flex items-center justify-center border-2 border-gray-200 mr-3">
+                    <TbShieldLock className="w-6 h-6 text-black" />
                   </span>
-                  <span className="text-base font-semibold text-black">Security Audits</span>
+                  <span className="text-lg font-semibold text-black">Security Audits</span>
                 </div>
                 <p className="text-gray-500 text-xs mb-4">View security audit reports for Escra's smart contracts</p>
                 <button className="flex items-center justify-center px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-xs font-medium hover:bg-gray-50 mt-auto">
