@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect, RefObject, createRef } from 'react';
 import { FaSearch, FaUser, FaFilter, FaSort, FaCheckCircle, FaPlus, FaTimes, FaChevronDown, FaChevronUp, FaCheck } from 'react-icons/fa';
 import { FaRegSquareCheck } from 'react-icons/fa6';
-import { HiOutlineEye, HiOutlineDownload, HiOutlineViewBoards, HiOutlineTrash, HiOutlineUpload, HiOutlineDocumentText, HiOutlineBell, HiOutlineCog, HiOutlineDuplicate, HiOutlineDocumentSearch } from 'react-icons/hi';
+import { HiOutlineEye, HiOutlineDownload, HiOutlineViewBoards, HiOutlineTrash, HiOutlineUpload, HiOutlineDocumentText, HiOutlineBell, HiOutlineCog, HiOutlineDuplicate, HiOutlineDocumentSearch, HiOutlineUserGroup } from 'react-icons/hi';
 import { HiMiniChevronUpDown, HiMiniChevronDown } from 'react-icons/hi2';
 import { LuPen, LuCalendarClock, LuBellRing, LuPenLine } from 'react-icons/lu';
 import { MdCancelPresentation } from 'react-icons/md';
@@ -12,7 +12,7 @@ import { BsPerson } from 'react-icons/bs';
 import { PiWarningDiamondBold } from 'react-icons/pi';
 import clsx from 'clsx';
 import { IconBaseProps } from 'react-icons';
-import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbClockPin } from 'react-icons/tb';
+import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbClockPin, TbPencilShare, TbPencilPlus } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
 import { TiUserAddOutline } from 'react-icons/ti';
@@ -101,6 +101,9 @@ export default function SignaturesPage() {
   const [showToolSelectorModal, setShowToolSelectorModal] = useState(false);
   const [showLast30DaysDropdown, setShowLast30DaysDropdown] = useState(false);
   const last30DaysDropdownRef = useRef<HTMLDivElement>(null);
+  const [openContractDropdown, setOpenContractDropdown] = useState(false);
+  const contractButtonRef = useRef<HTMLButtonElement>(null);
+  const senderButtonRef = useRef<HTMLButtonElement>(null);
 
   // Handler to add a new recipient card
   const handleAddRecipient = () => {
@@ -375,17 +378,23 @@ export default function SignaturesPage() {
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as Node;
-      if (senderDropdownRef.current?.contains(target)) {
-        return; // Don't close if clicking inside the dropdown
+      const dropdown = document.querySelector('.sender-dropdown');
+      const button = senderButtonRef.current;
+      
+      // Only check if dropdown is open
+      if (showSenderDropdown) {
+        // If clicking outside both dropdown and button, close the dropdown
+        if (!dropdown?.contains(target) && !button?.contains(target)) {
+          setShowSenderDropdown(false);
+        }
       }
-      setShowSenderDropdown(false);
     }
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [showSenderDropdown]);
 
   // Handle click outside for assignee dropdown
   useEffect(() => {
@@ -621,17 +630,23 @@ export default function SignaturesPage() {
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as Node;
-      if (contractDropdownRef.current?.contains(target)) {
-        return; // Don't close if clicking inside the dropdown
+      const dropdown = document.querySelector('.contract-dropdown');
+      const button = contractButtonRef.current;
+      
+      // Only check if dropdown is open
+      if (openContractDropdown) {
+        // If clicking outside both dropdown and button, close the dropdown
+        if (!dropdown?.contains(target) && !button?.contains(target)) {
+          setOpenContractDropdown(false);
+        }
       }
-      setShowContractDropdown(false);
     }
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [openContractDropdown]);
 
   // Sorting functions
   const handleIdSort = () => {
@@ -734,7 +749,8 @@ export default function SignaturesPage() {
            shouldShowCancelledRow(row.status) &&
            shouldShowAssignee(row.assignee) &&
            matchesSearch(row) &&
-           shouldShowSender(row.assignee, row.parties);
+           shouldShowSender(row.assignee, row.parties) &&
+           shouldShowContract(row.contractId);
   }));
 
   // Helper function to generate document hash
@@ -753,7 +769,7 @@ export default function SignaturesPage() {
             onClick={handleRequestSignatureClick}
             className="flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
           >
-            <LuPen className="mr-2 text-base" />
+            <TbPencilPlus className="mr-2 text-lg" />
             Request Signature
           </button>
         </div>
@@ -781,7 +797,7 @@ export default function SignaturesPage() {
             <FaRegClock size={18} color="#f59e0b" />
           </div>
           <div className="flex flex-col items-start h-full">
-            <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Waiting for Others</p>
+            <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Waiting on Others</p>
             <p className="text-2xl font-bold text-gray-900">{statBoxesData.waitingForOthers}</p>
             <p className="text-xs text-gray-400">Pending signatures</p>
           </div>
@@ -814,7 +830,7 @@ export default function SignaturesPage() {
 
       {/* Search/Filter Bar - outlined box (identical to contracts page) */}
       <div className="bg-white border border-gray-200 rounded-xl px-4 py-4 mb-6 flex items-center w-full mt-2">
-        <div className="flex items-center flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2 min-w-0" style={{ width: 'calc(100% - 500px)' }}>
+        <div className="flex items-center flex-1 bg-white border border-gray-200 rounded-lg px-4 py-2 min-w-0" style={{ width: 'calc(100% - 500px)' }}>
           <FaSearch className="text-gray-400 mr-2" size={18} />
           <input
             type="text"
@@ -827,7 +843,7 @@ export default function SignaturesPage() {
         </div>
         {/* Status Filter */}
         <button 
-          className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 relative whitespace-nowrap" 
+          className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 relative whitespace-nowrap" 
           style={{ fontFamily: 'Avenir, sans-serif' }}
           onClick={(e) => {
             e.preventDefault();
@@ -860,7 +876,9 @@ export default function SignaturesPage() {
                       setSelectedStatuses(prev => {
                         const newStatuses = prev.filter(s => s !== 'All');
                         if (prev.includes(status)) {
-                          return newStatuses.filter(s => s !== status);
+                          const filtered = newStatuses.filter(s => s !== status);
+                          // If no statuses are selected, default to "All"
+                          return filtered.length === 0 ? ['All'] : filtered;
                         } else {
                           return [...newStatuses, status];
                         }
@@ -883,27 +901,31 @@ export default function SignaturesPage() {
         </button>
 
         {/* Contract Filter */}
-        <button 
-          className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 relative whitespace-nowrap" 
-          style={{ fontFamily: 'Avenir, sans-serif' }}
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setShowContractDropdown(prev => !prev);
-            if (!showContractDropdown) {
-              setShowStatusDropdown(false);
-              setShowSenderDropdown(false);
-              setShowAssigneeDropdown(false);
-            }
-          }}
-          ref={contractDropdownRef as any}
-        >
-          <HiOutlineDocumentSearch className="text-gray-400 w-4 h-4" />
-          <span>Contract</span>
-          <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
-          
-          {showContractDropdown && (
-            <div className="absolute top-full left-0 mt-2 min-w-[400px] w-96 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2" style={{ fontFamily: 'Avenir, sans-serif' }}>
+        <div className="relative ml-1">
+          <button
+            ref={contractButtonRef}
+            className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
+            style={{ fontFamily: 'Avenir, sans-serif' }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setOpenContractDropdown(prev => !prev);
+              if (!openContractDropdown) {
+                setShowStatusDropdown(false);
+                setShowAssigneeDropdown(false);
+              }
+            }}
+          >
+            <HiOutlineDocumentSearch className="text-gray-400 w-4 h-4" />
+            <span>Contract</span>
+            <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+          </button>
+          {openContractDropdown && (
+            <div 
+              className="absolute top-full left-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-2 min-w-[400px] w-96 contract-dropdown" 
+              style={{ fontFamily: 'Avenir, sans-serif' }}
+              onClick={(e) => e.stopPropagation()}
+            >
               {/* Search Bar */}
               <div className="px-4 py-2 border-b border-gray-100">
                 <div className="relative">
@@ -914,6 +936,7 @@ export default function SignaturesPage() {
                     onChange={(e) => setContractSearch(e.target.value)}
                     className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                     style={{ fontFamily: 'Avenir, sans-serif' }}
+                    onClick={(e) => e.stopPropagation()}
                   />
                   <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 </div>
@@ -921,7 +944,11 @@ export default function SignaturesPage() {
 
               <button
                 className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center"
-                onClick={() => setSelectedContracts([])}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setSelectedContracts([]);
+                }}
               >
                 <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
                   {selectedContracts.length === 0 && (
@@ -941,16 +968,20 @@ export default function SignaturesPage() {
                   <button
                     key={contract.id}
                     className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center whitespace-nowrap truncate"
-                    onClick={() => {
-                      if (selectedContracts.includes(contract.id)) {
-                        setSelectedContracts(prev => prev.filter(id => id !== contract.id));
-                      } else {
-                        setSelectedContracts(prev => [...prev, contract.id]);
-                      }
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setSelectedContracts(prev => {
+                        if (prev.includes(String(contract.id))) {
+                          return prev.filter(id => id !== contract.id);
+                        } else {
+                          return [...prev, String(contract.id)];
+                        }
+                      });
                     }}
                   >
                     <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                      {selectedContracts.includes(contract.id) && (
+                      {selectedContracts.includes(String(contract.id)) && (
                         <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
                           <FaCheck className="text-white" size={8} />
                         </div>
@@ -961,57 +992,62 @@ export default function SignaturesPage() {
                 ))}
             </div>
           )}
-        </button>
+        </div>
 
         {/* Sender Filter */}
-        <button 
-          className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 relative whitespace-nowrap" 
-          style={{ fontFamily: 'Avenir, sans-serif' }}
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setShowSenderDropdown(prev => !prev);
-            if (!showSenderDropdown) {
-              setShowStatusDropdown(false);
-              setShowAssigneeDropdown(false);
-            }
-          }}
-          ref={senderDropdownRef as any}
-        >
-          <RiUserSharedLine className="text-gray-400 w-4 h-4" />
-          <span>Sender</span>
-          <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
-          
+        <div className="relative ml-1">
+          <button
+            ref={senderButtonRef}
+            className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
+            style={{ fontFamily: 'Avenir, sans-serif' }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowSenderDropdown(prev => !prev);
+              if (!showSenderDropdown) {
+                setShowStatusDropdown(false);
+                setOpenContractDropdown(false);
+                setShowAssigneeDropdown(false);
+              }
+            }}
+          >
+            <RiUserSharedLine className="text-gray-400 w-4 h-4" />
+            <span>Sender</span>
+            <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+          </button>
           {showSenderDropdown && (
-            <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
-              {availableSenders.map((sender) => (
+            <div 
+              className="absolute top-full left-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-2 min-w-[200px] sender-dropdown" 
+              style={{ fontFamily: 'Avenir, sans-serif' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {availableSenders.map((option) => (
                 <button
-                  key={sender}
-                  className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                  key={option}
+                  className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    setSelectedSender(sender);
-                    setShowSenderDropdown(false);
+                    setSelectedSender(option);
                   }}
                 >
                   <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                    {selectedSender === sender && (
+                    {selectedSender === option && (
                       <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
                         <FaCheck className="text-white" size={8} />
                       </div>
                     )}
                   </div>
-                  {sender}
+                  {option}
                 </button>
               ))}
             </div>
           )}
-        </button>
+        </div>
 
         {/* Assignee Filter */}
         <button
-          className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 relative whitespace-nowrap" 
+          className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 relative whitespace-nowrap" 
           style={{ fontFamily: 'Avenir, sans-serif' }}
           onClick={(e) => {
             e.preventDefault();
@@ -1097,7 +1133,7 @@ export default function SignaturesPage() {
         </button>
         {/* Last 30 Days Filter */}
         <button 
-          className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 relative whitespace-nowrap" 
+          className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 relative whitespace-nowrap" 
           style={{ fontFamily: 'Avenir, sans-serif' }}
           onClick={(e) => {
             e.preventDefault();
@@ -1441,8 +1477,8 @@ export default function SignaturesPage() {
                 {/* Left: Document ID and Status */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-4 mb-4">
-                    <span className="text-[10px] font-bold bg-gray-700 text-white px-2 py-0.5 rounded border border-gray-600">
-                      #{selectedDocument?.id}
+                    <span className="text-[10px] font-bold bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-700">
+                      # {selectedDocument.id}
                     </span>
                   </div>
                 </div>

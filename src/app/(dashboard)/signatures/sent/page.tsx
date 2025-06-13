@@ -2,14 +2,14 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import clsx from "clsx";
-import { FaSearch, FaCheckCircle } from "react-icons/fa";
+import { FaSearch, FaCheckCircle, FaCheck } from "react-icons/fa";
 import { HiMiniChevronDown } from "react-icons/hi2";
 import { HiOutlineEye, HiOutlineDownload, HiOutlineViewBoards } from "react-icons/hi";
 import { LuBellRing } from "react-icons/lu";
 import { MdCancelPresentation } from "react-icons/md";
 import { TbClockPin } from "react-icons/tb";
 import { RiUserSearchLine } from 'react-icons/ri';
-import { FaCheck } from "react-icons/fa";
+import { Logo } from '@/components/common/Logo';
 
 const outboxRows = [
   // Example data, should match the 'Sent' filter from the main signatures page
@@ -164,44 +164,50 @@ export default function OutboxPage() {
       </div>
       <hr className="my-6 border-gray-300" />
       {/* Filter Tabs */}
-      <div className="bg-white border border-gray-200 rounded-xl px-4 py-4 flex gap-1 w-fit">
+      <div className="flex gap-1">
         <button
           onClick={() => setActiveTab("all")}
-          className={clsx(
-            "px-4 py-2 rounded-xl text-xs font-medium border border-gray-200 transition-colors font-sans min-w-[120px]",
-            activeTab === "all"
-              ? "bg-teal-50 text-teal-500"
-              : "bg-white text-gray-700 hover:bg-gray-50"
-          )}
+          className={`px-4 py-2 rounded-lg text-xs font-medium transition-all duration-300 font-sans flex items-center justify-center ${
+            activeTab === "all" 
+              ? 'bg-white dark:bg-gray-800 text-teal-500 dark:text-teal-400 min-w-[130px] border-2 border-gray-200 dark:border-gray-700' 
+              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 w-fit border border-gray-200 dark:border-gray-700'
+          }`}
         >
+          <span className={`inline-block transition-all duration-300 ${activeTab === "all" ? 'opacity-100 mr-1.5' : 'opacity-0 w-0 mr-0'}`} style={{width: activeTab === "all" ? 16 : 0}}>
+            {activeTab === "all" && <Logo width={16} height={16} className="pointer-events-none" />}
+          </span>
           All
         </button>
         <button
           onClick={() => setActiveTab("waiting")}
-          className={clsx(
-            "px-4 py-2 rounded-xl text-xs font-medium border border-gray-200 transition-colors font-sans min-w-[120px]",
-            activeTab === "waiting"
-              ? "bg-teal-50 text-teal-500"
-              : "bg-white text-gray-700 hover:bg-gray-50"
-          )}
+          className={`px-4 py-2 rounded-lg text-xs font-medium transition-all duration-300 font-sans flex items-center justify-center ${
+            activeTab === "waiting" 
+              ? 'bg-white dark:bg-gray-800 text-teal-500 dark:text-teal-400 min-w-[130px] border-2 border-gray-200 dark:border-gray-700' 
+              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 w-fit border border-gray-200 dark:border-gray-700'
+          }`}
         >
-          Waiting for Others
+          <span className={`inline-block transition-all duration-300 ${activeTab === "waiting" ? 'opacity-100 mr-1.5' : 'opacity-0 w-0 mr-0'}`} style={{width: activeTab === "waiting" ? 16 : 0}}>
+            {activeTab === "waiting" && <Logo width={16} height={16} className="pointer-events-none" />}
+          </span>
+          Waiting on Others
         </button>
         <button
           onClick={() => setActiveTab("expiring")}
-          className={clsx(
-            "px-4 py-2 rounded-xl text-xs font-medium border border-gray-200 transition-colors font-sans min-w-[120px]",
-            activeTab === "expiring"
-              ? "bg-teal-50 text-teal-500"
-              : "bg-white text-gray-700 hover:bg-gray-50"
-          )}
+          className={`px-4 py-2 rounded-lg text-xs font-medium transition-all duration-300 font-sans flex items-center justify-center ${
+            activeTab === "expiring" 
+              ? 'bg-white dark:bg-gray-800 text-teal-500 dark:text-teal-400 min-w-[130px] border-2 border-gray-200 dark:border-gray-700' 
+              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 w-fit border border-gray-200 dark:border-gray-700'
+          }`}
         >
+          <span className={`inline-block transition-all duration-300 ${activeTab === "expiring" ? 'opacity-100 mr-1.5' : 'opacity-0 w-0 mr-0'}`} style={{width: activeTab === "expiring" ? 16 : 0}}>
+            {activeTab === "expiring" && <Logo width={16} height={16} className="pointer-events-none" />}
+          </span>
           Expiring Soon
         </button>
       </div>
       {/* Search Bar and Filters */}
       <div className="bg-white border border-gray-200 rounded-xl px-4 py-4 mb-6 flex items-center w-full mt-2">
-        <div className="flex items-center flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2 min-w-0">
+        <div className="flex items-center flex-1 bg-white border border-gray-200 rounded-lg px-4 py-2 min-w-0">
           <FaSearch className="text-gray-400 mr-2" size={18} />
           <input
             type="text"
@@ -214,7 +220,7 @@ export default function OutboxPage() {
         </div>
         {/* Status Filter */}
         <button 
-          className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 relative whitespace-nowrap" 
+          className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 relative whitespace-nowrap" 
           style={{ fontFamily: 'Avenir, sans-serif' }}
           onClick={(e) => {
             e.preventDefault();
@@ -269,7 +275,7 @@ export default function OutboxPage() {
 
         {/* Assignee Filter */}
         <button
-          className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 relative whitespace-nowrap" 
+          className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 relative whitespace-nowrap" 
           style={{ fontFamily: 'Avenir, sans-serif' }}
           onClick={(e) => {
             e.preventDefault();
@@ -355,7 +361,7 @@ export default function OutboxPage() {
 
         {/* Last 30 Days Filter */}
         <button
-          className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 relative whitespace-nowrap" 
+          className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 relative whitespace-nowrap" 
           style={{ fontFamily: 'Avenir, sans-serif' }}
           onClick={(e) => {
             e.preventDefault();

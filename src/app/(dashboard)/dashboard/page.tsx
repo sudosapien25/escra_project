@@ -4,6 +4,7 @@ import { Card } from '@/components/common/Card';
 import { FaFileContract, FaMoneyBillAlt, FaClock, FaPlus, FaArrowUp, FaDollarSign, FaCheckCircle, FaBox, FaChartLine } from 'react-icons/fa';
 import { IconBaseProps } from 'react-icons';
 import { LuPen } from 'react-icons/lu';
+import { MdOutlineAddToPhotos } from 'react-icons/md';
 import NewContractModal from '@/components/common/NewContractModal';
 
 export default function DashboardPage() {
@@ -22,7 +23,7 @@ export default function DashboardPage() {
           className="flex items-center justify-center w-full md:w-auto px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
           onClick={() => setShowNewContractModal(true)}
         >
-          <FaPlus className="mr-2 text-base" />
+          <MdOutlineAddToPhotos className="mr-2 text-lg" />
           New Contract
         </button>
         <NewContractModal isOpen={showNewContractModal} onClose={() => setShowNewContractModal(false)} />

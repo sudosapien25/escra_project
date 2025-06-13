@@ -42,10 +42,10 @@ export default function LandingPage() {
           </div>
           
           <div className="hidden md:flex items-center space-x-8">
+            <a href="#" className="text-gray-600 hover:text-black transition-colors text-sm">Platform</a>
             <a href="#" className="text-gray-600 hover:text-black transition-colors text-sm">Solutions</a>
             <a href="#" className="text-gray-600 hover:text-black transition-colors text-sm">Resources</a>
             <Link href="/pricing" className="text-gray-600 hover:text-black transition-colors text-sm">Pricing</Link>
-            <a href="#" className="text-gray-600 hover:text-black transition-colors text-sm">Features</a>
           </div>
           
           <div className="flex items-center space-x-1">

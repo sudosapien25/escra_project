@@ -53,14 +53,15 @@ export default function DraftsPage() {
           <table className="w-full">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="px-6 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider text-center whitespace-nowrap" style={{ minWidth: '100px' }}>Document ID</th>
-                <th className="px-6 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider text-left" style={{ minWidth: '200px' }}>Document</th>
-                <th className="px-6 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider text-left" style={{ minWidth: '200px' }}>Parties</th>
-                <th className="px-6 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider text-center" style={{ minWidth: '120px' }}>Contract ID</th>
-                <th className="px-6 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider text-left" style={{ minWidth: '180px' }}>Contract</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '80px' }}>Document ID</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-left" style={{ minWidth: '180px' }}>Document</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-left" style={{ minWidth: '200px' }}>Recipients</th>
                 <th className="px-6 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider text-center" style={{ minWidth: '120px' }}>Status</th>
-                <th className="px-6 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider text-left" style={{ minWidth: '150px' }}>Assignee</th>
-                <th className="px-6 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider text-center" style={{ minWidth: '120px' }}>Last Modified</th>
+                <th className="px-6 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider text-center" style={{ minWidth: '140px' }}>Contract ID</th>
+                <th className="px-6 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider text-left" style={{ minWidth: '180px' }}>Contract</th>
+                <th className="px-6 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider text-left" style={{ minWidth: '120px' }}>Assignee</th>
+                <th className="px-6 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider text-center" style={{ minWidth: '140px' }}>Due Date</th>
+                <th className="px-6 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider text-center" style={{ minWidth: '140px' }}>Last Modified</th>
                 <th className="px-6 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider text-center" style={{ minWidth: '150px' }}>Actions</th>
               </tr>
             </thead>
@@ -77,13 +78,14 @@ export default function DraftsPage() {
                   </div>
                 </td>
                 <td className="px-6 py-2.5 text-xs text-center whitespace-nowrap">
+                  <span className="px-2 py-1 rounded-full bg-gray-100 text-gray-800 border border-gray-500 font-semibold">Draft</span>
+                </td>
+                <td className="px-6 py-2.5 text-xs text-center whitespace-nowrap">
                   <span className="text-primary underline font-semibold cursor-pointer">9548</span>
                 </td>
                 <td className="px-6 py-2.5 text-xs font-semibold whitespace-nowrap">New Property Acquisition</td>
-                <td className="px-6 py-2.5 text-xs text-center whitespace-nowrap">
-                  <span className="px-2 py-1 rounded-full bg-gray-100 text-gray-800 border border-gray-500 font-semibold">Draft</span>
-                </td>
-                <td className="px-6 py-2.5 text-xs whitespace-nowrap">John Smith</td>
+                <td className="px-6 py-2.5 text-xs whitespace-nowrap text-left">John Smith</td>
+                <td className="px-6 py-2.5 text-xs text-center whitespace-nowrap">2024-04-15</td>
                 <td className="px-6 py-2.5 text-xs text-center whitespace-nowrap">2024-03-15</td>
                 <td className="px-6 py-2.5 text-xs text-center whitespace-nowrap">
                   <div className="flex items-center justify-center space-x-1">

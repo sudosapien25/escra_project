@@ -7,61 +7,68 @@ import { HiMiniChevronDown } from "react-icons/hi2";
 import { HiOutlineEye, HiOutlineDownload, HiOutlineViewBoards } from "react-icons/hi";
 import { LuBellRing } from "react-icons/lu";
 import { MdCancelPresentation } from "react-icons/md";
-import { FaRegClock } from "react-icons/fa";
-import { PiWarningDiamondBold } from "react-icons/pi";
-import { FaRegSquareCheck } from "react-icons/fa6";
-import { BsPerson } from 'react-icons/bs';
-import { RiUserSharedLine, RiUserSearchLine } from 'react-icons/ri';
-import { TbClockPin } from 'react-icons/tb';
-import { TbPencilShare, TbPencilX } from 'react-icons/tb';
-import { Modal } from '@/components/common/Modal';
-import { FaDochub } from 'react-icons/fa6';
-import { SiAdobe } from 'react-icons/si';
+import { TbClockPin } from "react-icons/tb";
+import { RiUserSearchLine, RiUserSharedLine } from 'react-icons/ri';
 import { Logo } from '@/components/common/Logo';
 
-const inboxRows = [
-  // Example data, should match the inbox filter from the main signatures page
+const cancelledRows = [
+  // Example data, should match the 'Cancelled' filter from the main signatures page
   {
-    id: "1234",
-    document: "Purchase Agreement",
-    parties: ["Robert Chen", "Eastside Properties"],
-    status: "Pending",
-    signatures: "1 of 2",
-    contractId: "9548",
-    contract: "New Property Acquisition",
-    assignee: "John Smith",
-    dateSent: "2024-03-15",
-    dueDate: "2024-03-30",
-    filter: "received",
+    id: "3456",
+    document: "Inspection Report",
+    parties: ["BuildRight", "Horizon Developers"],
+    status: "Rejected",
+    signatures: "0 of 2",
+    contractId: "9145",
+    contract: "Construction Escrow",
+    assignee: "Michael Brown",
+    dateSent: "2024-03-13",
+    dueDate: "2024-03-28",
+    filter: "rejected"
+  },
+  {
+    id: "4567",
+    document: "Lease Agreement",
+    parties: ["Pacific Properties"],
+    status: "Expired",
+    signatures: "0 of 1",
+    contractId: "8784",
+    contract: "Commercial Lease Amendment",
+    assignee: "Emma Johnson",
+    dateSent: "2024-03-12",
+    dueDate: "2024-03-27",
+    filter: "expired"
   },
   {
     id: "5678",
     document: "Title Insurance",
     parties: ["John Smith", "Emma Johnson"],
-    status: "Pending",
-    signatures: "1 of 2",
+    status: "Voided",
+    signatures: "0 of 2",
     contractId: "8423",
     contract: "Property Sale Contract",
     assignee: "Robert Chen",
     dateSent: "2024-03-11",
     dueDate: "2024-03-26",
-    filter: "action-required",
-  },
+    filter: "voided"
+  }
 ];
 
-export default function InboxPage() {
+export default function CancelledPage() {
   const [activeTab, setActiveTab] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
-  const [selectedStatuses, setSelectedStatuses] = useState(['All']);
+  const [selectedStatuses, setSelectedStatuses] = useState(['Rejected', 'Expired', 'Voided']);
   const [showSenderDropdown, setShowSenderDropdown] = useState(false);
   const [selectedSender, setSelectedSender] = useState('Sent by anyone');
   const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false);
   const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
-  const [showToolSelectorModal, setShowToolSelectorModal] = useState(false);
+  const [showLast30DaysDropdown, setShowLast30DaysDropdown] = useState(false);
+
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const senderButtonRef = useRef<HTMLButtonElement>(null);
   const assigneeDropdownRef = useRef<HTMLDivElement>(null);
+  const last30DaysDropdownRef = useRef<HTMLDivElement>(null);
 
   // Available statuses for the dropdown
   const availableStatuses = [
@@ -102,6 +109,15 @@ export default function InboxPage() {
     return selectedStatuses.includes(status);
   };
 
+  // Function to check if a row should be shown based on selected assignees
+  const shouldShowAssignee = (assignee: string) => {
+    if (selectedAssignees.length === 0) return true;
+    if (selectedAssignees.includes('__ME__')) {
+      return assignee === currentUserName;
+    }
+    return selectedAssignees.includes(assignee);
+  };
+
   // Function to check if a row should be shown based on sender relationship
   const shouldShowSender = (assignee: string, parties: string[]) => {
     switch (selectedSender) {
@@ -114,23 +130,14 @@ export default function InboxPage() {
     }
   };
 
-  // Function to check if a row should be shown based on selected assignees
-  const shouldShowAssignee = (assignee: string) => {
-    if (selectedAssignees.length === 0) return true;
-    if (selectedAssignees.includes('__ME__')) {
-      return assignee === currentUserName;
-    }
-    return selectedAssignees.includes(assignee);
-  };
-
-  // Handle click outside for status dropdown
+  // Handle click outside for assignee dropdown
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as Node;
-      if (statusDropdownRef.current?.contains(target)) {
+      if (assigneeDropdownRef.current?.contains(target)) {
         return; // Don't close if clicking inside the dropdown
       }
-      setShowStatusDropdown(false);
+      setShowAssigneeDropdown(false);
     }
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -161,26 +168,11 @@ export default function InboxPage() {
     };
   }, [showSenderDropdown]);
 
-  // Handle click outside for assignee dropdown
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      const target = event.target as Node;
-      if (assigneeDropdownRef.current?.contains(target)) {
-        return; // Don't close if clicking inside the dropdown
-      }
-      setShowAssigneeDropdown(false);
-    }
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  const filteredRows = inboxRows.filter((row) => {
+  const filteredRows = cancelledRows.filter((row) => {
     if (activeTab === "all") return true;
-    if (activeTab === "received") return row.filter === "received";
-    if (activeTab === "action-required") return row.filter === "action-required";
+    if (activeTab === "rejected") return row.filter === "rejected";
+    if (activeTab === "expired") return row.filter === "expired";
+    if (activeTab === "voided") return row.filter === "voided";
     return true;
   }).filter((row) => {
     if (!searchTerm) return true;
@@ -197,8 +189,8 @@ export default function InboxPage() {
   return (
     <div className="space-y-4" style={{ fontFamily: "Avenir, sans-serif" }}>
       <div className="pb-1">
-        <h1 className="text-[24px] md:text-[30px] font-bold text-black mb-1" style={{ fontFamily: "Avenir, sans-serif" }}>Inbox</h1>
-        <p className="text-gray-500 text-[15px] md:text-[16px] mt-0" style={{ fontFamily: "Avenir, sans-serif" }}>View & manage your received signature requests</p>
+        <h1 className="text-[24px] md:text-[30px] font-bold text-black mb-1" style={{ fontFamily: "Avenir, sans-serif" }}>Canceled</h1>
+        <p className="text-gray-500 text-[15px] md:text-[16px] mt-0" style={{ fontFamily: "Avenir, sans-serif" }}>View your canceled signature requests</p>
       </div>
       <hr className="my-6 border-gray-300" />
       {/* Filter Tabs */}
@@ -217,35 +209,48 @@ export default function InboxPage() {
           All
         </button>
         <button
-          onClick={() => setActiveTab("received")}
+          onClick={() => setActiveTab("rejected")}
           className={`px-4 py-2 rounded-lg text-xs font-medium transition-all duration-300 font-sans flex items-center justify-center ${
-            activeTab === "received" 
+            activeTab === "rejected" 
               ? 'bg-white dark:bg-gray-800 text-teal-500 dark:text-teal-400 min-w-[130px] border-2 border-gray-200 dark:border-gray-700' 
               : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 w-fit border border-gray-200 dark:border-gray-700'
           }`}
         >
-          <span className={`inline-block transition-all duration-300 ${activeTab === "received" ? 'opacity-100 mr-1.5' : 'opacity-0 w-0 mr-0'}`} style={{width: activeTab === "received" ? 16 : 0}}>
-            {activeTab === "received" && <Logo width={16} height={16} className="pointer-events-none" />}
+          <span className={`inline-block transition-all duration-300 ${activeTab === "rejected" ? 'opacity-100 mr-1.5' : 'opacity-0 w-0 mr-0'}`} style={{width: activeTab === "rejected" ? 16 : 0}}>
+            {activeTab === "rejected" && <Logo width={16} height={16} className="pointer-events-none" />}
           </span>
-          Received
+          Rejected
         </button>
         <button
-          onClick={() => setActiveTab("action-required")}
+          onClick={() => setActiveTab("voided")}
           className={`px-4 py-2 rounded-lg text-xs font-medium transition-all duration-300 font-sans flex items-center justify-center ${
-            activeTab === "action-required" 
+            activeTab === "voided" 
               ? 'bg-white dark:bg-gray-800 text-teal-500 dark:text-teal-400 min-w-[130px] border-2 border-gray-200 dark:border-gray-700' 
               : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 w-fit border border-gray-200 dark:border-gray-700'
           }`}
         >
-          <span className={`inline-block transition-all duration-300 ${activeTab === "action-required" ? 'opacity-100 mr-1.5' : 'opacity-0 w-0 mr-0'}`} style={{width: activeTab === "action-required" ? 16 : 0}}>
-            {activeTab === "action-required" && <Logo width={16} height={16} className="pointer-events-none" />}
+          <span className={`inline-block transition-all duration-300 ${activeTab === "voided" ? 'opacity-100 mr-1.5' : 'opacity-0 w-0 mr-0'}`} style={{width: activeTab === "voided" ? 16 : 0}}>
+            {activeTab === "voided" && <Logo width={16} height={16} className="pointer-events-none" />}
           </span>
-          Action Required
+          Voided
+        </button>
+        <button
+          onClick={() => setActiveTab("expired")}
+          className={`px-4 py-2 rounded-lg text-xs font-medium transition-all duration-300 font-sans flex items-center justify-center ${
+            activeTab === "expired" 
+              ? 'bg-white dark:bg-gray-800 text-teal-500 dark:text-teal-400 min-w-[130px] border-2 border-gray-200 dark:border-gray-700' 
+              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 w-fit border border-gray-200 dark:border-gray-700'
+          }`}
+        >
+          <span className={`inline-block transition-all duration-300 ${activeTab === "expired" ? 'opacity-100 mr-1.5' : 'opacity-0 w-0 mr-0'}`} style={{width: activeTab === "expired" ? 16 : 0}}>
+            {activeTab === "expired" && <Logo width={16} height={16} className="pointer-events-none" />}
+          </span>
+          Expired
         </button>
       </div>
       {/* Search Bar and Filters */}
       <div className="bg-white border border-gray-200 rounded-xl px-4 py-4 mb-6 flex items-center w-full mt-2">
-        <div className="flex items-center bg-white border border-gray-200 rounded-lg px-4 py-2 min-w-0" style={{ width: 'calc(100% - 520px)' }}>
+        <div className="flex items-center flex-1 bg-white border border-gray-200 rounded-lg px-4 py-2 min-w-0" style={{ width: 'calc(100% - 500px)' }}>
           <FaSearch className="text-gray-400 mr-2" size={18} />
           <input
             type="text"
@@ -256,61 +261,6 @@ export default function InboxPage() {
             style={{ fontFamily: "Avenir, sans-serif" }}
           />
         </div>
-        {/* Status Filter */}
-        <button 
-          className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 relative whitespace-nowrap" 
-          style={{ fontFamily: 'Avenir, sans-serif' }}
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setShowStatusDropdown(prev => !prev);
-            if (!showStatusDropdown) {
-              setShowSenderDropdown(false);
-              setShowAssigneeDropdown(false);
-            }
-          }}
-          ref={statusDropdownRef as any}
-        >
-          <HiOutlineViewBoards className="text-gray-400 text-lg" />
-          <span>Status</span>
-          <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
-          
-          {showStatusDropdown && (
-            <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
-              {availableStatuses.map((status) => (
-                <button
-                  key={status}
-                  className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (status === 'All') {
-                      setSelectedStatuses(['All']);
-                    } else {
-                      setSelectedStatuses(prev => {
-                        const newStatuses = prev.filter(s => s !== 'All');
-                        if (prev.includes(status)) {
-                          return newStatuses.filter(s => s !== status);
-                        } else {
-                          return [...newStatuses, status];
-                        }
-                      });
-                    }
-                  }}
-                >
-                  <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                    {selectedStatuses.includes(status) && (
-                      <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
-                        <FaCheck className="text-white" size={8} />
-                      </div>
-                    )}
-                  </div>
-                  {status}
-                </button>
-              ))}
-            </div>
-          )}
-        </button>
 
         {/* Sender Filter */}
         <div className="relative ml-1">
@@ -370,10 +320,6 @@ export default function InboxPage() {
             e.preventDefault();
             e.stopPropagation();
             setShowAssigneeDropdown(prev => !prev);
-            if (!showAssigneeDropdown) {
-              setShowStatusDropdown(false);
-              setShowSenderDropdown(false);
-            }
           }}
           ref={assigneeDropdownRef as any}
         >
@@ -450,12 +396,22 @@ export default function InboxPage() {
         </button>
 
         {/* Last 30 Days Filter */}
-        <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 whitespace-nowrap" style={{ fontFamily: 'Avenir, sans-serif' }}>
+        <button
+          className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 relative whitespace-nowrap" 
+          style={{ fontFamily: 'Avenir, sans-serif' }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setShowLast30DaysDropdown((prev: boolean) => !prev);
+          }}
+          ref={last30DaysDropdownRef as any}
+        >
           <TbClockPin className="text-gray-400 w-4 h-4" />
           <span>Last 30 Days</span>
           <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
         </button>
       </div>
+
       {/* Table */}
       <div className="bg-white border border-gray-200 rounded-xl overflow-x-auto">
         <div className="min-w-[1400px]">
@@ -472,7 +428,7 @@ export default function InboxPage() {
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-left" style={{ minWidth: '120px' }}>Assignee</th>
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '120px' }}>Date Sent</th>
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '120px' }}>Due Date</th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '220px' }}>Actions</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '120px' }}>Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -482,10 +438,7 @@ export default function InboxPage() {
                 </tr>
               ) : (
                 filteredRows.map((row) => (
-                  <tr
-                    key={row.id}
-                    className="hover:bg-gray-50 cursor-pointer"
-                  >
+                  <tr key={row.id} className="hover:bg-gray-50">
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
                       <span className="text-primary underline font-semibold cursor-pointer">{row.id}</span>
                     </td>
@@ -494,13 +447,20 @@ export default function InboxPage() {
                     </td>
                     <td className="px-6 py-2.5 text-xs">
                       <div className="flex flex-col space-y-1">
-                        {row.parties.map((party, idx) => (
-                          <div key={idx} className="text-gray-900">{party}</div>
+                        {row.parties.map((party, index) => (
+                          <div key={index} className="text-gray-900">{party}</div>
                         ))}
                       </div>
                     </td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
-                      <span className="text-xs font-semibold px-2 py-1 rounded-full bg-yellow-100 text-yellow-800 border border-yellow-500">{row.status}</span>
+                      <span className={clsx(
+                        "inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full border",
+                        row.status === "Rejected" && "bg-red-100 text-red-800 border-red-500",
+                        row.status === "Expired" && "bg-orange-100 text-orange-800 border-orange-500",
+                        row.status === "Voided" && "bg-gray-100 text-gray-800 border-gray-500"
+                      )}>
+                        {row.status}
+                      </span>
                     </td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs text-gray-600">{row.signatures}</td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
@@ -524,23 +484,6 @@ export default function InboxPage() {
                         </button>
                         <button
                           className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors"
-                          title="Sign"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setShowToolSelectorModal(true);
-                          }}
-                        >
-                          <TbPencilShare className="h-4 w-4" />
-                        </button>
-                        <button
-                          className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-red-500 hover:text-red-500 transition-colors"
-                          title="Reject"
-                        >
-                          <TbPencilX className="h-4 w-4" />
-                        </button>
-                        <button
-                          className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors"
                           title="Download"
                         >
                           <HiOutlineDownload className="h-4 w-4" />
@@ -554,76 +497,6 @@ export default function InboxPage() {
           </table>
         </div>
       </div>
-
-      {/* Tool Selector Modal */}
-      <Modal
-        isOpen={showToolSelectorModal}
-        onClose={() => setShowToolSelectorModal(false)}
-        title="Select your signing method..."
-        description="Choose your preferred electronic signature platform"
-        size="xl"
-        className="font-avenir"
-      >
-        <div className="flex flex-col items-center gap-6">
-          <div className="flex flex-row gap-6 w-full justify-center">
-            {/* Escra Native */}
-            <button
-              className="flex flex-col items-center border border-gray-200 rounded-xl p-6 w-64 bg-white hover:shadow-lg transition-shadow focus:outline-none"
-              onClick={() => {
-                setShowToolSelectorModal(false);
-                // TODO: Add Escra signing logic here
-              }}
-            >
-              <div className="h-14 w-14 rounded-full bg-teal-50 flex items-center justify-center mb-4">
-                <img 
-                  src="/assets/logos/escra-logo-teal.png" 
-                  alt="Escra Logo" 
-                  className="w-9 h-9 object-contain"
-                />
-              </div>
-              <div className="text-lg font-semibold mb-1">Escra</div>
-              <div className="text-xs text-gray-500 mb-2 text-center">Native signature solution with blockchain security</div>
-              <span className="text-xs bg-teal-50 text-teal-500 px-3 py-1 rounded-full font-semibold">Recommended</span>
-            </button>
-            {/* DocuSign */}
-            <button
-              className="flex flex-col items-center border border-gray-200 rounded-xl p-6 w-64 bg-white hover:shadow-lg transition-shadow focus:outline-none"
-              onClick={() => {
-                setShowToolSelectorModal(false);
-                // TODO: Add DocuSign logic here
-              }}
-            >
-              <div className="h-14 w-14 rounded-full bg-blue-50 flex items-center justify-center mb-4">
-                <FaDochub className="w-8 h-8 text-blue-500 transform translate-x-[2px]" />
-              </div>
-              <div className="text-lg font-semibold mb-1">DocuSign</div>
-              <div className="text-xs text-gray-500 mb-2 text-center">
-                Industry-leading<br />
-                e-signature platform
-              </div>
-              <span className="text-xs bg-gray-100 text-gray-700 px-3 py-1 rounded-full font-semibold">External</span>
-            </button>
-            {/* Adobe Sign */}
-            <button
-              className="flex flex-col items-center border border-gray-200 rounded-xl p-6 w-64 bg-white hover:shadow-lg transition-shadow focus:outline-none"
-              onClick={() => {
-                setShowToolSelectorModal(false);
-                // TODO: Add Adobe Sign logic here
-              }}
-            >
-              <div className="h-14 w-14 rounded-full bg-red-50 flex items-center justify-center mb-4">
-                <SiAdobe className="w-8 h-8 text-red-400" />
-              </div>
-              <div className="text-lg font-semibold mb-1">Adobe Sign</div>
-              <div className="text-xs text-gray-500 mb-2 text-center">
-                Professional<br />
-                PDF Signing Solution
-              </div>
-              <span className="text-xs bg-gray-100 text-gray-700 px-3 py-1 rounded-full font-semibold">External</span>
-            </button>
-          </div>
-        </div>
-      </Modal>
     </div>
   );
 } 

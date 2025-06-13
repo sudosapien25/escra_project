@@ -5,11 +5,14 @@ import { usePathname, useRouter } from 'next/navigation';
 import { HiOutlineDocumentText, HiOutlineBell, HiOutlineCog } from 'react-icons/hi';
 import { RiLayoutColumnLine, RiDashboardLine, RiBox3Line } from 'react-icons/ri';
 import { FaSignature } from 'react-icons/fa';
+import { TbSubtask, TbCubeSpark } from 'react-icons/tb';
 import { IconBaseProps } from 'react-icons';
 import clsx from 'clsx';
 import { HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight } from 'react-icons/hi';
 import { MdOutlineLightMode, MdOutlineDarkMode } from 'react-icons/md';
 import React, { useEffect, useRef } from 'react';
+import { LiaCubesSolid } from 'react-icons/lia';
+import { HiCubeTransparent } from 'react-icons/hi2';
 
 interface NavItem {
   name: string;
@@ -69,9 +72,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
   const navItems: NavItem[] = [
     { name: 'Dashboard', href: '/dashboard', icon: RiDashboardLine },
     { name: 'Contracts', href: '/contracts', icon: HiOutlineDocumentText },
-    { name: 'Tasks', href: '/workflows', icon: RiLayoutColumnLine },
+    { name: 'Tasks', href: '/workflows', icon: TbSubtask },
     { name: 'Signatures', href: '/signatures', icon: FaSignature },
-    { name: 'Blockchain', href: '/blockchain', icon: RiBox3Line },
+    { name: 'Blockchain', href: '/blockchain', icon: TbCubeSpark },
   ];
 
   const bottomNavItems: NavItem[] = [
@@ -108,7 +111,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
                       )}
                     >
                       <IconWrapper icon={item.icon} className={clsx('w-5 h-5 flex-shrink-0', 'mr-2')} />
-                      <span className="flex-1 text-left">{item.name}</span>
+                      <span className="text-sm font-medium flex-1 text-left">{item.name}</span>
                     </button>
                   </div>
                 ) : (
@@ -117,11 +120,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
                     className={clsx(
                       'flex items-center p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150',
                       pathname === item.href ? 'bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-400' : '',
-                      isCollapsed ? 'justify-center' : ''
+                      isCollapsed ? 'justify-center' : '',
+                      isCollapsed && pathname === item.href ? 'px-4' : ''
                     )}
                   >
                     <IconWrapper icon={item.icon} className={clsx('w-5 h-5 flex-shrink-0', !isCollapsed && 'mr-2')} />
-                    {!isCollapsed && item.name}
+                    {!isCollapsed && <span className="text-sm font-medium">{item.name}</span>}
                   </Link>
                 )}
               </li>
@@ -133,13 +137,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
                     { name: 'Outbox', href: '/signatures/sent' },
                     { name: 'Drafts', href: '/signatures/drafts' },
                     { name: 'Completed', href: '/signatures/completed' },
-                    { name: 'Cancelled', href: '/signatures/cancelled' },
+                    { name: 'Canceled', href: '/signatures/canceled' },
                   ].map((sub) => (
                     <li key={sub.href} className="mb-1">
                       <Link
                         href={sub.href}
                         className={clsx(
-                          'block pl-4 py-1 rounded-md text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors',
+                          'block pl-4 py-1 rounded-md text-xs hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors',
                           pathname === sub.href ? 'bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 font-semibold' : 'text-gray-600 dark:text-gray-300'
                         )}
                       >
@@ -161,11 +165,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
                 className={clsx(
                   'flex items-center p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150',
                   pathname === item.href ? 'bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-400' : '',
-                  isCollapsed ? 'justify-center' : ''
+                  isCollapsed ? 'justify-center' : '',
+                  isCollapsed && pathname === item.href ? 'px-4' : ''
                 )}
               >
                 <IconWrapper icon={item.icon} className={clsx('w-5 h-5 flex-shrink-0', !isCollapsed && 'mr-2')} />
-                {!isCollapsed && item.name}
+                {!isCollapsed && <span className="text-sm font-medium">{item.name}</span>}
               </Link>
             </li>
           ))}
@@ -187,7 +192,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
           ) : (
             <IconWrapper icon={MdOutlineDarkMode} className={clsx('w-5 h-5 flex-shrink-0', !isCollapsed && 'mr-2')} />
           )}
-          {!isCollapsed && (theme.isDark ? 'Light Mode' : 'Dark Mode')}
+          {!isCollapsed && <span className="text-sm font-medium">{theme.isDark ? 'Light Mode' : 'Dark Mode'}</span>}
         </button>
 
         {/* Collapse Button */}
@@ -203,7 +208,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
           ) : (
             <IconWrapper icon={HiOutlineChevronDoubleLeft} className={clsx('w-5 h-5 flex-shrink-0', !isCollapsed && 'mr-2')} />
           )}
-          {!isCollapsed && 'Collapse'}
+          {!isCollapsed && <span className="text-sm font-medium">Collapse</span>}
         </button>
       </div>
     </aside>

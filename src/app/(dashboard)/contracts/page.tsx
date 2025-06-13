@@ -4,11 +4,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaSearch, FaClock, FaSort, FaPlus, FaDollarSign, FaTimes, FaChevronDown, FaChevronUp, FaRegClock, FaCheck } from 'react-icons/fa';
 import { FaArrowUpRightFromSquare } from 'react-icons/fa6';
-import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutlineTrash, HiOutlinePencilAlt, HiOutlineUpload, HiOutlineEye, HiOutlineClipboardList, HiOutlineExclamation, HiChevronDown, HiOutlineDocumentSearch } from 'react-icons/hi';
+import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutlineTrash, HiOutlineEye, HiOutlineClipboardList, HiOutlineExclamation, HiChevronDown, HiOutlineDocumentSearch, HiOutlineDocumentAdd, HiOutlineUpload } from 'react-icons/hi';
 import { HiOutlineViewBoards } from 'react-icons/hi';
 import { LuCalendarClock } from 'react-icons/lu';
 import { BiDotsHorizontal } from 'react-icons/bi';
-import { TbWorldDollar } from 'react-icons/tb';
+import { TbWorldDollar, TbEdit } from 'react-icons/tb';
 import { Logo } from '@/components/common/Logo';
 import { mockContracts } from '@/data/mockContracts';
 import { useEditor } from '@tiptap/react';
@@ -22,7 +22,7 @@ import { EditorContent } from '@tiptap/react';
 import { BsPerson } from 'react-icons/bs';
 import { LuSendHorizontal } from 'react-icons/lu';
 import { RxCaretSort } from 'react-icons/rx';
-import { MdOutlineEditCalendar, MdOutlineUpdate } from 'react-icons/md';
+import { MdOutlineEditCalendar, MdOutlineUpdate, MdOutlineAddToPhotos } from 'react-icons/md';
 import { RiArrowDropDownLine } from 'react-icons/ri';
 import { HiMiniChevronUpDown, HiMiniChevronDown } from 'react-icons/hi2';
 import { useTaskStore } from '@/data/taskStore';
@@ -1137,9 +1137,9 @@ const ContractsPage: React.FC = () => {
               onClick={() => setShowNewContractForm(!showNewContractForm)}
               className="flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold w-full sm:w-auto"
             >
-            <FaPlus className="mr-2 text-base" />
-            New Contract
-          </button>
+              <MdOutlineAddToPhotos className="mr-2 text-lg" />
+              New Contract
+            </button>
           </div>
         </div>
 
@@ -1702,7 +1702,7 @@ const ContractsPage: React.FC = () => {
             {/* Pending Signatures */}
             <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
               <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center border-2 border-purple-200">
-                <HiOutlinePencilAlt size={18} color="#7c3aed" />
+                <TbEdit size={18} color="#7c3aed" />
               </div>
               <div className="flex flex-col items-start h-full">
                 <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Pending Signatures</p>
@@ -1751,8 +1751,8 @@ const ContractsPage: React.FC = () => {
       <hr className="mb-6 border-gray-300" />
 
       {/* Search/Filter Bar */}
-      <div className="bg-white border border-gray-200 rounded-xl px-4 py-4 mb-6 flex items-center w-full mt-2">
-        <div className="flex items-center flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2 min-w-0">
+      <div className="bg-white border border-gray-200 rounded-lg px-4 py-4 mb-6 flex items-center w-full mt-2">
+        <div className="flex items-center flex-1 bg-white border border-gray-200 rounded-lg px-4 py-2 min-w-0">
           <FaSearch className="text-gray-400 mr-2" size={18} />
           <input
             type="text"
@@ -1767,7 +1767,7 @@ const ContractsPage: React.FC = () => {
           <div className="relative ml-1">
             <button
               ref={statusDropdownRef as any}
-              className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
+              className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
               style={{ fontFamily: 'Avenir, sans-serif' }}
               onClick={(e) => {
                 e.preventDefault();
@@ -1785,7 +1785,7 @@ const ContractsPage: React.FC = () => {
             </button>
             {showStatusDropdown && (
               <div 
-                className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 status-filter-dropdown" 
+                className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-2 status-filter-dropdown" 
                 style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
               >
                 <button
@@ -1841,7 +1841,7 @@ const ContractsPage: React.FC = () => {
             <div className="relative ml-1">
               <button
                 ref={contractButtonRef}
-                className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
+                className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
                 style={{ fontFamily: 'Avenir, sans-serif' }}
                 onClick={() => { setOpenContractDropdown(v => !v); setOpenAssigneeDropdown(false); setShowStatusDropdown(false); }}
               >
@@ -1851,7 +1851,7 @@ const ContractsPage: React.FC = () => {
               </button>
               {openContractDropdown && (
                 <div 
-                  className="absolute left-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 min-w-[400px] w-96 contract-dropdown" 
+                  className="absolute left-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-2 min-w-[400px] w-96 contract-dropdown" 
                   style={{ fontFamily: 'Avenir, sans-serif' }}
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -1918,7 +1918,7 @@ const ContractsPage: React.FC = () => {
             <div className="relative ml-1">
               <button
                 ref={assigneeButtonRef}
-                className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
+                className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
                 style={{ fontFamily: 'Avenir, sans-serif' }}
                 onClick={() => { setOpenAssigneeDropdown(v => !v); setOpenContractDropdown(false); setShowStatusDropdown(false); }}
               >
@@ -1928,7 +1928,7 @@ const ContractsPage: React.FC = () => {
               </button>
               {openAssigneeDropdown && (
                 <div 
-                  className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 assignee-dropdown" 
+                  className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-2 assignee-dropdown" 
                   style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
                 >
                   <button
@@ -2000,7 +2000,7 @@ const ContractsPage: React.FC = () => {
             </div>
           </>
         )}
-        <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[150px] ml-1" style={{ fontFamily: 'Avenir, sans-serif' }}
+        <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[150px] ml-1" style={{ fontFamily: 'Avenir, sans-serif' }}
           onClick={() => setLastUpdatedSort(prev => prev === 'desc' ? 'asc' : 'desc')}
         >
           <MdOutlineUpdate className="text-gray-400 w-4 h-4" />
@@ -2130,7 +2130,7 @@ const ContractsPage: React.FC = () => {
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs font-medium">
                       <div className="flex items-center justify-center space-x-1">
                         <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Edit">
-                          <HiOutlinePencilAlt className="h-4 w-4" />
+                          <TbEdit className="h-4 w-4" />
                         </button>
                         <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Upload" onClick={e => { e.stopPropagation(); setShowUploadModal(true); setUploadContractId(contract.id); }}>
                           <HiOutlineUpload className="h-4 w-4" />
@@ -2247,7 +2247,7 @@ const ContractsPage: React.FC = () => {
                             setShowDocumentModal(true);
                           }}
                         >
-                          <HiOutlinePencilAlt className="h-4 w-4" />
+                          <TbEdit className="h-4 w-4" />
                         </button>
                         <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Download">
                           <HiOutlineDownload className="h-4 w-4" />
@@ -2277,7 +2277,7 @@ const ContractsPage: React.FC = () => {
               {/* Left: Contract ID and Status */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-4 mb-4">
-                  <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20">
+                  <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary">
                     # {selectedContract.id}
                   </span>
                 </div>
@@ -3184,7 +3184,7 @@ const ContractsPage: React.FC = () => {
               {/* Left: Document ID and Status */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-4 mb-4">
-                  <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20">
+                  <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary">
                     # {selectedDocument.id}
                   </span>
                 </div>

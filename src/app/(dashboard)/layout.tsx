@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 
-const DEFAULT_SIDEBAR_WIDTH = 288; // Corresponds to w-72
+const DEFAULT_SIDEBAR_WIDTH = 175; // Extremely compact sidebar width
 const COLLAPSED_SIDEBAR_WIDTH = 64; // Example collapsed width (w-16)
 const LOCAL_STORAGE_COLLAPSED_KEY = 'isSidebarCollapsed';
 

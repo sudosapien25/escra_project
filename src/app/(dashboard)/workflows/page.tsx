@@ -14,7 +14,7 @@ import { FaPlus, FaSearch, FaRetweet, FaCheckCircle, FaCheck } from 'react-icons
 import { PiListMagnifyingGlassBold, PiListPlusBold, PiDotsThreeOutline } from 'react-icons/pi';
 import { FaRegSquareCheck } from 'react-icons/fa6';
 import { BiDotsHorizontal } from 'react-icons/bi';
-import { MdCancelPresentation } from 'react-icons/md';
+import { MdCancelPresentation, MdOutlineLibraryAddCheck } from 'react-icons/md';
 import { MdOutlineLightMode, MdOutlineDarkMode } from 'react-icons/md';
 import { RiUserSearchLine } from 'react-icons/ri';
 import { HiOutlineDocumentSearch } from 'react-icons/hi';
@@ -61,6 +61,10 @@ interface Comment {
 
 // Use the task store
 import { useTaskStore } from '@/data/taskStore';
+import { Logo } from '@/components/common/Logo';
+
+type TaskStatus = 'To Do' | 'Blocked' | 'On Hold' | 'In Progress' | 'In Review' | 'Done' | 'Canceled';
+type StatusOption = TaskStatus | 'All';
 
 export default function WorkflowsPage() {
   const [kanbanTab, setKanbanTab] = React.useState('All Tasks');
@@ -70,7 +74,7 @@ export default function WorkflowsPage() {
   const menuRef = useRef<HTMLDivElement>(null);
   const [selectedAssignee, setSelectedAssignee] = React.useState('All');
   const [selectedContract, setSelectedContract] = React.useState('All');
-  const [selectedStatuses, setSelectedStatuses] = React.useState<string[]>([]);
+  const [selectedStatuses, setSelectedStatuses] = useState<StatusOption[]>(['All']);
   const [selectedAssignees, setSelectedAssignees] = React.useState<string[]>([]);
   const [selectedContracts, setSelectedContracts] = React.useState<string[]>([]);
   const [openAssigneeDropdown, setOpenAssigneeDropdown] = React.useState(false);
@@ -92,7 +96,7 @@ export default function WorkflowsPage() {
   const assigneeDropdownRef = useRef<HTMLDivElement>(null);
   const [showAssigneeDropdown, setShowAssigneeDropdown] = React.useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = React.useState(false);
-  const statusDropdownRef = useRef<HTMLDivElement>(null);
+  const statusDropdownRef = useRef<HTMLButtonElement>(null);
   const [editingCommentId, setEditingCommentId] = React.useState<string | null>(null);
   const [showNewTaskModal, setShowNewTaskModal] = React.useState(false);
   const [showUploadModal, setShowUploadModal] = React.useState(false);
@@ -222,14 +226,17 @@ export default function WorkflowsPage() {
 
   // Add status options constant
   const statusOptions = [
-    { key: 'To Do' as const, title: 'To Do' },
-    { key: 'Blocked' as const, title: 'Blocked' },
-    { key: 'On Hold' as const, title: 'On Hold' },
-    { key: 'In Progress' as const, title: 'In Progress' },
-    { key: 'In Review' as const, title: 'In Review' },
-    { key: 'Done' as const, title: 'Done' },
-    { key: 'Canceled' as const, title: 'Canceled' }
-  ];
+    { key: 'To Do', title: 'To Do' },
+    { key: 'Blocked', title: 'Blocked' },
+    { key: 'On Hold', title: 'On Hold' },
+    { key: 'In Progress', title: 'In Progress' },
+    { key: 'In Review', title: 'In Review' },
+    { key: 'Done', title: 'Done' },
+    { key: 'Canceled', title: 'Canceled' }
+  ] as const;
+
+  type TaskStatus = typeof statusOptions[number]['key'];
+  type StatusOption = TaskStatus | 'All';
 
   // Placeholder for current user's name
   const currentUserName = 'John Smith'; // TODO: Replace with actual user context
@@ -432,11 +439,12 @@ export default function WorkflowsPage() {
   }, [openAssigneeDropdown]);
 
   // Update the status change handler for the task details modal
-  const handleTaskStatusChange = (status: typeof statusOptions[number]['key']) => {
-    if (selectedTask) {
-      moveTask(selectedTask.code, status);
+  const handleTaskStatusChange = (status: StatusOption) => {
+    if (selectedTask && status !== 'All') {
+      const taskStatus = status as TaskStatus;
+      moveTask(selectedTask.code, taskStatus);
       // Update the selected task's status in the modal
-      setSelectedTask({ ...selectedTask, status });
+      setSelectedTask({ ...selectedTask, status: taskStatus });
       setShowStatusDropdown(false);
     }
   };
@@ -485,13 +493,13 @@ export default function WorkflowsPage() {
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as HTMLElement;
-      const dropdown = document.querySelector('.status-dropdown');
-      const input = document.querySelector('input[placeholder*="Status"]');
+      const dropdown = document.querySelector('.status-filter-dropdown');
+      const button = statusDropdownRef.current;
 
-      // Only close if clicking outside both the dropdown and input
+      // Only close if clicking outside both the dropdown and button
       if (showStatusDropdown && 
           !dropdown?.contains(target) && 
-          !input?.contains(target)) {
+          !button?.contains(target)) {
         setShowStatusDropdown(false);
       }
     }
@@ -535,7 +543,7 @@ export default function WorkflowsPage() {
             onClick={() => setShowNewTaskModal(true)}
             className="flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
           >
-            <FaPlus className="mr-2 text-base" />
+            <MdOutlineLibraryAddCheck className="mr-2 text-lg" />
             New Task
           </button>
         </div>
@@ -546,17 +554,20 @@ export default function WorkflowsPage() {
       {/* Workflow Stats and Filters Section */}
       <div className="space-y-4">
         {/* Tabs */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 flex gap-1 w-fit">
+        <div className="flex gap-1">
           {kanbanTabs.map((tab) => (
             <button
               key={tab}
               onClick={() => setKanbanTab(tab)}
-              className={`px-4 py-2 rounded-xl text-xs font-medium border border-gray-200 dark:border-gray-700 transition-colors font-sans min-w-[120px] ${
+              className={`px-4 py-2 rounded-lg text-xs font-medium transition-all duration-300 font-sans flex items-center justify-center ${
                 kanbanTab === tab 
-                  ? 'bg-teal-50 dark:bg-teal-900/30 text-teal-500 dark:text-teal-400' 
-                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                  ? 'bg-white dark:bg-gray-800 text-teal-500 dark:text-teal-400 min-w-[130px] border-2 border-gray-200 dark:border-gray-700' 
+                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 w-fit border border-gray-200 dark:border-gray-700'
               }`}
             >
+              <span className={`inline-block transition-all duration-300 ${kanbanTab === tab ? 'opacity-100 mr-1.5' : 'opacity-0 w-0 mr-0'}`} style={{width: kanbanTab === tab ? 16 : 0}}>
+                {kanbanTab === tab && <Logo width={16} height={16} className="pointer-events-none" />}
+              </span>
               {tab}
             </button>
           ))}
@@ -603,12 +614,13 @@ export default function WorkflowsPage() {
 
         {/* Filter Bar */}
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 mb-6 flex items-center w-full mt-2">
+          {/* Assignee Filter */}
           <div className="relative ml-1">
             <button
               ref={assigneeButtonRef}
-              className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px]"
+              className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
               style={{ fontFamily: 'Avenir, sans-serif' }}
-              onClick={() => { setOpenAssigneeDropdown(v => !v); setOpenContractDropdown(false); setOpenStatusDropdown(false); }}
+              onClick={() => { setOpenAssigneeDropdown(v => !v); setOpenContractDropdown(false); setShowStatusDropdown(false); }}
             >
               <RiUserSearchLine className="text-gray-400 w-4 h-4" />
               <span>Assignee</span>
@@ -616,13 +628,12 @@ export default function WorkflowsPage() {
             </button>
             {openAssigneeDropdown && (
               <div 
-                className="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 assignee-dropdown" 
+                className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-2 assignee-dropdown" 
                 style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
-                onClick={(e) => e.stopPropagation()}
               >
                 <button
                   className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
-                  onClick={(e) => {
+                  onClick={(e: React.MouseEvent) => {
                     e.preventDefault();
                     e.stopPropagation();
                     setSelectedAssignees([]);
@@ -639,10 +650,14 @@ export default function WorkflowsPage() {
                 </button>
                 <button
                   className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setSelectedAssignees(['__ME__']);
+                  onClick={() => {
+                    setSelectedAssignees(prev => {
+                      if (prev.includes('__ME__')) {
+                        return prev.filter(a => a !== '__ME__');
+                      } else {
+                        return [...prev, '__ME__'];
+                      }
+                    });
                   }}
                 >
                   <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
@@ -684,12 +699,13 @@ export default function WorkflowsPage() {
             )}
           </div>
 
+          {/* Contract Filter */}
           <div className="relative ml-1">
             <button
               ref={contractButtonRef}
-              className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px]"
+              className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
               style={{ fontFamily: 'Avenir, sans-serif' }}
-              onClick={() => { setOpenContractDropdown(v => !v); setOpenAssigneeDropdown(false); setOpenStatusDropdown(false); }}
+              onClick={() => { setOpenContractDropdown(v => !v); setOpenAssigneeDropdown(false); setShowStatusDropdown(false); }}
             >
               <HiOutlineDocumentSearch className="text-gray-400 w-4 h-4" />
               <span>Contract</span>
@@ -697,8 +713,8 @@ export default function WorkflowsPage() {
             </button>
             {openContractDropdown && (
               <div 
-                className="absolute left-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 contract-dropdown" 
-                style={{ minWidth: '400px', width: '24rem', fontFamily: 'Avenir, sans-serif' }}
+                className="absolute left-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-2 min-w-[400px] w-96 contract-dropdown" 
+                style={{ fontFamily: 'Avenir, sans-serif' }}
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Search Bar */}
@@ -716,69 +732,75 @@ export default function WorkflowsPage() {
                   </div>
                 </div>
 
-                {/* Contract List */}
-                <div className="max-h-[300px] overflow-y-auto">
-                  <button
-                    className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center"
-                    onClick={() => setSelectedContracts([])}
-                  >
-                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                      {selectedContracts.length === 0 && (
-                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
-                          <FaCheck className="text-white" size={8} />
-                        </div>
-                      )}
-                    </div>
-                    All
-                  </button>
-                  {mockContracts
-                    .filter(contract => 
-                      contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
-                      contract.title.toLowerCase().includes(contractSearch.toLowerCase())
-                    )
-                    .map(contract => (
-                      <button
-                        key={contract.id}
-                        className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center whitespace-nowrap truncate"
-                        onClick={() => {
-                          setSelectedContracts(prev => {
-                            if (prev.includes(String(contract.id))) {
-                              return prev.filter(c => c !== String(contract.id));
-                            } else {
-                              return [...prev, String(contract.id)];
-                            }
-                          });
-                        }}
-                      >
-                        <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                          {selectedContracts.includes(String(contract.id)) && (
-                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
-                              <FaCheck className="text-white" size={8} />
-                            </div>
-                          )}
-                        </div>
-                        {contract.id} - {contract.title}
-                      </button>
-                    ))}
-                </div>
+                <button
+                  className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center"
+                  onClick={() => setSelectedContracts([])}
+                >
+                  <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                    {selectedContracts.length === 0 && (
+                      <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                        <FaCheck className="text-white" size={8} />
+                      </div>
+                    )}
+                  </div>
+                  All
+                </button>
+                {mockContracts
+                  .filter(contract => 
+                    contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
+                    contract.title.toLowerCase().includes(contractSearch.toLowerCase())
+                  )
+                  .map(contract => (
+                    <button
+                      key={contract.id}
+                      className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center whitespace-nowrap truncate"
+                      onClick={() => {
+                        setSelectedContracts(prev => {
+                          if (prev.includes(String(contract.id))) {
+                            return prev.filter(c => c !== String(contract.id));
+                          } else {
+                            return [...prev, String(contract.id)];
+                          }
+                        });
+                      }}
+                    >
+                      <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                        {selectedContracts.includes(String(contract.id)) && (
+                          <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                            <FaCheck className="text-white" size={8} />
+                          </div>
+                        )}
+                      </div>
+                      {contract.id} - {contract.title}
+                    </button>
+                  ))}
               </div>
             )}
           </div>
 
+          {/* Status Filter */}
           <div className="relative ml-1">
             <button
-              ref={statusButtonRef}
-              className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
+              ref={statusDropdownRef}
+              className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap" 
               style={{ fontFamily: 'Avenir, sans-serif' }}
-              onClick={() => { setOpenStatusDropdown(v => !v); setOpenAssigneeDropdown(false); setOpenContractDropdown(false); }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowStatusDropdown(prev => !prev);
+                if (!showStatusDropdown) {
+                  setOpenContractDropdown(false);
+                  setOpenAssigneeDropdown(false);
+                }
+              }}
             >
               <HiOutlineViewBoards className="text-gray-400 w-4 h-4" />
               <span>Status</span>
               <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
             </button>
-            {openStatusDropdown && (
+            {showStatusDropdown && (
               <div 
-                className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 status-filter-dropdown" 
+                className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-2 status-filter-dropdown" 
                 style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
               >
                 <button
@@ -786,11 +808,11 @@ export default function WorkflowsPage() {
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    setSelectedStatuses([]);
+                    setSelectedStatuses(['All']);
                   }}
                 >
                   <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                    {selectedStatuses.length === 0 && (
+                    {selectedStatuses.includes('All') && (
                       <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
                         <FaCheck className="text-white" size={8} />
                       </div>
@@ -806,16 +828,19 @@ export default function WorkflowsPage() {
                       e.preventDefault();
                       e.stopPropagation();
                       setSelectedStatuses(prev => {
-                        if (prev.includes(status.key)) {
-                          return prev.filter(s => s !== status.key);
+                        const newStatuses = prev.filter(s => s !== 'All');
+                        if (prev.includes(status.key as StatusOption)) {
+                          const filtered = newStatuses.filter(s => s !== status.key);
+                          // If no statuses are selected, default to "All"
+                          return filtered.length === 0 ? ['All'] : filtered;
                         } else {
-                          return [...prev, status.key];
+                          return [...newStatuses, status.key as StatusOption];
                         }
                       });
                     }}
                   >
                     <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                      {selectedStatuses.includes(status.key) && (
+                      {selectedStatuses.includes(status.key as StatusOption) && (
                         <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
                           <FaCheck className="text-white" size={8} />
                         </div>
@@ -827,14 +852,14 @@ export default function WorkflowsPage() {
               </div>
             )}
           </div>
-          <div className="flex items-center bg-white border border-gray-200 rounded-xl px-4 py-2 flex-1 ml-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+          <div className="flex items-center bg-white border border-gray-200 rounded-lg px-4 py-2 flex-1 ml-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
             <FaSearch className="text-gray-400 mr-2 text-lg" />
             <input
               type="text"
-              placeholder="Search tasks, assignees, contracts or IDs"
+              placeholder="Search tasks..."
               value={taskSearchTerm}
               onChange={e => setTaskSearchTerm(e.target.value)}
-              className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 placeholder-gray-400 font-medium min-w-0"
+              className="w-full bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 placeholder-gray-400 font-medium"
               style={{ fontFamily: 'Avenir, sans-serif' }}
             />
           </div>
@@ -848,7 +873,7 @@ export default function WorkflowsPage() {
         <DragDropContext onDragEnd={onDragEnd}>
           <div className="flex flex-grow overflow-x-auto space-x-6 p-4 rounded-lg">
             {kanbanColumns
-              .filter(col => selectedStatuses.length === 0 || selectedStatuses.includes(col.key))
+              .filter(col => selectedStatuses.includes('All') || selectedStatuses.includes(col.key as TaskStatus))
               .map((col) => (
                 <Droppable droppableId={col.key} key={col.key}>
                   {(provided) => (
@@ -910,10 +935,10 @@ export default function WorkflowsPage() {
 
                                   {/* Task Number - Top Left */}
                                   <div className="mb-3">
-                                    <span className="text-[10px] font-bold bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-200">
-                                      Task #{task.taskNumber}
+                                    <span className="text-[10px] font-bold bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-700">
+                                      # {task.taskNumber}
                                     </span>
-                                    <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20 ml-1">
+                                    <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary ml-1">
                                       # {task.contractId}
                                     </span>
                                   </div>
@@ -975,7 +1000,7 @@ export default function WorkflowsPage() {
         <DragDropContext onDragEnd={onDragEnd}>
           <div className="flex flex-grow overflow-x-auto space-x-6 p-4 rounded-lg">
             {kanbanColumns
-              .filter(col => col.key !== 'Done' && col.key !== 'Canceled' && (selectedStatuses.length === 0 || selectedStatuses.includes(col.key)))
+              .filter(col => col.key !== 'Done' && col.key !== 'Canceled' && (selectedStatuses.length === 0 || selectedStatuses.includes(col.key as TaskStatus)))
               .map((col) => (
                 <Droppable droppableId={col.key} key={col.key}>
                   {(provided) => (
@@ -1034,10 +1059,10 @@ export default function WorkflowsPage() {
                                   </div>
                                   {/* Task Number - Top Left */}
                                   <div className="mb-3">
-                                    <span className="text-[10px] font-bold bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-200">
-                                      Task #{task.taskNumber}
+                                    <span className="text-[10px] font-bold bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-700">
+                                      # {task.taskNumber}
                                     </span>
-                                    <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20 ml-1">
+                                    <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary ml-1">
                                       # {task.contractId}
                                     </span>
                                   </div>
@@ -1102,10 +1127,10 @@ export default function WorkflowsPage() {
                 {/* Left: Task ID and Contract ID */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center mb-4">
-                    <span className="text-[10px] font-bold bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-200">
-                      #{selectedTask.taskNumber}
+                    <span className="text-[10px] font-bold bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-700">
+                      # {selectedTask.taskNumber}
                     </span>
-                    <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20 ml-1">
+                    <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary ml-1">
                       # {selectedTask.contractId}
                     </span>
                   </div>

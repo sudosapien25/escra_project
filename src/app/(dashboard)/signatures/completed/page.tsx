@@ -8,7 +8,7 @@ import { HiOutlineEye, HiOutlineDownload, HiOutlineViewBoards } from "react-icon
 import { LuBellRing } from "react-icons/lu";
 import { MdCancelPresentation } from "react-icons/md";
 import { TbClockPin } from "react-icons/tb";
-import { RiUserSearchLine } from 'react-icons/ri';
+import { RiUserSearchLine, RiUserSharedLine } from 'react-icons/ri';
 
 const completedRows = [
   // Example data, should match the 'Completed' filter from the main signatures page
@@ -67,6 +67,8 @@ export default function CompletedPage() {
     key: string;
     direction: 'asc' | 'desc';
   }>({ key: 'dateSent', direction: 'desc' });
+  const [showToolSelectorModal, setShowToolSelectorModal] = useState(false);
+  const senderButtonRef = useRef<HTMLButtonElement>(null);
 
   // Available sender options for the dropdown
   const availableSenders = [
@@ -116,17 +118,23 @@ export default function CompletedPage() {
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as Node;
-      if (senderDropdownRef.current?.contains(target)) {
-        return; // Don't close if clicking inside the dropdown
+      const dropdown = document.querySelector('.sender-dropdown');
+      const button = senderButtonRef.current;
+      
+      // Only check if dropdown is open
+      if (showSenderDropdown) {
+        // If clicking outside both dropdown and button, close the dropdown
+        if (!dropdown?.contains(target) && !button?.contains(target)) {
+          setShowSenderDropdown(false);
+        }
       }
-      setShowSenderDropdown(false);
     }
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [showSenderDropdown]);
 
   // Handle click outside for assignee dropdown
   useEffect(() => {
@@ -181,7 +189,7 @@ export default function CompletedPage() {
       <hr className="my-6 border-gray-300" />
       {/* Search Bar and Filters */}
       <div className="bg-white border border-gray-200 rounded-xl px-4 py-4 mb-6 flex items-center w-full mt-2">
-        <div className="flex items-center bg-white border border-gray-200 rounded-xl px-4 py-2 min-w-0 flex-1 mr-1">
+        <div className="flex items-center flex-1 bg-white border border-gray-200 rounded-lg px-4 py-2 min-w-0" style={{ width: 'calc(100% - 500px)' }}>
           <FaSearch className="text-gray-400 mr-2" size={18} />
           <input
             type="text"
@@ -193,34 +201,39 @@ export default function CompletedPage() {
           />
         </div>
         {/* Sender Filter */}
-        <button 
-          className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 relative whitespace-nowrap" 
-          style={{ fontFamily: 'Avenir, sans-serif' }}
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setShowSenderDropdown(prev => !prev);
-            if (!showSenderDropdown) {
-              setShowAssigneeDropdown(false);
-            }
-          }}
-          ref={senderDropdownRef as any}
-        >
-          <HiOutlineViewBoards className="text-gray-400 text-lg" />
-          <span>Sender</span>
-          <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
-          
+        <div className="relative ml-1">
+          <button
+            ref={senderButtonRef}
+            className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
+            style={{ fontFamily: 'Avenir, sans-serif' }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowSenderDropdown(prev => !prev);
+              if (!showSenderDropdown) {
+                setShowStatusDropdown(false);
+                setShowAssigneeDropdown(false);
+              }
+            }}
+          >
+            <RiUserSharedLine className="text-gray-400 w-4 h-4" />
+            <span>Sender</span>
+            <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+          </button>
           {showSenderDropdown && (
-            <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
+            <div 
+              className="absolute top-full left-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-2 min-w-[200px] sender-dropdown" 
+              style={{ fontFamily: 'Avenir, sans-serif' }}
+              onClick={(e) => e.stopPropagation()}
+            >
               {availableSenders.map((sender) => (
                 <button
                   key={sender}
-                  className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                  className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     setSelectedSender(sender);
-                    setShowSenderDropdown(false);
                   }}
                 >
                   <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
@@ -235,16 +248,19 @@ export default function CompletedPage() {
               ))}
             </div>
           )}
-        </button>
+        </div>
 
         {/* Assignee Filter */}
         <button
-          className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 relative whitespace-nowrap" 
+          className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 relative whitespace-nowrap" 
           style={{ fontFamily: 'Avenir, sans-serif' }}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
             setShowAssigneeDropdown(prev => !prev);
+            if (!showAssigneeDropdown) {
+              setShowSenderDropdown(false);
+            }
           }}
           ref={assigneeDropdownRef as any}
         >
@@ -322,7 +338,7 @@ export default function CompletedPage() {
 
         {/* Last 30 Days Filter */}
         <button
-          className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 relative whitespace-nowrap" 
+          className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] ml-1 relative whitespace-nowrap" 
           style={{ fontFamily: 'Avenir, sans-serif' }}
           onClick={(e) => {
             e.preventDefault();
@@ -345,7 +361,7 @@ export default function CompletedPage() {
               <tr>
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '60px' }}>Document ID</th>
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-left" style={{ minWidth: '180px' }}>Document</th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-left" style={{ minWidth: '200px' }}>Parties</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-left" style={{ minWidth: '200px' }}>Recipients</th>
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '120px' }}>Status</th>
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '100px' }}>Signatures</th>
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '100px' }}>Contract ID</th>

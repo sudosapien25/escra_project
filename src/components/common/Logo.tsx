@@ -17,8 +17,8 @@ export const Logo: React.FC<LogoProps> = ({
   className,
   targetUrl = '/dashboard', // Default to dashboard if no target is specified
 }) => {
-  // Placeholder for logo source - will be updated once files are provided
-  const logoSrc = theme === 'dark' ? '/assets/logos/escra-logo-white.png' : '/assets/logos/escra-logo-teal.png';
+  // Use the teal logo for both light and dark modes
+  const logoSrc = '/assets/logos/escra-logo-teal.png';
 
   return (
     <Link href={targetUrl} className={clsx('block cursor-pointer', className)}>
