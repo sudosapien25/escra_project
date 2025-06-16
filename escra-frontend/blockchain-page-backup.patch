@@ -1,0 +1,7 @@
+diff --git a/escra-frontend b/escra-frontend
+index b38da2d..a296b5f 160000
+--- a/escra-frontend
++++ b/escra-frontend
+@@ -1 +1 @@
+-Subproject commit b38da2ded8d567c1edf0c88eada266a5dcd3dde9
++Subproject commit a296b5f679168cc53d473ef60a3bb1775188f807-dirty
