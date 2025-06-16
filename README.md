@@ -1,36 +1,95 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MacBook Development Environment Backup & Restoration
 
-## Getting Started
+This repository contains scripts to backup and restore your development environment when transitioning to a new MacBook.
 
-First, run the development server:
+## Backup Process
+
+The backup script (`backup_development_env.sh`) creates a comprehensive backup of your development environment in `~/trade-in-backup/`. This includes:
+
+- System and development environment information
+- Git repositories and their remote URLs
+- Git configuration
+- .env files from your projects
+- Global npm and Python packages
+- Installed applications list
+
+### Running the Backup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+./backup_development_env.sh
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Restoration Process
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The restoration script (`restore_development_env.sh`) automates the setup of your new MacBook. Before running it, ensure you have:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Transferred the `trade-in-backup` directory to your new MacBook
+2. Copied the `restore_development_env.sh` script to your new MacBook
 
-## Learn More
+### Running the Restoration
 
-To learn more about Next.js, take a look at the following resources:
+1. Make the script executable:
+   ```bash
+   chmod +x restore_development_env.sh
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. Run the restoration script:
+   ```bash
+   ./restore_development_env.sh
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The script will:
+- Install essential development tools (Node.js, Python, Git, Homebrew)
+- Set up Git configuration
+- Create a Development directory
+- Clone all your repositories
+- Restore .env files
+- Install Cursor IDE
+- Install global npm and Python packages
 
-## Deploy on Vercel
+### Post-Restoration Steps
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. **Verify GitHub Access**
+   - When you first try to pull or push to a repository, you'll be prompted for your GitHub credentials
+   - Enter your GitHub username and password (or personal access token)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+2. **Check Repository Access**
+   - Navigate to your Development directory
+   - Try pulling from a repository to verify access
+
+3. **Verify Environment Variables**
+   - Check that .env files were restored correctly
+   - Verify any necessary environment variables are set
+
+4. **Test Development Tools**
+   - Verify Node.js: `node --version`
+   - Verify Python: `python3 --version`
+   - Verify Git: `git --version`
+   - Test Cursor IDE
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Repository Access Issues**
+   - If repositories fail to clone:
+     - Verify your GitHub credentials
+     - Check repository URLs in `git_repositories.txt`
+
+2. **Package Installation Issues**
+   - If npm or pip packages fail to install:
+     - Check internet connection
+     - Try installing packages manually
+
+### Getting Help
+
+If you encounter any issues:
+1. Check the restoration summary in `~/Development/restoration_summary.txt`
+2. Review the script output for error messages
+3. Verify the backup directory contents are complete
+
+## Maintenance
+
+- Keep your backup updated before major system changes
+- Regularly commit and push your code to GitHub
+- Document any manual changes to your development environment
