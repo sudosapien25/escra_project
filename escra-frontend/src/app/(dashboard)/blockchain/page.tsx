@@ -130,6 +130,74 @@ export default function BlockchainPage() {
   const [showNewContractModal, setShowNewContractModal] = useState(false);
   const [copiedContractId, setCopiedContractId] = useState<string | null>(null);
   const [hoveredContractId, setHoveredContractId] = useState<string | null>(null);
+  const [selectedSmartContract, setSelectedSmartContract] = useState<any>(null);
+  const [transactionsTab, setTransactionsTab] = useState('table');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  
+  // Mock transaction data
+  const transactionData = [
+    {
+      id: 'DLH04MH...',
+      groupId: '1nlgJou...',
+      from: 'WARN_SCAM',
+      to: '1284326447',
+      type: 'Application Call',
+      amount: '0.000013',
+      fee: '0'
+    },
+    {
+      id: '4U0HG7Q...',
+      groupId: '1nlgJou...',
+      from: 'WARN_SCAM',
+      to: 'KKGU_UZBI',
+      type: 'Payment',
+      amount: '0.000013',
+      fee: '0'
+    },
+    {
+      id: '7AD9E3B...',
+      groupId: '2mkgKpv...',
+      from: 'ESCRA_WALLET',
+      to: 'CONTRACT_123',
+      type: 'Application Call',
+      amount: '0.000001',
+      fee: '0.001'
+    },
+    {
+      id: '9BE31C5...',
+      groupId: '3plhLqw...',
+      from: 'USER_456',
+      to: 'ESCRA_WALLET',
+      type: 'Payment',
+      amount: '1.500000',
+      fee: '0.001'
+    },
+    {
+      id: '2EA9F1B...',
+      groupId: '4qlmMrx...',
+      from: 'CONTRACT_789',
+      to: 'USER_123',
+      type: 'Application Call',
+      amount: '0.000005',
+      fee: '0'
+    }
+  ];
+
+  // Calculate pagination
+  const totalPages = Math.ceil(transactionData.length / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const currentTransactions = transactionData.slice(startIndex, endIndex);
+
+  // Get type badge style
+  const getTypeBadgeStyle = (type: string) => {
+    switch (type) {
+      case 'Application Call': return 'bg-blue-100 text-blue-700 border border-blue-500';
+      case 'Payment': return 'bg-orange-100 text-orange-700 border border-orange-500';
+      default: return 'bg-gray-100 text-gray-700 border border-gray-400';
+    }
+  };
   
   // Search and filter state for Smart Contracts tab
   const [searchTerm, setSearchTerm] = useState('');
@@ -471,7 +539,11 @@ export default function BlockchainPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-h-[calc(3*(240px+1rem))] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
             {filteredContracts.map((contract, idx) => (
-              <Card key={idx} className="rounded-xl border border-gray-200 p-4">
+              <Card 
+                key={idx} 
+                className="rounded-xl border border-gray-200 p-4 cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => setSelectedSmartContract(contract)}
+              >
                 <div className="flex justify-between items-start mb-2">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1">
@@ -504,7 +576,8 @@ export default function BlockchainPage() {
                     <button
                       type="button"
                       className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         navigator.clipboard.writeText(getContractHash(contract.id));
                         setCopiedContractId(contract.id);
                         setTimeout(() => setCopiedContractId(null), 1500);
@@ -901,6 +974,389 @@ export default function BlockchainPage() {
                   View Audit Reports
                 </button>
               </Card>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Smart Contract Details Modal */}
+      {selectedSmartContract && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="relative bg-white rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden">
+            {/* Sticky Header with Contract ID and Close buttons */}
+            <div className="sticky top-0 z-40 bg-white px-6 py-4">
+              <div className="flex items-start justify-between">
+                {/* Left: Contract ID */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-4 mb-4">
+                    <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary">
+                      # {selectedSmartContract.id}
+                    </span>
+                  </div>
+                </div>
+                {/* Right: Close Button */}
+                <button
+                  className="text-gray-400 hover:text-gray-600 p-2 rounded-full ml-4 mt-1"
+                  onClick={() => setSelectedSmartContract(null)}
+                  aria-label="Close"
+                >
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="flex flex-col flex-1 min-h-0">
+              <div className="overflow-y-auto p-6 flex-1">
+                {/* Modal Content Grid: 2x1 layout */}
+                <div className="flex flex-col gap-6 w-full h-full min-h-0 -mt-2">
+                  {/* Top Row: Block Details and Contract Information */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Block Details */}
+                    <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
+                      <h3 className="text-sm font-semibold text-gray-900 mb-4">Block Details</h3>
+                      <div className="grid grid-cols-2 gap-x-12 gap-y-4">
+                        <div>
+                          <div className="text-gray-500 text-xs mb-1">Block Number</div>
+                          <div className="text-xs text-black">#15283674</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500 text-xs mb-1">Block Hash</div>
+                          <div className="flex items-center">
+                            <span className="text-xs font-mono text-gray-900 truncate" style={{ maxWidth: '120px' }}>
+                              0x7ad9e3b...8f2c1
+                            </span>
+                            <button className="ml-2 text-gray-400 hover:text-gray-600">
+                              <HiOutlineDuplicate className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500 text-xs mb-1">Timestamp</div>
+                          <div className="text-xs text-black">2024-05-20 14:32:15</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500 text-xs mb-1">Gas Used</div>
+                          <div className="text-xs text-black">2,847,392</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500 text-xs mb-1">Gas Limit</div>
+                          <div className="text-xs text-black">3,000,000</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500 text-xs mb-1">Base Fee</div>
+                          <div className="text-xs text-black">15.2 Gwei</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Contract Information */}
+                    <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
+                      <h3 className="text-sm font-semibold text-gray-900 mb-4">Contract Information</h3>
+                      <div className="grid grid-cols-2 gap-x-12 gap-y-4">
+                        <div>
+                          <div className="text-gray-500 text-xs mb-1">Contract Address</div>
+                          <div className="flex items-center">
+                            <span className="text-xs font-mono text-gray-900 truncate" style={{ maxWidth: '120px' }}>
+                              {getContractHash(selectedSmartContract.id)}
+                            </span>
+                            <button className="ml-2 text-gray-400 hover:text-gray-600">
+                              <HiOutlineDuplicate className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500 text-xs mb-1">Contract Name</div>
+                          <div className="text-xs text-black">{selectedSmartContract.title}</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500 text-xs mb-1">Version</div>
+                          <div className="text-xs text-black">{selectedSmartContract.version}</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500 text-xs mb-1">Status</div>
+                          <span className={`inline-flex items-center justify-center min-w-[130px] h-7 px-4 font-semibold rounded-full text-xs ${selectedSmartContract.badges[1]?.color || 'bg-gray-100 text-gray-700 border border-gray-400'}`}>
+                            {selectedSmartContract.status}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="text-gray-500 text-xs mb-1">Network</div>
+                          <span className={`inline-flex items-center justify-center min-w-[130px] h-7 px-4 font-semibold rounded-full text-xs ${selectedSmartContract.badges[0]?.color || 'bg-blue-100 text-blue-700 border border-blue-500'}`}>
+                            {selectedSmartContract.badges[0]?.label || 'TestNet'}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="text-gray-500 text-xs mb-1">Deployed</div>
+                          <div className="text-xs text-black">{selectedSmartContract.deployed}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bottom: Full-width Transactions */}
+                  <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-4">Transactions</h3>
+                    
+                    {/* Tabs Row with Divider */}
+                    <div className="border-b border-gray-200 mb-4">
+                      <div className="flex space-x-4 overflow-x-auto w-full">
+                        <button
+                          className={`pb-2 text-sm font-semibold whitespace-nowrap border-b-2 ${
+                            transactionsTab === 'table'
+                              ? 'text-primary border-primary'
+                              : 'text-gray-500 hover:text-gray-700 border-transparent'
+                          }`}
+                          onClick={() => setTransactionsTab('table')}
+                        >
+                          Table
+                        </button>
+                        <button
+                          className={`pb-2 text-sm font-semibold whitespace-nowrap border-b-2 ${
+                            transactionsTab === 'visual'
+                              ? 'text-primary border-primary'
+                              : 'text-gray-500 hover:text-gray-700 border-transparent'
+                          }`}
+                          onClick={() => setTransactionsTab('visual')}
+                        >
+                          Visual
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Tab Content */}
+                    {transactionsTab === 'table' && (
+                      <div className="space-y-4">
+                        {/* Table */}
+                        <div className="relative overflow-x-auto overflow-y-auto" style={{ maxHeight: '200px' }}>
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead>
+                              <tr>
+                                <th className="sticky top-0 z-10 bg-gray-50 text-left px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none">
+                                  Position
+                                </th>
+                                <th className="sticky top-0 z-10 bg-gray-50 text-left px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none">
+                                  Transaction ID
+                                </th>
+                                <th className="sticky top-0 z-10 bg-gray-50 text-left px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none">
+                                  Group ID
+                                </th>
+                                <th className="sticky top-0 z-10 bg-gray-50 text-left px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none">
+                                  Sender
+                                </th>
+                                <th className="sticky top-0 z-10 bg-gray-50 text-left px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none">
+                                  Receiver
+                                </th>
+                                <th className="sticky top-0 z-10 bg-gray-50 text-center px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none">
+                                  Type
+                                </th>
+                                <th className="sticky top-0 z-10 bg-gray-50 text-right px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none">
+                                  Amount
+                                </th>
+                                <th className="sticky top-0 z-10 bg-gray-50 text-right px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none">
+                                  Fee
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                              {currentTransactions.map((transaction, index) => (
+                                <tr key={index} className="hover:bg-gray-50 cursor-pointer">
+                                  <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-900">
+                                    {startIndex + index + 1}
+                                  </td>
+                                  <td className="px-3 py-2 whitespace-nowrap text-xs">
+                                    <span className="text-primary underline font-semibold cursor-pointer">
+                                      {transaction.id}
+                                    </span>
+                                  </td>
+                                  <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-900">
+                                    {transaction.groupId}
+                                  </td>
+                                  <td className="px-3 py-2 whitespace-nowrap text-xs">
+                                    <span className="text-primary underline font-semibold cursor-pointer">
+                                      {transaction.from}
+                                    </span>
+                                  </td>
+                                  <td className="px-3 py-2 whitespace-nowrap text-xs">
+                                    <span className="text-primary underline font-semibold cursor-pointer">
+                                      {transaction.to}
+                                    </span>
+                                  </td>
+                                  <td className="px-3 py-2 whitespace-nowrap text-center text-xs">
+                                    <span className={`inline-flex items-center justify-center px-2 py-1 font-semibold rounded-full text-xs ${getTypeBadgeStyle(transaction.type)}`}>
+                                      {transaction.type}
+                                    </span>
+                                  </td>
+                                  <td className="pl-6 pr-0 py-2 whitespace-nowrap text-right text-xs text-gray-900">
+                                    <div className="flex items-center justify-end">
+                                      <span>{transaction.amount}</span>
+                                      <Image
+                                        src="/assets/algorand_logo_mark_black.png"
+                                        alt="ALGO"
+                                        width={22}
+                                        height={22}
+                                        className="-ml-0.5 opacity-75"
+                                      />
+                                    </div>
+                                  </td>
+                                  <td className="pl-4 pr-2 py-2 whitespace-nowrap text-right text-xs text-gray-900">
+                                    <div className="flex items-center justify-end">
+                                      <span>{transaction.fee}</span>
+                                      <Image
+                                        src="/assets/algorand_logo_mark_black.png"
+                                        alt="ALGO"
+                                        width={22}
+                                        height={22}
+                                        className="-ml-0.5 opacity-75"
+                                      />
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {/* Pagination */}
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-500">Rows per page:</span>
+                            <select
+                              value={rowsPerPage}
+                              onChange={(e) => {
+                                setRowsPerPage(Number(e.target.value));
+                                setCurrentPage(1);
+                              }}
+                              className="border border-gray-200 rounded px-2 py-1 text-xs bg-white"
+                            >
+                              <option value={5}>5</option>
+                              <option value={10}>10</option>
+                              <option value={25}>25</option>
+                            </select>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <span className="text-gray-500">
+                              Page {currentPage} of {totalPages}
+                            </span>
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                                disabled={currentPage === 1}
+                                className="px-2 py-1 border border-gray-200 rounded text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                              >
+                                Previous
+                              </button>
+                              <button
+                                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                                disabled={currentPage === totalPages}
+                                className="px-2 py-1 border border-gray-200 rounded text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                              >
+                                Next
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {transactionsTab === 'visual' && (
+                      <div className="space-y-4">
+                        <div className="relative bg-white rounded-xl border border-gray-200 p-6 min-h-[400px]">
+                          {/* Address Nodes Row */}
+                          <div className="flex justify-between items-center mb-16 px-8">
+                            {[
+                              'WARN_SCAM',
+                              '1284326447',
+                              'KKGU_UZBI',
+                              'KFA2_T374',
+                              'D31M_B51E',
+                              'BUCT_B01A',
+                              'BL5Y_LE4E'
+                            ].map((address, index) => (
+                              <div key={address} className="flex flex-col items-center group relative">
+                                <div className="text-xs font-mono text-gray-700 mb-2 flex items-center">
+                                  {address}
+                                  <div className="ml-1 w-4 h-4 rounded-full bg-gray-100 flex items-center justify-center text-[10px] font-semibold text-gray-600">
+                                    {index + 1}
+                                  </div>
+                                </div>
+                                <div className="w-3 h-3 rounded-full border-2 border-primary bg-white" />
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Transaction Flow Lines */}
+                          <div className="space-y-6 px-8">
+                            {[
+                              { id: 'DLH04MH', type: 'App Call', amount: null },
+                              { id: '4U0HG7Q', type: 'Payment', amount: '0.000013' },
+                              { id: 'HNBJXTY', type: 'Payment', amount: '0.000013' },
+                              { id: 'UHDR4KP', type: 'Payment', amount: '0.000013' },
+                              { id: 'PAS06BJ', type: 'Payment', amount: '0.000013' },
+                              { id: 'ZXFRSCG', type: 'Payment', amount: '0.000013' }
+                            ].map((tx, index) => (
+                              <div key={tx.id} className="relative flex items-center">
+                                {/* Transaction ID */}
+                                <div className="w-24 text-xs font-mono text-gray-700 flex items-center">
+                                  <div className="w-2 h-2 rounded-full bg-primary mr-2" />
+                                  {tx.id}
+                                </div>
+
+                                {/* Transaction Line */}
+                                <div className="flex-grow relative" style={{ maxWidth: `${40 + (index * 10)}%` }}>
+                                  <div className={`h-[2px] w-full ${
+                                    tx.type === 'App Call' ? 'bg-primary' : 'bg-orange-400'
+                                  }`} />
+                                  
+                                  {/* Transaction Type & Amount */}
+                                  <div className="absolute left-4 -top-3 flex items-center">
+                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                                      tx.type === 'App Call' 
+                                        ? 'bg-blue-100 text-blue-700 border border-blue-500'
+                                        : 'bg-orange-100 text-orange-700 border border-orange-500'
+                                    }`}>
+                                      {tx.type}
+                                    </span>
+                                    {tx.amount && (
+                                      <span className="ml-2 flex items-center bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-[10px] font-medium">
+                                        {tx.amount}
+                                        <Image
+                                          src="/assets/algorand_logo_mark_black.png"
+                                          alt="ALGO"
+                                          width={12}
+                                          height={12}
+                                          className="ml-0.5 opacity-75"
+                                        />
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {/* Right Connection Point */}
+                                  <div className="absolute right-0 -top-[4px] w-3 h-3 rounded-full bg-white border-2 border-primary" />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Total Transactions Counter */}
+                          <div className="absolute bottom-4 right-4 flex items-center text-xs text-gray-500">
+                            <span className="mr-2">Total Transactions:</span>
+                            <span className="font-semibold text-gray-900">58</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="mt-4 pt-3 border-t border-gray-200">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-gray-500">Total Transactions</span>
+                        <span className="font-semibold text-gray-900">{selectedSmartContract.transactions}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
