@@ -609,6 +609,43 @@ const ContractsPage: React.FC = () => {
   // Add state at the top of the component:
   const [selectedUploadSource, setSelectedUploadSource] = useState<string | null>(null);
 
+  // Function to handle dropdown clicks
+  const handleDropdownClick = (
+    event: React.MouseEvent,
+    currentDropdown: boolean,
+    setCurrentDropdown: React.Dispatch<React.SetStateAction<boolean>>,
+    otherDropdownSetters: Array<React.Dispatch<React.SetStateAction<boolean>>>
+  ) => {
+    event.stopPropagation();
+    otherDropdownSetters.forEach(setter => setter(false));
+    setCurrentDropdown(!currentDropdown);
+  };
+
+  // Click outside handler for form dropdowns
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      const contractTypeDropdown = contractTypeDropdownRef.current;
+      const milestoneDropdown = milestoneDropdownRef.current;
+      const propertyTypeDropdown = propertyTypeDropdownRef.current;
+      
+      if (!contractTypeDropdown?.contains(target) && 
+          !milestoneDropdown?.contains(target) && 
+          !propertyTypeDropdown?.contains(target)) {
+        setShowContractTypeDropdown(false);
+        setShowMilestoneDropdown(false);
+        setShowPropertyTypeDropdown(false);
+      }
+    }
+
+    if (showContractTypeDropdown || showMilestoneDropdown || showPropertyTypeDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showContractTypeDropdown, showMilestoneDropdown, showPropertyTypeDropdown]);
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as Node;
@@ -1244,7 +1281,7 @@ const ContractsPage: React.FC = () => {
                         placeholder="Select contract type"
                         value={CONTRACT_TYPES.find(t => t === modalForm.type) || ''}
                         readOnly
-                        onClick={() => setShowContractTypeDropdown(true)}
+                        onClick={(e) => handleDropdownClick(e, showContractTypeDropdown, setShowContractTypeDropdown, [setShowMilestoneDropdown, setShowPropertyTypeDropdown])}
                       />
                       <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                       {showContractTypeDropdown && (
@@ -1279,7 +1316,7 @@ const ContractsPage: React.FC = () => {
                         placeholder="Select property type"
                         value={PROPERTY_TYPES.find(t => t === modalForm.propertyType) || ''}
                         readOnly
-                        onClick={() => setShowPropertyTypeDropdown(true)}
+                        onClick={(e) => handleDropdownClick(e, showPropertyTypeDropdown, setShowPropertyTypeDropdown, [setShowContractTypeDropdown, setShowMilestoneDropdown])}
                       />
                       <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                       {showPropertyTypeDropdown && (
@@ -1310,7 +1347,7 @@ const ContractsPage: React.FC = () => {
                         placeholder="Select milestone template"
                         value={MILESTONE_TEMPLATES.find(t => t === modalForm.milestone) || ''}
                         readOnly
-                        onClick={() => setShowMilestoneDropdown(true)}
+                        onClick={(e) => handleDropdownClick(e, showMilestoneDropdown, setShowMilestoneDropdown, [setShowContractTypeDropdown, setShowPropertyTypeDropdown])}
                       />
                       <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                       {showMilestoneDropdown && (

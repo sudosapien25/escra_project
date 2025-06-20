@@ -16,14 +16,34 @@ import { LuSquareArrowOutUpRight, LuFileTerminal } from 'react-icons/lu';
 import { TbClockPin, TbShieldLock, TbDropletFilled } from 'react-icons/tb';
 import { CgTerminal } from 'react-icons/cg';
 
+const BLOCK_HASH = "0x7ad9e3b8f2c1a4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9";
+const PROPOSER_HASH = "0xabc1234def5678fedcba9876543210abcdef1234567890fedcba0987654321ab";
+
 // Helper function to generate contract hash
 const getContractHash = (id: string) => `0x${id}${'0'.repeat(66 - 2 - id.length)}`;
+
+// Helper function for status badge styling (from contract details modal)
+const getStatusBadgeStyle = (status: string) => {
+  switch (status) {
+    case 'Initiation': return 'bg-blue-100 text-blue-700 border border-blue-500';
+    case 'Preparation': return 'bg-gray-100 text-gray-700 border border-gray-400';
+    case 'In Review': return 'bg-yellow-100 text-yellow-700 border border-yellow-500';
+    case 'Wire Details': return 'bg-orange-100 text-orange-700 border border-orange-400';
+    case 'Signatures': return 'bg-purple-100 text-purple-700 border border-purple-500';
+    case 'Funds Disbursed': return 'bg-teal-100 text-teal-700 border border-teal-500';
+    case 'Complete': return 'bg-green-100 text-green-700 border border-green-500';
+    case 'Verified': return 'bg-green-100 text-green-700 border border-green-500';
+    case 'Pending': return 'bg-yellow-100 text-yellow-700 border border-yellow-500';
+    case 'Rejected': return 'bg-red-100 text-red-700 border border-red-500';
+    default: return 'bg-gray-100 text-gray-700 border border-gray-400';
+  }
+};
 
 const contracts = mockContracts.map(contract => ({
   title: contract.title,
   version: 'v1.0.0',
   badges: [
-    { label: contract.status === 'Complete' ? 'MainNet' : 'TestNet', color: contract.status === 'Complete' ? 'bg-green-100 text-green-700 border border-green-500' : 'bg-blue-100 text-blue-700 border border-blue-500' },
+    { label: contract.status === 'Complete' ? 'MainNet' : 'TestNet', color: contract.status === 'Complete' ? 'bg-green-100 text-green-700 border border-green-500' : 'bg-gray-100 text-gray-700 border border-gray-400' },
     { 
       label: contract.status, 
       color: (() => {
@@ -537,7 +557,7 @@ export default function BlockchainPage() {
               )}
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-h-[calc(3*(240px+1rem))] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-h-[calc(4*(240px+1rem))] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
             {filteredContracts.map((contract, idx) => (
               <Card 
                 key={idx} 
@@ -814,7 +834,7 @@ export default function BlockchainPage() {
                       <div className="text-xs text-gray-400 font-medium mb-0.5">Contract ID</div>
                       <div className="bg-gray-100 rounded px-2 py-0.5 font-mono text-xs w-fit">{activity.contractId}</div>
                       <div className="text-xs text-gray-400 font-medium mt-1">Timestamp</div>
-                      <div className="font-semibold text-gray-900 text-xs">{activity.timestamp}</div>
+                      <div className="text-xs text-black">2024-05-20 14:32:15</div>
                     </div>
                   </div>
                   <div className="flex justify-end mt-1">
@@ -1020,60 +1040,185 @@ export default function BlockchainPage() {
                       <div className="grid grid-cols-2 gap-x-12 gap-y-4">
                         <div>
                           <div className="text-gray-500 text-xs mb-1">Block Number</div>
-                          <div className="text-xs text-black">#15283674</div>
+                          <div className="text-xs text-black">15283674</div>
                         </div>
                         <div>
                           <div className="text-gray-500 text-xs mb-1">Block Hash</div>
                           <div className="flex items-center">
-                            <span className="text-xs font-mono text-gray-900 truncate" style={{ maxWidth: '120px' }}>
-                              0x7ad9e3b...8f2c1
+                            <span
+                              className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
+                              style={{ maxWidth: '120px' }}
+                              title={BLOCK_HASH}
+                            >
+                              {`${BLOCK_HASH.substring(0, 9)}...${BLOCK_HASH.slice(-4)}`}
                             </span>
-                            <button className="ml-2 text-gray-400 hover:text-gray-600">
-                              <HiOutlineDuplicate className="w-4 h-4" />
-                            </button>
+                            <div className="relative flex-shrink-0">
+                              <button
+                                type="button"
+                                className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(BLOCK_HASH);
+                                  setCopiedContractId('block-hash');
+                                  setTimeout(() => setCopiedContractId(null), 1500);
+                                }}
+                                onMouseEnter={() => setHoveredContractId('block-hash')}
+                                onMouseLeave={() => setHoveredContractId(null)}
+                                aria-label="Copy block hash"
+                              >
+                                <HiOutlineDuplicate className="w-4 h-4" />
+                              </button>
+                              {copiedContractId === 'block-hash' && (
+                                <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded">
+                                  Copied!
+                                </div>
+                              )}
+                              {hoveredContractId === 'block-hash' && copiedContractId !== 'block-hash' && (
+                                <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded">
+                                  Copy
+                                </div>
+                              )}
+                            </div>
                           </div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500 text-xs mb-1">Previous Round</div>
+                          <div className="text-xs text-black">15283673</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500 text-xs mb-1">Next Round</div>
+                          <div className="text-xs text-black">15283675</div>
                         </div>
                         <div>
                           <div className="text-gray-500 text-xs mb-1">Timestamp</div>
                           <div className="text-xs text-black">2024-05-20 14:32:15</div>
                         </div>
                         <div>
-                          <div className="text-gray-500 text-xs mb-1">Gas Used</div>
-                          <div className="text-xs text-black">2,847,392</div>
-                        </div>
-                        <div>
-                          <div className="text-gray-500 text-xs mb-1">Gas Limit</div>
-                          <div className="text-xs text-black">3,000,000</div>
+                          <div className="text-gray-500 text-xs mb-1">Proposer</div>
+                          <div className="flex items-center">
+                            <span
+                              className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
+                              style={{ maxWidth: '120px' }}
+                              title={PROPOSER_HASH}
+                            >
+                              {`${PROPOSER_HASH.substring(0, 9)}...${PROPOSER_HASH.slice(-4)}`}
+                            </span>
+                            <div className="relative flex-shrink-0">
+                              <button
+                                type="button"
+                                className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(PROPOSER_HASH);
+                                  setCopiedContractId('proposer');
+                                  setTimeout(() => setCopiedContractId(null), 1500);
+                                }}
+                                onMouseEnter={() => setHoveredContractId('proposer')}
+                                onMouseLeave={() => setHoveredContractId(null)}
+                                aria-label="Copy proposer address"
+                              >
+                                <HiOutlineDuplicate className="w-4 h-4" />
+                              </button>
+                              {copiedContractId === 'proposer' && (
+                                <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded">
+                                  Copied!
+                                </div>
+                              )}
+                              {hoveredContractId === 'proposer' && copiedContractId !== 'proposer' && (
+                                <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded">
+                                  Copy
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         </div>
                         <div>
                           <div className="text-gray-500 text-xs mb-1">Base Fee</div>
-                          <div className="text-xs text-black">15.2 Gwei</div>
+                          <div className="flex items-center">
+                            <span className="text-xs text-black">0.001</span>
+                            <Image
+                              src="/assets/algorand_logo_mark_black.png"
+                              alt="ALGO"
+                              width={22}
+                              height={22}
+                              className="-ml-0.5 opacity-75"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Contract Information */}
+                    {/* Contract Details */}
                     <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
-                      <h3 className="text-sm font-semibold text-gray-900 mb-4">Contract Information</h3>
-                      <div className="grid grid-cols-2 gap-x-12 gap-y-4">
+                      <h3 className="text-sm font-semibold text-gray-900 mb-4">Contract Details</h3>
+                      <div className="grid grid-cols-3 gap-x-12 gap-y-4">
                         <div>
-                          <div className="text-gray-500 text-xs mb-1">Contract Address</div>
-                          <div className="flex items-center">
-                            <span className="text-xs font-mono text-gray-900 truncate" style={{ maxWidth: '120px' }}>
-                              {getContractHash(selectedSmartContract.id)}
-                            </span>
-                            <button className="ml-2 text-gray-400 hover:text-gray-600">
-                              <HiOutlineDuplicate className="w-4 h-4" />
-                            </button>
-                          </div>
+                          <div className="text-gray-500 text-xs mb-1">Contract ID</div>
+                          <div className="text-xs text-black">{selectedSmartContract.id}</div>
                         </div>
                         <div>
                           <div className="text-gray-500 text-xs mb-1">Contract Name</div>
                           <div className="text-xs text-black">{selectedSmartContract.title}</div>
                         </div>
                         <div>
+                          <div className="text-gray-500 text-xs mb-1">Contract Hash</div>
+                          <div className="flex items-center">
+                            <span
+                              className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
+                              style={{ maxWidth: '120px' }}
+                              title={getContractHash(selectedSmartContract.id)}
+                            >
+                              {`${getContractHash(selectedSmartContract.id).substring(0, 9)}...${getContractHash(selectedSmartContract.id).slice(-4)}`}
+                            </span>
+                            <div className="relative">
+                              <button
+                                type="button"
+                                className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(getContractHash(selectedSmartContract.id));
+                                  setCopiedContractId(selectedSmartContract.id);
+                                  setTimeout(() => setCopiedContractId(null), 1500);
+                                }}
+                                onMouseEnter={() => setHoveredContractId(selectedSmartContract.id)}
+                                onMouseLeave={() => setHoveredContractId(null)}
+                                aria-label="Copy contract hash"
+                              >
+                                <HiOutlineDuplicate className="w-4 h-4" />
+                              </button>
+                              {copiedContractId === selectedSmartContract.id && (
+                                <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded">
+                                  Copied!
+                                </div>
+                              )}
+                              {hoveredContractId === selectedSmartContract.id && copiedContractId !== selectedSmartContract.id && (
+                                <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded">
+                                  Copy
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div>
                           <div className="text-gray-500 text-xs mb-1">Version</div>
                           <div className="text-xs text-black">{selectedSmartContract.version}</div>
+                        </div>
+                        <div></div>
+                        <div>
+                          <div className="text-gray-500 text-xs mb-1">On-Chain ID</div>
+                          <div className="flex items-center">
+                            <span
+                              className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
+                              style={{ maxWidth: '120px' }}
+                              title={getContractHash(selectedSmartContract.id)}
+                            >
+                              {`${getContractHash(selectedSmartContract.id).substring(0, 9)}...${getContractHash(selectedSmartContract.id).slice(-4)}`}
+                            </span>
+                            <button className="ml-2 text-gray-400 hover:text-gray-600" onClick={() => {
+                                  navigator.clipboard.writeText(getContractHash(selectedSmartContract.id));
+                                  setCopiedContractId('on-chain-id');
+                                  setTimeout(() => setCopiedContractId(null), 1500);
+                                }}>
+                              <HiOutlineDuplicate className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
                         <div>
                           <div className="text-gray-500 text-xs mb-1">Status</div>
@@ -1082,15 +1227,25 @@ export default function BlockchainPage() {
                           </span>
                         </div>
                         <div>
+                          <div className="text-gray-500 text-xs mb-1">Current Milestone</div>
+                          <span className={`inline-flex items-center justify-center min-w-[130px] h-7 px-4 font-semibold rounded-full text-xs ${getStatusBadgeStyle('Wire Details')}`}>Wire Details</span>
+                        </div>
+                        {/* 4th row: Network left, Deployed middle */}
+                        <div style={{gridColumn: '1 / 2'}}>
                           <div className="text-gray-500 text-xs mb-1">Network</div>
-                          <span className={`inline-flex items-center justify-center min-w-[130px] h-7 px-4 font-semibold rounded-full text-xs ${selectedSmartContract.badges[0]?.color || 'bg-blue-100 text-blue-700 border border-blue-500'}`}>
+                          <span className={`inline-flex items-center justify-center min-w-[130px] h-7 px-4 font-semibold rounded-full text-xs ${
+                            selectedSmartContract.badges[0]?.label === 'MainNet' 
+                              ? 'bg-green-100 text-green-700 border border-green-500' 
+                              : 'bg-gray-100 text-gray-700 border border-gray-400'
+                          }`}>
                             {selectedSmartContract.badges[0]?.label || 'TestNet'}
                           </span>
                         </div>
-                        <div>
+                        <div style={{gridColumn: '2 / 3'}}>
                           <div className="text-gray-500 text-xs mb-1">Deployed</div>
                           <div className="text-xs text-black">{selectedSmartContract.deployed}</div>
                         </div>
+                        <div></div>
                       </div>
                     </div>
                   </div>
@@ -1098,6 +1253,93 @@ export default function BlockchainPage() {
                   {/* Bottom: Full-width Transactions */}
                   <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
                     <h3 className="text-sm font-semibold text-gray-900 mb-4">Transactions</h3>
+                    
+                    {/* Transaction Summary Elements */}
+                    <div className="grid grid-cols-4 gap-4 mb-6">
+                      <div className="p-3">
+                        <div className="text-xs text-gray-500 font-medium mb-1">Total Transactions</div>
+                        <div className="text-base font-bold text-gray-900">{selectedSmartContract.transactions}</div>
+                      </div>
+                      <div className="p-3">
+                        <div className="text-xs text-gray-500 font-medium mb-1">Standard Transactions</div>
+                        <div className="text-base font-bold text-gray-900">{transactionData.length}</div>
+                      </div>
+                      <div className="p-3">
+                        <div className="text-xs text-gray-500 font-medium mb-1">Inner Transactions</div>
+                        <div className="text-base font-bold text-gray-900">{Math.floor(selectedSmartContract.transactions * 0.3)}</div>
+                      </div>
+                      <div className="p-3">
+                        <div className="text-xs text-gray-500 font-medium mb-1">Total Fees</div>
+                        <div className="text-base font-bold text-gray-900">
+                          {transactionData.reduce((sum, tx) => sum + parseFloat(tx.fee), 0).toFixed(3)}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Transaction Types Pie Chart */}
+                    <div className="mb-6">
+                      <h4 className="text-sm font-semibold text-gray-900 mb-3">Transaction Types</h4>
+                      <div className="flex items-center gap-6">
+                        {/* Pie Chart */}
+                        <div className="relative w-24 h-24">
+                          <svg className="w-24 h-24 transform -rotate-90" viewBox="0 0 100 100">
+                            {/* Calculate percentages */}
+                            {(() => {
+                              const appCallCount = transactionData.filter(tx => tx.type === 'Application Call').length;
+                              const paymentCount = transactionData.filter(tx => tx.type === 'Payment').length;
+                              const total = transactionData.length;
+                              const appCallPercent = (appCallCount / total) * 100;
+                              const paymentPercent = (paymentCount / total) * 100;
+                              
+                              return (
+                                <>
+                                  {/* Application Call slice */}
+                                  <circle
+                                    cx="50"
+                                    cy="50"
+                                    r="40"
+                                    fill="none"
+                                    stroke="#0EA5E9"
+                                    strokeWidth="20"
+                                    strokeDasharray={`${appCallPercent * 2.51} ${100 * 2.51}`}
+                                    strokeDashoffset="0"
+                                  />
+                                  {/* Payment slice */}
+                                  <circle
+                                    cx="50"
+                                    cy="50"
+                                    r="40"
+                                    fill="none"
+                                    stroke="#F97316"
+                                    strokeWidth="20"
+                                    strokeDasharray={`${paymentPercent * 2.51} ${100 * 2.51}`}
+                                    strokeDashoffset={`-${appCallPercent * 2.51}`}
+                                  />
+                                </>
+                              );
+                            })()}
+                          </svg>
+                        </div>
+                        
+                        {/* Legend */}
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-primary"></div>
+                            <span className="text-xs text-gray-700">Application Call</span>
+                            <span className="text-xs font-semibold text-gray-900">
+                              ({transactionData.filter(tx => tx.type === 'Application Call').length})
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                            <span className="text-xs text-gray-700">Payment</span>
+                            <span className="text-xs font-semibold text-gray-900">
+                              ({transactionData.filter(tx => tx.type === 'Payment').length})
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                     
                     {/* Tabs Row with Divider */}
                     <div className="border-b border-gray-200 mb-4">
@@ -1184,7 +1426,7 @@ export default function BlockchainPage() {
                                     </span>
                                   </td>
                                   <td className="px-3 py-2 whitespace-nowrap text-center text-xs">
-                                    <span className={`inline-flex items-center justify-center px-2 py-1 font-semibold rounded-full text-xs ${getTypeBadgeStyle(transaction.type)}`}>
+                                    <span className={`inline-flex items-center justify-center min-w-[120px] px-2 py-1 font-semibold rounded-full text-xs ${getTypeBadgeStyle(transaction.type)}`}>
                                       {transaction.type}
                                     </span>
                                   </td>

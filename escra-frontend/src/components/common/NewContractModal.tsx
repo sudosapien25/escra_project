@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from 'react';
-import { HiOutlineDocumentText } from 'react-icons/hi';
+import React, { useState, useRef } from 'react';
+import { HiOutlineDocumentText, HiChevronDown, HiOutlineUpload } from 'react-icons/hi';
 import { Logo } from '@/components/common/Logo';
 
 interface NewContractModalProps {
@@ -10,10 +10,12 @@ interface NewContractModalProps {
 }
 
 const CONTRACT_TYPES = [
-  'Property Sale',
-  'Commercial Lease',
-  'Construction Escrow',
-  'Investment Property',
+  'Standard Agreement',
+  'Residential – Cash',
+  'Residential – Financed',
+  'Commercial – Cash or Financed',
+  'Assignment / Wholesale',
+  'Installment / Lease-to-Own',
 ];
 const MILESTONE_TEMPLATES = [
   'Standard (6 milestones)',
@@ -24,6 +26,10 @@ const MILESTONE_TEMPLATES = [
 
 const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) => {
   const [modalStep, setModalStep] = useState(1);
+  const [showContractTypeDropdown, setShowContractTypeDropdown] = useState(false);
+  const [showMilestoneDropdown, setShowMilestoneDropdown] = useState(false);
+  const contractTypeDropdownRef = useRef<HTMLDivElement>(null);
+  const milestoneDropdownRef = useRef<HTMLDivElement>(null);
   const [modalForm, setModalForm] = useState({
     title: '',
     type: '',
@@ -33,10 +39,13 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
     seller: '',
     agent: '',
   });
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
   const handleModalChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setModalForm({ ...modalForm, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setModalForm({ ...modalForm, [name]: value });
+    setFormErrors(prev => ({ ...prev, [name]: '' }));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,6 +55,87 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
       ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "image/jpeg"].includes(file.type) && file.size <= 10 * 1024 * 1024
     );
     setUploadedFiles(validFiles);
+  };
+
+  // Function to handle dropdown clicks
+  const handleDropdownClick = (
+    event: React.MouseEvent,
+    currentDropdown: boolean,
+    setCurrentDropdown: React.Dispatch<React.SetStateAction<boolean>>,
+    otherDropdownSetter: React.Dispatch<React.SetStateAction<boolean>>
+  ) => {
+    event.stopPropagation();
+    otherDropdownSetter(false);
+    setCurrentDropdown(!currentDropdown);
+  };
+
+  // Click outside handler for both dropdowns
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      const contractTypeDropdown = contractTypeDropdownRef.current;
+      const milestoneDropdown = milestoneDropdownRef.current;
+      
+      if (!contractTypeDropdown?.contains(target) && !milestoneDropdown?.contains(target)) {
+        setShowContractTypeDropdown(false);
+        setShowMilestoneDropdown(false);
+      }
+    }
+
+    if (showContractTypeDropdown || showMilestoneDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showContractTypeDropdown, showMilestoneDropdown]);
+
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+    let isValid = true;
+
+    if (modalStep === 1) {
+      if (!modalForm.title.trim()) {
+        errors.title = 'Please fill out this field';
+        isValid = false;
+      }
+      if (!modalForm.type) {
+        errors.type = 'Please select a contract type';
+        isValid = false;
+      }
+      if (!modalForm.milestone) {
+        errors.milestone = 'Please select a milestone template';
+        isValid = false;
+      }
+    } else if (modalStep === 2) {
+      if (!modalForm.buyer.trim()) {
+        errors.buyer = 'Please fill out this field';
+        isValid = false;
+      }
+      if (!modalForm.seller.trim()) {
+        errors.seller = 'Please fill out this field';
+        isValid = false;
+      }
+    }
+
+    setFormErrors(errors);
+    return isValid;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const isValid = validateForm();
+    
+    if (isValid) {
+      if (modalStep === 1) {
+        setModalStep(2);
+      } else if (modalStep === 2) {
+        setModalStep(3);
+      } else {
+        onClose();
+        setModalStep(1);
+      }
+    }
   };
 
   if (!isOpen) return null;
@@ -98,62 +188,107 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
         </div>
         {/* Modal Body */}
         {modalStep === 1 && (
-          <form className="px-8 pt-2 pb-6" onSubmit={e => { e.preventDefault(); setModalStep(2); }}>
+          <form className="px-8 pt-2 pb-6" onSubmit={handleSubmit} noValidate>
             <div className="mb-4">
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Contract Title</label>
+              <label htmlFor="title" className="block text-xs font-medium text-gray-500 mb-1">Contract Title</label>
               <input
                 type="text"
                 id="title"
                 name="title"
                 value={modalForm.title}
                 onChange={handleModalChange}
-                className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base"
+                className={`w-full px-3 py-2 border-2 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors ${
+                  formErrors.title ? 'border-red-300' : 'border-gray-200'
+                }`}
                 placeholder="Enter contract title"
-                required
               />
+              {formErrors.title && (
+                <p className="mt-1 text-xs text-red-600">{formErrors.title}</p>
+              )}
             </div>
             <div className="mb-4">
-              <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">Contract Type</label>
-              <select
-                id="type"
-                name="type"
-                value={modalForm.type}
-                onChange={handleModalChange}
-                className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base"
-                required
-              >
-                <option value="" disabled>Select a contract type</option>
-                {CONTRACT_TYPES.map(type => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
+              <label htmlFor="type" className="block text-xs font-medium text-gray-500 mb-1">Contract Type</label>
+              <div className="relative w-full" ref={contractTypeDropdownRef}>
+                <input
+                  type="text"
+                  className={`w-full px-3 py-2 border-2 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white ${
+                    formErrors.type ? 'border-red-300' : 'border-gray-200'
+                  }`}
+                  placeholder="Select contract type"
+                  value={CONTRACT_TYPES.find(t => t === modalForm.type) || ''}
+                  readOnly
+                  onClick={(e) => handleDropdownClick(e, showContractTypeDropdown, setShowContractTypeDropdown, setShowMilestoneDropdown)}
+                />
+                <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                {showContractTypeDropdown && (
+                  <div className="absolute left-0 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                    {CONTRACT_TYPES.map(type => (
+                      <button
+                        key={type}
+                        className={`w-full text-left px-3 py-0.5 text-xs font-medium ${modalForm.type === type ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`}
+                        onClick={e => {
+                          e.preventDefault();
+                          setModalForm(prev => ({ ...prev, type }));
+                          setShowContractTypeDropdown(false);
+                          setFormErrors(prev => ({ ...prev, type: '' }));
+                        }}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {formErrors.type && (
+                <p className="mt-1 text-xs text-red-600">{formErrors.type}</p>
+              )}
             </div>
             <div className="mb-4">
-              <label htmlFor="milestone" className="block text-sm font-medium text-gray-700 mb-1">Milestone Template</label>
-              <select
-                id="milestone"
-                name="milestone"
-                value={modalForm.milestone}
-                onChange={handleModalChange}
-                className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base"
-                required
-              >
-                <option value="" disabled>Select a milestone template</option>
-                {MILESTONE_TEMPLATES.map(template => (
-                  <option key={template} value={template}>{template}</option>
-                ))}
-              </select>
+              <label htmlFor="milestone" className="block text-xs font-medium text-gray-500 mb-1">Milestone Template</label>
+              <div className="relative w-full" ref={milestoneDropdownRef}>
+                <input
+                  type="text"
+                  className={`w-full px-3 py-2 border-2 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white ${
+                    formErrors.milestone ? 'border-red-300' : 'border-gray-200'
+                  }`}
+                  placeholder="Select milestone template"
+                  value={MILESTONE_TEMPLATES.find(t => t === modalForm.milestone) || ''}
+                  readOnly
+                  onClick={(e) => handleDropdownClick(e, showMilestoneDropdown, setShowMilestoneDropdown, setShowContractTypeDropdown)}
+                />
+                <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                {showMilestoneDropdown && (
+                  <div className="absolute left-0 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                    {MILESTONE_TEMPLATES.map(template => (
+                      <button
+                        key={template}
+                        className={`w-full text-left px-3 py-0.5 text-xs font-medium ${modalForm.milestone === template ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`}
+                        onClick={e => {
+                          e.preventDefault();
+                          setModalForm(prev => ({ ...prev, milestone: template }));
+                          setShowMilestoneDropdown(false);
+                          setFormErrors(prev => ({ ...prev, milestone: '' }));
+                        }}
+                      >
+                        {template}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {formErrors.milestone && (
+                <p className="mt-1 text-xs text-red-600">{formErrors.milestone}</p>
+              )}
             </div>
             <div className="mb-6">
-              <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">Notes (Optional)</label>
+              <label htmlFor="notes" className="block text-xs font-medium text-gray-500 mb-1">Notes (Optional)</label>
               <textarea
                 id="notes"
                 name="notes"
                 value={modalForm.notes}
                 onChange={handleModalChange}
-                className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base min-h-[80px]"
+                className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors min-h-[120px]"
                 placeholder="Enter any additional notes for this contract"
-                rows={4}
               />
             </div>
             <div className="flex justify-end">
@@ -162,42 +297,50 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
           </form>
         )}
         {modalStep === 2 && (
-          <form className="px-8 pt-2 pb-6" onSubmit={e => { e.preventDefault(); setModalStep(3); }}>
+          <form className="px-8 pt-2 pb-6" onSubmit={handleSubmit} noValidate>
             <div className="mb-4">
-              <label htmlFor="buyer" className="block text-sm font-medium text-gray-700 mb-1">Buyer / Client</label>
+              <label htmlFor="buyer" className="block text-xs font-medium text-gray-500 mb-1">Buyer / Client</label>
               <input
                 type="text"
                 id="buyer"
                 name="buyer"
                 value={modalForm.buyer}
                 onChange={handleModalChange}
-                className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base"
+                className={`w-full px-3 py-2 border-2 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors ${
+                  formErrors.buyer ? 'border-red-300' : 'border-gray-200'
+                }`}
                 placeholder="Enter buyer or client name"
-                required
               />
+              {formErrors.buyer && (
+                <p className="mt-1 text-xs text-red-600">{formErrors.buyer}</p>
+              )}
             </div>
             <div className="mb-4">
-              <label htmlFor="seller" className="block text-sm font-medium text-gray-700 mb-1">Seller / Provider</label>
+              <label htmlFor="seller" className="block text-xs font-medium text-gray-500 mb-1">Seller / Provider</label>
               <input
                 type="text"
                 id="seller"
                 name="seller"
                 value={modalForm.seller}
                 onChange={handleModalChange}
-                className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base"
+                className={`w-full px-3 py-2 border-2 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors ${
+                  formErrors.seller ? 'border-red-300' : 'border-gray-200'
+                }`}
                 placeholder="Enter seller or provider name"
-                required
               />
+              {formErrors.seller && (
+                <p className="mt-1 text-xs text-red-600">{formErrors.seller}</p>
+              )}
             </div>
             <div className="mb-6">
-              <label htmlFor="agent" className="block text-sm font-medium text-gray-700 mb-1">Agent / Escrow Officer (Optional)</label>
+              <label htmlFor="agent" className="block text-xs font-medium text-gray-500 mb-1">Agent / Escrow Officer (Optional)</label>
               <input
                 type="text"
                 id="agent"
                 name="agent"
                 value={modalForm.agent}
                 onChange={handleModalChange}
-                className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base"
+                className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                 placeholder="Enter agent or escrow officer name"
               />
             </div>
@@ -208,12 +351,12 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
           </form>
         )}
         {modalStep === 3 && (
-          <form className="px-8 pt-2 pb-6" onSubmit={e => { e.preventDefault(); onClose(); setModalStep(1); }}>
+          <form className="px-8 pt-2 pb-6" onSubmit={handleSubmit} noValidate>
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Upload Documents (Optional)</label>
+              <label className="block text-xs font-medium text-gray-500 mb-2">Upload Documents (Optional)</label>
               <label htmlFor="file-upload" className="block cursor-pointer">
                 <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 py-8 px-4 text-center transition hover:border-primary">
-                  <HiOutlineDocumentText className="text-3xl text-gray-400 mb-2" />
+                  <HiOutlineUpload className="text-3xl text-gray-400 mb-2" />
                   <div className="text-xs text-gray-500 font-medium">Click to upload or drag and drop</div>
                   <div className="text-xs text-gray-400 mt-1">PDF, DOC, DOCX, or JPG (max. 10MB each)</div>
                   <input
