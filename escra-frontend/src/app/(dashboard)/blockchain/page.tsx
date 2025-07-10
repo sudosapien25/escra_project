@@ -3,8 +3,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/common/Card';
 import { FaPlus, FaCopy, FaWallet, FaNetworkWired, FaBook, FaExternalLinkAlt, FaCogs, FaArrowRight, FaSearch, FaCheck } from 'react-icons/fa';
-import { FaTimeline, FaFaucetDrip, FaRegSquareCheck } from 'react-icons/fa6';
-import { HiOutlineExternalLink, HiOutlineBookOpen, HiOutlineDuplicate, HiOutlineViewBoards, HiOutlineDocumentSearch, HiOutlineDocumentText } from 'react-icons/hi';
+import { FaTimeline, FaFaucetDrip, FaRegSquareCheck, FaArrowUpRightFromSquare } from 'react-icons/fa6';
+import { HiOutlineExternalLink, HiOutlineDuplicate, HiOutlineViewBoards, HiOutlineDocumentSearch, HiOutlineDocumentText } from 'react-icons/hi';
+import { BiBookOpen } from 'react-icons/bi';
 import { HiMiniChevronDown } from 'react-icons/hi2';
 import { FaRegCalendarAlt, FaRegCheckCircle, FaRegFileAlt, FaCodeBranch, FaHashtag, FaCoins } from 'react-icons/fa';
 import { GrMoney } from 'react-icons/gr';
@@ -13,9 +14,11 @@ import NewContractModal from '@/components/common/NewContractModal';
 import { MdOutlineAddToPhotos, MdOutlineUpdate } from 'react-icons/md';
 import { mockContracts } from '@/data/mockContracts';
 import Image from 'next/image';
-import { LuSquareArrowOutUpRight, LuFileTerminal } from 'react-icons/lu';
-import { TbClockPin, TbShieldLock, TbDropletFilled } from 'react-icons/tb';
+import { LuSquareArrowOutUpRight, LuFileTerminal, LuBookText } from 'react-icons/lu';
+import { TbClockPin, TbShieldLock, TbDropletFilled, TbReportSearch } from 'react-icons/tb';
 import { CgTerminal } from 'react-icons/cg';
+import { AiOutlineNodeExpand } from 'react-icons/ai';
+import { PiHandCoins } from 'react-icons/pi';
 
 const BLOCK_HASH = "0x7ad9e3b8f2c1a4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9";
 const PROPOSER_HASH = "0xabc1234def5678fedcba9876543210abcdef1234567890fedcba0987654321ab";
@@ -78,7 +81,7 @@ const activityData = [
     description: 'Document Review milestone completed for Contract #8423',
     txHash: '0x7ad9e3b...',
     block: '#15283674',
-    contractId: 'CTR–8423',
+    contractId: '8423',
     timestamp: '20,',
     date: 'May',
     bgColor: 'bg-green-100',
@@ -87,10 +90,10 @@ const activityData = [
   {
     type: 'Document Signed',
     icon: <HiOutlineDocumentText size={18} color="#3b82f6" />,
-    description: 'Purchase Agreement signed by John Smith for Contract #7612',
+    description: 'Purchase Agreement signed by John Smith for Contract #9145',
     txHash: '0x4fc8d2a...',
     block: '#15283545',
-    contractId: 'CTR–7612',
+    contractId: '9145',
     timestamp: '20,',
     date: 'May',
     bgColor: 'bg-blue-100',
@@ -102,7 +105,7 @@ const activityData = [
     description: 'Oracle Integration contract deployed to TestNet',
     txHash: '0x9be31c5...',
     block: '#15283213',
-    contractId: '0x1b4d8...',
+    contractId: '7804',
     timestamp: '20,',
     date: 'May',
     bgColor: 'bg-purple-100',
@@ -111,10 +114,10 @@ const activityData = [
   {
     type: 'Document Hash Registered',
     icon: <FaHashtag size={18} color="#06b6d4" />,
-    description: 'Lease Agreement hash registered for Contract #9145',
+    description: 'Lease Agreement hash registered for Contract #7234',
     txHash: '0x2ea9f1b...',
     block: '#15282789',
-    contractId: 'CTR–9145',
+    contractId: '7234',
     timestamp: '19,',
     date: 'May',
     bgColor: 'bg-cyan-100',
@@ -123,10 +126,10 @@ const activityData = [
   {
     type: 'Escrow Payment Released',
     icon: <GrMoney size={18} color="#f97316" />,
-    description: 'Final payment released for Contract #3219',
+    description: 'Final payment released for Contract #6891',
     txHash: '0x8d4f2e3...',
     block: '#15281952',
-    contractId: 'CTR–3219',
+    contractId: '6891',
     timestamp: '19,',
     date: 'May',
     bgColor: 'bg-orange-100',
@@ -259,6 +262,20 @@ export default function BlockchainPage() {
   const [activityContractSearch, setActivityContractSearch] = useState('');
   const activityTypeDropdownRef = useRef<HTMLButtonElement>(null);
   const activityContractButtonRef = useRef<HTMLButtonElement>(null);
+  const activityTypeDropdownContainerRef = useRef<HTMLDivElement>(null);
+  const activityTypeDropdownDesktopRef = useRef<HTMLDivElement>(null);
+  const activityContractDropdownContainerRef = useRef<HTMLDivElement>(null);
+  const activityContractDropdownDesktopRef = useRef<HTMLDivElement>(null);
+  const contractDropdownContainerRef = useRef<HTMLDivElement>(null);
+  const contractDropdownDesktopRef = useRef<HTMLDivElement>(null);
+  const statusDropdownContainerRef = useRef<HTMLDivElement>(null);
+  const statusDropdownDesktopRef = useRef<HTMLDivElement>(null);
+  const mobileStatusButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileContractButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileActivityTypeButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileActivityContractButtonRef = useRef<HTMLButtonElement>(null);
+  const desktopActivityContractButtonRef = useRef<HTMLButtonElement>(null);
+  const desktopActivityTypeButtonRef = useRef<HTMLButtonElement>(null);
 
   // Filter contracts based on search term and selected statuses
   const filteredContracts = contracts.filter(contract => {
@@ -291,12 +308,16 @@ export default function BlockchainPage() {
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as HTMLElement;
-      const dropdown = document.querySelector('.status-filter-dropdown');
-      const button = statusDropdownRef.current;
+      const mobileDropdown = statusDropdownContainerRef.current;
+      const desktopDropdown = statusDropdownDesktopRef.current;
+      const mobileButton = mobileStatusButtonRef.current;
+      const desktopButton = statusDropdownRef.current;
 
       if (showStatusDropdown && 
-          !dropdown?.contains(target) && 
-          !button?.contains(target)) {
+          !mobileDropdown?.contains(target) && 
+          !desktopDropdown?.contains(target) &&
+          !mobileButton?.contains(target) &&
+          !desktopButton?.contains(target)) {
         setShowStatusDropdown(false);
       }
     }
@@ -311,12 +332,16 @@ export default function BlockchainPage() {
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as HTMLElement;
-      const dropdown = document.querySelector('.activity-type-dropdown');
-      const button = activityTypeDropdownRef.current;
+      const mobileDropdown = activityTypeDropdownContainerRef.current;
+      const desktopDropdown = activityTypeDropdownDesktopRef.current;
+      const mobileButton = mobileActivityTypeButtonRef.current;
+      const desktopButton = desktopActivityTypeButtonRef.current;
 
       if (showActivityTypeDropdown && 
-          !dropdown?.contains(target) && 
-          !button?.contains(target)) {
+          !mobileDropdown?.contains(target) && 
+          !desktopDropdown?.contains(target) &&
+          !mobileButton?.contains(target) &&
+          !desktopButton?.contains(target)) {
         setShowActivityTypeDropdown(false);
       }
     }
@@ -331,12 +356,16 @@ export default function BlockchainPage() {
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as HTMLElement;
-      const dropdown = document.querySelector('.contract-dropdown');
-      const button = contractButtonRef.current;
+      const mobileDropdown = contractDropdownContainerRef.current;
+      const desktopDropdown = contractDropdownDesktopRef.current;
+      const mobileButton = mobileContractButtonRef.current;
+      const desktopButton = contractButtonRef.current;
 
       if (openContractDropdown && 
-          !dropdown?.contains(target) && 
-          !button?.contains(target)) {
+          !mobileDropdown?.contains(target) && 
+          !desktopDropdown?.contains(target) &&
+          !mobileButton?.contains(target) &&
+          !desktopButton?.contains(target)) {
         setOpenContractDropdown(false);
       }
     }
@@ -351,12 +380,16 @@ export default function BlockchainPage() {
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as HTMLElement;
-      const dropdown = document.querySelector('.activity-contract-dropdown');
-      const button = activityContractButtonRef.current;
+      const mobileDropdown = activityContractDropdownContainerRef.current;
+      const desktopDropdown = activityContractDropdownDesktopRef.current;
+      const mobileButton = mobileActivityContractButtonRef.current;
+      const desktopButton = desktopActivityContractButtonRef.current;
 
       if (openActivityContractDropdown && 
-          !dropdown?.contains(target) && 
-          !button?.contains(target)) {
+          !mobileDropdown?.contains(target) && 
+          !desktopDropdown?.contains(target) &&
+          !mobileButton?.contains(target) &&
+          !desktopButton?.contains(target)) {
         setOpenActivityContractDropdown(false);
       }
     }
@@ -372,8 +405,8 @@ export default function BlockchainPage() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0">
         <div className="pb-1">
-          <h1 className="text-[24px] md:text-[30px] font-bold text-black mb-0">Blockchain</h1>
-          <p className="text-gray-500 text-[15px] md:text-[16px] mt-0">Review your smart contracts, on-chain activity & explorer integrations</p>
+          <h1 className="text-[30px] font-bold text-black mb-0">Blockchain</h1>
+          <p className="text-gray-500 text-[16px] mt-0">Review your smart contracts, on-chain activity & explorer integrations</p>
         </div>
         <button
           className="flex items-center justify-center w-full md:w-auto px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
@@ -387,195 +420,422 @@ export default function BlockchainPage() {
 
       <hr className="my-6 border-gray-300" />
 
-      {/* Toggle Bar */}
-      <div className="flex gap-1">
-        {[
-          { key: 'smart-contracts', label: 'Smart Contracts' },
-          { key: 'on-chain-activity', label: 'On-Chain Activity' },
-          { key: 'explorers', label: 'Explorers' },
-          { key: 'tokens', label: 'Tokens' },
-        ].map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all duration-300 font-sans flex items-center justify-center ${
-              activeTab === tab.key 
-                ? 'bg-white dark:bg-gray-800 text-teal-500 dark:text-teal-400 min-w-[130px] border-2 border-gray-200 dark:border-gray-700' 
-                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 w-fit border border-gray-200 dark:border-gray-700'
-            }`}
-          >
-            <span className={`inline-block transition-all duration-300 ${activeTab === tab.key ? 'opacity-100 mr-1.5' : 'opacity-0 w-0 mr-0'}`} style={{width: activeTab === tab.key ? 16 : 0}}>
-              {activeTab === tab.key && <Logo width={16} height={16} className="pointer-events-none" />}
-            </span>
-            {tab.label}
-          </button>
-        ))}
+      {/* Toggle Bar - Responsive Design */}
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 mb-6">
+        {/* Mobile: Stacked layout */}
+        <div className="lg:hidden">
+          <div className="flex flex-col gap-2">
+            {[
+              { key: 'smart-contracts', label: 'Smart Contracts' },
+              { key: 'on-chain-activity', label: 'On-Chain Activity' },
+              { key: 'explorers', label: 'Explorers' },
+              { key: 'tokens', label: 'Tokens' },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex items-center justify-between w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 font-medium text-xs shadow-sm whitespace-nowrap transition-all duration-300 ${
+                  activeTab === tab.key 
+                    ? 'bg-white dark:bg-gray-800 text-teal-500 dark:text-teal-400 border-2 border-gray-200 dark:border-gray-700' 
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
+                }`}
+                style={{ fontFamily: 'Avenir, sans-serif' }}
+              >
+                <span className="flex items-center">
+                  <span className={`inline-block transition-all duration-300 ${activeTab === tab.key ? 'opacity-100 mr-1.5' : 'opacity-0 w-0 mr-0'}`} style={{width: activeTab === tab.key ? 16 : 0}}>
+                    {activeTab === tab.key && <Logo width={16} height={16} className="pointer-events-none" />}
+                  </span>
+                  {tab.label}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Desktop: Horizontal layout */}
+        <div className="hidden lg:flex gap-1">
+          {[
+            { key: 'smart-contracts', label: 'Smart Contracts' },
+            { key: 'on-chain-activity', label: 'On-Chain Activity' },
+            { key: 'explorers', label: 'Explorers' },
+            { key: 'tokens', label: 'Tokens' },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all duration-300 font-sans flex items-center justify-center ${
+                activeTab === tab.key 
+                  ? 'bg-white dark:bg-gray-800 text-teal-500 dark:text-teal-400 min-w-[130px] border-2 border-gray-200 dark:border-gray-700' 
+                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 w-fit border border-gray-200 dark:border-gray-700'
+              }`}
+            >
+              <span className={`inline-block transition-all duration-300 ${activeTab === tab.key ? 'opacity-100 mr-1.5' : 'opacity-0 w-0 mr-0'}`} style={{width: activeTab === tab.key ? 16 : 0}}>
+                {activeTab === tab.key && <Logo width={16} height={16} className="pointer-events-none" />}
+              </span>
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Tab Content */}
       {activeTab === 'smart-contracts' && (
         <>
-          <div className="bg-white border border-gray-200 rounded-xl px-4 py-4 mb-6 flex items-center w-full">
-            <div className="flex items-center flex-1 bg-white border border-gray-200 rounded-lg px-4 py-2 min-w-0">
-              <FaSearch className="text-gray-400 mr-2" size={18} />
-              <input
-                type="text"
-                placeholder="Search contracts, parties, or IDs"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 placeholder-gray-400 font-medium min-w-0"
-                style={{ fontFamily: 'Avenir, sans-serif' }}
-              />
-            </div>
-            <div className="relative ml-1">
-              <button
-                ref={statusDropdownRef}
-                className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
-                style={{ fontFamily: 'Avenir, sans-serif' }}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setShowStatusDropdown(prev => !prev);
-                  if (!showStatusDropdown) {
-                    setOpenContractDropdown(false);
-                  }
-                }}
-              >
-                <HiOutlineViewBoards className="text-gray-400 w-4 h-4" />
-                <span>Status</span>
-                <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
-              </button>
-              {showStatusDropdown && (
-                <div 
-                  className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 status-filter-dropdown" 
-                  style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
-                >
-                  <button
-                    className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
-                    onClick={() => setSelectedStatuses(['All'])}
-                  >
-                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                      {selectedStatuses.includes('All') && (
-                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
-                          <FaCheck className="text-white" size={8} />
-                        </div>
-                      )}
-                    </div>
-                    All
-                  </button>
-                  {availableStatuses.filter(status => status !== 'All').map(status => (
-                    <button
-                      key={status}
-                      className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setSelectedStatuses(prev => {
-                          const newStatuses = prev.filter(s => s !== 'All');
-                          if (prev.includes(status)) {
-                            return newStatuses.filter(s => s !== status);
-                          } else {
-                            return [...newStatuses, status];
-                          }
-                        });
-                      }}
-                    >
-                      <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                        {selectedStatuses.includes(status) && (
-                          <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
-                            <FaCheck className="text-white" size={8} />
-                          </div>
-                        )}
-                      </div>
-                      {status}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="relative ml-1">
-              <button
-                ref={contractButtonRef}
-                className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
-                style={{ fontFamily: 'Avenir, sans-serif' }}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setOpenContractDropdown(prev => !prev);
-                  if (!openContractDropdown) {
-                    setShowStatusDropdown(false);
-                  }
-                }}
-              >
-                <HiOutlineDocumentSearch className="text-gray-400 w-4 h-4" />
-                <span>Contract</span>
-                <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
-              </button>
-              {openContractDropdown && (
-                <div 
-                  className="absolute right-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 min-w-[400px] w-96 contract-dropdown" 
+          <div className="bg-white border border-gray-200 rounded-xl px-4 py-4 mb-6">
+            {/* Mobile: Stacked layout */}
+            <div className="lg:hidden space-y-2">
+              {/* Search Bar */}
+              <div className="flex items-center bg-white border border-gray-200 rounded-lg px-4 py-2 w-full">
+                <FaSearch className="text-gray-400 mr-2" size={18} />
+                <input
+                  type="text"
+                  placeholder="Search contracts, parties, or IDs"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 placeholder-gray-400 font-medium"
                   style={{ fontFamily: 'Avenir, sans-serif' }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {/* Search Bar */}
-                  <div className="px-4 py-2 border-b border-gray-100">
-                    <div className="relative">
-                      <input
-                        type="text"
-                        placeholder="Search contracts..."
-                        value={contractSearch}
-                        onChange={(e) => setContractSearch(e.target.value)}
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                        style={{ fontFamily: 'Avenir, sans-serif' }}
-                      />
-                      <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    </div>
-                  </div>
-
+                />
+              </div>
+              {/* Filter Buttons - Stacked */}
+              <div className="flex flex-col gap-2">
+                <div className="relative">
                   <button
-                    className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center"
-                    onClick={() => setSelectedContracts([])}
+                    ref={mobileStatusButtonRef}
+                    className="flex items-center justify-between w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 font-medium text-xs shadow-sm whitespace-nowrap"
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setShowStatusDropdown(prev => !prev);
+                      if (!showStatusDropdown) {
+                        setOpenContractDropdown(false);
+                      }
+                    }}
                   >
-                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                      {selectedContracts.length === 0 && (
-                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
-                          <FaCheck className="text-white" size={8} />
-                        </div>
-                      )}
-                    </div>
-                    All
+                    <span className="flex items-center"><HiOutlineViewBoards className="text-gray-400 text-base mr-2" />Status</span>
+                    <HiMiniChevronDown className="text-gray-400" size={16} />
                   </button>
-                  {mockContracts
-                    .filter(contract => 
-                      contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
-                      contract.title.toLowerCase().includes(contractSearch.toLowerCase())
-                    )
-                    .map(contract => (
+                  {showStatusDropdown && (
+                    <div 
+                      ref={statusDropdownContainerRef}
+                      className="absolute top-full left-0 mt-2 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 status-filter-dropdown" 
+                      style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                    >
                       <button
-                        key={contract.id}
-                        className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center whitespace-nowrap truncate"
+                        className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
                         onClick={() => {
-                          setSelectedContracts(prev => {
-                            if (prev.includes(String(contract.id))) {
-                              return prev.filter(c => c !== String(contract.id));
-                            } else {
-                              return [...prev, String(contract.id)];
-                            }
-                          });
+                          setSelectedStatuses(['All']);
                         }}
                       >
                         <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                          {selectedContracts.includes(String(contract.id)) && (
+                          {selectedStatuses.includes('All') && (
                             <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
                               <FaCheck className="text-white" size={8} />
                             </div>
                           )}
                         </div>
-                        {contract.id} - {contract.title}
+                        All
                       </button>
-                    ))}
+                      {availableStatuses.filter(status => status !== 'All').map(status => (
+                        <button
+                          key={status}
+                          className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                          onClick={() => {
+                            setSelectedStatuses(prev => {
+                              const newStatuses = prev.filter(s => s !== 'All');
+                              if (prev.includes(status)) {
+                                return newStatuses.filter(s => s !== status);
+                              } else {
+                                return [...newStatuses, status];
+                              }
+                            });
+                          }}
+                        >
+                          <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                            {selectedStatuses.includes(status) && (
+                              <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                                <FaCheck className="text-white" size={8} />
+                              </div>
+                            )}
+                          </div>
+                          {status}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
+                <div className="relative">
+                  <button
+                    ref={mobileContractButtonRef}
+                    className="flex items-center justify-between w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 font-medium text-xs shadow-sm whitespace-nowrap"
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setOpenContractDropdown(prev => !prev);
+                      if (!openContractDropdown) {
+                        setShowStatusDropdown(false);
+                      }
+                    }}
+                  >
+                    <span className="flex items-center"><HiOutlineDocumentSearch className="text-gray-400 text-base mr-2" />Contract</span>
+                    <HiMiniChevronDown className="text-gray-400" size={16} />
+                  </button>
+                  {openContractDropdown && (
+                    <div 
+                      ref={contractDropdownContainerRef}
+                      className="absolute top-full left-0 mt-2 min-w-[180px] w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 contract-dropdown" 
+                      style={{ 
+                        fontFamily: 'Avenir, sans-serif',
+                        maxWidth: 'calc(100vw - 2rem)',
+                        right: '0',
+                        transform: 'translateX(0)'
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {/* Search Bar */}
+                      <div className="px-4 py-2 border-b border-gray-100">
+                        <div className="relative">
+                          <input
+                            type="text"
+                            placeholder="Search contracts..."
+                            value={contractSearch}
+                            onChange={(e) => setContractSearch(e.target.value)}
+                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                            style={{ fontFamily: 'Avenir, sans-serif' }}
+                          />
+                          <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        </div>
+                      </div>
+
+                      <button
+                        className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center"
+                        onClick={() => {
+                          setSelectedContracts([]);
+                        }}
+                      >
+                        <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                          {selectedContracts.length === 0 && (
+                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                              <FaCheck className="text-white" size={8} />
+                            </div>
+                          )}
+                        </div>
+                        All
+                      </button>
+                      {mockContracts
+                        .filter(contract => 
+                          contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
+                          contract.title.toLowerCase().includes(contractSearch.toLowerCase())
+                        )
+                        .map(contract => (
+                          <button
+                            key={contract.id}
+                            className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center whitespace-nowrap truncate"
+                            onClick={() => {
+                              setSelectedContracts(prev => {
+                                if (prev.includes(String(contract.id))) {
+                                  return prev.filter(c => c !== String(contract.id));
+                                } else {
+                                  return [...prev, String(contract.id)];
+                                }
+                              });
+                            }}
+                          >
+                            <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                              {selectedContracts.includes(String(contract.id)) && (
+                                <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                                  <FaCheck className="text-white" size={8} />
+                                </div>
+                              )}
+                            </div>
+                            {contract.id} - {contract.title}
+                          </button>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Desktop: Horizontal layout */}
+            <div className="hidden lg:flex items-center gap-1">
+              {/* Search Bar */}
+              <div className="flex items-center bg-white border border-gray-200 rounded-lg px-4 py-2 flex-1 min-w-0">
+                <FaSearch className="text-gray-400 mr-2" size={18} />
+                <input
+                  type="text"
+                  placeholder="Search contracts, parties, or IDs"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 placeholder-gray-400 font-medium min-w-0"
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                />
+              </div>
+              {/* Filter Buttons */}
+              <div className="flex items-center">
+                {/* Status Filter */}
+                <div className="relative flex-shrink-0">
+                  <button
+                    ref={statusDropdownRef}
+                    className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setShowStatusDropdown(prev => !prev);
+                      if (!showStatusDropdown) {
+                        setOpenContractDropdown(false);
+                      }
+                    }}
+                  >
+                    <HiOutlineViewBoards className="text-gray-400 w-4 h-4" />
+                    <span>Status</span>
+                    <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+                  </button>
+                  {showStatusDropdown && (
+                    <div 
+                      ref={statusDropdownDesktopRef}
+                      className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 status-filter-dropdown" 
+                      style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                    >
+                      <button
+                        className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                        onClick={() => {
+                          setSelectedStatuses(['All']);
+                        }}
+                      >
+                        <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                          {selectedStatuses.includes('All') && (
+                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                              <FaCheck className="text-white" size={8} />
+                            </div>
+                          )}
+                        </div>
+                        All
+                      </button>
+                      {availableStatuses.filter(status => status !== 'All').map(status => (
+                        <button
+                          key={status}
+                          className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                          onClick={() => {
+                            setSelectedStatuses(prev => {
+                              const newStatuses = prev.filter(s => s !== 'All');
+                              if (prev.includes(status)) {
+                                return newStatuses.filter(s => s !== status);
+                              } else {
+                                return [...newStatuses, status];
+                              }
+                            });
+                          }}
+                        >
+                          <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                            {selectedStatuses.includes(status) && (
+                              <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                                <FaCheck className="text-white" size={8} />
+                              </div>
+                            )}
+                          </div>
+                          {status}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {/* Contract Filter */}
+                <div className="relative flex-shrink-0 ml-1">
+                  <button
+                    ref={contractButtonRef}
+                    className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setOpenContractDropdown(prev => !prev);
+                      if (!openContractDropdown) {
+                        setShowStatusDropdown(false);
+                      }
+                    }}
+                  >
+                    <HiOutlineDocumentSearch className="text-gray-400 w-4 h-4" />
+                    <span>Contract</span>
+                    <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+                  </button>
+                  {openContractDropdown && (
+                    <div 
+                      ref={contractDropdownDesktopRef}
+                      className="absolute right-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 min-w-[300px] max-w-[90vw] w-80 contract-dropdown" 
+                      style={{ 
+                        fontFamily: 'Avenir, sans-serif',
+                        maxWidth: 'calc(100vw - 2rem)',
+                        right: '0',
+                        transform: 'translateX(0)'
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {/* Search Bar */}
+                      <div className="px-4 py-2 border-b border-gray-100">
+                        <div className="relative">
+                          <input
+                            type="text"
+                            placeholder="Search contracts..."
+                            value={contractSearch}
+                            onChange={(e) => setContractSearch(e.target.value)}
+                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                            style={{ fontFamily: 'Avenir, sans-serif' }}
+                          />
+                          <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        </div>
+                      </div>
+
+                      <button
+                        className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center"
+                        onClick={() => {
+                          setSelectedContracts([]);
+                        }}
+                      >
+                        <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                          {selectedContracts.length === 0 && (
+                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                              <FaCheck className="text-white" size={8} />
+                            </div>
+                          )}
+                        </div>
+                        All
+                      </button>
+                      {mockContracts
+                        .filter(contract => 
+                          contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
+                          contract.title.toLowerCase().includes(contractSearch.toLowerCase())
+                        )
+                        .map(contract => (
+                          <button
+                            key={contract.id}
+                            className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center whitespace-nowrap truncate"
+                            onClick={() => {
+                              setSelectedContracts(prev => {
+                                if (prev.includes(String(contract.id))) {
+                                  return prev.filter(c => c !== String(contract.id));
+                                } else {
+                                  return [...prev, String(contract.id)];
+                                }
+                              });
+                            }}
+                          >
+                            <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                              {selectedContracts.includes(String(contract.id)) && (
+                                <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                                  <FaCheck className="text-white" size={8} />
+                                </div>
+                              )}
+                            </div>
+                            {contract.id} - {contract.title}
+                          </button>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-h-[calc(4*(240px+1rem))] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
@@ -657,170 +917,362 @@ export default function BlockchainPage() {
       )}
       {activeTab === 'on-chain-activity' && (
         <div>
-          <div className="bg-white border border-gray-200 rounded-xl px-4 py-4 mb-6 flex items-center w-full">
-            <div className="flex items-center flex-1 bg-white border border-gray-200 rounded-lg px-4 py-2 min-w-0">
-              <FaSearch className="text-gray-400 mr-2" size={18} />
-              <input
-                type="text"
-                placeholder="Search transactions, descriptions, or IDs"
-                value={activitySearchTerm}
-                onChange={(e) => setActivitySearchTerm(e.target.value)}
-                className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 placeholder-gray-400 font-medium min-w-0"
-                style={{ fontFamily: 'Avenir, sans-serif' }}
-              />
-            </div>
-            <div className="relative ml-1">
-              <button
-                ref={activityTypeDropdownRef}
-                className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
-                style={{ fontFamily: 'Avenir, sans-serif' }}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setShowActivityTypeDropdown(prev => !prev);
-                  if (!showActivityTypeDropdown) {
-                    setOpenActivityContractDropdown(false);
-                  }
-                }}
-              >
-                <HiOutlineViewBoards className="text-gray-400 w-4 h-4" />
-                <span>Type</span>
-                <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
-              </button>
-              {showActivityTypeDropdown && (
-                <div 
-                  className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 activity-type-dropdown" 
-                  style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
-                >
-                  <button
-                    className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
-                    onClick={() => setSelectedActivityTypes(['All'])}
-                  >
-                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                      {selectedActivityTypes.includes('All') && (
-                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
-                          <FaCheck className="text-white" size={8} />
-                        </div>
-                      )}
-                    </div>
-                    All
-                  </button>
-                  {availableActivityTypes.filter(type => type !== 'All').map(type => (
-                    <button
-                      key={type}
-                      className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setSelectedActivityTypes(prev => {
-                          const newTypes = prev.filter(t => t !== 'All');
-                          if (prev.includes(type)) {
-                            return newTypes.filter(t => t !== type);
-                          } else {
-                            return [...newTypes, type];
-                          }
-                        });
-                      }}
-                    >
-                      <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                        {selectedActivityTypes.includes(type) && (
-                          <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
-                            <FaCheck className="text-white" size={8} />
-                          </div>
-                        )}
-                      </div>
-                      {type}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="relative ml-1">
-              <button
-                ref={activityContractButtonRef}
-                className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
-                style={{ fontFamily: 'Avenir, sans-serif' }}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setOpenActivityContractDropdown(prev => !prev);
-                  if (!openActivityContractDropdown) {
-                    setShowActivityTypeDropdown(false);
-                  }
-                }}
-              >
-                <HiOutlineDocumentSearch className="text-gray-400 w-4 h-4" />
-                <span>Contract</span>
-                <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
-              </button>
-              {openActivityContractDropdown && (
-                <div 
-                  className="absolute right-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 min-w-[400px] w-96 activity-contract-dropdown" 
+          <div className="bg-white border border-gray-200 rounded-xl px-4 py-4 mb-6">
+            {/* Mobile: Stacked layout */}
+            <div className="lg:hidden space-y-2">
+              {/* Search Bar */}
+              <div className="flex items-center bg-white border border-gray-200 rounded-lg px-4 py-2 w-full">
+                <FaSearch className="text-gray-400 mr-2" size={18} />
+                <input
+                  type="text"
+                  placeholder="Search transactions, descriptions, or IDs"
+                  value={activitySearchTerm}
+                  onChange={(e) => setActivitySearchTerm(e.target.value)}
+                  className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 placeholder-gray-400 font-medium"
                   style={{ fontFamily: 'Avenir, sans-serif' }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {/* Search Bar */}
-                  <div className="px-4 py-2 border-b border-gray-100">
-                    <div className="relative">
-                      <input
-                        type="text"
-                        placeholder="Search contracts..."
-                        value={activityContractSearch}
-                        onChange={(e) => setActivityContractSearch(e.target.value)}
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                        style={{ fontFamily: 'Avenir, sans-serif' }}
-                      />
-                      <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    </div>
-                  </div>
-
+                />
+              </div>
+              {/* Filter Buttons - Stacked */}
+              <div className="flex flex-col gap-2">
+                <div className="relative">
                   <button
-                    className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center"
-                    onClick={() => setSelectedActivityContracts([])}
+                    ref={mobileActivityTypeButtonRef}
+                    className="flex items-center justify-between w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 font-medium text-xs shadow-sm whitespace-nowrap"
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setShowActivityTypeDropdown(prev => !prev);
+                      if (!showActivityTypeDropdown) {
+                        setOpenActivityContractDropdown(false);
+                      }
+                    }}
                   >
-                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                      {selectedActivityContracts.length === 0 && (
-                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
-                          <FaCheck className="text-white" size={8} />
-                        </div>
-                      )}
-                    </div>
-                    All
+                    <span className="flex items-center"><HiOutlineViewBoards className="text-gray-400 text-base mr-2" />Type</span>
+                    <HiMiniChevronDown className="text-gray-400" size={16} />
                   </button>
-                  {mockContracts
-                    .filter(contract => 
-                      contract.id.toLowerCase().includes(activityContractSearch.toLowerCase()) ||
-                      contract.title.toLowerCase().includes(activityContractSearch.toLowerCase())
-                    )
-                    .map(contract => (
+                  {showActivityTypeDropdown && (
+                    <div 
+                      ref={activityTypeDropdownContainerRef}
+                      className="absolute top-full left-0 mt-2 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 activity-type-dropdown" 
+                      style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                    >
                       <button
-                        key={contract.id}
-                        className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center whitespace-nowrap truncate"
+                        className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
                         onClick={() => {
-                          setSelectedActivityContracts(prev => {
-                            if (prev.includes(String(contract.id))) {
-                              return prev.filter(c => c !== String(contract.id));
-                            } else {
-                              return [...prev, String(contract.id)];
-                            }
-                          });
+                          setSelectedActivityTypes(['All']);
                         }}
                       >
                         <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                          {selectedActivityContracts.includes(String(contract.id)) && (
+                          {selectedActivityTypes.includes('All') && (
                             <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
                               <FaCheck className="text-white" size={8} />
                             </div>
                           )}
                         </div>
-                        {contract.id} - {contract.title}
+                        All
                       </button>
-                    ))}
+                      {availableActivityTypes.filter(type => type !== 'All').map(type => (
+                        <button
+                          key={type}
+                          className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                          onClick={() => {
+                            setSelectedActivityTypes(prev => {
+                              const newTypes = prev.filter(t => t !== 'All');
+                              if (prev.includes(type)) {
+                                return newTypes.filter(t => t !== type);
+                              } else {
+                                return [...newTypes, type];
+                              }
+                            });
+                          }}
+                        >
+                          <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                            {selectedActivityTypes.includes(type) && (
+                              <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                                <FaCheck className="text-white" size={8} />
+                              </div>
+                            )}
+                          </div>
+                          {type}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
+                <div className="relative">
+                  <button
+                    ref={mobileActivityContractButtonRef}
+                    className="flex items-center justify-between w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 font-medium text-xs shadow-sm whitespace-nowrap"
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setOpenActivityContractDropdown(prev => !prev);
+                      if (!openActivityContractDropdown) {
+                        setShowActivityTypeDropdown(false);
+                      }
+                    }}
+                  >
+                    <span className="flex items-center"><HiOutlineDocumentSearch className="text-gray-400 text-base mr-2" />Contract</span>
+                    <HiMiniChevronDown className="text-gray-400" size={16} />
+                  </button>
+                  {openActivityContractDropdown && (
+                    <div 
+                      ref={activityContractDropdownContainerRef}
+                      className="absolute top-full left-0 mt-2 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 min-w-[300px] max-w-[90vw] activity-contract-dropdown" 
+                      style={{ 
+                        fontFamily: 'Avenir, sans-serif',
+                        maxWidth: 'calc(100vw - 2rem)',
+                        right: '0',
+                        transform: 'translateX(0)'
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {/* Search Bar */}
+                      <div className="px-4 py-2 border-b border-gray-100">
+                        <div className="relative">
+                          <input
+                            type="text"
+                            placeholder="Search contracts..."
+                            value={activityContractSearch}
+                            onChange={(e) => setActivityContractSearch(e.target.value)}
+                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                            style={{ fontFamily: 'Avenir, sans-serif' }}
+                          />
+                          <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        </div>
+                      </div>
+
+                      <button
+                        className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center"
+                        onClick={() => {
+                          setSelectedActivityContracts([]);
+                        }}
+                      >
+                        <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                          {selectedActivityContracts.length === 0 && (
+                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                              <FaCheck className="text-white" size={8} />
+                            </div>
+                          )}
+                        </div>
+                        All
+                      </button>
+                      {mockContracts
+                        .filter(contract => 
+                          contract.id.toLowerCase().includes(activityContractSearch.toLowerCase()) ||
+                          contract.title.toLowerCase().includes(activityContractSearch.toLowerCase())
+                        )
+                        .map(contract => (
+                          <button
+                            key={contract.id}
+                            className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center whitespace-nowrap truncate"
+                            onClick={() => {
+                              setSelectedActivityContracts(prev => {
+                                if (prev.includes(String(contract.id))) {
+                                  return prev.filter(c => c !== String(contract.id));
+                                } else {
+                                  return [...prev, String(contract.id)];
+                                }
+                              });
+                            }}
+                          >
+                            <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                              {selectedActivityContracts.includes(String(contract.id)) && (
+                                <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                                  <FaCheck className="text-white" size={8} />
+                                </div>
+                              )}
+                            </div>
+                            {contract.id} - {contract.title}
+                          </button>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Desktop: Horizontal layout */}
+            <div className="hidden lg:flex items-center gap-1">
+              {/* Search Bar */}
+              <div className="flex items-center bg-white border border-gray-200 rounded-lg px-4 py-2 flex-1 min-w-0">
+                <FaSearch className="text-gray-400 mr-2" size={18} />
+                <input
+                  type="text"
+                  placeholder="Search transactions, descriptions, or IDs"
+                  value={activitySearchTerm}
+                  onChange={(e) => setActivitySearchTerm(e.target.value)}
+                  className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 placeholder-gray-400 font-medium min-w-0"
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                />
+              </div>
+              {/* Filter Buttons */}
+              <div className="flex items-center">
+                {/* Type Filter */}
+                <div className="relative flex-shrink-0">
+                  <button
+                    ref={desktopActivityTypeButtonRef}
+                    className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setShowActivityTypeDropdown(prev => !prev);
+                      setOpenActivityContractDropdown(false);
+                    }}
+                  >
+                    <HiOutlineViewBoards className="text-gray-400 w-4 h-4" />
+                    <span>Type</span>
+                    <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+                  </button>
+                  {showActivityTypeDropdown && (
+                    <div
+                      ref={activityTypeDropdownDesktopRef}
+                      className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 activity-type-dropdown"
+                      style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                    >
+                      <button
+                        className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                        onClick={() => {
+                          setSelectedActivityTypes(['All']);
+                        }}
+                      >
+                        <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                          {selectedActivityTypes.includes('All') && (
+                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                              <FaCheck className="text-white" size={8} />
+                            </div>
+                          )}
+                        </div>
+                        All
+                      </button>
+                      {availableActivityTypes.filter(type => type !== 'All').map(type => (
+                        <button
+                          key={type}
+                          className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                          onClick={() => {
+                            setSelectedActivityTypes(prev => {
+                              const newTypes = prev.filter(t => t !== 'All');
+                              if (prev.includes(type)) {
+                                return newTypes.filter(t => t !== type);
+                              } else {
+                                return [...newTypes, type];
+                              }
+                            });
+                          }}
+                        >
+                          <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                            {selectedActivityTypes.includes(type) && (
+                              <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                                <FaCheck className="text-white" size={8} />
+                              </div>
+                            )}
+                          </div>
+                          {type}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {/* Contract Filter */}
+                <div className="relative flex-shrink-0 ml-1">
+                  <button
+                    ref={desktopActivityContractButtonRef}
+                    className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setOpenActivityContractDropdown(prev => !prev);
+                      if (!openActivityContractDropdown) {
+                        setShowActivityTypeDropdown(false);
+                      }
+                    }}
+                  >
+                    <HiOutlineDocumentSearch className="text-gray-400 w-4 h-4" />
+                    <span>Contract</span>
+                    <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+                  </button>
+                  {openActivityContractDropdown && (
+                    <div
+                      ref={activityContractDropdownDesktopRef}
+                      className="absolute right-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 min-w-[300px] max-w-[90vw] w-80 activity-contract-dropdown"
+                      style={{
+                        fontFamily: 'Avenir, sans-serif',
+                        maxWidth: 'calc(100vw - 2rem)',
+                        right: '0',
+                        transform: 'translateX(0)'
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {/* Search Bar */}
+                      <div className="px-4 py-2 border-b border-gray-100">
+                        <div className="relative">
+                          <input
+                            type="text"
+                            placeholder="Search contracts..."
+                            value={activityContractSearch}
+                            onChange={(e) => setActivityContractSearch(e.target.value)}
+                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                            style={{ fontFamily: 'Avenir, sans-serif' }}
+                          />
+                          <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        </div>
+                      </div>
+
+                      <button
+                        className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center"
+                        onClick={() => {
+                          setSelectedActivityContracts([]);
+                        }}
+                      >
+                        <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                          {selectedActivityContracts.length === 0 && (
+                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                              <FaCheck className="text-white" size={8} />
+                            </div>
+                          )}
+                        </div>
+                        All
+                      </button>
+                      {mockContracts
+                        .filter(contract =>
+                          contract.id.toLowerCase().includes(activityContractSearch.toLowerCase()) ||
+                          contract.title.toLowerCase().includes(activityContractSearch.toLowerCase())
+                        )
+                        .map(contract => (
+                          <button
+                            key={contract.id}
+                            className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center whitespace-nowrap truncate"
+                            onClick={() => {
+                              setSelectedActivityContracts(prev => {
+                                if (prev.includes(String(contract.id))) {
+                                  return prev.filter(c => c !== String(contract.id));
+                                } else {
+                                  return [...prev, String(contract.id)];
+                                }
+                              });
+                            }}
+                          >
+                            <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                              {selectedActivityContracts.includes(String(contract.id)) && (
+                                <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                                  <FaCheck className="text-white" size={8} />
+                                </div>
+                              )}
+                            </div>
+                            {contract.id} - {contract.title}
+                          </button>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-[calc(4*(240px+1rem))] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
             {filteredActivityData.map((activity, idx) => (
               <div key={idx} className="bg-white rounded-xl border border-gray-200 shadow-sm flex p-4 items-start relative cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedActivity(activity)}>
                 {/* Timeline Icon */}
@@ -831,14 +1283,10 @@ export default function BlockchainPage() {
                 </div>
                 {/* Card Content */}
                 <div className="flex-1">
-                  <div className="flex justify-between items-start mb-2">
+                  <div className="mb-2">
                     <div>
                       <h3 className="text-sm font-bold text-black mb-0.5" style={{ fontFamily: 'Avenir, sans-serif' }}>{activity.type}</h3>
                       <p className="text-[12px] text-gray-600 mb-1 italic" style={{ fontFamily: 'Avenir, sans-serif' }}>{activity.description}</p>
-                    </div>
-                    <div className="flex flex-col items-end text-[11px] text-gray-500 font-medium" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                      <span>{activity.date}</span>
-                      <span><svg className="inline w-4 h-4 ml-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3" /><circle cx="12" cy="12" r="10" /></svg></span>
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-1">
@@ -880,13 +1328,19 @@ export default function BlockchainPage() {
                           )}
                         </div>
                       </div>
-                      <div className="text-[11px] text-gray-500 font-medium mt-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Timestamp</div>
-                      <div className="text-xs text-black" style={{ fontFamily: 'Avenir, sans-serif' }}>2024-05-20 14:32:15</div>
                     </div>
                     <div>
                       <div className="text-[11px] text-gray-500 font-medium mb-0.5" style={{ fontFamily: 'Avenir, sans-serif' }}>Contract ID</div>
                       <div className="bg-gray-100 rounded px-2 py-0.5 font-mono text-xs w-fit">{activity.contractId}</div>
-                      <div className="text-[11px] text-gray-500 font-medium mt-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Contract Title</div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-1">
+                    <div>
+                      <div className="text-[11px] text-gray-500 font-medium mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Timestamp</div>
+                      <div className="text-xs text-black" style={{ fontFamily: 'Avenir, sans-serif' }}>2024-05-20 14:32:15</div>
+                    </div>
+                    <div>
+                      <div className="text-[11px] text-gray-500 font-medium mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Contract Title</div>
                       <div className="font-semibold text-gray-900 text-xs" style={{ fontFamily: 'Avenir, sans-serif' }}>{activity.type}</div>
                     </div>
                   </div>
@@ -909,8 +1363,8 @@ export default function BlockchainPage() {
         <div>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-black">Blockchain Explorers</h2>
-            <button className="flex items-center px-4 py-2 border border-gray-200 rounded-lg bg-white text-gray-700 hover:bg-gray-100 text-sm font-medium">
-              <FaBook className="mr-2 text-base" />
+            <button className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors" style={{ fontFamily: 'Avenir, sans-serif' }}>
+              <LuBookText className="text-base text-primary" />
               Explorer Guides
             </button>
           </div>
@@ -933,13 +1387,13 @@ export default function BlockchainPage() {
               <p className="text-gray-500 text-sm mb-4">Cross-chain interoperability and transaction monitoring</p>
               <div className="flex flex-col gap-2 mb-4">
                 <button className="flex items-center justify-between px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50">
-                  Monitor Bridges <FaExternalLinkAlt className="ml-2 text-base" />
+                  Monitor Bridges <FaArrowUpRightFromSquare className="ml-2 text-sm" />
                 </button>
                 <button className="flex items-center justify-between px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50">
-                  Cross-Chain Analytics <FaExternalLinkAlt className="ml-2 text-base" />
+                  Cross-Chain Analytics <FaArrowUpRightFromSquare className="ml-2 text-sm" />
                 </button>
                 <button className="flex items-center justify-between px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50">
-                  Network Status <FaExternalLinkAlt className="ml-2 text-base" />
+                  Network Status <FaArrowUpRightFromSquare className="ml-2 text-sm" />
                 </button>
               </div>
               <button className="mt-auto w-full px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 transition-colors text-sm">Connect to Allo Explorer</button>
@@ -961,13 +1415,13 @@ export default function BlockchainPage() {
               <p className="text-gray-500 text-sm mb-4">Track transactions and contract activity on the Algorand blockchain</p>
               <div className="flex flex-col gap-2 mb-4">
                 <button className="flex items-center justify-between px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50">
-                  View Smart Contracts <FaExternalLinkAlt className="ml-2 text-base" />
+                  View Smart Contracts <FaArrowUpRightFromSquare className="ml-2 text-sm" />
                 </button>
                 <button className="flex items-center justify-between px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50">
-                  Track Escra Wallet <FaExternalLinkAlt className="ml-2 text-base" />
+                  Track Escra Wallet <FaArrowUpRightFromSquare className="ml-2 text-sm" />
                 </button>
                 <button className="flex items-center justify-between px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50">
-                  Browse Assets <FaExternalLinkAlt className="ml-2 text-base" />
+                  Browse Assets <FaArrowUpRightFromSquare className="ml-2 text-sm" />
                 </button>
               </div>
               <button className="mt-auto w-full px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 transition-colors text-sm">Connect to Pera Explorer</button>
@@ -989,13 +1443,13 @@ export default function BlockchainPage() {
               <p className="text-gray-500 text-sm mb-4">Mobile and web wallet for Algorand blockchain interactions</p>
               <div className="flex flex-col gap-2 mb-4">
                 <button className="flex items-center justify-between px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50">
-                  Manage Assets <FaExternalLinkAlt className="ml-2 text-base" />
+                  Manage Assets <FaArrowUpRightFromSquare className="ml-2 text-sm" />
                 </button>
                 <button className="flex items-center justify-between px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50">
-                  View Transaction History <FaExternalLinkAlt className="ml-2 text-base" />
+                  View Transaction History <FaArrowUpRightFromSquare className="ml-2 text-sm" />
                 </button>
                 <button className="flex items-center justify-between px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50">
-                  Connect dApps <FaExternalLinkAlt className="ml-2 text-base" />
+                  Connect dApps <FaArrowUpRightFromSquare className="ml-2 text-sm" />
                 </button>
               </div>
               <button className="mt-auto w-full px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 transition-colors text-sm">Connect Pera Wallet</button>
@@ -1014,8 +1468,8 @@ export default function BlockchainPage() {
                   <span className="text-base font-semibold text-black">Smart Contract SDK</span>
                 </div>
                 <p className="text-gray-500 text-xs mb-4">Developer toolkit for building on Escra's smart contract platform</p>
-                <button className="flex items-center justify-center px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-xs font-medium hover:bg-gray-50 mt-auto">
-                  <HiOutlineBookOpen className="mr-2 text-base" />
+                <button className="flex items-center justify-center px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 mt-auto">
+                  <BiBookOpen className="mr-2 text-lg" />
                   View Documentation
                 </button>
               </Card>
@@ -1028,8 +1482,8 @@ export default function BlockchainPage() {
                   <span className="text-lg font-semibold text-black">Faucet</span>
                 </div>
                 <p className="text-gray-500 text-xs mb-4">Get test tokens to interact with Escra's TestNet environment</p>
-                <button className="flex items-center justify-center px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-xs font-medium hover:bg-gray-50 mt-auto">
-                  <FaArrowRight className="mr-2 text-base" />
+                <button className="flex items-center justify-center px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 mt-auto">
+                  <PiHandCoins className="mr-2 text-lg" />
                   Request Test Tokens
                 </button>
               </Card>
@@ -1042,8 +1496,8 @@ export default function BlockchainPage() {
                   <span className="text-lg font-semibold text-black">Security Audits</span>
                 </div>
                 <p className="text-gray-500 text-xs mb-4">View security audit reports for Escra's smart contracts</p>
-                <button className="flex items-center justify-center px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-xs font-medium hover:bg-gray-50 mt-auto">
-                  <FaExternalLinkAlt className="mr-2 text-base" />
+                <button className="flex items-center justify-center px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 mt-auto">
+                  <TbReportSearch className="mr-2 text-lg" />
                   View Audit Reports
                 </button>
               </Card>
