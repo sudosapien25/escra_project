@@ -4,6 +4,7 @@ import { Logo } from '@/components/common/Logo';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { PageContentWrapper } from '@/components/layout/PageContentWrapper';
 import { useState, useEffect, useRef } from 'react';
+import { useTheme } from '@/context/ThemeContext';
 import clsx from 'clsx';
 import { Avatar } from '@/components/common/Avatar';
 import { useRouter } from 'next/navigation';
@@ -24,15 +25,6 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }>) {
   const [isCollapsed, setIsCollapsed] = useState<boolean | undefined>(undefined);
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('theme');
-      if (savedTheme) {
-        return JSON.parse(savedTheme);
-      }
-    }
-    return { isDark: false };
-  });
   const [showAvatarDropdown, setShowAvatarDropdown] = useState(false);
   const avatarDropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -52,39 +44,8 @@ export default function DashboardLayout({
     setIsCollapsed(initialCollapsed);
   }, []);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('theme', JSON.stringify(theme));
-      if (theme.isDark) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    }
-  }, [theme]);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        showAvatarDropdown &&
-        avatarDropdownRef.current &&
-        !avatarDropdownRef.current.contains(event.target as Node)
-      ) {
-        setShowAvatarDropdown(false);
-      }
-    }
-    if (showAvatarDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-    } else {
-      document.removeEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showAvatarDropdown]);
-
+  const { theme, setTheme } = useTheme();
   const currentSidebarWidth = isCollapsed ? COLLAPSED_SIDEBAR_WIDTH : DEFAULT_SIDEBAR_WIDTH;
-
   return (
     <div className="flex flex-col h-screen">
       <header className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center bg-white dark:bg-gray-800 justify-between">
@@ -120,13 +81,11 @@ export default function DashboardLayout({
       </header>
       {isCollapsed !== undefined ? (
         <div className="flex flex-grow">
-          <div style={{ width: `${currentSidebarWidth}px` }} className="flex-shrink-0 border-r border-gray-200 dark:border-gray-700 transition-width duration-150 ease-in-out">
+          <div style={{ width: `${currentSidebarWidth}px` }} className="flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-width duration-150 ease-in-out">
             <Sidebar 
               width={currentSidebarWidth} 
               isCollapsed={isCollapsed} 
               toggleSidebar={toggleSidebar}
-              theme={theme}
-              setTheme={setTheme}
             />
           </div>
           <div className="flex flex-col flex-grow overflow-hidden flex-basis-0 min-w-0">

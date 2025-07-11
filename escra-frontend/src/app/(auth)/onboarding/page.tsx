@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Input } from '@/components/common/Input';
 import { Select, SelectOption } from '@/components/common/Select';
 import { Logo } from '@/components/common/Logo';
-import { HiMiniChevronDown } from 'react-icons/hi2';
+import { HiChevronDown } from 'react-icons/hi2';
 import { FaCheck } from 'react-icons/fa';
 import { TbBuildingEstate, TbShoppingBagEdit, TbWorld } from 'react-icons/tb';
 import { MdOutlineSportsFootball, MdOutlineMovieFilter, MdOutlineHealthAndSafety } from 'react-icons/md';
@@ -317,6 +317,8 @@ export default function OnboardingPage() {
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const [showCompanyTypeDropdown, setShowCompanyTypeDropdown] = useState(false);
   const [showIndustryDropdown, setShowIndustryDropdown] = useState(false);
+  const [stateSearchTerm, setStateSearchTerm] = useState('');
+  const [countrySearchTerm, setCountrySearchTerm] = useState('');
   const stateDropdownRef = useRef<HTMLDivElement>(null);
   const countryDropdownRef = useRef<HTMLDivElement>(null);
   const companyTypeDropdownRef = useRef<HTMLDivElement>(null);
@@ -328,10 +330,12 @@ export default function OnboardingPage() {
       
       if (showStateDropdown && stateDropdownRef.current && !stateDropdownRef.current.contains(target)) {
         setShowStateDropdown(false);
+        setStateSearchTerm('');
       }
       
       if (showCountryDropdown && countryDropdownRef.current && !countryDropdownRef.current.contains(target)) {
         setShowCountryDropdown(false);
+        setCountrySearchTerm('');
       }
       
       if (showCompanyTypeDropdown && companyTypeDropdownRef.current && !companyTypeDropdownRef.current.contains(target)) {
@@ -349,10 +353,66 @@ export default function OnboardingPage() {
     };
   }, [showStateDropdown, showCountryDropdown, showCompanyTypeDropdown, showIndustryDropdown]);
 
+  // Scroll to selected state when dropdown opens
+  useEffect(() => {
+    if (showStateDropdown && formData.state && !stateSearchTerm) {
+      scrollToSelectedState();
+    }
+  }, [showStateDropdown, formData.state, stateSearchTerm]);
+
+  // Scroll to selected country when dropdown opens
+  useEffect(() => {
+    if (showCountryDropdown && formData.country && !countrySearchTerm) {
+      scrollToSelectedCountry();
+    }
+  }, [showCountryDropdown, formData.country, countrySearchTerm]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     setFormErrors(prev => ({ ...prev, [name]: '' }));
+  };
+
+  const handleStateSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setStateSearchTerm(value);
+    
+    // Always show dropdown when user is typing
+    if (!showStateDropdown) {
+      setShowStateDropdown(true);
+    }
+  };
+
+  const handleCountrySearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setCountrySearchTerm(value);
+    
+    // Always show dropdown when user is typing
+    if (!showCountryDropdown) {
+      setShowCountryDropdown(true);
+    }
+  };
+
+  const scrollToSelectedState = () => {
+    if (showStateDropdown && formData.state) {
+      setTimeout(() => {
+        const selectedElement = document.querySelector(`[data-state-value="${formData.state}"]`);
+        if (selectedElement) {
+          selectedElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  };
+
+  const scrollToSelectedCountry = () => {
+    if (showCountryDropdown && formData.country) {
+      setTimeout(() => {
+        const selectedElement = document.querySelector(`[data-country-value="${formData.country}"]`);
+        if (selectedElement) {
+          selectedElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+      }, 100);
+    }
   };
 
   const handleIndustryToggle = (industryValue: string) => {
@@ -452,26 +512,26 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-white dark:bg-gray-800 py-4 px-4 font-sans">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-white py-4 px-4 font-sans select-none">
       <div className="flex flex-col items-center mb-4">
         <div className="rounded-full bg-primary/10 p-2 mb-4">
           <Logo width={60} height={60} />
         </div>
       </div>
 
-      <div className={`w-full ${tab === 'business' ? 'max-w-3xl' : 'max-w-md'} bg-white dark:bg-gray-800 rounded-2xl p-4 transition-all duration-300`} style={{ boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
+      <div className={`w-full ${tab === 'business' ? 'max-w-3xl' : 'max-w-md'} bg-white rounded-2xl p-4 transition-all duration-300`} style={{ boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
         <div className="mb-2">
-          <h2 className="text-lg font-bold text-center text-gray-900 dark:text-white mb-1">Complete your profile</h2>
-          <p className="text-center text-gray-500 dark:text-gray-300 text-sm mb-3">Tell us more about your business</p>
-          <div className="flex rounded-lg bg-gray-100 dark:bg-gray-700 overflow-hidden mb-3 border border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-bold text-center text-gray-900 mb-1">Complete your profile</h2>
+          <p className="text-center text-gray-500 text-sm mb-3">Tell us more about your business</p>
+          <div className="flex rounded-lg bg-gray-100 overflow-hidden mb-3 border border-gray-200">
             <button
-              className={`flex-1 py-1.5 text-sm font-semibold transition-colors duration-150 ${tab === 'personal' ? 'bg-white dark:bg-gray-800 text-primary shadow' : 'text-gray-500 dark:text-gray-300'}`}
+              className={`flex-1 py-1.5 text-sm font-semibold transition-colors duration-150 ${tab === 'personal' ? 'bg-white text-primary shadow' : 'text-gray-500'}`}
               onClick={() => setTab('personal')}
             >
               Personal
             </button>
             <button
-              className={`flex-1 py-1.5 text-sm font-semibold transition-colors duration-150 ${tab === 'business' ? 'bg-white dark:bg-gray-800 text-primary shadow' : 'text-gray-500 dark:text-gray-300'}`}
+              className={`flex-1 py-1.5 text-sm font-semibold transition-colors duration-150 ${tab === 'business' ? 'bg-white text-primary shadow' : 'text-gray-500'}`}
               onClick={() => setTab('business')}
             >
               Business
@@ -481,11 +541,11 @@ export default function OnboardingPage() {
 
         <div className="mb-4">
           <div className="flex items-center justify-between mb-1">
-            <div className="flex-1 h-1 bg-gray-200 dark:bg-gray-700 rounded-full">
+            <div className="flex-1 h-1 bg-gray-200 rounded-full">
               <div className="h-1 bg-primary rounded-full" style={{ width: `${(step / 2) * 100}%` }}></div>
             </div>
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 text-center">Step {step} of 2</p>
+          <p className="text-xs text-gray-500 text-center">Step {step} of 2</p>
         </div>
 
         <form onSubmit={handleSubmit} className={`space-y-3 ${tab === 'business' ? 'max-w-3xl' : ''}`} noValidate>
@@ -499,7 +559,7 @@ export default function OnboardingPage() {
                   value={formData.companyName}
                   onChange={handleChange}
                   placeholder="Enter your company name"
-                  className={`py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 ${formErrors.companyName ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
+                  className={`py-0.5 text-sm bg-gray-50 border-gray-200 placeholder-gray-400 ${formErrors.companyName ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
                   required
                 />
                 {formErrors.companyName && <p className="text-xs text-red-600 mt-1">{formErrors.companyName}</p>}
@@ -510,13 +570,13 @@ export default function OnboardingPage() {
                   <div className="relative w-full" ref={companyTypeDropdownRef}>
                     <input
                       type="text"
-                      className={`w-full px-3 py-2 border-2 ${formErrors.companyType ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : 'border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary'} rounded-lg text-xs font-medium text-black transition-colors pr-10 cursor-pointer bg-white`}
+                      className={`w-full px-3 py-2 border-2 ${formErrors.companyType ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : 'border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary'} rounded-lg text-xs font-medium text-black transition-colors pr-10 bg-white`}
                       placeholder="Select company type"
                       value={COMPANY_TYPES.find(t => t.value === formData.companyType)?.label || ''}
                       readOnly
                       onClick={() => setShowCompanyTypeDropdown(true)}
                     />
-                    <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     {showCompanyTypeDropdown && (
                       <div className="absolute left-0 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                         {COMPANY_TYPES.map(type => (
@@ -546,7 +606,7 @@ export default function OnboardingPage() {
                   value={formData.address}
                   onChange={handleChange}
                   placeholder="Enter your business address"
-                  className={`py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 ${formErrors.address ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
+                  className={`py-0.5 text-sm bg-gray-50 border-gray-200 placeholder-gray-400 ${formErrors.address ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
                   required
                 />
                 {formErrors.address && <p className="text-xs text-red-600 mt-1">{formErrors.address}</p>}
@@ -560,7 +620,7 @@ export default function OnboardingPage() {
                     value={formData.city}
                     onChange={handleChange}
                     placeholder="City"
-                    className={`py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 ${formErrors.city ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
+                    className={`py-0.5 text-sm bg-gray-50 border-gray-200 placeholder-gray-400 ${formErrors.city ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
                     required
                   />
                   {formErrors.city && <p className="text-xs text-red-600 mt-1">{formErrors.city}</p>}
@@ -570,23 +630,40 @@ export default function OnboardingPage() {
                   <div className="relative w-full" ref={stateDropdownRef}>
                     <input
                       type="text"
-                      className={`w-full px-3 py-2 border-2 ${formErrors.state ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : 'border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary'} rounded-lg text-xs font-medium text-black transition-colors pr-10 cursor-pointer bg-white`}
-                      placeholder="Select state"
-                      value={US_STATES.find(s => s.value === formData.state)?.label || ''}
-                      readOnly
-                      onClick={() => setShowStateDropdown(true)}
+                      className={`w-full px-3 py-2 border-2 ${formErrors.state ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : 'border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary'} rounded-lg text-xs font-medium text-black transition-colors pr-10 bg-white`}
+                      placeholder="Select State"
+                      value={stateSearchTerm || US_STATES.find(s => s.value === formData.state)?.label || ''}
+                      onChange={handleStateSearch}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Backspace' && !stateSearchTerm) {
+                          e.preventDefault();
+                          setFormData(prev => ({ ...prev, state: '' }));
+                        }
+                      }}
+                      onFocus={(e) => {
+                        // Show dropdown when focused
+                        if (!showStateDropdown) {
+                          setShowStateDropdown(true);
+                        }
+                      }}
                     />
-                    <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     {showStateDropdown && (
                       <div className="absolute left-0 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                        {US_STATES.map(state => (
+                        {US_STATES
+                          .filter(state => 
+                            state.label.toLowerCase().includes(stateSearchTerm.toLowerCase())
+                          )
+                          .map(state => (
                           <button
                             key={state.value}
+                            data-state-value={state.value}
                             className={`w-full text-left px-3 py-0.5 text-xs font-medium ${formData.state === state.value ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`}
                             onClick={e => {
                               e.preventDefault();
                               setFormData(prev => ({ ...prev, state: state.value }));
                               setShowStateDropdown(false);
+                              setStateSearchTerm('');
                             }}
                           >
                             {state.label}
@@ -607,7 +684,7 @@ export default function OnboardingPage() {
                     value={formData.zipCode}
                     onChange={handleChange}
                     placeholder="Enter ZIP code"
-                    className={`py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 ${formErrors.zipCode ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
+                    className={`py-0.5 text-sm bg-gray-50 border-gray-200 placeholder-gray-400 ${formErrors.zipCode ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
                     required
                   />
                   {formErrors.zipCode && <p className="text-xs text-red-600 mt-1">{formErrors.zipCode}</p>}
@@ -618,22 +695,39 @@ export default function OnboardingPage() {
                     <input
                       type="text"
                       className={`w-full px-3 py-2 border-2 ${formErrors.country ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : 'border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary'} rounded-lg text-xs font-medium text-black transition-colors pr-10 bg-white`}
-                      placeholder="Select country"
-                      value={COUNTRIES.find(c => c.value === formData.country)?.label || ''}
-                      readOnly
-                      onClick={() => setShowCountryDropdown(true)}
+                      placeholder="Select Country"
+                      value={countrySearchTerm || COUNTRIES.find(c => c.value === formData.country)?.label || ''}
+                      onChange={handleCountrySearch}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Backspace' && !countrySearchTerm) {
+                          e.preventDefault();
+                          setFormData(prev => ({ ...prev, country: '' }));
+                        }
+                      }}
+                      onFocus={(e) => {
+                        // Show dropdown when focused
+                        if (!showCountryDropdown) {
+                          setShowCountryDropdown(true);
+                        }
+                      }}
                     />
-                    <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     {showCountryDropdown && (
                       <div className="absolute left-0 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                        {COUNTRIES.map(country => (
+                        {COUNTRIES
+                          .filter(country => 
+                            country.label.toLowerCase().includes(countrySearchTerm.toLowerCase())
+                          )
+                          .map(country => (
                           <button
                             key={country.value}
+                            data-country-value={country.value}
                             className={`w-full text-left px-3 py-0.5 text-xs font-medium ${formData.country === country.value ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`}
                             onClick={e => {
                               e.preventDefault();
                               setFormData(prev => ({ ...prev, country: country.value }));
                               setShowCountryDropdown(false);
+                              setCountrySearchTerm('');
                             }}
                           >
                             {country.label}
@@ -654,7 +748,7 @@ export default function OnboardingPage() {
                     value={formData.phoneNumber}
                     onChange={handleChange}
                     placeholder="Enter your phone #"
-                    className={`py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 ${formErrors.phoneNumber ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
+                    className={`py-0.5 text-sm bg-gray-50 border-gray-200 placeholder-gray-400 ${formErrors.phoneNumber ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
                     required
                   />
                   {formErrors.phoneNumber && <p className="text-xs text-red-600 mt-1">{formErrors.phoneNumber}</p>}
@@ -669,7 +763,7 @@ export default function OnboardingPage() {
                   value={formData.website}
                   onChange={handleChange}
                   placeholder="Enter your website"
-                  className={`py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 ${formErrors.website ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
+                  className={`py-0.5 text-sm bg-gray-50 border-gray-200 placeholder-gray-400 ${formErrors.website ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
                 />
                 {formErrors.website && <p className="text-xs text-red-600 mt-1">{formErrors.website}</p>}
               </div>
@@ -723,7 +817,7 @@ export default function OnboardingPage() {
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="flex-1 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  className="flex-1 py-1.5 rounded-lg border border-gray-200 text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-colors"
                 >
                   Back
                 </button>
@@ -745,7 +839,7 @@ export default function OnboardingPage() {
                   value={formData.address}
                   onChange={handleChange}
                   placeholder="Enter your address"
-                  className={`py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 ${formErrors.address ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
+                  className={`py-0.5 text-sm bg-gray-50 border-gray-200 placeholder-gray-400 ${formErrors.address ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
                   required
                 />
                 {formErrors.address && <p className="text-xs text-red-600 mt-1">{formErrors.address}</p>}
@@ -759,7 +853,7 @@ export default function OnboardingPage() {
                     value={formData.city}
                     onChange={handleChange}
                     placeholder="City"
-                    className={`py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 ${formErrors.city ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
+                    className={`py-0.5 text-sm bg-gray-50 border-gray-200 placeholder-gray-400 ${formErrors.city ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
                     required
                   />
                   {formErrors.city && <p className="text-xs text-red-600 mt-1">{formErrors.city}</p>}
@@ -769,23 +863,40 @@ export default function OnboardingPage() {
                   <div className="relative w-full" ref={stateDropdownRef}>
                     <input
                       type="text"
-                      className={`w-full px-3 py-2 border-2 ${formErrors.state ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : 'border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary'} rounded-lg text-xs font-medium text-black transition-colors pr-10 cursor-pointer bg-white`}
-                      placeholder="Select state"
-                      value={US_STATES.find(s => s.value === formData.state)?.label || ''}
-                      readOnly
-                      onClick={() => setShowStateDropdown(true)}
+                      className={`w-full px-3 py-2 border-2 ${formErrors.state ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : 'border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary'} rounded-lg text-xs font-medium text-black transition-colors pr-10 bg-white`}
+                      placeholder="Select State"
+                      value={stateSearchTerm || US_STATES.find(s => s.value === formData.state)?.label || ''}
+                      onChange={handleStateSearch}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Backspace' && !stateSearchTerm) {
+                          e.preventDefault();
+                          setFormData(prev => ({ ...prev, state: '' }));
+                        }
+                      }}
+                      onFocus={(e) => {
+                        // Show dropdown when focused
+                        if (!showStateDropdown) {
+                          setShowStateDropdown(true);
+                        }
+                      }}
                     />
-                    <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     {showStateDropdown && (
                       <div className="absolute left-0 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                        {US_STATES.map(state => (
+                        {US_STATES
+                          .filter(state => 
+                            state.label.toLowerCase().includes(stateSearchTerm.toLowerCase())
+                          )
+                          .map(state => (
                           <button
                             key={state.value}
+                            data-state-value={state.value}
                             className={`w-full text-left px-3 py-0.5 text-xs font-medium ${formData.state === state.value ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`}
                             onClick={e => {
                               e.preventDefault();
                               setFormData(prev => ({ ...prev, state: state.value }));
                               setShowStateDropdown(false);
+                              setStateSearchTerm('');
                             }}
                           >
                             {state.label}
@@ -806,7 +917,7 @@ export default function OnboardingPage() {
                     value={formData.zipCode}
                     onChange={handleChange}
                     placeholder="Enter ZIP code"
-                    className={`py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 ${formErrors.zipCode ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
+                    className={`py-0.5 text-sm bg-gray-50 border-gray-200 placeholder-gray-400 ${formErrors.zipCode ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
                     required
                   />
                   {formErrors.zipCode && <p className="text-xs text-red-600 mt-1">{formErrors.zipCode}</p>}
@@ -818,21 +929,38 @@ export default function OnboardingPage() {
                       type="text"
                       className={`w-full px-3 py-2 border-2 ${formErrors.country ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : 'border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary'} rounded-lg text-xs font-medium text-black transition-colors pr-10 bg-white`}
                       placeholder="Select country"
-                      value={COUNTRIES.find(c => c.value === formData.country)?.label || ''}
-                      readOnly
-                      onClick={() => setShowCountryDropdown(true)}
+                      value={countrySearchTerm || COUNTRIES.find(c => c.value === formData.country)?.label || ''}
+                      onChange={handleCountrySearch}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Backspace' && !countrySearchTerm) {
+                          e.preventDefault();
+                          setFormData(prev => ({ ...prev, country: '' }));
+                        }
+                      }}
+                      onFocus={(e) => {
+                        // Show dropdown when focused
+                        if (!showCountryDropdown) {
+                          setShowCountryDropdown(true);
+                        }
+                      }}
                     />
-                    <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     {showCountryDropdown && (
                       <div className="absolute left-0 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                        {COUNTRIES.map(country => (
+                        {COUNTRIES
+                          .filter(country => 
+                            country.label.toLowerCase().includes(countrySearchTerm.toLowerCase())
+                          )
+                          .map(country => (
                           <button
                             key={country.value}
+                            data-country-value={country.value}
                             className={`w-full text-left px-3 py-0.5 text-xs font-medium ${formData.country === country.value ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`}
                             onClick={e => {
                               e.preventDefault();
                               setFormData(prev => ({ ...prev, country: country.value }));
                               setShowCountryDropdown(false);
+                              setCountrySearchTerm('');
                             }}
                           >
                             {country.label}
@@ -853,7 +981,7 @@ export default function OnboardingPage() {
                     value={formData.phoneNumber}
                     onChange={handleChange}
                     placeholder="Enter your phone #"
-                    className={`py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 ${formErrors.phoneNumber ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
+                    className={`py-0.5 text-sm bg-gray-50 border-gray-200 placeholder-gray-400 ${formErrors.phoneNumber ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
                     required
                   />
                   {formErrors.phoneNumber && <p className="text-xs text-red-600 mt-1">{formErrors.phoneNumber}</p>}

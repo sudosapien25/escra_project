@@ -96,7 +96,7 @@ export default function WorkflowsPage() {
   const assigneeDropdownRef = useRef<HTMLDivElement>(null);
   const [showAssigneeDropdown, setShowAssigneeDropdown] = React.useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = React.useState(false);
-  const statusDropdownRef = useRef<HTMLButtonElement>(null);
+  const statusDropdownRef = useRef<HTMLDivElement>(null);
   const [editingCommentId, setEditingCommentId] = React.useState<string | null>(null);
   const [showNewTaskModal, setShowNewTaskModal] = React.useState(false);
   const [showUploadModal, setShowUploadModal] = React.useState(false);
@@ -114,6 +114,13 @@ export default function WorkflowsPage() {
   });
   const taskDetailsAssigneeDropdownRef = useRef<HTMLDivElement>(null);
   const taskDetailsAssigneeInputRef = useRef<HTMLInputElement>(null);
+  // Mobile filter refs
+  const mobileAssigneeButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileContractButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileStatusButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileAssigneeDropdownRef = useRef<HTMLDivElement>(null);
+  const mobileContractDropdownRef = useRef<HTMLDivElement>(null);
+  const mobileStatusDropdownRef = useRef<HTMLDivElement>(null);
 
   // Use the task store
   const {
@@ -373,70 +380,11 @@ export default function WorkflowsPage() {
     }
   };
 
-  // Add this useEffect for the contract dropdown click-outside handler
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      const target = event.target as HTMLElement;
-      const dropdown = document.querySelector('.contract-dropdown');
-      const button = contractButtonRef.current;
 
-      // Only close if clicking outside both the dropdown and button
-      if (openContractDropdown && 
-          !dropdown?.contains(target) && 
-          !button?.contains(target)) {
-        setOpenContractDropdown(false);
-      }
-    }
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [openContractDropdown]);
 
-  // Add this useEffect for the status filter dropdown click-outside handler
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      const target = event.target as HTMLElement;
-      const dropdown = document.querySelector('.status-filter-dropdown');
-      const button = statusButtonRef.current;
 
-      // Only close if clicking outside both the dropdown and button
-      if (openStatusDropdown && 
-          !dropdown?.contains(target) && 
-          !button?.contains(target)) {
-        setOpenStatusDropdown(false);
-      }
-    }
 
-    if (openStatusDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [openStatusDropdown]);
-
-  // Add this useEffect for the assignee filter dropdown click-outside handler
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      const target = event.target as HTMLElement;
-      const dropdown = document.querySelector('.assignee-dropdown');
-      const button = assigneeButtonRef.current;
-
-      // Only close if clicking outside both the dropdown and button
-      if (openAssigneeDropdown && 
-          !dropdown?.contains(target) && 
-          !button?.contains(target)) {
-        setOpenAssigneeDropdown(false);
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [openAssigneeDropdown]);
 
   // Update the status change handler for the task details modal
   const handleTaskStatusChange = (status: StatusOption) => {
@@ -489,26 +437,7 @@ export default function WorkflowsPage() {
   // Debug: Print all tasks from the store to check for subtasks
   console.log('All tasks from store:', tasks);
 
-  // Add this useEffect for the status dropdown click-outside handler in task details modal
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      const target = event.target as HTMLElement;
-      const dropdown = document.querySelector('.status-filter-dropdown');
-      const button = statusDropdownRef.current;
 
-      // Only close if clicking outside both the dropdown and button
-      if (showStatusDropdown && 
-          !dropdown?.contains(target) && 
-          !button?.contains(target)) {
-        setShowStatusDropdown(false);
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showStatusDropdown]);
 
   // Add click-off behavior for task details modal assignee dropdown
   useEffect(() => {
@@ -530,26 +459,108 @@ export default function WorkflowsPage() {
     };
   }, [showAssigneeDropdown]);
 
+  // Add this useEffect for the mobile assignee filter dropdown click-outside handler
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+      const desktopDropdown = assigneeDropdownRef.current;
+      const mobileDropdown = mobileAssigneeDropdownRef.current;
+      const desktopButton = assigneeButtonRef.current;
+      const mobileButton = mobileAssigneeButtonRef.current;
+      
+      // Only check if dropdown is open
+      if (openAssigneeDropdown) {
+        // Check if clicking inside either desktop or mobile dropdown, or either button
+        const isInsideDropdown = desktopDropdown?.contains(target) || mobileDropdown?.contains(target);
+        const isInsideButton = desktopButton?.contains(target) || mobileButton?.contains(target);
+        
+        // If clicking outside both dropdowns and buttons, close the dropdown
+        if (!isInsideDropdown && !isInsideButton) {
+          setOpenAssigneeDropdown(false);
+        }
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openAssigneeDropdown]);
+
+  // Add this useEffect for the mobile contract filter dropdown click-outside handler
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+      const desktopDropdown = contractDropdownRef.current;
+      const mobileDropdown = mobileContractDropdownRef.current;
+      const desktopButton = contractButtonRef.current;
+      const mobileButton = mobileContractButtonRef.current;
+      
+      // Only check if dropdown is open
+      if (openContractDropdown) {
+        // Check if clicking inside either desktop or mobile dropdown, or either button
+        const isInsideDropdown = desktopDropdown?.contains(target) || mobileDropdown?.contains(target);
+        const isInsideButton = desktopButton?.contains(target) || mobileButton?.contains(target);
+        
+        // If clicking outside both dropdowns and buttons, close the dropdown
+        if (!isInsideDropdown && !isInsideButton) {
+          setOpenContractDropdown(false);
+        }
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openContractDropdown]);
+
+  // Add this useEffect for the mobile status filter dropdown click-outside handler
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+      const desktopDropdown = statusDropdownRef.current;
+      const mobileDropdown = mobileStatusDropdownRef.current;
+      const desktopButton = statusButtonRef.current;
+      const mobileButton = mobileStatusButtonRef.current;
+      
+      // Only check if dropdown is open
+      if (showStatusDropdown) {
+        // Check if clicking inside either desktop or mobile dropdown, or either button
+        const isInsideDropdown = desktopDropdown?.contains(target) || mobileDropdown?.contains(target);
+        const isInsideButton = desktopButton?.contains(target) || mobileButton?.contains(target);
+        
+        // If clicking outside both dropdowns and buttons, close the dropdown
+        if (!isInsideDropdown && !isInsideButton) {
+          setShowStatusDropdown(false);
+        }
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showStatusDropdown]);
+
   return (
     <div className="space-y-4">
       {/* Workflow Title and Button */}
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-8 gap-4">
         <div>
           <h1 className="text-[30px] font-bold text-black dark:text-white mb-1">Tasks</h1>
           <p className="text-gray-500 dark:text-gray-400 text-[16px] mt-0">Track &amp; manage your activity</p>
         </div>
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={() => setShowNewTaskModal(true)}
-            className="flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
-          >
-            <MdOutlineLibraryAddCheck className="mr-2 text-lg" />
-            New Task
-          </button>
-        </div>
+        <button
+          onClick={() => setShowNewTaskModal(true)}
+          className="flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+        >
+          <MdOutlineLibraryAddCheck className="mr-2 text-lg" />
+          New Task
+        </button>
       </div>
 
-      <hr className="my-6 border-gray-300 dark:border-gray-700" />
+      <hr className="my-3 md:my-6 border-gray-300 dark:border-gray-700" />
 
       {/* Workflow Stats and Filters Section */}
       <div className="space-y-4">
@@ -574,21 +585,21 @@ export default function WorkflowsPage() {
         </div>
 
         {/* Stat Cards */}
-        <div className="flex gap-6 mb-6 mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 mt-4">
           {/* Tasks in Progress */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full flex-1 min-w-[200px]">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full">
             <div className="h-10 w-10 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center border-2 border-blue-200 dark:border-blue-800">
               <FaRetweet size={18} className="text-blue-500 dark:text-blue-400" />
             </div>
             <div className="flex flex-col items-start h-full">
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans">Tasks in Progress</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">{kanbanColumns.find(col => col.key === 'In Progress')?.tasks.length || 0}</p>
-              <p className="text-xs invisible">placeholder</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">Currently active</p>
             </div>
           </div>
 
           {/* Due Within 7 Days */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full flex-1 min-w-[200px]">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full">
             <div className="h-10 w-10 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center border-2 border-yellow-200 dark:border-yellow-800">
               <LuCalendarClock size={18} className="text-yellow-500 dark:text-yellow-400" />
             </div>
@@ -600,7 +611,7 @@ export default function WorkflowsPage() {
           </div>
 
           {/* Blocked Tasks */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full flex-1 min-w-[200px]">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full">
             <div className="h-10 w-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center border-2 border-red-200 dark:border-red-800">
               <CgPlayStopR size={18} className="text-red-500 dark:text-red-400" />
             </div>
@@ -610,258 +621,550 @@ export default function WorkflowsPage() {
               <p className="text-xs text-gray-400 dark:text-gray-500">Requires action</p>
             </div>
           </div>
+
+          {/* Completed Tasks */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full">
+            <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center border-2 border-green-200 dark:border-green-800">
+              <FaRegSquareCheck size={18} className="text-green-500 dark:text-green-400" />
+            </div>
+            <div className="flex flex-col items-start h-full">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans">Completed</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{kanbanColumns.find(col => col.key === 'Done')?.tasks.length || 0}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">This month</p>
+            </div>
+          </div>
         </div>
 
-        {/* Filter Bar */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 mb-6 flex items-center w-full mt-2">
-          {/* Assignee Filter */}
-          <div className="relative ml-1">
-            <button
-              ref={assigneeButtonRef}
-              className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
-              style={{ fontFamily: 'Avenir, sans-serif' }}
-              onClick={() => { setOpenAssigneeDropdown(v => !v); setOpenContractDropdown(false); setShowStatusDropdown(false); }}
-            >
-              <RiUserSearchLine className="text-gray-400 w-4 h-4" />
-              <span>Assignee</span>
-              <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
-            </button>
-            {openAssigneeDropdown && (
-              <div 
-                className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-2 assignee-dropdown" 
-                style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
-              >
+        {/* Filter Bar - Responsive Design */}
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 mb-6 mt-2">
+          {/* Mobile: Stacked layout */}
+          <div className="lg:hidden">
+            {/* Search Bar */}
+            <div className="flex items-center bg-white border border-gray-200 rounded-lg px-4 py-2 w-full">
+              <FaSearch className="text-gray-400 mr-2" size={18} />
+              <input
+                type="text"
+                placeholder="Search tasks, assignees, contracts or IDs"
+                value={taskSearchTerm}
+                onChange={(e) => setTaskSearchTerm(e.target.value)}
+                className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 placeholder-gray-400 font-medium"
+                style={{ fontFamily: "Avenir, sans-serif" }}
+              />
+            </div>
+            {/* Filter Buttons - Stacked, full width */}
+            <div className="flex flex-col gap-2 mt-2">
+              {/* Assignee Filter */}
+              <div className="relative">
                 <button
-                  className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
-                  onClick={(e: React.MouseEvent) => {
+                  ref={mobileAssigneeButtonRef}
+                  className="flex items-center justify-between w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 font-medium text-xs shadow-sm whitespace-nowrap"
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                  onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    setSelectedAssignees([]);
+                    setOpenAssigneeDropdown(v => !v);
+                    if (!openAssigneeDropdown) {
+                      setOpenContractDropdown(false);
+                      setShowStatusDropdown(false);
+                    }
                   }}
                 >
-                  <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                    {selectedAssignees.length === 0 && (
-                      <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
-                        <FaCheck className="text-white" size={8} />
-                      </div>
-                    )}
-                  </div>
-                  All
+                  <span className="flex items-center"><RiUserSearchLine className="text-gray-400 text-base mr-2" />Assignee</span>
+                  <HiMiniChevronDown className="text-gray-400" size={16} />
                 </button>
-                <button
-                  className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
-                  onClick={() => {
-                    setSelectedAssignees(prev => {
-                      if (prev.includes('__ME__')) {
-                        return prev.filter(a => a !== '__ME__');
-                      } else {
-                        return [...prev, '__ME__'];
-                      }
-                    });
-                  }}
-                >
-                  <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                    {selectedAssignees.includes('__ME__') && (
-                      <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
-                        <FaCheck className="text-white" size={8} />
-                      </div>
-                    )}
-                  </div>
-                  Me
-                </button>
-                {uniqueAssignees.map(assignee => (
-                  <button
-                    key={assignee}
-                    className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setSelectedAssignees(prev => {
-                        if (prev.includes(assignee)) {
-                          return prev.filter(a => a !== assignee);
-                        } else {
-                          return [...prev, assignee];
-                        }
-                      });
-                    }}
-                  >
-                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                      {selectedAssignees.includes(assignee) && (
-                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
-                          <FaCheck className="text-white" size={8} />
-                        </div>
-                      )}
-                    </div>
-                    {assignee}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Contract Filter */}
-          <div className="relative ml-1">
-            <button
-              ref={contractButtonRef}
-              className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
-              style={{ fontFamily: 'Avenir, sans-serif' }}
-              onClick={() => { setOpenContractDropdown(v => !v); setOpenAssigneeDropdown(false); setShowStatusDropdown(false); }}
-            >
-              <HiOutlineDocumentSearch className="text-gray-400 w-4 h-4" />
-              <span>Contract</span>
-              <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
-            </button>
-            {openContractDropdown && (
-              <div 
-                className="absolute left-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-2 min-w-[400px] w-96 contract-dropdown" 
-                style={{ fontFamily: 'Avenir, sans-serif' }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {/* Search Bar */}
-                <div className="px-4 py-2 border-b border-gray-100">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="Search contracts..."
-                      value={contractSearch}
-                      onChange={(e) => setContractSearch(e.target.value)}
-                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                      style={{ fontFamily: 'Avenir, sans-serif' }}
-                    />
-                    <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                  </div>
-                </div>
-
-                <button
-                  className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center"
-                  onClick={() => setSelectedContracts([])}
-                >
-                  <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                    {selectedContracts.length === 0 && (
-                      <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
-                        <FaCheck className="text-white" size={8} />
-                      </div>
-                    )}
-                  </div>
-                  All
-                </button>
-                {mockContracts
-                  .filter(contract => 
-                    contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
-                    contract.title.toLowerCase().includes(contractSearch.toLowerCase())
-                  )
-                  .map(contract => (
+                {openAssigneeDropdown && (
+                  <div ref={mobileAssigneeDropdownRef} className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 assignee-dropdown" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
                     <button
-                      key={contract.id}
-                      className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center whitespace-nowrap truncate"
-                      onClick={() => {
-                        setSelectedContracts(prev => {
-                          if (prev.includes(String(contract.id))) {
-                            return prev.filter(c => c !== String(contract.id));
-                          } else {
-                            return [...prev, String(contract.id)];
-                          }
-                        });
+                      className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                      onClick={(e: React.MouseEvent) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedAssignees([]);
+                        // Do NOT close the dropdown here
                       }}
                     >
                       <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                        {selectedContracts.includes(String(contract.id)) && (
+                        {selectedAssignees.length === 0 && (
                           <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
                             <FaCheck className="text-white" size={8} />
                           </div>
                         )}
                       </div>
-                      {contract.id} - {contract.title}
+                      All
                     </button>
-                  ))}
+                    <button
+                      className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedAssignees(prev => {
+                          if (prev.includes('__ME__')) {
+                            return prev.filter(a => a !== '__ME__');
+                          } else {
+                            return [...prev, '__ME__'];
+                          }
+                        });
+                        // Do NOT close the dropdown here
+                      }}
+                    >
+                      <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                        {selectedAssignees.includes('__ME__') && (
+                          <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                            <FaCheck className="text-white" size={8} />
+                          </div>
+                        )}
+                      </div>
+                      Me
+                    </button>
+                    {uniqueAssignees.map(assignee => (
+                      <button
+                        key={assignee}
+                        className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setSelectedAssignees(prev => {
+                            if (prev.includes(assignee)) {
+                              return prev.filter(a => a !== assignee);
+                            } else {
+                              return [...prev, assignee];
+                            }
+                          });
+                          // Do NOT close the dropdown here
+                        }}
+                      >
+                        <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                          {selectedAssignees.includes(assignee) && (
+                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                              <FaCheck className="text-white" size={8} />
+                            </div>
+                          )}
+                        </div>
+                        {assignee}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-
-          {/* Status Filter */}
-          <div className="relative ml-1">
-            <button
-              ref={statusDropdownRef}
-              className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap" 
-              style={{ fontFamily: 'Avenir, sans-serif' }}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setShowStatusDropdown(prev => !prev);
-                if (!showStatusDropdown) {
-                  setOpenContractDropdown(false);
-                  setOpenAssigneeDropdown(false);
-                }
-              }}
-            >
-              <HiOutlineViewBoards className="text-gray-400 w-4 h-4" />
-              <span>Status</span>
-              <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
-            </button>
-            {showStatusDropdown && (
-              <div 
-                className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-2 status-filter-dropdown" 
-                style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
-              >
+              {/* Contract Filter */}
+              <div className="relative">
                 <button
-                  className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                  ref={mobileContractButtonRef}
+                  className="flex items-center justify-between w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 font-medium text-xs shadow-sm whitespace-nowrap"
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    setSelectedStatuses(['All']);
+                    setOpenContractDropdown(v => !v);
+                    if (!openContractDropdown) {
+                      setOpenAssigneeDropdown(false);
+                      setShowStatusDropdown(false);
+                    }
                   }}
                 >
-                  <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                    {selectedStatuses.includes('All') && (
-                      <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
-                        <FaCheck className="text-white" size={8} />
-                      </div>
-                    )}
-                  </div>
-                  All
+                  <span className="flex items-center"><HiOutlineDocumentSearch className="text-gray-400 text-base mr-2" />Contract</span>
+                  <HiMiniChevronDown className="text-gray-400" size={16} />
                 </button>
-                {statusOptions.map(status => (
-                  <button
-                    key={status.key}
-                    className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setSelectedStatuses(prev => {
-                        const newStatuses = prev.filter(s => s !== 'All');
-                        if (prev.includes(status.key as StatusOption)) {
-                          const filtered = newStatuses.filter(s => s !== status.key);
-                          // If no statuses are selected, default to "All"
-                          return filtered.length === 0 ? ['All'] : filtered;
-                        } else {
-                          return [...newStatuses, status.key as StatusOption];
-                        }
-                      });
-                    }}
-                  >
-                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                      {selectedStatuses.includes(status.key as StatusOption) && (
-                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
-                          <FaCheck className="text-white" size={8} />
-                        </div>
-                      )}
+                {openContractDropdown && (
+                  <div ref={mobileContractDropdownRef} className="absolute top-full left-0 mt-2 min-w-[180px] w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 contract-dropdown" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                    {/* Search Bar */}
+                    <div className="px-4 py-2 border-b border-gray-100">
+                      <div className="relative">
+                        <input
+                          type="text"
+                          placeholder="Search contracts..."
+                          value={contractSearch}
+                          onChange={(e) => setContractSearch(e.target.value)}
+                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                          style={{ fontFamily: 'Avenir, sans-serif' }}
+                        />
+                        <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                      </div>
                     </div>
-                    {status.title}
-                  </button>
-                ))}
+
+                    <button
+                      className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedContracts([]);
+                        // Do NOT close the dropdown here
+                      }}
+                    >
+                      <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                        {selectedContracts.length === 0 && (
+                          <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                            <FaCheck className="text-white" size={8} />
+                          </div>
+                        )}
+                      </div>
+                      All
+                    </button>
+                    {mockContracts
+                      .filter(contract => 
+                        contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
+                        contract.title.toLowerCase().includes(contractSearch.toLowerCase())
+                      )
+                      .map(contract => (
+                        <button
+                          key={contract.id}
+                          className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center whitespace-nowrap truncate"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setSelectedContracts(prev => {
+                              if (prev.includes(String(contract.id))) {
+                                return prev.filter(c => c !== String(contract.id));
+                              } else {
+                                return [...prev, String(contract.id)];
+                              }
+                            });
+                            // Do NOT close the dropdown here
+                          }}
+                        >
+                          <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                            {selectedContracts.includes(String(contract.id)) && (
+                              <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                                <FaCheck className="text-white" size={8} />
+                              </div>
+                            )}
+                          </div>
+                          {contract.id} - {contract.title}
+                        </button>
+                      ))}
+                  </div>
+                )}
               </div>
-            )}
+              {/* Status Filter */}
+              <div className="relative">
+                <button
+                  ref={mobileStatusButtonRef}
+                  className="flex items-center justify-between w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 font-medium text-xs shadow-sm whitespace-nowrap"
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowStatusDropdown(v => !v);
+                    if (!showStatusDropdown) {
+                      setOpenAssigneeDropdown(false);
+                      setOpenContractDropdown(false);
+                    }
+                  }}
+                >
+                  <span className="flex items-center"><HiOutlineViewBoards className="text-gray-400 text-base mr-2" />Status</span>
+                  <HiMiniChevronDown className="text-gray-400" size={16} />
+                </button>
+                {showStatusDropdown && (
+                  <div ref={mobileStatusDropdownRef} className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 status-filter-dropdown" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
+                    <button
+                      className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedStatuses(['All']);
+                      }}
+                    >
+                      <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                        {selectedStatuses.includes('All') && (
+                          <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                            <FaCheck className="text-white" size={8} />
+                          </div>
+                        )}
+                      </div>
+                      All
+                    </button>
+                    {statusOptions.map(status => (
+                      <button
+                        key={status.key}
+                        className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setSelectedStatuses(prev => {
+                            const newStatuses = prev.filter(s => s !== 'All');
+                            if (prev.includes(status.key as StatusOption)) {
+                              const filtered = newStatuses.filter(s => s !== status.key);
+                              // If no statuses are selected, default to "All"
+                              return filtered.length === 0 ? ['All'] : filtered;
+                            } else {
+                              return [...newStatuses, status.key as StatusOption];
+                            }
+                          });
+                        }}
+                      >
+                        <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                          {selectedStatuses.includes(status.key as StatusOption) && (
+                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                              <FaCheck className="text-white" size={8} />
+                            </div>
+                          )}
+                        </div>
+                        {status.title}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-          <div className="flex items-center bg-white border border-gray-200 rounded-lg px-4 py-2 flex-1 ml-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
-            <FaSearch className="text-gray-400 mr-2 text-lg" />
-            <input
-              type="text"
-              placeholder="Search tasks..."
-              value={taskSearchTerm}
-              onChange={e => setTaskSearchTerm(e.target.value)}
-              className="w-full bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 placeholder-gray-400 font-medium"
-              style={{ fontFamily: 'Avenir, sans-serif' }}
-            />
+          {/* Desktop: Horizontal layout */}
+          <div className="hidden lg:flex items-center gap-1">
+            {/* Search Bar */}
+            <div className="flex items-center bg-white border border-gray-200 rounded-lg px-4 py-2 flex-1 min-w-0">
+              <FaSearch className="text-gray-400 mr-2" size={18} />
+              <input
+                type="text"
+                placeholder="Search tasks, assignees, contracts or IDs"
+                value={taskSearchTerm}
+                onChange={(e) => setTaskSearchTerm(e.target.value)}
+                className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 placeholder-gray-400 font-medium min-w-0"
+                style={{ fontFamily: "Avenir, sans-serif" }}
+              />
+            </div>
+            {/* Filter Buttons */}
+            <div className="flex items-center">
+              {/* Assignee Filter */}
+              <div className="relative flex-shrink-0">
+                <button
+                  ref={assigneeButtonRef}
+                  className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                  onClick={() => { setOpenAssigneeDropdown(v => !v); setOpenContractDropdown(false); setShowStatusDropdown(false); }}
+                >
+                  <RiUserSearchLine className="text-gray-400 w-4 h-4" />
+                  <span>Assignee</span>
+                  <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+                </button>
+                {openAssigneeDropdown && (
+                  <div 
+                    ref={assigneeDropdownRef}
+                    className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-2 assignee-dropdown" 
+                    style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                  >
+                    <button
+                      className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                      onClick={(e: React.MouseEvent) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedAssignees([]);
+                      }}
+                    >
+                      <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                        {selectedAssignees.length === 0 && (
+                          <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                            <FaCheck className="text-white" size={8} />
+                          </div>
+                        )}
+                      </div>
+                      All
+                    </button>
+                    <button
+                      className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedAssignees(prev => {
+                          if (prev.includes('__ME__')) {
+                            return prev.filter(a => a !== '__ME__');
+                          } else {
+                            return [...prev, '__ME__'];
+                          }
+                        });
+                      }}
+                    >
+                      <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                        {selectedAssignees.includes('__ME__') && (
+                          <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                            <FaCheck className="text-white" size={8} />
+                          </div>
+                        )}
+                      </div>
+                      Me
+                    </button>
+                    {uniqueAssignees.map(assignee => (
+                      <button
+                        key={assignee}
+                        className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setSelectedAssignees(prev => {
+                            if (prev.includes(assignee)) {
+                              return prev.filter(a => a !== assignee);
+                            } else {
+                              return [...prev, assignee];
+                            }
+                          });
+                        }}
+                      >
+                        <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                          {selectedAssignees.includes(assignee) && (
+                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                              <FaCheck className="text-white" size={8} />
+                            </div>
+                          )}
+                        </div>
+                        {assignee}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {/* Contract Filter */}
+              <div className="relative flex-shrink-0 ml-1">
+                <button
+                  ref={contractButtonRef}
+                  className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                  onClick={() => { setOpenContractDropdown(v => !v); setOpenAssigneeDropdown(false); setShowStatusDropdown(false); }}
+                >
+                  <HiOutlineDocumentSearch className="text-gray-400 w-4 h-4" />
+                  <span>Contract</span>
+                  <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+                </button>
+                {openContractDropdown && (
+                  <div 
+                    ref={contractDropdownRef}
+                    className="absolute left-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-2 min-w-[400px] w-96 contract-dropdown" 
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {/* Search Bar */}
+                    <div className="px-4 py-2 border-b border-gray-100">
+                      <div className="relative">
+                        <input
+                          type="text"
+                          placeholder="Search contracts..."
+                          value={contractSearch}
+                          onChange={(e) => setContractSearch(e.target.value)}
+                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                          style={{ fontFamily: 'Avenir, sans-serif' }}
+                        />
+                        <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                      </div>
+                    </div>
+
+                    <button
+                      className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedContracts([]);
+                        // Do NOT close the dropdown here
+                      }}
+                    >
+                      <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                        {selectedContracts.length === 0 && (
+                          <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                            <FaCheck className="text-white" size={8} />
+                          </div>
+                        )}
+                      </div>
+                      All
+                    </button>
+                    {mockContracts
+                      .filter(contract => 
+                        contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
+                        contract.title.toLowerCase().includes(contractSearch.toLowerCase())
+                      )
+                      .map(contract => (
+                        <button
+                          key={contract.id}
+                          className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center whitespace-nowrap truncate"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setSelectedContracts(prev => {
+                              if (prev.includes(String(contract.id))) {
+                                return prev.filter(c => c !== String(contract.id));
+                              } else {
+                                return [...prev, String(contract.id)];
+                              }
+                            });
+                            // Do NOT close the dropdown here
+                          }}
+                        >
+                          <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                            {selectedContracts.includes(String(contract.id)) && (
+                              <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                                <FaCheck className="text-white" size={8} />
+                              </div>
+                            )}
+                          </div>
+                          {contract.id} - {contract.title}
+                        </button>
+                      ))}
+                  </div>
+                )}
+              </div>
+              {/* Status Filter */}
+              <div className="relative flex-shrink-0 ml-1">
+                <button
+                  ref={statusButtonRef}
+                  className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap" 
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                  onClick={() => { setShowStatusDropdown(v => !v); setOpenAssigneeDropdown(false); setOpenContractDropdown(false); }}
+                >
+                  <HiOutlineViewBoards className="text-gray-400 w-4 h-4" />
+                  <span>Status</span>
+                  <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+                </button>
+                {showStatusDropdown && (
+                  <div 
+                    ref={statusDropdownRef}
+                    className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 status-filter-dropdown" 
+                    style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                  >
+                    <button
+                      className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedStatuses(['All']);
+                      }}
+                    >
+                      <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                        {selectedStatuses.includes('All') && (
+                          <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                            <FaCheck className="text-white" size={8} />
+                          </div>
+                        )}
+                      </div>
+                      All
+                    </button>
+                    {statusOptions.map(status => (
+                      <button
+                        key={status.key}
+                        className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setSelectedStatuses(prev => {
+                            const newStatuses = prev.filter(s => s !== 'All');
+                            if (prev.includes(status.key as StatusOption)) {
+                              const filtered = newStatuses.filter(s => s !== status.key);
+                              // If no statuses are selected, default to "All"
+                              return filtered.length === 0 ? ['All'] : filtered;
+                            } else {
+                              return [...newStatuses, status.key as StatusOption];
+                            }
+                          });
+                        }}
+                      >
+                        <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                          {selectedStatuses.includes(status.key as StatusOption) && (
+                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                              <FaCheck className="text-white" size={8} />
+                            </div>
+                          )}
+                        </div>
+                        {status.title}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1238,7 +1541,7 @@ export default function WorkflowsPage() {
                       </div>
                       <div>
                         <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Status</div>
-                        <div className="relative w-full" ref={statusDropdownRef}>
+                        <div className="relative w-full">
                           <input
                             type="text"
                             className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10"

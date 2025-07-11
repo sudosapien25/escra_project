@@ -16,8 +16,8 @@ export default function DashboardPage() {
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0">
         {/* Group title and subtitle with controlled spacing */}
         <div className="pb-1">
-          <h1 className="text-[24px] md:text-[30px] font-bold text-black mb-0">Dashboard</h1>
-          <p className="text-gray-500 text-[15px] md:text-[16px] mt-0">Overview of your contract closing activities & metrics</p>
+          <h1 className="text-[30px] font-bold text-black dark:text-white mb-0">Dashboard</h1>
+          <p className="text-gray-500 text-[16px] mt-0">Overview of your contract closing activities & metrics</p>
         </div>
         <button
           className="flex items-center justify-center w-full md:w-auto px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"

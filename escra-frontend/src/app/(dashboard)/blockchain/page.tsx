@@ -405,7 +405,7 @@ export default function BlockchainPage() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0">
         <div className="pb-1">
-          <h1 className="text-[30px] font-bold text-black mb-0">Blockchain</h1>
+          <h1 className="text-[30px] font-bold text-black dark:text-white mb-0">Blockchain</h1>
           <p className="text-gray-500 text-[16px] mt-0">Review your smart contracts, on-chain activity & explorer integrations</p>
         </div>
         <button
@@ -1361,15 +1361,14 @@ export default function BlockchainPage() {
       )}
       {activeTab === 'explorers' && (
         <div>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-black">Blockchain Explorers</h2>
-            <button className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors" style={{ fontFamily: 'Avenir, sans-serif' }}>
+          <div className="flex justify-end mt-6 mb-6">
+            <button className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors w-full sm:w-auto" style={{ fontFamily: 'Avenir, sans-serif' }}>
               <LuBookText className="text-base text-primary" />
               Explorer Guides
             </button>
           </div>
           {/* Explorer Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
             {/* Allo Explorer (moved to first) */}
             <Card className="rounded-xl border border-gray-200 p-6 flex flex-col h-full">
               <div className="flex items-center mb-2">

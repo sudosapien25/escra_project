@@ -13,6 +13,7 @@ import { MdOutlineLightMode, MdOutlineDarkMode } from 'react-icons/md';
 import React, { useEffect, useRef } from 'react';
 import { LiaCubesSolid } from 'react-icons/lia';
 import { HiCubeTransparent } from 'react-icons/hi2';
+import { useTheme } from '@/context/ThemeContext';
 
 interface NavItem {
   name: string;
@@ -29,8 +30,6 @@ interface SidebarProps {
   width: number;
   isCollapsed: boolean;
   toggleSidebar: () => void;
-  theme: Theme;
-  setTheme: React.Dispatch<React.SetStateAction<Theme>>;
 }
 
 // Helper component to render icons with className
@@ -42,7 +41,8 @@ const IconWrapper: React.FC<{ icon: React.ComponentType<IconBaseProps>; classNam
   return <Icon {...iconProps} />;
 };
 
-export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSidebar, theme, setTheme }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSidebar }) => {
+  const { theme, setTheme } = useTheme();
   const rawPathname = usePathname();
   const pathname = rawPathname || '';
   const router = useRouter();
@@ -83,7 +83,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
   ];
 
   return (
-    <aside className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 p-4 border-r border-gray-200 dark:border-gray-700 flex flex-col" style={{ width: `${width}px` }}>
+    <aside className="text-gray-800 dark:text-gray-200 p-4 flex flex-col" style={{ width: `${width}px` }}>
       <nav className="flex-grow">
         <ul>
           {navItems.map((item) => (

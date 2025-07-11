@@ -142,33 +142,33 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-auto p-0 font-sans">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg sm:max-w-2xl mx-auto px-4 sm:px-8 font-sans">
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-8 pt-8 pb-2 border-b border-gray-100">
+        <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 py-4 sm:px-8 sm:pt-8 sm:pb-2 border-b border-gray-100 gap-2">
           <div className="flex items-center gap-4">
             <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-primary/10">
               <HiOutlineDocumentText className="text-primary text-2xl" />
             </span>
             <div>
               <h2 className="text-xl font-bold text-black leading-tight">Create New Contract</h2>
-              <p className="text-gray-500 text-sm leading-tight">Fill in the contract details to get started</p>
+              <p className="text-gray-500 text-sm leading-tight">Fill in the details to quickly get started</p>
             </div>
           </div>
-          <button onClick={() => { onClose(); setModalStep(1); }} className="text-gray-400 hover:text-gray-600 p-2 rounded-full">
+          <button onClick={() => { onClose(); setModalStep(1); }} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-2 rounded-full">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
         {/* Stepper */}
-        <div className="flex items-center justify-between px-8 pt-4 pb-2">
-          <div className="flex items-center space-x-2 w-full">
+        <div className="flex items-center justify-center w-full px-0 sm:px-2 py-3 sm:pt-4 sm:pb-2 overflow-x-auto">
+          <div className="flex items-center space-x-2 flex-nowrap justify-center w-full px-2">
             {[1, 2, 3].map((step, idx) => (
               <React.Fragment key={step}>
                 <button
                   type="button"
                   onClick={() => setModalStep(step)}
-                  className={`flex items-center gap-2 font-semibold transition-all duration-300 text-sm px-4 py-1.5 rounded-lg whitespace-nowrap
+                  className={`flex items-center gap-2 font-semibold transition-all duration-300 text-sm px-2 py-1 sm:text-base sm:px-4 sm:py-1.5 rounded-lg whitespace-nowrap
                     ${modalStep === step
                       ? 'text-primary border-2 border-gray-200'
                       : 'text-gray-500 hover:text-gray-700'}
@@ -181,14 +181,14 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                   {step === 2 && 'Step 2: Parties'}
                   {step === 3 && 'Step 3: Documents'}
                 </button>
-                {idx < 2 && <div className="flex-1 h-0.5 bg-gray-200 mx-2" />}
+                {idx < 2 && <div className="w-4 sm:w-6 h-0.5 bg-gray-200 mx-2" />}
               </React.Fragment>
             ))}
           </div>
         </div>
         {/* Modal Body */}
         {modalStep === 1 && (
-          <form className="px-8 pt-2 pb-6" onSubmit={handleSubmit} noValidate>
+          <form className="px-4 py-4 sm:px-8 sm:pt-2 sm:pb-6" onSubmit={handleSubmit} noValidate>
             <div className="mb-4">
               <label htmlFor="title" className="block text-xs font-medium text-gray-500 mb-1">Contract Title</label>
               <input
