@@ -6,9 +6,9 @@ import { FaSearch, FaClock, FaSort, FaPlus, FaDollarSign, FaTimes, FaChevronDown
 import { FaArrowUpRightFromSquare } from 'react-icons/fa6';
 import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutlineTrash, HiOutlineEye, HiOutlineClipboardList, HiOutlineExclamation, HiChevronDown, HiOutlineDocumentSearch, HiOutlineDocumentAdd, HiOutlineUpload } from 'react-icons/hi';
 import { HiOutlineViewBoards } from 'react-icons/hi';
-import { LuCalendarClock } from 'react-icons/lu';
-import { BiDotsHorizontal } from 'react-icons/bi';
-import { TbWorldDollar, TbEdit, TbClockUp } from 'react-icons/tb';
+import { LuCalendarFold } from 'react-icons/lu';
+import { BiDotsHorizontal, BiCommentAdd } from 'react-icons/bi';
+import { TbWorldDollar, TbEdit, TbClockUp, TbCubeSend } from 'react-icons/tb';
 import { Logo } from '@/components/common/Logo';
 import { mockContracts } from '@/data/mockContracts';
 import { useEditor } from '@tiptap/react';
@@ -244,6 +244,10 @@ const ContractsPage: React.FC = () => {
     insuranceCompany: '',
     inspectionPeriod: '',
     contingencies: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    country: '',
   });
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [contracts, setContracts] = useState<Contract[]>(mockContracts);
@@ -278,6 +282,260 @@ const ContractsPage: React.FC = () => {
     'Other'
   ];
 
+  const US_STATES = [
+    { value: 'AL', label: 'Alabama' },
+    { value: 'AK', label: 'Alaska' },
+    { value: 'AZ', label: 'Arizona' },
+    { value: 'AR', label: 'Arkansas' },
+    { value: 'CA', label: 'California' },
+    { value: 'CO', label: 'Colorado' },
+    { value: 'CT', label: 'Connecticut' },
+    { value: 'DE', label: 'Delaware' },
+    { value: 'FL', label: 'Florida' },
+    { value: 'GA', label: 'Georgia' },
+    { value: 'HI', label: 'Hawaii' },
+    { value: 'ID', label: 'Idaho' },
+    { value: 'IL', label: 'Illinois' },
+    { value: 'IN', label: 'Indiana' },
+    { value: 'IA', label: 'Iowa' },
+    { value: 'KS', label: 'Kansas' },
+    { value: 'KY', label: 'Kentucky' },
+    { value: 'LA', label: 'Louisiana' },
+    { value: 'ME', label: 'Maine' },
+    { value: 'MD', label: 'Maryland' },
+    { value: 'MA', label: 'Massachusetts' },
+    { value: 'MI', label: 'Michigan' },
+    { value: 'MN', label: 'Minnesota' },
+    { value: 'MS', label: 'Mississippi' },
+    { value: 'MO', label: 'Missouri' },
+    { value: 'MT', label: 'Montana' },
+    { value: 'NE', label: 'Nebraska' },
+    { value: 'NV', label: 'Nevada' },
+    { value: 'NH', label: 'New Hampshire' },
+    { value: 'NJ', label: 'New Jersey' },
+    { value: 'NM', label: 'New Mexico' },
+    { value: 'NY', label: 'New York' },
+    { value: 'NC', label: 'North Carolina' },
+    { value: 'ND', label: 'North Dakota' },
+    { value: 'OH', label: 'Ohio' },
+    { value: 'OK', label: 'Oklahoma' },
+    { value: 'OR', label: 'Oregon' },
+    { value: 'PA', label: 'Pennsylvania' },
+    { value: 'RI', label: 'Rhode Island' },
+    { value: 'SC', label: 'South Carolina' },
+    { value: 'SD', label: 'South Dakota' },
+    { value: 'TN', label: 'Tennessee' },
+    { value: 'TX', label: 'Texas' },
+    { value: 'UT', label: 'Utah' },
+    { value: 'VT', label: 'Vermont' },
+    { value: 'VA', label: 'Virginia' },
+    { value: 'WA', label: 'Washington' },
+    { value: 'WV', label: 'West Virginia' },
+    { value: 'WI', label: 'Wisconsin' },
+    { value: 'WY', label: 'Wyoming' }
+  ];
+
+  const COUNTRIES = [
+    // Most commonly used countries first
+    { value: 'US', label: 'United States' },
+    { value: 'CA', label: 'Canada' },
+    { value: 'MX', label: 'Mexico' },
+    { value: 'GB', label: 'United Kingdom' },
+    { value: 'DE', label: 'Germany' },
+    { value: 'FR', label: 'France' },
+    { value: 'IT', label: 'Italy' },
+    { value: 'ES', label: 'Spain' },
+    { value: 'NL', label: 'Netherlands' },
+    { value: 'BE', label: 'Belgium' },
+    { value: 'CH', label: 'Switzerland' },
+    { value: 'AT', label: 'Austria' },
+    { value: 'SE', label: 'Sweden' },
+    { value: 'NO', label: 'Norway' },
+    { value: 'DK', label: 'Denmark' },
+    { value: 'FI', label: 'Finland' },
+    { value: 'PL', label: 'Poland' },
+    { value: 'CZ', label: 'Czech Republic' },
+    { value: 'HU', label: 'Hungary' },
+    { value: 'RO', label: 'Romania' },
+    { value: 'BG', label: 'Bulgaria' },
+    { value: 'HR', label: 'Croatia' },
+    { value: 'SI', label: 'Slovenia' },
+    { value: 'SK', label: 'Slovakia' },
+    { value: 'LT', label: 'Lithuania' },
+    { value: 'LV', label: 'Latvia' },
+    { value: 'EE', label: 'Estonia' },
+    { value: 'IE', label: 'Ireland' },
+    { value: 'PT', label: 'Portugal' },
+    { value: 'GR', label: 'Greece' },
+    { value: 'CY', label: 'Cyprus' },
+    { value: 'MT', label: 'Malta' },
+    { value: 'LU', label: 'Luxembourg' },
+    { value: 'IS', label: 'Iceland' },
+    { value: 'AU', label: 'Australia' },
+    { value: 'NZ', label: 'New Zealand' },
+    { value: 'JP', label: 'Japan' },
+    { value: 'KR', label: 'South Korea' },
+    { value: 'CN', label: 'China' },
+    { value: 'IN', label: 'India' },
+    { value: 'BR', label: 'Brazil' },
+    { value: 'AR', label: 'Argentina' },
+    { value: 'CL', label: 'Chile' },
+    { value: 'CO', label: 'Colombia' },
+    { value: 'PE', label: 'Peru' },
+    { value: 'VE', label: 'Venezuela' },
+    { value: 'EC', label: 'Ecuador' },
+    { value: 'UY', label: 'Uruguay' },
+    { value: 'PY', label: 'Paraguay' },
+    { value: 'BO', label: 'Bolivia' },
+    { value: 'GY', label: 'Guyana' },
+    { value: 'SR', label: 'Suriname' },
+    { value: 'FK', label: 'Falkland Islands' },
+    { value: 'GF', label: 'French Guiana' },
+    // All other countries alphabetically
+    { value: 'AF', label: 'Afghanistan' },
+    { value: 'AL', label: 'Albania' },
+    { value: 'DZ', label: 'Algeria' },
+    { value: 'AD', label: 'Andorra' },
+    { value: 'AO', label: 'Angola' },
+    { value: 'AG', label: 'Antigua and Barbuda' },
+    { value: 'AM', label: 'Armenia' },
+    { value: 'AZ', label: 'Azerbaijan' },
+    { value: 'BS', label: 'Bahamas' },
+    { value: 'BH', label: 'Bahrain' },
+    { value: 'BD', label: 'Bangladesh' },
+    { value: 'BB', label: 'Barbados' },
+    { value: 'BY', label: 'Belarus' },
+    { value: 'BZ', label: 'Belize' },
+    { value: 'BJ', label: 'Benin' },
+    { value: 'BT', label: 'Bhutan' },
+    { value: 'BA', label: 'Bosnia and Herzegovina' },
+    { value: 'BW', label: 'Botswana' },
+    { value: 'BN', label: 'Brunei' },
+    { value: 'BF', label: 'Burkina Faso' },
+    { value: 'BI', label: 'Burundi' },
+    { value: 'KH', label: 'Cambodia' },
+    { value: 'CM', label: 'Cameroon' },
+    { value: 'CV', label: 'Cape Verde' },
+    { value: 'CF', label: 'Central African Republic' },
+    { value: 'TD', label: 'Chad' },
+    { value: 'KM', label: 'Comoros' },
+    { value: 'CG', label: 'Congo' },
+    { value: 'CR', label: 'Costa Rica' },
+    { value: 'CU', label: 'Cuba' },
+    { value: 'DJ', label: 'Djibouti' },
+    { value: 'DM', label: 'Dominica' },
+    { value: 'DO', label: 'Dominican Republic' },
+    { value: 'EG', label: 'Egypt' },
+    { value: 'SV', label: 'El Salvador' },
+    { value: 'GQ', label: 'Equatorial Guinea' },
+    { value: 'ER', label: 'Eritrea' },
+    { value: 'ET', label: 'Ethiopia' },
+    { value: 'FJ', label: 'Fiji' },
+    { value: 'GA', label: 'Gabon' },
+    { value: 'GM', label: 'Gambia' },
+    { value: 'GE', label: 'Georgia' },
+    { value: 'GH', label: 'Ghana' },
+    { value: 'GD', label: 'Grenada' },
+    { value: 'GT', label: 'Guatemala' },
+    { value: 'GN', label: 'Guinea' },
+    { value: 'GW', label: 'Guinea-Bissau' },
+    { value: 'HT', label: 'Haiti' },
+    { value: 'HN', label: 'Honduras' },
+    { value: 'ID', label: 'Indonesia' },
+    { value: 'IR', label: 'Iran' },
+    { value: 'IQ', label: 'Iraq' },
+    { value: 'IL', label: 'Israel' },
+    { value: 'JM', label: 'Jamaica' },
+    { value: 'JO', label: 'Jordan' },
+    { value: 'KZ', label: 'Kazakhstan' },
+    { value: 'KE', label: 'Kenya' },
+    { value: 'KI', label: 'Kiribati' },
+    { value: 'KP', label: 'North Korea' },
+    { value: 'KW', label: 'Kuwait' },
+    { value: 'KG', label: 'Kyrgyzstan' },
+    { value: 'LA', label: 'Laos' },
+    { value: 'LB', label: 'Lebanon' },
+    { value: 'LS', label: 'Lesotho' },
+    { value: 'LR', label: 'Liberia' },
+    { value: 'LY', label: 'Libya' },
+    { value: 'LI', label: 'Liechtenstein' },
+    { value: 'MK', label: 'North Macedonia' },
+    { value: 'MG', label: 'Madagascar' },
+    { value: 'MW', label: 'Malawi' },
+    { value: 'MY', label: 'Malaysia' },
+    { value: 'MV', label: 'Maldives' },
+    { value: 'ML', label: 'Mali' },
+    { value: 'MH', label: 'Marshall Islands' },
+    { value: 'MR', label: 'Mauritania' },
+    { value: 'MU', label: 'Mauritius' },
+    { value: 'FM', label: 'Micronesia' },
+    { value: 'MD', label: 'Moldova' },
+    { value: 'MC', label: 'Monaco' },
+    { value: 'MN', label: 'Mongolia' },
+    { value: 'ME', label: 'Montenegro' },
+    { value: 'MA', label: 'Morocco' },
+    { value: 'MZ', label: 'Mozambique' },
+    { value: 'MM', label: 'Myanmar' },
+    { value: 'NA', label: 'Namibia' },
+    { value: 'NR', label: 'Nauru' },
+    { value: 'NP', label: 'Nepal' },
+    { value: 'NI', label: 'Nicaragua' },
+    { value: 'NE', label: 'Niger' },
+    { value: 'NG', label: 'Nigeria' },
+    { value: 'OM', label: 'Oman' },
+    { value: 'PK', label: 'Pakistan' },
+    { value: 'PW', label: 'Palau' },
+    { value: 'PS', label: 'Palestine' },
+    { value: 'PA', label: 'Panama' },
+    { value: 'PG', label: 'Papua New Guinea' },
+    { value: 'PH', label: 'Philippines' },
+    { value: 'QA', label: 'Qatar' },
+    { value: 'RU', label: 'Russia' },
+    { value: 'RW', label: 'Rwanda' },
+    { value: 'KN', label: 'Saint Kitts and Nevis' },
+    { value: 'LC', label: 'Saint Lucia' },
+    { value: 'VC', label: 'Saint Vincent and the Grenadines' },
+    { value: 'WS', label: 'Samoa' },
+    { value: 'SM', label: 'San Marino' },
+    { value: 'ST', label: 'Sao Tome and Principe' },
+    { value: 'SA', label: 'Saudi Arabia' },
+    { value: 'SN', label: 'Senegal' },
+    { value: 'RS', label: 'Serbia' },
+    { value: 'SC', label: 'Seychelles' },
+    { value: 'SL', label: 'Sierra Leone' },
+    { value: 'SG', label: 'Singapore' },
+    { value: 'SB', label: 'Solomon Islands' },
+    { value: 'SO', label: 'Somalia' },
+    { value: 'ZA', label: 'South Africa' },
+    { value: 'SS', label: 'South Sudan' },
+    { value: 'LK', label: 'Sri Lanka' },
+    { value: 'SD', label: 'Sudan' },
+    { value: 'SZ', label: 'Eswatini' },
+    { value: 'SY', label: 'Syria' },
+    { value: 'TW', label: 'Taiwan' },
+    { value: 'TJ', label: 'Tajikistan' },
+    { value: 'TZ', label: 'Tanzania' },
+    { value: 'TH', label: 'Thailand' },
+    { value: 'TL', label: 'Timor-Leste' },
+    { value: 'TG', label: 'Togo' },
+    { value: 'TO', label: 'Tonga' },
+    { value: 'TT', label: 'Trinidad and Tobago' },
+    { value: 'TN', label: 'Tunisia' },
+    { value: 'TR', label: 'Turkey' },
+    { value: 'TM', label: 'Turkmenistan' },
+    { value: 'TV', label: 'Tuvalu' },
+    { value: 'UG', label: 'Uganda' },
+    { value: 'UA', label: 'Ukraine' },
+    { value: 'AE', label: 'United Arab Emirates' },
+    { value: 'UZ', label: 'Uzbekistan' },
+    { value: 'VU', label: 'Vanuatu' },
+    { value: 'VA', label: 'Vatican City' },
+    { value: 'VN', label: 'Vietnam' },
+    { value: 'YE', label: 'Yemen' },
+    { value: 'ZM', label: 'Zambia' },
+    { value: 'ZW', label: 'Zimbabwe' }
+  ];
+
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
@@ -297,6 +555,48 @@ const ContractsPage: React.FC = () => {
       } else {
         setEmailErrors(prev => ({ ...prev, [name]: false }));
       }
+    }
+  };
+
+  const handleCountrySearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setCountrySearchTerm(value);
+    
+    // Always show dropdown when user is typing
+    if (!showCountryDropdown) {
+      setShowCountryDropdown(true);
+    }
+  };
+
+  const scrollToSelectedCountry = () => {
+    if (showCountryDropdown && modalForm.country) {
+      setTimeout(() => {
+        const selectedElement = document.querySelector(`[data-country-value="${modalForm.country}"]`);
+        if (selectedElement) {
+          selectedElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  };
+
+  const handleStateSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setStateSearchTerm(value);
+    
+    // Always show dropdown when user is typing
+    if (!showStateDropdown) {
+      setShowStateDropdown(true);
+    }
+  };
+
+  const scrollToSelectedState = () => {
+    if (showStateDropdown && modalForm.state) {
+      setTimeout(() => {
+        const selectedElement = document.querySelector(`[data-state-value="${modalForm.state}"]`);
+        if (selectedElement) {
+          selectedElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+      }, 100);
     }
   };
 
@@ -325,6 +625,8 @@ const ContractsPage: React.FC = () => {
     } else {
       setShowNewContractForm(false);
       setModalStep(1);
+      setCountrySearchTerm('');
+      setStateSearchTerm('');
     }
   };
 
@@ -584,9 +886,15 @@ const ContractsPage: React.FC = () => {
   const [showContractTypeDropdown, setShowContractTypeDropdown] = useState(false);
   const [showPropertyTypeDropdown, setShowPropertyTypeDropdown] = useState(false);
   const [showMilestoneDropdown, setShowMilestoneDropdown] = useState(false);
+  const [showStateDropdown, setShowStateDropdown] = useState(false);
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  const [countrySearchTerm, setCountrySearchTerm] = useState('');
+  const [stateSearchTerm, setStateSearchTerm] = useState('');
   const contractTypeDropdownRef = useRef<HTMLDivElement>(null);
   const propertyTypeDropdownRef = useRef<HTMLDivElement>(null);
   const milestoneDropdownRef = useRef<HTMLDivElement>(null);
+  const stateDropdownRef = useRef<HTMLDivElement>(null);
+  const countryDropdownRef = useRef<HTMLDivElement>(null);
 
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
@@ -621,30 +929,87 @@ const ContractsPage: React.FC = () => {
     setCurrentDropdown(!currentDropdown);
   };
 
-  // Click outside handler for form dropdowns
+  // Click outside handler for form dropdowns (excluding country which has its own handler)
   React.useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as HTMLElement;
       const contractTypeDropdown = contractTypeDropdownRef.current;
       const milestoneDropdown = milestoneDropdownRef.current;
       const propertyTypeDropdown = propertyTypeDropdownRef.current;
+      const stateDropdown = stateDropdownRef.current;
       
       if (!contractTypeDropdown?.contains(target) && 
           !milestoneDropdown?.contains(target) && 
-          !propertyTypeDropdown?.contains(target)) {
+          !propertyTypeDropdown?.contains(target) &&
+          !stateDropdown?.contains(target)) {
         setShowContractTypeDropdown(false);
         setShowMilestoneDropdown(false);
         setShowPropertyTypeDropdown(false);
+        setShowStateDropdown(false);
       }
     }
 
-    if (showContractTypeDropdown || showMilestoneDropdown || showPropertyTypeDropdown) {
+    if (showContractTypeDropdown || showMilestoneDropdown || showPropertyTypeDropdown || showStateDropdown) {
       document.addEventListener('mousedown', handleClickOutside);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showContractTypeDropdown, showMilestoneDropdown, showPropertyTypeDropdown]);
+  }, [showContractTypeDropdown, showMilestoneDropdown, showPropertyTypeDropdown, showStateDropdown]);
+
+  // Separate click outside handler for country dropdown
+  React.useEffect(() => {
+    function handleCountryClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      const countryDropdown = countryDropdownRef.current;
+      
+      if (countryDropdown && !countryDropdown.contains(target)) {
+        setShowCountryDropdown(false);
+        setCountrySearchTerm('');
+      }
+    }
+
+    if (showCountryDropdown) {
+      document.addEventListener('mousedown', handleCountryClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleCountryClickOutside);
+    };
+  }, [showCountryDropdown]);
+
+  // Separate click outside handler for state dropdown
+  React.useEffect(() => {
+    function handleStateClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      const stateDropdown = stateDropdownRef.current;
+      
+      if (stateDropdown && !stateDropdown.contains(target)) {
+        setShowStateDropdown(false);
+        setStateSearchTerm('');
+      }
+    }
+
+    if (showStateDropdown) {
+      document.addEventListener('mousedown', handleStateClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleStateClickOutside);
+    };
+  }, [showStateDropdown]);
+
+  // Scroll to selected country when dropdown opens
+  useEffect(() => {
+    if (showCountryDropdown && modalForm.country && !countrySearchTerm) {
+      scrollToSelectedCountry();
+    }
+  }, [showCountryDropdown, modalForm.country, countrySearchTerm]);
+
+  // Scroll to selected state when dropdown opens
+  useEffect(() => {
+    if (showStateDropdown && modalForm.state && !stateSearchTerm) {
+      scrollToSelectedState();
+    }
+  }, [showStateDropdown, modalForm.state, stateSearchTerm]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -1137,12 +1502,12 @@ const ContractsPage: React.FC = () => {
 
   return (
     <>
-      <div className="space-y-4">
+      <div className="space-y-4 select-none">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0">
           <div className="pb-1">
-            <h1 className="text-[24px] md:text-[30px] font-bold text-black mb-0">Contracts</h1>
-            <p className="text-gray-500 text-[15px] md:text-[16px] mt-0">
+            <h1 className="text-[30px] font-bold text-black dark:text-white mb-0">Contracts</h1>
+            <p className="text-gray-500 text-[16px] mt-0">
               Manage & monitor all your contracts
             </p>
           </div>
@@ -1185,19 +1550,19 @@ const ContractsPage: React.FC = () => {
 
       {/* Stat Boxes or New Contract Modal */}
       {showNewContractForm ? (
-        <div className="bg-white rounded-xl border border-gray-300 px-6 py-4 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-300 dark:border-gray-700 px-6 py-4 mb-6 select-none">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
               <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-primary/10">
                 <HiOutlineDocumentText className="text-primary text-2xl" />
               </span>
               <div>
-                <h2 className="text-xl font-bold text-black leading-tight">Create New Contract</h2>
-                <p className="text-gray-500 text-sm leading-tight">Fill in the contract details to get started</p>
+                <h2 className="text-xl font-bold text-white leading-tight">Create New Contract</h2>
+                <p className="text-gray-500 text-sm leading-tight cursor-default select-none">Fill in the contract details to get started</p>
               </div>
             </div>
               <button
-              onClick={() => { setShowNewContractForm(false); setModalStep(1); }} 
+              onClick={() => { setShowNewContractForm(false); setModalStep(1); setCountrySearchTerm(''); setStateSearchTerm(''); }} 
               className="text-gray-400 hover:text-gray-600 p-2 rounded-full"
               >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1217,8 +1582,8 @@ const ContractsPage: React.FC = () => {
                       onClick={() => setModalStep(step)}
                       className={`flex items-center gap-2 rounded-xl font-semibold border transition-all duration-300 text-sm px-4 py-2 whitespace-nowrap
                         ${modalStep === step
-                          ? 'bg-white text-gray-900 border-gray-300 ring-1 ring-inset ring-gray-200 shadow-sm'
-                          : 'text-gray-500 border-transparent hover:bg-gray-100'
+                          ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 ring-1 ring-inset ring-gray-200 dark:ring-gray-600 shadow-sm'
+                          : 'text-gray-500 dark:text-gray-400 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700'
                         }`}
                     >
                       <span className={`inline-block transition-all duration-300 ${modalStep === step ? 'opacity-100 mr-2' : 'opacity-0 w-0 mr-0'}`} style={{width: modalStep === step ? 18 : 0}}>
@@ -1228,7 +1593,7 @@ const ContractsPage: React.FC = () => {
                       {step === 2 && 'Step 2: Parties'}
                       {step === 3 && 'Step 3: Documents'}
                     </button>
-                    {idx < 2 && <div className="flex-1 h-0.5 bg-gray-200 mx-2 min-w-[20px]" />}
+                    {idx < 2 && <div className="flex-1 h-0.5 bg-gray-200 dark:bg-gray-600 mx-2 min-w-[20px]" />}
                   </React.Fragment>
             ))}
           </div>
@@ -1241,55 +1606,65 @@ const ContractsPage: React.FC = () => {
               <form onSubmit={handleSubmit} noValidate>
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="title" className="block text-xs font-medium text-gray-500 mb-1">Contract Title</label>
+                    <label htmlFor="title" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Contract Title</label>
                     <input
                       type="text"
                       id="title"
                       name="title"
                       value={modalForm.title}
                       onChange={handleModalChange}
-                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs ${
-                        formErrors.title ? 'border-red-300' : 'border-gray-200'
+                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white dark:border-gray-600 ${
+                        formErrors.title ? 'border-red-300' : 'border-gray-200 dark:border-gray-600'
                       }`}
                       placeholder="Enter contract title"
                       required
                     />
                     {formErrors.title && (
-                      <p className="mt-1 text-xs text-red-600 font-medium">Please fill out this field</p>
+                      <p className="mt-1 text-xs text-red-600 font-medium cursor-default select-none">Please fill out this field</p>
                     )}
                   </div>
                   <div>
-                    <label htmlFor="escrowNumber" className="block text-xs font-medium text-gray-500 mb-1">Escrow Number</label>
+                    <label htmlFor="escrowNumber" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Escrow Number</label>
                     <input
                       type="text"
                       id="escrowNumber"
                       name="escrowNumber"
                       value={modalForm.escrowNumber}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white"
                       placeholder="Enter escrow number"
                     />
                   </div>
                   <div>
-                    <label htmlFor="type" className="block text-xs font-medium text-gray-500 mb-1">Contract Type</label>
+                    <label htmlFor="type" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Contract Type</label>
                     <div className="relative w-full" ref={contractTypeDropdownRef}>
                       <input
                         type="text"
-                        className={`w-full px-3 py-2 border-2 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white ${
-                          formErrors.type ? 'border-red-300' : 'border-gray-200'
-                        }`}
+                        className={`w-full px-3 py-2 border-2 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white dark:bg-gray-800 ${
+                          formErrors.type ? 'border-red-300' : 'border-gray-200 dark:border-gray-600'
+                        } caret-transparent`}
                         placeholder="Select contract type"
                         value={CONTRACT_TYPES.find(t => t === modalForm.type) || ''}
                         readOnly
+                        onKeyDown={(e) => {
+                          if (e.key === 'Backspace') {
+                            e.preventDefault();
+                            setModalForm(prev => ({ ...prev, type: '' }));
+                          }
+                        }}
+                        onFocus={(e) => {
+                          // Move cursor to end of text when focused
+                          e.target.setSelectionRange(e.target.value.length, e.target.value.length);
+                        }}
                         onClick={(e) => handleDropdownClick(e, showContractTypeDropdown, setShowContractTypeDropdown, [setShowMilestoneDropdown, setShowPropertyTypeDropdown])}
                       />
                       <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                       {showContractTypeDropdown && (
-                        <div className="absolute left-0 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                        <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                           {CONTRACT_TYPES.map(type => (
                             <button
                               key={type}
-                              className={`w-full text-left px-3 py-0.5 text-xs font-medium ${modalForm.type === type ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`}
+                              className={`w-full text-left px-3 py-0.5 text-xs font-medium ${modalForm.type === type ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                               onClick={e => {
                                 e.preventDefault();
                                 setModalForm(prev => ({ ...prev, type }));
@@ -1304,27 +1679,37 @@ const ContractsPage: React.FC = () => {
                       )}
                     </div>
                     {formErrors.type && (
-                      <p className="mt-1 text-xs text-red-600 font-medium">Please select a contract type</p>
+                      <p className="mt-1 text-xs text-red-600 font-medium cursor-default select-none">Please select a contract type</p>
                     )}
                   </div>
                   <div>
-                    <label htmlFor="propertyType" className="block text-xs font-medium text-gray-500 mb-1">Property Type</label>
+                    <label htmlFor="propertyType" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Property Type</label>
                     <div className="relative w-full" ref={propertyTypeDropdownRef}>
                       <input
                         type="text"
-                        className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white"
+                        className={`w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white dark:bg-gray-800 caret-transparent`}
                         placeholder="Select property type"
                         value={PROPERTY_TYPES.find(t => t === modalForm.propertyType) || ''}
                         readOnly
+                        onKeyDown={(e) => {
+                          if (e.key === 'Backspace') {
+                            e.preventDefault();
+                            setModalForm(prev => ({ ...prev, propertyType: '' }));
+                          }
+                        }}
+                        onFocus={(e) => {
+                          // Move cursor to end of text when focused
+                          e.target.setSelectionRange(e.target.value.length, e.target.value.length);
+                        }}
                         onClick={(e) => handleDropdownClick(e, showPropertyTypeDropdown, setShowPropertyTypeDropdown, [setShowContractTypeDropdown, setShowMilestoneDropdown])}
                       />
                       <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                       {showPropertyTypeDropdown && (
-                        <div className="absolute left-0 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                        <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                           {PROPERTY_TYPES.map(type => (
                             <button
                               key={type}
-                              className={`w-full text-left px-3 py-0.5 text-xs font-medium ${modalForm.propertyType === type ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`}
+                              className={`w-full text-left px-3 py-0.5 text-xs font-medium ${modalForm.propertyType === type ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                               onClick={e => {
                                 e.preventDefault();
                                 setModalForm(prev => ({ ...prev, propertyType: type }));
@@ -1339,23 +1724,33 @@ const ContractsPage: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="milestone" className="block text-xs font-medium text-gray-500 mb-1">Milestone Template</label>
+                    <label htmlFor="milestone" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Milestone Template</label>
                     <div className="relative w-full" ref={milestoneDropdownRef}>
                       <input
                         type="text"
-                        className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white"
+                        className={`w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white dark:bg-gray-800 caret-transparent`}
                         placeholder="Select milestone template"
                         value={MILESTONE_TEMPLATES.find(t => t === modalForm.milestone) || ''}
                         readOnly
+                        onKeyDown={(e) => {
+                          if (e.key === 'Backspace') {
+                            e.preventDefault();
+                            setModalForm(prev => ({ ...prev, milestone: '' }));
+                          }
+                        }}
+                        onFocus={(e) => {
+                          // Move cursor to end of text when focused
+                          e.target.setSelectionRange(e.target.value.length, e.target.value.length);
+                        }}
                         onClick={(e) => handleDropdownClick(e, showMilestoneDropdown, setShowMilestoneDropdown, [setShowContractTypeDropdown, setShowPropertyTypeDropdown])}
                       />
                       <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                       {showMilestoneDropdown && (
-                        <div className="absolute left-0 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                        <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                           {MILESTONE_TEMPLATES.map(template => (
                             <button
                               key={template}
-                              className={`w-full text-left px-3 py-0.5 text-xs font-medium ${modalForm.milestone === template ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'}`}
+                              className={`w-full text-left px-3 py-0.5 text-xs font-medium ${modalForm.milestone === template ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                               onClick={e => {
                                 e.preventDefault();
                                 setModalForm(prev => ({ ...prev, milestone: template }));
@@ -1370,61 +1765,199 @@ const ContractsPage: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="value" className="block text-xs font-medium text-gray-500 mb-1">Contract Value</label>
+                    <label htmlFor="value" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Contract Value</label>
                     <input
                       type="text"
                       id="value"
                       name="value"
                       value={modalForm.value}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white"
                       placeholder="Enter contract value"
                       required
                     />
                   </div>
                   <div>
-                    <label htmlFor="dueDate" className="block text-xs font-medium text-gray-500 mb-1">Due Date</label>
-                    <input
-                      type="date"
-                      id="dueDate"
-                      name="dueDate"
-                      value={modalForm.dueDate}
-                      onChange={handleModalChange}
-                      className={`w-full px-4 py-2 pr-3 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs text-black bg-white ${
-                        formErrors.dueDate ? 'border-red-300' : 'border-gray-200'
-                      }`}
-                      required
-                    />
+                    <label htmlFor="dueDate" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Due Date</label>
+                    <div className="relative">
+                      <input
+                        type="date"
+                        id="dueDate"
+                        name="dueDate"
+                        value={modalForm.dueDate}
+                        onChange={handleModalChange}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Backspace') {
+                            e.preventDefault();
+                            setModalForm(prev => ({ ...prev, dueDate: '' }));
+                          }
+                        }}
+                        className={`w-full px-4 py-2 pr-10 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs text-black dark:text-white bg-white dark:bg-gray-800 [&::-webkit-calendar-picker-indicator]:hidden ${
+                          formErrors.dueDate ? 'border-red-300' : 'border-gray-200 dark:border-gray-600'
+                        }`}
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => (document.getElementById('dueDate') as HTMLInputElement)?.showPicker()}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 flex items-center justify-center"
+                      >
+                        <LuCalendarFold className="w-4 h-4 text-white" />
+                      </button>
+                    </div>
                     {formErrors.dueDate && (
-                      <p className="mt-1 text-xs text-red-600 font-medium">Please select a due date</p>
+                      <p className="mt-1 text-xs text-red-600 font-medium cursor-default select-none">Please select a due date</p>
                     )}
                   </div>
                 </div>
-                <div className="mt-6">
-                  <label htmlFor="propertyAddress" className="block text-xs font-medium text-gray-500 mb-1">Property Address</label>
-                  <input
-                    type="text"
-                    id="propertyAddress"
-                    name="propertyAddress"
-                    value={modalForm.propertyAddress}
-                    onChange={handleModalChange}
-                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
-                    placeholder="Enter property address"
-                  />
+                <div className="grid grid-cols-2 gap-6 mt-6">
+                  <div>
+                    <label htmlFor="propertyAddress" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Address</label>
+                    <input
+                      type="text"
+                      id="propertyAddress"
+                      name="propertyAddress"
+                      value={modalForm.propertyAddress}
+                      onChange={handleModalChange}
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white"
+                      placeholder="Enter address"
+                    />
+                  </div>
+                  <div></div>
+                  <div>
+                    <label htmlFor="city" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">City</label>
+                    <input
+                      type="text"
+                      id="city"
+                      name="city"
+                      value={modalForm.city}
+                      onChange={handleModalChange}
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white"
+                      placeholder="Enter city"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="state" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">State</label>
+                    <div className="relative w-full" ref={stateDropdownRef}>
+                      <input
+                        type="text"
+                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 bg-white dark:bg-gray-800"
+                        placeholder="Select State"
+                        value={stateSearchTerm || US_STATES.find(s => s.value === modalForm.state)?.label || ''}
+                        onChange={handleStateSearch}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Backspace' && !stateSearchTerm) {
+                            e.preventDefault();
+                            setModalForm(prev => ({ ...prev, state: '' }));
+                          }
+                        }}
+                        onFocus={(e) => {
+                          // Show dropdown when focused
+                          if (!showStateDropdown) {
+                            setShowStateDropdown(true);
+                          }
+                        }}
+                      />
+                      <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      {showStateDropdown && (
+                        <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                          {US_STATES
+                            .filter(state => 
+                              state.label.toLowerCase().includes(stateSearchTerm.toLowerCase())
+                            )
+                            .map(state => (
+                            <button
+                              key={state.value}
+                              data-state-value={state.value}
+                              className={`w-full text-left px-3 py-0.5 text-xs font-medium ${modalForm.state === state.value ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                              onClick={e => {
+                                e.preventDefault();
+                                setModalForm(prev => ({ ...prev, state: state.value }));
+                                setShowStateDropdown(false);
+                                setStateSearchTerm('');
+                              }}
+                            >
+                              {state.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <label htmlFor="zipCode" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Zip Code</label>
+                    <input
+                      type="text"
+                      id="zipCode"
+                      name="zipCode"
+                      value={modalForm.zipCode}
+                      onChange={handleModalChange}
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white"
+                      placeholder="Enter zip code"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="country" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Country</label>
+                    <div className="relative w-full" ref={countryDropdownRef}>
+                      <input
+                        type="text"
+                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 bg-white dark:bg-gray-800"
+                        placeholder="Select Country"
+                        value={countrySearchTerm || COUNTRIES.find(c => c.value === modalForm.country)?.label || ''}
+                        onChange={handleCountrySearch}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Backspace' && !countrySearchTerm) {
+                            e.preventDefault();
+                            setModalForm(prev => ({ ...prev, country: '' }));
+                          }
+                        }}
+                        onFocus={(e) => {
+                          // Show dropdown when focused
+                          if (!showCountryDropdown) {
+                            setShowCountryDropdown(true);
+                          }
+                        }}
+                      />
+                      <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      {showCountryDropdown && (
+                        <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                          {COUNTRIES
+                            .filter(country => 
+                              country.label.toLowerCase().includes(countrySearchTerm.toLowerCase())
+                            )
+                            .map(country => (
+                            <button
+                              key={country.value}
+                              data-country-value={country.value}
+                              className={`w-full text-left px-3 py-0.5 text-xs font-medium ${modalForm.country === country.value ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                              onClick={e => {
+                                e.preventDefault();
+                                setModalForm(prev => ({ ...prev, country: country.value }));
+                                setShowCountryDropdown(false);
+                                setCountrySearchTerm('');
+                              }}
+                            >
+                              {country.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 <div className="mt-6">
-                  <label htmlFor="notes" className="block text-xs font-medium text-gray-500 mb-1">Notes (Optional)</label>
+                  <label htmlFor="notes" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Notes (Optional)</label>
                   <textarea
                     id="notes"
                     name="notes"
                     value={modalForm.notes}
                     onChange={handleModalChange}
-                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs min-h-[120px]"
+                    className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs min-h-[120px] dark:bg-gray-800 dark:text-white"
                     placeholder="Enter any additional notes for this contract"
                   />
                 </div>
                 <div className="flex justify-end mt-6">
-                  <button type="submit" className="px-6 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-base">Next</button>
+                  <button type="submit" className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm">Next</button>
         </div>
               </form>
             )}
@@ -1433,254 +1966,269 @@ const ContractsPage: React.FC = () => {
               <form onSubmit={handleSubmit} noValidate>
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="buyer" className="block text-xs font-medium text-gray-500 mb-1">Buyer / Client</label>
+                    <label htmlFor="buyer" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Buyer / Client</label>
                     <input
                       type="text"
                       id="buyer"
                       name="buyer"
                       value={modalForm.buyer}
                       onChange={handleModalChange}
-                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs ${
-                        formErrors.buyer ? 'border-red-300' : 'border-gray-200'
+                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white ${
+                        formErrors.buyer ? 'border-red-300' : 'border-gray-200 dark:border-gray-600'
                       }`}
                       placeholder="Enter buyer or client name"
                       required
                     />
                     {formErrors.buyer && (
-                      <p className="mt-1 text-xs text-red-600 font-medium">Please fill out this field</p>
+                      <p className="mt-1 text-xs text-red-600 font-medium cursor-default select-none">Please fill out this field</p>
                     )}
                   </div>
                   <div>
-                    <label htmlFor="buyerEmail" className="block text-xs font-medium text-gray-500 mb-1">Buyer Email</label>
+                    <label htmlFor="buyerEmail" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Buyer Email</label>
                     <input
                       type="email"
                       id="buyerEmail"
                       name="buyerEmail"
                       value={modalForm.buyerEmail}
                       onChange={handleModalChange}
-                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs ${
-                        emailErrors.buyerEmail ? 'border-red-300' : 'border-gray-200'
+                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white ${
+                        emailErrors.buyerEmail ? 'border-red-300' : 'border-gray-200 dark:border-gray-600'
                       }`}
                       placeholder="Enter buyer email"
                       required
                     />
                     {emailErrors.buyerEmail && (
-                      <p className="mt-1 text-sm text-red-600">Please enter a valid email address</p>
+                      <p className="mt-1 text-sm text-red-600 cursor-default select-none">Please enter a valid email address</p>
                     )}
                   </div>
                   <div>
-                    <label htmlFor="seller" className="block text-xs font-medium text-gray-500 mb-1">Seller / Provider</label>
+                    <label htmlFor="seller" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Seller / Provider</label>
                     <input
                       type="text"
                       id="seller"
                       name="seller"
                       value={modalForm.seller}
                       onChange={handleModalChange}
-                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs ${
-                        formErrors.seller ? 'border-red-300' : 'border-gray-200'
+                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white ${
+                        formErrors.seller ? 'border-red-300' : 'border-gray-200 dark:border-gray-600'
                       }`}
                       placeholder="Enter seller or provider name"
                       required
                     />
                     {formErrors.seller && (
-                      <p className="mt-1 text-xs text-red-600 font-medium">Please fill out this field</p>
+                      <p className="mt-1 text-xs text-red-600 font-medium cursor-default select-none">Please fill out this field</p>
                     )}
                   </div>
                   <div>
-                    <label htmlFor="sellerEmail" className="block text-xs font-medium text-gray-500 mb-1">Seller Email</label>
+                    <label htmlFor="sellerEmail" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Seller Email</label>
                     <input
                       type="email"
                       id="sellerEmail"
                       name="sellerEmail"
                       value={modalForm.sellerEmail}
                       onChange={handleModalChange}
-                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs ${
-                        emailErrors.sellerEmail ? 'border-red-300' : 'border-gray-200'
+                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white ${
+                        emailErrors.sellerEmail ? 'border-red-300' : 'border-gray-200 dark:border-gray-600'
                       }`}
                       placeholder="Enter seller email"
                       required
                     />
                     {emailErrors.sellerEmail && (
-                      <p className="mt-1 text-sm text-red-600">Please enter a valid email address</p>
+                      <p className="mt-1 text-sm text-red-600 cursor-default select-none">Please enter a valid email address</p>
                     )}
                   </div>
                   <div>
-                    <label htmlFor="agent" className="block text-xs font-medium text-gray-500 mb-1">Agent / Escrow Officer (Optional)</label>
+                    <label htmlFor="agent" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Agent / Escrow Officer (Optional)</label>
                     <input
                       type="text"
                       id="agent"
                       name="agent"
                       value={modalForm.agent}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white"
                       placeholder="Enter agent or escrow officer name"
                     />
                   </div>
                   <div>
-                    <label htmlFor="agentEmail" className="block text-xs font-medium text-gray-500 mb-1">Agent Email (Optional)</label>
+                    <label htmlFor="agentEmail" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Agent Email (Optional)</label>
                     <input
                       type="email"
                       id="agentEmail"
                       name="agentEmail"
                       value={modalForm.agentEmail}
                       onChange={handleModalChange}
-                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs ${
-                        emailErrors.agentEmail ? 'border-red-300' : 'border-gray-200'
+                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white ${
+                        emailErrors.agentEmail ? 'border-red-300' : 'border-gray-200 dark:border-gray-600'
                       }`}
                       placeholder="Enter agent email"
                     />
                     {emailErrors.agentEmail && (
-                      <p className="mt-1 text-sm text-red-600">Please enter a valid email address</p>
+                      <p className="mt-1 text-sm text-red-600 cursor-default select-none">Please enter a valid email address</p>
                     )}
                   </div>
                   <div>
-                    <label htmlFor="lenderName" className="block text-xs font-medium text-gray-500 mb-1">Lender Name</label>
+                    <label htmlFor="lenderName" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Lender Name</label>
                     <input
                       type="text"
                       id="lenderName"
                       name="lenderName"
                       value={modalForm.lenderName}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white"
                       placeholder="Enter lender name"
                     />
                   </div>
                   <div>
-                    <label htmlFor="titleCompany" className="block text-xs font-medium text-gray-500 mb-1">Title Company</label>
+                    <label htmlFor="titleCompany" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Title Company</label>
                     <input
                       type="text"
                       id="titleCompany"
                       name="titleCompany"
                       value={modalForm.titleCompany}
                       onChange={handleModalChange}
-                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs ${
-                        formErrors.titleCompany ? 'border-red-300' : 'border-gray-200'
+                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white ${
+                        formErrors.titleCompany ? 'border-red-300' : 'border-gray-200 dark:border-gray-600'
                       }`}
                       placeholder="Enter title company name"
                       required
                     />
                     {formErrors.titleCompany && (
-                      <p className="mt-1 text-xs text-red-600 font-medium">Please fill out this field</p>
+                      <p className="mt-1 text-xs text-red-600 font-medium cursor-default select-none">Please fill out this field</p>
                     )}
                   </div>
                   <div>
-                    <label htmlFor="insuranceCompany" className="block text-xs font-medium text-gray-500 mb-1">Insurance Company</label>
+                    <label htmlFor="insuranceCompany" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Insurance Company</label>
                     <input
                       type="text"
                       id="insuranceCompany"
                       name="insuranceCompany"
                       value={modalForm.insuranceCompany}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white"
                       placeholder="Enter insurance company name"
                     />
                   </div>
                   <div>
-                    <label htmlFor="closingDate" className="block text-xs font-medium text-gray-500 mb-1">Expected Closing Date</label>
-                    <input
-                      type="date"
-                      id="closingDate"
-                      name="closingDate"
-                      value={modalForm.closingDate}
-                      onChange={handleModalChange}
-                      className={`w-full px-4 py-2 pr-3 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs text-black bg-white ${
-                        formErrors.closingDate ? 'border-red-300' : 'border-gray-200'
-                      }`}
-                      required
-                    />
+                    <label htmlFor="closingDate" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Expected Closing Date</label>
+                    <div className="relative">
+                      <input
+                        type="date"
+                        id="closingDate"
+                        name="closingDate"
+                        value={modalForm.closingDate}
+                        onChange={handleModalChange}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Backspace') {
+                            e.preventDefault();
+                            setModalForm(prev => ({ ...prev, closingDate: '' }));
+                          }
+                        }}
+                        className={`w-full px-4 py-2 pr-10 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs text-black dark:text-white bg-white dark:bg-gray-800 [&::-webkit-calendar-picker-indicator]:hidden ${
+                          formErrors.closingDate ? 'border-red-300' : 'border-gray-200 dark:border-gray-600'
+                        }`}
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => (document.getElementById('closingDate') as HTMLInputElement)?.showPicker()}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 flex items-center justify-center"
+                      >
+                        <LuCalendarFold className="w-4 h-4 text-white" />
+                      </button>
+                    </div>
                     {formErrors.closingDate && (
-                      <p className="mt-1 text-xs text-red-600 font-medium">Please select a closing date</p>
+                      <p className="mt-1 text-xs text-red-600 font-medium cursor-default select-none">Please select a closing date</p>
                     )}
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-6 mt-6">
                   <div>
-                    <label htmlFor="earnestMoney" className="block text-xs font-medium text-gray-500 mb-1">Earnest Money</label>
+                    <label htmlFor="earnestMoney" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Earnest Money</label>
                     <input
                       type="text"
                       id="earnestMoney"
                       name="earnestMoney"
                       value={modalForm.earnestMoney}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white"
                       placeholder="Enter earnest money amount"
                     />
                   </div>
                   <div>
-                    <label htmlFor="downPayment" className="block text-xs font-medium text-gray-500 mb-1">Down Payment</label>
+                    <label htmlFor="downPayment" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Down Payment</label>
                     <input
                       type="text"
                       id="downPayment"
                       name="downPayment"
                       value={modalForm.downPayment}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white"
                       placeholder="Enter down payment amount"
                     />
                   </div>
                   <div>
-                    <label htmlFor="loanAmount" className="block text-xs font-medium text-gray-500 mb-1">Loan Amount</label>
+                    <label htmlFor="loanAmount" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Loan Amount</label>
                     <input
                       type="text"
                       id="loanAmount"
                       name="loanAmount"
                       value={modalForm.loanAmount}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white"
                       placeholder="Enter loan amount"
                     />
                   </div>
                   <div>
-                    <label htmlFor="interestRate" className="block text-xs font-medium text-gray-500 mb-1">Interest Rate (%)</label>
+                    <label htmlFor="interestRate" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Interest Rate (%)</label>
                     <input
                       type="text"
                       id="interestRate"
                       name="interestRate"
                       value={modalForm.interestRate}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white"
                       placeholder="Enter interest rate"
                     />
                   </div>
                   <div>
-                    <label htmlFor="loanTerm" className="block text-xs font-medium text-gray-500 mb-1">Loan Term (Years)</label>
+                    <label htmlFor="loanTerm" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Loan Term (Years)</label>
                     <input
                       type="text"
                       id="loanTerm"
                       name="loanTerm"
                       value={modalForm.loanTerm}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white"
                       placeholder="Enter loan term"
                     />
                   </div>
                   <div>
-                    <label htmlFor="inspectionPeriod" className="block text-xs font-medium text-gray-500 mb-1">Inspection Period (Days)</label>
+                    <label htmlFor="inspectionPeriod" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Inspection Period (Days)</label>
                     <input
                       type="text"
                       id="inspectionPeriod"
                       name="inspectionPeriod"
                       value={modalForm.inspectionPeriod}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white"
                       placeholder="Enter inspection period"
                     />
                   </div>
                 </div>
                 <div className="mt-6">
-                  <label htmlFor="contingencies" className="block text-xs font-medium text-gray-500 mb-1">Contingencies</label>
+                  <label htmlFor="contingencies" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Contingencies</label>
                   <textarea
                     id="contingencies"
                     name="contingencies"
                     value={modalForm.contingencies}
                     onChange={handleModalChange}
-                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs min-h-[80px]"
+                    className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs min-h-[80px] dark:bg-gray-800 dark:text-white"
                     placeholder="Enter any contingencies for this contract"
                   />
                 </div>
                 <div className="flex justify-between mt-6">
-                  <button type="button" onClick={() => setModalStep(1)} className="px-6 py-2 rounded-lg border border-gray-300 bg-white text-gray-900 font-semibold hover:bg-gray-50 transition-colors text-base">Previous</button>
-                  <button type="submit" className="px-6 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-base">Next</button>
+                  <button type="button" onClick={() => { setModalStep(1); setCountrySearchTerm(''); setStateSearchTerm(''); }} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm">Previous</button>
+                  <button type="submit" className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm">Next</button>
                 </div>
               </form>
             )}
@@ -1689,12 +2237,12 @@ const ContractsPage: React.FC = () => {
               <form onSubmit={handleSubmit} noValidate>
                 <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Upload Documents (Optional)</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 cursor-default select-none">Upload Documents (Optional)</label>
                     <label htmlFor="file-upload" className="block cursor-pointer">
-                      <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 py-8 px-4 text-center transition hover:border-primary">
-                        <HiOutlineUpload className="text-3xl text-gray-400 mb-2" />
-                        <div className="text-gray-700 font-medium">Click to upload or drag and drop</div>
-                        <div className="text-xs text-gray-400 mt-1">PDF, DOC, DOCX, or JPG (max. 10MB each)</div>
+                      <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 py-8 px-4 text-center transition hover:border-primary">
+                        <HiOutlineUpload className="text-2xl text-gray-400 mb-2" />
+                        <div className="text-gray-700 dark:text-gray-300 font-medium cursor-default select-none">Click to upload or drag and drop</div>
+                        <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 cursor-default select-none">PDF, DOC, DOCX, or JPG (max. 10MB each)</div>
                         <input
                           id="file-upload"
                           name="file-upload"
@@ -1707,7 +2255,7 @@ const ContractsPage: React.FC = () => {
                       </div>
                     </label>
                     {uploadedFiles.length > 0 && (
-                      <ul className="mt-3 text-sm text-gray-600">
+                      <ul className="mt-3 text-sm text-gray-600 dark:text-gray-400 cursor-default select-none">
                         {uploadedFiles.map((file, idx) => (
                           <li key={idx} className="truncate">{file.name}</li>
                         ))}
@@ -1715,8 +2263,8 @@ const ContractsPage: React.FC = () => {
                     )}
                   </div>
                   <div className="flex justify-between">
-                    <button type="button" onClick={() => setModalStep(2)} className="px-6 py-2 rounded-lg border border-gray-300 bg-white text-gray-900 font-semibold hover:bg-gray-50 transition-colors text-base">Previous</button>
-                    <button type="submit" className="px-6 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-base">Create Contract</button>
+                    <button type="button" onClick={() => setModalStep(2)} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm cursor-default select-none">Previous</button>
+                    <button type="submit" className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm">Create Contract</button>
                   </div>
                 </div>
               </form>
@@ -1725,62 +2273,62 @@ const ContractsPage: React.FC = () => {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 select-none">
             {/* Total Contracts */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full">
               <div className="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center border-2 border-teal-200">
                 <HiOutlineDocumentText size={18} color="#06b6d4" />
               </div>
               <div className="flex flex-col items-start h-full">
-                <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contracts</p>
-                <p className="text-2xl font-bold text-gray-900">{mockContracts.length}</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contracts</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{mockContracts.length}</p>
                 <p className="text-xs invisible">placeholder</p>
               </div>
             </div>
             {/* Pending Signatures */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full">
               <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center border-2 border-purple-200">
                 <TbEdit size={20} color="#7c3aed" />
               </div>
               <div className="flex flex-col items-start h-full">
-                <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Pending Signatures</p>
-                <p className="text-2xl font-bold text-gray-900">{mockContracts.filter(contract => contract.status === 'Signatures').length}</p>
-                <p className="text-xs text-gray-400">Requires action</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Pending Signatures</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{mockContracts.filter(contract => contract.status === 'Signatures').length}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">Requires action</p>
               </div>
             </div>
             {/* Awaiting Wire Instructions */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full">
               <div className="h-10 w-10 rounded-lg bg-orange-100 flex items-center justify-center border-2 border-orange-200">
                 <PiBankBold size={20} color="#ea580c" />
               </div>
               <div className="flex flex-col items-start h-full">
-                <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Awaiting Wire Details</p>
-                <p className="text-2xl font-bold text-gray-900">{mockContracts.filter(contract => contract.status === 'Wire Details').length}</p>
-                <p className="text-xs text-gray-400">Needs attention</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Awaiting Wire Details</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{mockContracts.filter(contract => contract.status === 'Wire Details').length}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">Needs attention</p>
               </div>
             </div>
             {/* Avg. Completion Time */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full">
               <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center border-2 border-blue-200">
                 <TbClockUp size={20} color="#3b82f6" />
               </div>
               <div className="flex flex-col items-start h-full">
-                <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Average Completion Time</p>
-                <p className="text-2xl font-bold text-gray-900">3.2 days</p>
-                <p className="text-xs text-gray-400">Last 30 days</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Average Completion Time</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">3.2 days</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">Last 30 days</p>
               </div>
             </div>
 
           </div>
           {/* Total Contract Value Box */}
-          <div className="mb-6 bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
+          <div className="mb-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full select-none">
             <div className="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center border-2 border-teal-200">
               <GrMoney size={20} color="#06b6d4" />
             </div>
             <div className="flex flex-col items-start h-full">
-              <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contract Value</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contract Value</p>
               <p className="text-2xl font-bold text-primary">{calculateTotalValue()}</p>
-              <p className="text-xs text-green-600 font-semibold">↑ 12% from last month</p>
+              <p className="text-xs text-green-600 font-semibold cursor-default select-none">↑ 12% from last month</p>
             </div>
           </div>
         </>
@@ -1789,15 +2337,15 @@ const ContractsPage: React.FC = () => {
       <hr className="mb-6 border-gray-300" />
 
       {/* Search/Filter Bar */}
-      <div className="bg-white border border-gray-200 rounded-lg px-4 py-4 mb-6 flex items-center w-full mt-2">
-        <div className="flex items-center flex-1 bg-white border border-gray-200 rounded-lg px-4 py-2 min-w-0">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-4 mb-6 flex items-center w-full mt-2 select-none">
+        <div className="flex items-center flex-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 min-w-0">
           <FaSearch className="text-gray-400 mr-2" size={18} />
           <input
             type="text"
             placeholder="Search contracts, parties, documents or IDs"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 placeholder-gray-400 font-medium min-w-0"
+            className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 font-medium min-w-0"
             style={{ fontFamily: 'Avenir, sans-serif' }}
           />
         </div>
@@ -1805,7 +2353,7 @@ const ContractsPage: React.FC = () => {
           <div className="relative ml-1">
             <button
               ref={statusDropdownRef as any}
-              className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
+              className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
               style={{ fontFamily: 'Avenir, sans-serif' }}
               onClick={(e) => {
                 e.preventDefault();
@@ -1823,11 +2371,11 @@ const ContractsPage: React.FC = () => {
             </button>
             {showStatusDropdown && (
               <div 
-                className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-2 status-filter-dropdown" 
+                className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 status-filter-dropdown" 
                 style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
               >
                 <button
-                  className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                  className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center text-gray-700 dark:text-gray-300"
                   onClick={() => setSelectedStatuses(['All'])}
                 >
                   <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
@@ -1842,7 +2390,7 @@ const ContractsPage: React.FC = () => {
                 {availableStatuses.filter(status => status !== 'All').map(status => (
                   <button
                     key={status}
-                    className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                    className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center text-gray-700 dark:text-gray-300"
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
@@ -1879,7 +2427,7 @@ const ContractsPage: React.FC = () => {
             <div className="relative ml-1">
               <button
                 ref={contractButtonRef}
-                className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
+                className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
                 style={{ fontFamily: 'Avenir, sans-serif' }}
                 onClick={() => { setOpenContractDropdown(v => !v); setOpenAssigneeDropdown(false); setShowStatusDropdown(false); }}
               >
@@ -1889,19 +2437,19 @@ const ContractsPage: React.FC = () => {
               </button>
               {openContractDropdown && (
                 <div 
-                  className="absolute left-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-2 min-w-[400px] w-96 contract-dropdown" 
+                  className="absolute left-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[400px] w-96 contract-dropdown" 
                   style={{ fontFamily: 'Avenir, sans-serif' }}
                   onClick={(e) => e.stopPropagation()}
                 >
                   {/* Search Bar */}
-                  <div className="px-4 py-2 border-b border-gray-100">
+                  <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
                     <div className="relative">
                       <input
                         type="text"
                         placeholder="Search contracts..."
                         value={contractSearch}
                         onChange={(e) => setContractSearch(e.target.value)}
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-black dark:text-white bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       />
                       <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -1909,7 +2457,7 @@ const ContractsPage: React.FC = () => {
                   </div>
 
                   <button
-                    className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center"
+                    className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center text-gray-700 dark:text-gray-300"
                     onClick={() => setSelectedContracts([])}
                   >
                     <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
@@ -1929,7 +2477,7 @@ const ContractsPage: React.FC = () => {
                     .map(contract => (
                       <button
                         key={contract.id}
-                        className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center whitespace-nowrap truncate"
+                        className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center whitespace-nowrap truncate text-gray-700 dark:text-gray-300"
                         onClick={() => {
                           setSelectedContracts(prev => {
                             if (prev.includes(String(contract.id))) {
@@ -1956,7 +2504,7 @@ const ContractsPage: React.FC = () => {
             <div className="relative ml-1">
               <button
                 ref={assigneeButtonRef}
-                className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
+                className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
                 style={{ fontFamily: 'Avenir, sans-serif' }}
                 onClick={() => { setOpenAssigneeDropdown(v => !v); setOpenContractDropdown(false); setShowStatusDropdown(false); }}
               >
@@ -1966,11 +2514,11 @@ const ContractsPage: React.FC = () => {
               </button>
               {openAssigneeDropdown && (
                 <div 
-                  className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-2 assignee-dropdown" 
+                  className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 assignee-dropdown" 
                   style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
                 >
                   <button
-                    className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                    className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center text-gray-700 dark:text-gray-300"
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
@@ -1987,7 +2535,7 @@ const ContractsPage: React.FC = () => {
                     All
                   </button>
                   <button
-                    className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                    className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center text-gray-700 dark:text-gray-300"
                     onClick={() => {
                       setSelectedAssignees(prev => {
                         if (prev.includes('__ME__')) {
@@ -2010,7 +2558,7 @@ const ContractsPage: React.FC = () => {
                   {Array.from(new Set(sampleDocuments.map(doc => doc.assignee).filter((assignee): assignee is string => assignee !== undefined))).sort().map(assignee => (
                     <button
                       key={assignee}
-                      className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                      className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center text-gray-700 dark:text-gray-300"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -2038,7 +2586,7 @@ const ContractsPage: React.FC = () => {
             </div>
           </>
         )}
-        <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[150px] ml-1" style={{ fontFamily: 'Avenir, sans-serif' }}
+        <button className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs min-w-[150px] ml-1" style={{ fontFamily: 'Avenir, sans-serif' }}
           onClick={() => setLastUpdatedSort(prev => prev === 'desc' ? 'asc' : 'desc')}
         >
           <MdOutlineUpdate className="text-gray-400 w-4 h-4" />
@@ -2048,9 +2596,9 @@ const ContractsPage: React.FC = () => {
       </div>
 
       {/* Table Section with Tabs in Outlined Box */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 select-none">
         {/* Tabs Row with Divider */}
-        <div className="border-b border-gray-200">
+        <div className="border-b border-gray-200 dark:border-gray-700">
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0 w-full">
             {/* Contracts/Documents Tabs */}
             <div className="flex space-x-4 overflow-x-auto w-full md:w-auto">
@@ -2060,7 +2608,7 @@ const ContractsPage: React.FC = () => {
                   className={`pb-2 text-sm font-semibold whitespace-nowrap border-b-2 ${
                     activeContentTab === tab.key
                       ? 'text-primary border-primary'
-                      : 'text-gray-500 hover:text-gray-700 border-transparent'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 border-transparent'
                   }`}
                   onClick={() => setActiveContentTab(tab.key)}
                 >
@@ -2077,7 +2625,7 @@ const ContractsPage: React.FC = () => {
                     className={`pb-2 text-sm font-semibold whitespace-nowrap border-b-2 ${
                       activeTab === tab.key
                         ? 'text-primary border-primary'
-                        : 'text-gray-500 hover:text-gray-700 border-transparent'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 border-transparent'
                     }`}
                     onClick={() => setActiveTab(tab.key)}
                   >
@@ -2094,87 +2642,96 @@ const ContractsPage: React.FC = () => {
         {/* Table */}
         {activeContentTab === 'contractList' && (
           <div style={{ height: 'calc(10 * 3.5rem)', minHeight: '350px' }} className="relative overflow-x-auto overflow-y-auto mt-4">
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead>
                 <tr>
                   <th
-                    className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
                     onClick={handleIdSort}
                   >
                     ID
                   </th>
                   <th
-                    className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
                     onClick={handleContractSort}
                   >
                     Contract
                   </th>
                   <th
-                    className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
                     onClick={handlePartiesSort}
                   >
                     Parties
                   </th>
                   <th
-                    className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
                     onClick={handleStatusSort}
                   >
                     Status
                   </th>
                   <th
-                    className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
                     onClick={handleCreatedDateSort}
                   >
                     Created Date
                   </th>
                   <th
-                    className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
                     onClick={handleLastUpdatedSort}
                   >
                     Last Updated
                   </th>
                   <th
-                    className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
                     onClick={handleValueSort}
                   >
                     Value
                   </th>
-                  <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {sortedContracts.map((contract) => (
                   <tr
                     key={contract.id}
-                    className="hover:bg-gray-50 cursor-pointer"
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer select-none"
                     onClick={() => setSelectedContract(contract)}
                   >
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
                       <span className="text-primary underline font-semibold cursor-pointer" onClick={e => { e.stopPropagation(); setSelectedContract(contract); }}>{contract.id}</span>
                     </td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-sm">
-                      <div className="text-xs font-bold text-gray-900">{contract.title}</div>
+                      <div className="text-xs font-bold text-gray-900 dark:text-white">{contract.title}</div>
                     </td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-xs">
-                      <div className="text-gray-900">{contract.parties}</div>
+                      <div className="text-gray-900 dark:text-white">{contract.parties}</div>
                     </td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
                       <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full ${getStatusBadgeStyle(contract.status)}`}
                         style={{ minWidth: '7rem', display: 'inline-flex', borderWidth: '1px' }}>{contract.status}</span>
                     </td>
-                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs text-gray-500">2024-05-01</td>
-                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs text-gray-500">{contract.updated}</td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs text-gray-500 dark:text-gray-400">2024-05-01</td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs text-gray-500 dark:text-gray-400">{contract.updated}</td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs text-primary">{contract.value}</td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs font-medium">
                       <div className="flex items-center justify-center space-x-1">
-                        <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Edit">
-                          <TbEdit className="h-4 w-4" />
+                        <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
+                          <TbEdit className="h-4 w-4 transition-colors" />
+                          <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                            Edit
+                          </span>
                         </button>
-                        <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Upload" onClick={e => { e.stopPropagation(); setShowUploadModal(true); setUploadContractId(contract.id); }}>
-                          <HiOutlineUpload className="h-4 w-4" />
+                        <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group" onClick={e => { e.stopPropagation(); setShowUploadModal(true); setUploadContractId(contract.id); }}>
+                          <HiOutlineUpload className="h-4 w-4 transition-colors" />
+                          <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                            Upload
+                          </span>
                         </button>
-                        <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-red-500 hover:text-red-500 transition-colors" title="Delete" onClick={e => { e.stopPropagation(); /* Add your delete logic or confirmation modal here */ }}>
-                          <HiOutlineTrash className="h-4 w-4" />
+                        <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group" onClick={e => { e.stopPropagation(); /* Add your delete logic or confirmation modal here */ }}>
+                          <HiOutlineTrash className="h-4 w-4 transition-colors" />
+                          <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                            Delete
+                          </span>
                         </button>
                       </div>
                     </td>
@@ -2187,111 +2744,121 @@ const ContractsPage: React.FC = () => {
         {/* Documents tab/table */}
         {activeContentTab === 'documents' && (
           <div style={{ height: 'calc(10 * 3.5rem)', minHeight: '350px' }} className="relative overflow-x-auto overflow-y-auto mt-4">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
                   <th 
-                    className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
                     onClick={handleDocIdSort}
                   >
                     ID
                   </th>
                   <th 
-                    className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
                     onClick={handleDocNameSort}
                   >
                     Document
                   </th>
                   <th 
-                    className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
                     onClick={handleDocAssigneeSort}
                   >
                     Assignee
                   </th>
                   <th 
-                    className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
                     onClick={handleDocUploadedBySort}
                   >
                     Uploaded By
                   </th>
                   <th 
-                    className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
                     onClick={handleDocDateUploadedSort}
                   >
                     Upload Date
                   </th>
                   <th 
-                    className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
                     onClick={handleDocContractIdSort}
                   >
                     Contract ID
                   </th>
                   <th 
-                    className="sticky top-0 z-10 bg-gray-50 text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none"
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
                     onClick={handleDocContractSort}
                   >
                     Contract
                   </th>
-                  <th className="sticky top-0 z-10 bg-gray-50 text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {sortedDocuments.map((doc) => (
                   <tr 
                     key={doc.id} 
-                    className="hover:bg-gray-50 cursor-pointer"
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer select-none"
                     onClick={() => {
                       setSelectedDocument(doc);
                       setShowDocumentModal(true);
                     }}
                   >
-                    <td className="px-6 py-2.5 whitespace-nowrap text-xs text-gray-900 text-center">
+                    <td className="px-6 py-2.5 whitespace-nowrap text-xs text-gray-900 dark:text-white text-center">
                       <span className="text-primary underline font-semibold cursor-pointer">{doc.id}</span>
                     </td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-sm">
-                      <div className="font-bold text-xs text-gray-900">{doc.name}</div>
-                      <div className="text-xs text-gray-500 flex items-center gap-2">
+                      <div className="font-bold text-xs text-gray-900 dark:text-white">{doc.name}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
                         <span>{doc.type}</span>
                         <span>&bull;</span>
                         <span>{doc.size}</span>
                     </div>
                     </td>
-                    <td className="px-6 py-2.5 whitespace-nowrap text-xs text-gray-500">{doc.assignee}</td>
-                    <td className="px-6 py-2.5 whitespace-nowrap text-xs">{doc.uploadedBy}</td>
-                    <td className="px-6 py-2.5 whitespace-nowrap text-xs text-gray-500 text-center">{doc.dateUploaded}</td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">{doc.assignee}</td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-xs dark:text-white">{doc.uploadedBy}</td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400 text-center">{doc.dateUploaded}</td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
                       <a href={`#${doc.contractId}`} className="text-primary underline font-semibold cursor-pointer">{doc.contractId}</a>
                     </td>
-                    <td className="px-6 py-2.5 whitespace-nowrap text-xs font-bold text-gray-900">{doc.contractTitle}</td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-xs font-bold text-gray-900 dark:text-white">{doc.contractTitle}</td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs font-medium">
                       <div className="flex items-center justify-center space-x-1">
                         <button 
-                          className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" 
-                          title="View" 
+                          className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group" 
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedPdf({ name: doc.name, url: `/documents/${doc.name}`, id: doc.id });
                             setShowPdfViewer(true);
                           }}
                         >
-                          <HiOutlineEye className="h-4 w-4" />
+                          <HiOutlineEye className="h-4 w-4 transition-colors" />
+                          <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                            View
+                          </span>
                         </button>
                         <button 
-                          className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" 
-                          title="Edit"
+                          className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group" 
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedDocument(doc);
                             setShowDocumentModal(true);
                           }}
                         >
-                          <TbEdit className="h-4 w-4" />
+                          <TbEdit className="h-4 w-4 transition-colors" />
+                          <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                            Edit
+                          </span>
                         </button>
-                        <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Download">
-                          <HiOutlineDownload className="h-4 w-4" />
+                        <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
+                          <HiOutlineDownload className="h-4 w-4 transition-colors" />
+                          <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                            Download
+                          </span>
                         </button>
-                        <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-red-500 hover:text-red-500 transition-colors" title="Delete">
-                          <HiOutlineTrash className="h-4 w-4" />
+                        <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group">
+                          <HiOutlineTrash className="h-4 w-4 transition-colors" />
+                          <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                            Delete
+                          </span>
                         </button>
                     </div>
                     </td>
@@ -2308,9 +2875,9 @@ const ContractsPage: React.FC = () => {
     {/* Modal for contract details */}
     {selectedContract && (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-        <div className="relative bg-white rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden">
+        <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden">
           {/* Sticky Header with Download Summary and Close buttons */}
-          <div className="sticky top-0 z-40 bg-white px-6 py-4">
+          <div className="sticky top-0 z-40 bg-gray-50 dark:bg-gray-900 px-6 py-4">
             <div className="flex items-start justify-between">
               {/* Left: Contract ID and Status */}
               <div className="flex-1 min-w-0">
@@ -2369,13 +2936,13 @@ const ContractsPage: React.FC = () => {
                     // Calculate dynamic spacing for connectors
                     const connectorWidth = `calc((100% - ${steps.length * 48}px) / ${steps.length - 1})`;
                     return steps.map((step, idx) => {
-                      const isCompleted = idx <= currentIdx;
+                      const isCompleted = idx < currentIdx;
                       const isCurrent = idx === currentIdx;
                       return (
                         <div key={step.key} className="flex flex-col items-center" style={{ minWidth: 80, flex: 1 }}>
                           <div className="relative flex items-center justify-center" style={{ width: 48 }}>
                             <div className={`flex items-center justify-center rounded-full border-2 transition-all duration-300 w-8 h-8 text-sm font-bold
-                              ${isCompleted ? 'bg-primary border-primary text-white' : isCurrent ? 'bg-white border-primary text-primary' : 'bg-white border-gray-300 text-gray-400'}`}
+                              ${isCompleted ? 'bg-white border-gray-300 text-gray-500 dark:text-gray-400' : isCurrent ? 'bg-primary border-primary text-white' : 'bg-white border-gray-300 text-gray-400'}`}
                             >
                               {isCompleted ? (
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
@@ -2388,7 +2955,7 @@ const ContractsPage: React.FC = () => {
                               <div className="absolute top-1/2 left-full ml-0 h-1 -translate-y-1/2 z-0" style={{ width: connectorWidth, background: '#9ca3af' }} />
                             )}
                           </div>
-                          <div className={`mt-2 text-xs font-medium text-center ${isCurrent ? 'text-primary' : isCompleted ? 'text-gray-700' : 'text-gray-400'}`}>{step.label}</div>
+                          <div className={`mt-2 text-xs font-medium text-center ${isCurrent ? 'text-primary' : isCompleted ? 'text-gray-500 dark:text-gray-400' : 'text-gray-400'}`}>{step.label}</div>
                         </div>
                       );
                     });
@@ -2399,25 +2966,25 @@ const ContractsPage: React.FC = () => {
           </div>
           {/* Modal Content (scrollable) and Sticky Footer as siblings */}
           <div className="flex flex-col flex-1 min-h-0">
-            <div className="overflow-y-auto p-6 flex-1">
+            <div className="overflow-y-auto p-6 flex-1 bg-gray-50 dark:bg-gray-900 cursor-default">
               {/* Modal Content Grid: 2 columns */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full h-full min-h-0 -mt-2">
                 {/* LEFT COLUMN: Contract Details, Parties Involved, Wire Details */}
                 <div className="flex flex-col gap-6 w-full h-full min-h-0">
                   {/* Contract Details Box */}
-                  <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4">Contract Details</h3>
+                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 w-full cursor-default">
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Contract Details</h3>
                     <div className="grid grid-cols-2 gap-x-12 gap-y-4">
                       {/* Row 1: Contract ID and Hash */}
                       <div>
-                        <div className="text-gray-500 text-xs mb-1">Contract ID</div>
-                        <div className="text-xs text-black">{selectedContract.id}</div>
+                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Contract ID</div>
+                        <div className="text-xs text-black dark:text-white select-none cursor-default">{selectedContract.id}</div>
                       </div>
                       <div>
-                        <div className="text-gray-500 text-xs mb-1">Contract Hash</div>
+                        <div className="text-gray-500 text-xs mb-1 cursor-default select-none">Contract Hash</div>
                         <div className="flex items-center">
                           <span
-                            className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
+                            className="text-xs font-mono text-gray-900 dark:text-white truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200"
                             style={{ maxWidth: '120px' }}
                             title={getContractHash(selectedContract.id)}
                           >
@@ -2453,11 +3020,11 @@ const ContractsPage: React.FC = () => {
                       </div>
                       {/* Row 2: Contract Title and Type */}
                       <div>
-                        <div className="text-gray-500 text-xs mb-1">Contract Title</div>
+                        <div className="text-gray-500 text-xs mb-1 cursor-default select-none">Contract Title</div>
                         {isEditingTitle ? (
                           <input
                             type="text"
-                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                             value={editableTitle}
                             autoFocus
                             onChange={e => setEditableTitle(e.target.value)}
@@ -2478,7 +3045,7 @@ const ContractsPage: React.FC = () => {
                           />
                         ) : (
                           <div
-                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-gray-900 cursor-text hover:border-gray-300 transition-colors"
+                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 cursor-text hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
                             onClick={() => setIsEditingTitle(true)}
                             tabIndex={0}
                             onKeyDown={e => { if (e.key === 'Enter') setIsEditingTitle(true); }}
@@ -2488,44 +3055,42 @@ const ContractsPage: React.FC = () => {
                         )}
                       </div>
                       <div>
-                        <div className="text-gray-500 text-xs mb-1">Contract Type</div>
-                        <div className="w-full px-4 py-2 text-xs text-black -ml-4">
-                          {selectedType}
-                        </div>
+                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Contract Type</div>
+                        <div className="w-full px-4 py-2 text-xs text-black dark:text-white -ml-4 select-none cursor-default">{selectedType}</div>
                       </div>
                       {/* Status Row */}
                       <div>
-                        <div className="text-gray-500 text-xs mb-1">Status</div>
+                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Status</div>
                         <span className={`inline-flex items-center justify-center min-w-[130px] h-7 px-4 font-semibold rounded-full text-xs ${getStatusBadgeStyle(selectedContract.status)}`}>{selectedContract.status}</span>
                       </div>
                       <div></div>
                       {/* Row 3: Current Milestone and Next Step */}
                       <div>
-                        <div className="text-gray-500 text-xs mb-1">Current Milestone</div>
+                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Current Milestone</div>
                         <span className={`inline-flex items-center justify-center min-w-[130px] h-7 px-4 font-semibold rounded-full text-xs ${getStatusBadgeStyle('Wire Details')}`}>Wire Details</span>
                       </div>
                       <div>
-                        <div className="text-gray-500 text-xs mb-1">Next Milestone</div>
+                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Next Milestone</div>
                         <span className={`inline-flex items-center justify-center min-w-[130px] h-7 px-4 font-semibold rounded-full text-xs ${getStatusBadgeStyle('In Review')}`}>Document Review</span>
                       </div>
                       {/* Row 4: Created Date and Last Updated */}
                       <div className="col-span-2 grid grid-cols-2 gap-x-12">
                         <div>
-                          <div className="text-gray-500 text-xs mb-1">Created Date</div>
-                          <div className="text-xs text-black">2024-05-01</div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Created Date</div>
+                          <div className="text-xs text-black dark:text-white select-none cursor-default">2024-05-01</div>
                         </div>
                         <div>
-                          <div className="text-gray-500 text-xs mb-1">Last Updated</div>
-                          <div className="text-xs text-black">2024-05-02</div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Last Updated</div>
+                          <div className="text-xs text-black dark:text-white select-none cursor-default">2024-05-02</div>
                         </div>
                       </div>
                       {/* Row 5: Total Value */}
                       <div>
-                        <div className="text-gray-500 text-xs mb-1">Total Value</div>
+                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Total Value</div>
                         {isEditingValue ? (
                           <input
                             type="text"
-                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                             value={editableValue}
                             autoFocus
                             onChange={e => setEditableValue(e.target.value)}
@@ -2546,7 +3111,7 @@ const ContractsPage: React.FC = () => {
                           />
                         ) : (
                           <div
-                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-gray-900 cursor-text hover:border-gray-300 transition-colors"
+                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 cursor-text hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
                             onClick={() => setIsEditingValue(true)}
                             tabIndex={0}
                             onKeyDown={e => { if (e.key === 'Enter') setIsEditingValue(true); }}
@@ -2558,16 +3123,16 @@ const ContractsPage: React.FC = () => {
                     </div>
                   </div>
                   {/* Parties Involved Box */}
-                  <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4">Parties Involved</h3>
+                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 w-full cursor-default">
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Parties Involved</h3>
                     <div className="grid grid-cols-1 gap-y-4">
                       {/* Buyer */}
                       <div>
-                        <div className="text-gray-500 text-xs mb-1">Buyer / Client</div>
+                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Buyer / Client</div>
                         {isEditingBuyer ? (
                           <input
                             type="text"
-                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                             value={editableBuyer}
                             autoFocus
                             onChange={e => setEditableBuyer(e.target.value)}
@@ -2588,7 +3153,7 @@ const ContractsPage: React.FC = () => {
                           />
                         ) : (
                           <div
-                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-gray-900 cursor-text hover:border-gray-300 transition-colors"
+                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 cursor-text hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
                             onClick={() => setIsEditingBuyer(true)}
                             tabIndex={0}
                             onKeyDown={e => { if (e.key === 'Enter') setIsEditingBuyer(true); }}
@@ -2599,11 +3164,11 @@ const ContractsPage: React.FC = () => {
                       </div>
                       {/* Seller */}
                       <div>
-                        <div className="text-gray-500 text-xs mb-1">Seller / Provider</div>
+                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Seller / Provider</div>
                         {isEditingSeller ? (
                           <input
                             type="text"
-                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                             value={editableSeller}
                             autoFocus
                             onChange={e => setEditableSeller(e.target.value)}
@@ -2624,7 +3189,7 @@ const ContractsPage: React.FC = () => {
                           />
                         ) : (
                           <div
-                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-gray-900 cursor-text hover:border-gray-300 transition-colors"
+                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 cursor-text hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
                             onClick={() => setIsEditingSeller(true)}
                             tabIndex={0}
                             onKeyDown={e => { if (e.key === 'Enter') setIsEditingSeller(true); }}
@@ -2635,11 +3200,11 @@ const ContractsPage: React.FC = () => {
                       </div>
                       {/* Agent */}
                       <div>
-                        <div className="text-gray-500 text-xs mb-1">Agent / Escrow Officer</div>
+                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Agent / Escrow Officer</div>
                         {isEditingAgent ? (
                           <input
                             type="text"
-                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                             value={editableAgent}
                             autoFocus
                             onChange={e => setEditableAgent(e.target.value)}
@@ -2660,7 +3225,7 @@ const ContractsPage: React.FC = () => {
                           />
                         ) : (
                           <div
-                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-gray-900 cursor-text hover:border-gray-300 transition-colors"
+                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 cursor-text hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
                             onClick={() => setIsEditingAgent(true)}
                             tabIndex={0}
                             onKeyDown={e => { if (e.key === 'Enter') setIsEditingAgent(true); }}
@@ -2672,33 +3237,33 @@ const ContractsPage: React.FC = () => {
                     </div>
                   </div>
                   {/* Wire Details Box */}
-                  <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4">Wire Details</h3>
+                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 w-full cursor-default">
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Wire Details</h3>
                     <div className="grid grid-cols-1 gap-y-4">
                       {/* Routing Number */}
                       <div>
-                        <div className="text-gray-500 text-xs mb-1">Routing Number</div>
+                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Routing Number</div>
                         <input
                           type="text"
-                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                          className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white dark:bg-gray-900 text-black dark:text-white"
                           placeholder="Enter routing number"
                         />
                       </div>
                       {/* Account Number */}
                       <div>
-                        <div className="text-gray-500 text-xs mb-1">Account Number</div>
+                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Account Number</div>
                         <input
                           type="text"
-                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                          className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white dark:bg-gray-900 text-black dark:text-white"
                           placeholder="Enter account number"
                         />
                       </div>
                       {/* Bank Name */}
                       <div>
-                        <div className="text-gray-500 text-xs mb-1">Bank Name</div>
+                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Bank Name</div>
                         <input
                           type="text"
-                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                          className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white dark:bg-gray-900 text-black dark:text-white"
                           placeholder="Enter bank name"
                         />
                       </div>
@@ -2708,14 +3273,14 @@ const ContractsPage: React.FC = () => {
                 {/* RIGHT COLUMN: Documents, Signature Status, Tasks */}
                 <div className="flex flex-col gap-6 w-full h-full min-h-0">
                   {/* Documents Box */}
-                  <div ref={documentsBoxRef} className="bg-white border border-gray-200 rounded-lg p-6 w-full box-border">
+                  <div ref={documentsBoxRef} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 w-full box-border cursor-default">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-semibold text-gray-900 mb-4">Documents</h3>
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Documents</h3>
                       <button 
                         onClick={() => { setShowUploadModal(true); setUploadContractId(selectedContract?.id || null); }}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors" style={{ fontFamily: 'Avenir, sans-serif' }}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-primary text-gray-700 dark:text-white font-semibold text-xs hover:bg-gray-200 dark:hover:bg-primary-dark transition-colors" style={{ fontFamily: 'Avenir, sans-serif' }}
                       >
-                        <HiOutlineUpload className="text-base text-primary" /> Upload
+                        <HiOutlineUpload className="text-base text-primary dark:text-white" /> Upload
                       </button>
                     </div>
                     <div className="flex flex-col gap-3 overflow-y-auto mt-4" style={{ maxHeight: '352px' }}>
@@ -2726,18 +3291,18 @@ const ContractsPage: React.FC = () => {
                           <div className="flex items-center gap-3">
                             <HiOutlineDocumentText className="w-5 h-5 text-primary" />
                             <div>
-                              <div className="font-semibold text-xs text-black cursor-pointer hover:underline">{doc.name}</div>
-                              <div className="text-xs text-gray-500">{doc.dateUploaded} &bull; {doc.type} &bull; {doc.size}</div>
+                              <div className="font-semibold text-xs text-black hover:underline cursor-default">{doc.name}</div>
+                              <div className="text-xs text-gray-500 cursor-default">{doc.dateUploaded} &bull; {doc.type} &bull; {doc.size}</div>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="View" onClick={() => { setSelectedPdf({ name: doc.name, url: `/documents/${doc.name}`, id: doc.id }); setShowPdfViewer(true); }}>
+                            <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors bg-white dark:bg-gray-700" title="View" onClick={() => { setSelectedPdf({ name: doc.name, url: `/documents/${doc.name}`, id: doc.id }); setShowPdfViewer(true); }}>
                               <HiOutlineEye className="h-4 w-4" />
                             </button>
-                            <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Download">
+                            <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors bg-white dark:bg-gray-700" title="Download">
                               <HiOutlineDownload className="h-4 w-4" />
                             </button>
-                            <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-red-500 hover:text-red-500 transition-colors" title="Delete">
+                            <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-red-500 hover:text-red-500 transition-colors bg-white dark:bg-gray-700" title="Delete">
                               <HiOutlineTrash className="h-4 w-4" />
                             </button>
                           </div>
@@ -2746,8 +3311,8 @@ const ContractsPage: React.FC = () => {
                     </div>
                   </div>
                   {/* Signature Status Box */}
-                  <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4">Signature Status</h3>
+                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 w-full cursor-default">
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Signature Status</h3>
                     <div className="flex flex-col gap-3">
                       {/* Use contract parties for signature status */}
                       {[
@@ -2779,18 +3344,18 @@ const ContractsPage: React.FC = () => {
                     </div>
                   </div>
                   {/* Tasks Box */}
-                  <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
+                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 w-full cursor-default">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-sm font-semibold text-gray-900">Tasks</h3>
-                      <button className="flex items-center gap-2 px-2 py-1 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                        <span className="text-base font-bold text-primary">+</span> New Task
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white cursor-default select-none">Tasks</h3>
+                      <button className="flex items-center gap-2 px-2 py-1 rounded-lg border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-primary text-gray-700 dark:text-white font-semibold text-xs hover:bg-gray-200 dark:hover:bg-primary-dark transition-colors" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                        <span className="text-base font-bold text-primary dark:text-white">+</span> New Task
                       </button>
                     </div>
                     <div className="flex flex-col gap-3 overflow-y-auto" style={{ maxHeight: '352px' }}>
                       {selectedContract ? (
                         getTasksByContract(selectedContract.id).length > 0 ? (
                           getTasksByContract(selectedContract.id).map(task => (
-                            <div key={task.id} className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm relative">
+                            <div key={task.id} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 p-4 shadow-sm relative">
                               {/* Task Number - Top Left */}
                               <div className="mb-3">
                                 <span className="text-[10px] font-bold bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-200">
@@ -2810,12 +3375,12 @@ const ContractsPage: React.FC = () => {
                               </button>
 
                               {/* Task Title */}
-                              <h3 className="text-xs font-bold text-gray-900 mb-2">{task.title}</h3>
+                              <h3 className="text-xs font-bold text-gray-900 mb-2 cursor-default">{task.title}</h3>
 
                               {/* Due Date and Status */}
                               <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-1">
-                                  <LuCalendarClock className="text-gray-400 text-sm" />
+                                  <LuCalendarFold className="text-gray-400 text-sm" />
                                   <span className="text-xs text-gray-500">{formatDatePretty(task.due)}</span>
                     </div>
                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${getTaskStatusBadgeStyle(task.status)}`}>
@@ -2841,8 +3406,8 @@ const ContractsPage: React.FC = () => {
 
                               {/* Assignee and Progress */}
                               <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-900">{task.assignee}</span>
-                                <span className="text-xs text-gray-900">{(() => {
+                                <span className="text-xs text-gray-900 cursor-default">{task.assignee}</span>
+                                <span className="text-xs text-gray-900 cursor-default">{(() => {
                                   const taskSubtasks = task.subtasks || [];
                                   const completed = taskSubtasks.filter(st => st.completed).length;
                                   return `${completed} of ${taskSubtasks.length}`;
@@ -2851,13 +3416,13 @@ const ContractsPage: React.FC = () => {
                             </div>
                           ))
                         ) : (
-                          <div className="text-center py-8 text-gray-500 text-sm">
-                            No tasks for this contract. Click "New Task" to add one.
+                          <div className="text-center py-8 text-gray-500 text-sm cursor-default select-none">
+                            <span className="text-xs text-gray-500 cursor-default select-none">No tasks for this contract. Click "New Task" to add one.</span>
                           </div>
                         )
                       ) : (
-                        <div className="text-center py-8 text-gray-500 text-sm">
-                          Select a contract to view its tasks.
+                        <div className="text-center py-8 text-gray-500 text-sm cursor-default select-none">
+                          <span className="text-xs text-gray-500 cursor-default select-none">Select a contract to view its tasks.</span>
                         </div>
                       )}
                     </div>
@@ -2867,8 +3432,8 @@ const ContractsPage: React.FC = () => {
 
               {/* Comments Box - Full Width */}
               <div className="mt-6">
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-4">Comments</h3>
+                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 cursor-default">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Comments</h3>
                   
                   {/* Comment History */}
                   <div className="space-y-4 mb-4 max-h-[300px] overflow-y-auto pr-2">
@@ -2883,7 +3448,7 @@ const ContractsPage: React.FC = () => {
                             <span className="text-xs text-gray-500">{comment.timestamp}</span>
                           </div>
                           <div 
-                            className="text-xs text-gray-900 font-medium mb-2"
+                            className="text-xs text-gray-900 font-medium mb-2 select-none cursor-default"
                             dangerouslySetInnerHTML={{ __html: comment.content }}
                           />
                           <div className="flex items-center gap-3">
@@ -2921,15 +3486,18 @@ const ContractsPage: React.FC = () => {
                         {/* Toolbar */}
                         {commentEditor && (
                           <>
-                            <div className="flex gap-2 mb-2 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 items-center">
-                              <button onClick={() => commentEditor.chain().focus().toggleBold().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('bold') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'}`} title="Bold"><b>B</b></button>
-                              <button onClick={() => commentEditor.chain().focus().toggleItalic().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('italic') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'}`} title="Italic"><i>I</i></button>
-                              <button onClick={() => commentEditor.chain().focus().toggleUnderline().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('underline') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'}`} title="Underline"><u>U</u></button>
-                              <button onClick={() => commentEditor.chain().focus().toggleStrike().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('strike') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'}`} title="Strikethrough"><s>S</s></button>
-                              <button onClick={() => commentEditor.chain().focus().toggleBulletList().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('bulletList') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'}`} title="Bullet List">• List</button>
-                              <button onClick={() => commentEditor.chain().focus().toggleOrderedList().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('orderedList') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'}`} title="Numbered List">1. List</button>
-                              <button onClick={handlePostContractComment} className="ml-auto text-xs px-2 py-1 rounded transition-colors flex items-center group" title={editingContractCommentId ? "Update Comment" : "Post Comment"}>
-                                <LuSendHorizontal className="w-4 h-4 text-black group-hover:text-primary transition-colors" />
+                            <div className="flex gap-2 mb-2 bg-white dark:bg-gray-800 rounded-lg px-2 py-1 items-center">
+                              <button onClick={() => commentEditor.chain().focus().toggleBold().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('bold') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'}`} title="Bold"><b>B</b></button>
+                              <button onClick={() => commentEditor.chain().focus().toggleItalic().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('italic') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'}`} title="Italic"><i>I</i></button>
+                              <button onClick={() => commentEditor.chain().focus().toggleUnderline().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('underline') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'}`} title="Underline"><u>U</u></button>
+                              <button onClick={() => commentEditor.chain().focus().toggleStrike().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('strike') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'}`} title="Strikethrough"><s>S</s></button>
+                              <button onClick={() => commentEditor.chain().focus().toggleBulletList().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('bulletList') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'}`} title="Bullet List">• List</button>
+                              <button onClick={() => commentEditor.chain().focus().toggleOrderedList().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('orderedList') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'}`} title="Numbered List">1. List</button>
+                              <button onClick={handlePostContractComment} className="ml-auto -mr-4 text-xs px-2 py-1 rounded transition-colors flex items-center group relative" title="Send">
+                                <BiCommentAdd className="w-5 h-5 text-gray-700 dark:text-white group-hover:text-primary transition-colors" />
+                                <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                  Send
+                                </span>
                               </button>
                               {editingContractCommentId && (
                                 <button 
@@ -2943,10 +3511,10 @@ const ContractsPage: React.FC = () => {
                                 </button>
                               )}
                             </div>
-                            <div className="border-2 border-gray-200 rounded-lg bg-white focus-within:border-primary transition-colors">
+                            <div className="border-2 border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 focus-within:border-primary transition-colors">
                               <EditorContent
                                 editor={commentEditor}
-                                className="tiptap min-h-[48px] px-4 py-2 text-xs font-medium text-black font-sans outline-none"
+                                className="tiptap min-h-[48px] px-4 py-2 text-xs font-medium text-black dark:text-white font-sans outline-none"
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter' && !e.shiftKey) {
                                     e.preventDefault();
@@ -2963,11 +3531,11 @@ const ContractsPage: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="bg-white z-30 px-6 py-4 flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+            <div className="bg-gray-50 dark:bg-gray-900 z-30 px-6 py-4 flex flex-col md:flex-row md:justify-between md:items-center gap-3">
               <button
-                className="flex items-center gap-2 px-5 py-2 rounded-lg bg-gray-100 text-gray-700 font-semibold text-sm hover:bg-gray-200 transition-colors"
+                className="flex items-center gap-2 px-5 py-2 rounded-lg border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-primary text-gray-700 dark:text-white font-semibold text-sm hover:bg-gray-200 dark:hover:bg-primary-dark transition-colors"
               >
-                <HiOutlineClipboardList className="w-5 h-5 text-primary-dark" />
+                <HiOutlineClipboardList className="w-5 h-5 text-primary dark:text-white" />
                 Download Summary
               </button>
               <button
@@ -3014,7 +3582,7 @@ const ContractsPage: React.FC = () => {
             <div className="flex flex-col gap-4 mb-4">
               <div className="flex gap-4">
                 <div className="flex-1 w-0">
-                  <div className="text-gray-500 text-xs mb-1">File Source</div>
+                  <div className="text-gray-500 text-xs mb-1 cursor-default select-none">File Source</div>
                   <div className="relative" ref={uploadDropdownRef}>
                     <button
                       type="button"
@@ -3135,8 +3703,8 @@ const ContractsPage: React.FC = () => {
             <label htmlFor="upload-modal-file-upload" className="block cursor-pointer">
               <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 py-8 px-4 text-center transition hover:border-primary">
                 <HiOutlineUpload className="h-4 w-4 text-gray-400 mb-2" />
-                <div className="text-xs text-gray-700 font-semibold">Click to upload or drag and drop</div>
-                <div className="text-[10px] text-gray-400 mt-1">PDF, DOC, DOCX, or JPG (max. 10MB each)</div>
+                <div className="text-xs text-gray-700 font-semibold cursor-default select-none">Click to upload or drag and drop</div>
+                <div className="text-[10px] text-gray-400 mt-1 cursor-default select-none">PDF, DOC, DOCX, or JPG (max. 10MB each)</div>
                 <input
                   id="upload-modal-file-upload"
                   name="upload-modal-file-upload"
@@ -3149,7 +3717,7 @@ const ContractsPage: React.FC = () => {
               </div>
             </label>
             {uploadModalFiles.length > 0 && (
-              <ul className="mt-3 text-sm text-gray-600">
+              <ul className="mt-3 text-sm text-gray-600 cursor-default select-none">
                 {uploadModalFiles.map((file, idx) => (
                   <li key={idx} className="truncate">{file.name}</li>
                 ))}
@@ -3186,7 +3754,7 @@ const ContractsPage: React.FC = () => {
           </div>
           <div className="flex-1 p-6 overflow-auto flex items-center justify-center bg-gray-50">
             {/* Blank area for PDF viewer */}
-            <span className="text-gray-400 text-lg">No document available</span>
+            <span className="text-gray-400 text-lg cursor-default select-none">PDF Viewer will be implemented here</span>
           </div>
         </div>
       </div>
@@ -3215,9 +3783,9 @@ const ContractsPage: React.FC = () => {
     {/* Document Details Modal */}
     {showDocumentModal && selectedDocument && (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-        <div className="relative bg-white rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden">
+        <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden">
           {/* Sticky Header with Document ID and Close buttons */}
-          <div className="sticky top-0 z-40 bg-white px-6 py-4">
+          <div className="sticky top-0 z-40 bg-white dark:bg-gray-900 px-6 py-4">
             <div className="flex items-start justify-between">
               {/* Left: Document ID and Status */}
               <div className="flex-1 min-w-0">
@@ -3245,19 +3813,19 @@ const ContractsPage: React.FC = () => {
               {/* Document Details and File Information Grid */}
               <div className="grid grid-cols-2 gap-6 mb-6">
                 {/* Document Details Box */}
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-4">Document Details</h3>
+                <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Document Details</h3>
                   <div className="grid grid-cols-2 gap-x-12 gap-y-4">
                             <div>
-                      <div className="text-gray-500 text-xs mb-1">Document ID</div>
-                      <div className="text-xs text-black mb-4">{selectedDocument.id}</div>
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Document ID</div>
+                      <div className="text-xs text-black dark:text-white">{selectedDocument.id}</div>
                             </div>
                     <div>
-                      <div className="text-gray-500 text-xs mb-1">Contract ID</div>
-                      <div className="text-xs text-black mb-4">{selectedDocument.contractId}</div>
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Contract ID</div>
+                      <div className="text-xs text-black dark:text-white">{selectedDocument.contractId}</div>
                           </div>
                     <div>
-                      <div className="text-gray-500 text-xs mb-1">Document Name</div>
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Document Name</div>
                       <input
                         type="text"
                         value={selectedDocument.name}
@@ -3265,16 +3833,16 @@ const ContractsPage: React.FC = () => {
                           const updatedDoc = { ...selectedDocument, name: e.target.value };
                           setSelectedDocument(updatedDoc);
                         }}
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       />
                     </div>
                     <div>
-                      <div className="text-gray-500 text-xs mb-1">Contract Name</div>
-                      <div className="text-xs text-black mb-4 pt-2">{selectedDocument.contractTitle}</div>
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Contract Name</div>
+                      <div className="text-xs text-black dark:text-white mb-4 pt-2">{selectedDocument.contractTitle}</div>
                     </div>
                     <div>
-                      <div className="text-gray-500 text-xs mb-1">Document Hash</div>
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Document Hash</div>
                       <div className="flex items-center">
                         <span
                           className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
@@ -3312,12 +3880,12 @@ const ContractsPage: React.FC = () => {
                       </div>
                     </div>
                     <div>
-                      <div className="text-gray-500 text-xs mb-1">Assignee</div>
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Assignee</div>
                       <div className="relative w-full" ref={documentDetailsAssigneeDropdownRef}>
                         <input
                           ref={documentDetailsAssigneeInputRef}
                           type="text"
-                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                          className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                           placeholder={selectedDocument?.assignee || 'Select assignee...'}
                           value={selectedDocument?.assignee || ''}
                           onChange={(e) => {
@@ -3330,7 +3898,7 @@ const ContractsPage: React.FC = () => {
                           autoComplete="off"
                         />
                         {showAssigneeDropdown && (
-                          <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                          <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-700 border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto" style={{ fontFamily: 'Avenir, sans-serif' }}>
                             {allAssignees.length > 0 ? (
                               allAssignees.map((assignee: string) => (
                                 <div
@@ -3356,34 +3924,34 @@ const ContractsPage: React.FC = () => {
                 </div>
 
                 {/* File Information Box */}
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-4">File Information</h3>
+                <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">File Information</h3>
                   <div className="grid grid-cols-2 gap-x-12 gap-y-4">
                     <div>
-                      <div className="text-gray-500 text-xs mb-1">Type</div>
-                      <div className="text-xs text-black mb-4">{selectedDocument.type}</div>
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Type</div>
+                      <div className="text-xs text-black dark:text-white mb-4">{selectedDocument.type}</div>
                     </div>
                     <div>
-                      <div className="text-gray-500 text-xs mb-1">Size</div>
-                      <div className="text-xs text-black mb-4">{selectedDocument.size}</div>
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Size</div>
+                      <div className="text-xs text-black dark:text-white mb-4">{selectedDocument.size}</div>
                     </div>
                     <div>
-                      <div className="text-gray-500 text-xs mb-1">Uploaded By</div>
-                      <div className="text-xs text-black mb-4">{selectedDocument.uploadedBy}</div>
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Uploaded By</div>
+                      <div className="text-xs text-black dark:text-white mb-4">{selectedDocument.uploadedBy}</div>
                     </div>
                     <div>
-                      <div className="text-gray-500 text-xs mb-1">Date Uploaded</div>
-                      <div className="text-xs text-black mb-4">{selectedDocument.dateUploaded}</div>
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Date Uploaded</div>
+                      <div className="text-xs text-black dark:text-white mb-4">{selectedDocument.dateUploaded}</div>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Document Preview Box - Full Width */}
-              <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
-                <h3 className="text-sm font-semibold text-gray-900 mb-4">Document Preview</h3>
+              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6 w-full cursor-default">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Document Preview</h3>
                 <div className="w-full h-[600px] bg-gray-50 rounded-lg flex items-center justify-center">
-                  <span className="text-gray-400 text-lg">PDF Viewer will be implemented here</span>
+                  <span className="text-gray-400 text-lg cursor-default select-none">PDF Viewer will be implemented here</span>
                 </div>
               </div>
             </div>
