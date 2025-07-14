@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaSearch, FaClock, FaSort, FaPlus, FaDollarSign, FaTimes, FaChevronDown, FaChevronUp, FaRegClock, FaCheck } from 'react-icons/fa';
 import { FaArrowUpRightFromSquare } from 'react-icons/fa6';
-import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutlineTrash, HiOutlineEye, HiOutlineClipboardList, HiOutlineExclamation, HiChevronDown, HiOutlineDocumentSearch, HiOutlineDocumentAdd, HiOutlineUpload } from 'react-icons/hi';
+import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutlineEye, HiOutlineEyeOff, HiOutlineClipboardList, HiOutlineExclamation, HiChevronDown, HiOutlineDocumentSearch, HiOutlineDocumentAdd, HiOutlineUpload, HiOutlineTrash } from 'react-icons/hi';
 import { HiOutlineViewBoards } from 'react-icons/hi';
 import { LuCalendarFold } from 'react-icons/lu';
 import { BiDotsHorizontal, BiCommentAdd } from 'react-icons/bi';
@@ -36,6 +36,8 @@ import { SlSocialDropbox } from 'react-icons/sl';
 import { FaCheckCircle } from 'react-icons/fa';
 import { RiUserSearchLine } from 'react-icons/ri';
 import { GrMoney } from 'react-icons/gr';
+import { LuPen } from 'react-icons/lu';
+import { TiUserAddOutline } from 'react-icons/ti';
 
 // Add date formatting utilities
 function formatDatePretty(dateStr: string): string {
@@ -240,6 +242,11 @@ const ContractsPage: React.FC = () => {
     interestRate: '',
     loanTerm: '',
     lenderName: '',
+    sellerFinancialInstitution: '',
+    buyerAccountNumber: '',
+    sellerAccountNumber: '',
+    buyerFinancialInstitutionRoutingNumber: '',
+    sellerFinancialInstitutionRoutingNumber: '',
     titleCompany: '',
     insuranceCompany: '',
     inspectionPeriod: '',
@@ -252,11 +259,235 @@ const ContractsPage: React.FC = () => {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [contracts, setContracts] = useState<Contract[]>(mockContracts);
 
+  // Routing number masking state
+  const [buyerRoutingDisplay, setBuyerRoutingDisplay] = useState('');
+  const [sellerRoutingDisplay, setSellerRoutingDisplay] = useState('');
+  const [contractRoutingDisplay, setContractRoutingDisplay] = useState('');
+  const [contractRoutingValue, setContractRoutingValue] = useState('');
+  
+  // Account number masking state
+  const [buyerAccountDisplay, setBuyerAccountDisplay] = useState('');
+  const [sellerAccountDisplay, setSellerAccountDisplay] = useState('');
+  const [contractAccountDisplay, setContractAccountDisplay] = useState('');
+  const [contractAccountValue, setContractAccountValue] = useState('');
+  
+  // Account number visibility state
+  const [buyerAccountVisible, setBuyerAccountVisible] = useState(false);
+  const [sellerAccountVisible, setSellerAccountVisible] = useState(false);
+  
+  // Refs to track timeouts for masking
+  const buyerRoutingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const sellerRoutingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const contractRoutingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const buyerAccountTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const sellerAccountTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const contractAccountTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Helper function to handle routing number masking (9 digits)
+  const handleRoutingNumberInput = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    currentActualValue: string,
+    setDisplayValue: (value: string) => void,
+    updateFormValue: (value: string) => void,
+    timeoutRef: React.MutableRefObject<NodeJS.Timeout | null>
+  ) => {
+    // Clear any existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    
+    const inputValue = e.target.value;
+    const inputElement = e.target;
+    
+    // Check if this is a backspace/delete operation
+    const isDeleting = inputValue.length < (currentActualValue.length > 0 ? currentActualValue.length : 1);
+    
+    if (isDeleting) {
+      // Handle deletion
+      const newValue = currentActualValue.slice(0, -1);
+      updateFormValue(newValue);
+      
+      if (newValue.length === 0) {
+        setDisplayValue('');
+      } else {
+        // Show all as asterisks when deleting
+        const maskedValue = newValue.split('').map(() => '*').join('');
+        setDisplayValue(maskedValue);
+      }
+      return;
+    }
+    
+    // Extract only the new digit(s) from the input
+    const newDigits = inputValue.replace(/\*/g, '').replace(/\D/g, '');
+    
+    // If we have new digits and haven't reached the limit
+    if (newDigits.length > 0 && currentActualValue.length < 9) {
+      // Take only the first new digit to add to our actual value
+      const digitToAdd = newDigits.slice(-1);
+      const newValue = (currentActualValue + digitToAdd).slice(0, 9);
+      
+      updateFormValue(newValue);
+      
+      // Create display value with asterisks for all but the last digit
+      const displayValue = newValue.split('').map((digit, index) => {
+        if (index === newValue.length - 1) {
+          // Show the last digit briefly
+          return digit;
+        } else {
+          // Show asterisk for previous digits
+          return '*';
+        }
+      }).join('');
+      
+      setDisplayValue(displayValue);
+      
+      // Set cursor position to end
+      setTimeout(() => {
+        inputElement.setSelectionRange(newValue.length, newValue.length);
+      }, 0);
+      
+      // After 1 second, mask the last digit too
+      timeoutRef.current = setTimeout(() => {
+        const maskedValue = newValue.split('').map(() => '*').join('');
+        setDisplayValue(maskedValue);
+        timeoutRef.current = null;
+      }, 1000);
+    }
+  };
+
+  // Helper function to handle account number masking (12 digits)
+  const handleAccountNumberInput = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    currentActualValue: string,
+    setDisplayValue: (value: string) => void,
+    updateFormValue: (value: string) => void,
+    timeoutRef: React.MutableRefObject<NodeJS.Timeout | null>
+  ) => {
+    // Clear any existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    
+    const inputValue = e.target.value;
+    const inputElement = e.target;
+    
+    // Check if this is a backspace/delete operation
+    const isDeleting = inputValue.length < (currentActualValue.length > 0 ? currentActualValue.length : 1);
+    
+    if (isDeleting) {
+      // Handle deletion
+      const newValue = currentActualValue.slice(0, -1);
+      updateFormValue(newValue);
+      
+      if (newValue.length === 0) {
+        setDisplayValue('');
+      } else {
+        // Show all as asterisks when deleting
+        const maskedValue = newValue.split('').map(() => '*').join('');
+        setDisplayValue(maskedValue);
+      }
+      return;
+    }
+    
+    // Extract only the new digit(s) from the input
+    const newDigits = inputValue.replace(/\*/g, '').replace(/\D/g, '');
+    
+    // If we have new digits and haven't reached the limit (12 digits for account numbers)
+    if (newDigits.length > 0 && currentActualValue.length < 12) {
+      // Take only the first new digit to add to our actual value
+      const digitToAdd = newDigits.slice(-1);
+      const newValue = (currentActualValue + digitToAdd).slice(0, 12);
+      
+      updateFormValue(newValue);
+      
+      // Create display value with asterisks for all but the last digit
+      const displayValue = newValue.split('').map((digit, index) => {
+        if (index === newValue.length - 1) {
+          // Show the last digit briefly
+          return digit;
+        } else {
+          // Show asterisk for previous digits
+          return '*';
+        }
+      }).join('');
+      
+      setDisplayValue(displayValue);
+      
+      // Set cursor position to end
+      setTimeout(() => {
+        inputElement.setSelectionRange(newValue.length, newValue.length);
+      }, 0);
+      
+      // After 1 second, mask the last digit too
+      timeoutRef.current = setTimeout(() => {
+        const maskedValue = newValue.split('').map(() => '*').join('');
+        setDisplayValue(maskedValue);
+        timeoutRef.current = null;
+      }, 1000);
+    }
+  };
+
   const [emailErrors, setEmailErrors] = useState({
     buyerEmail: false,
     sellerEmail: false,
     agentEmail: false,
   });
+
+  // Recipients state for Step 2
+  type Recipient = {
+    name: string;
+    email: string;
+    role: string;
+    signerRole: string;
+    showRoleDropdown: boolean;
+    showSignerRoleDropdown: boolean;
+    roleButtonRef: React.RefObject<HTMLButtonElement>;
+    roleDropdownRef: React.RefObject<HTMLDivElement>;
+    signerRoleButtonRef: React.RefObject<HTMLButtonElement>;
+    signerRoleDropdownRef: React.RefObject<HTMLDivElement>;
+  };
+
+  const [isOnlySigner, setIsOnlySigner] = useState(false);
+  const [recipients, setRecipients] = useState<Recipient[]>([
+    {
+      name: '',
+      email: '',
+      role: 'Needs to Sign',
+      signerRole: '',
+      showRoleDropdown: false,
+      showSignerRoleDropdown: false,
+      roleButtonRef: React.createRef<HTMLButtonElement>(),
+      roleDropdownRef: React.createRef<HTMLDivElement>(),
+      signerRoleButtonRef: React.createRef<HTMLButtonElement>(),
+      signerRoleDropdownRef: React.createRef<HTMLDivElement>(),
+    },
+  ]);
+
+  // Handler to add a new recipient card
+  const handleAddRecipient = () => {
+    setRecipients(prev => [
+      ...prev,
+      {
+        name: '',
+        email: '',
+        role: 'Needs to Sign',
+        signerRole: '',
+        showRoleDropdown: false,
+        showSignerRoleDropdown: false,
+        roleButtonRef: React.createRef<HTMLButtonElement>(),
+        roleDropdownRef: React.createRef<HTMLDivElement>(),
+        signerRoleButtonRef: React.createRef<HTMLButtonElement>(),
+        signerRoleDropdownRef: React.createRef<HTMLDivElement>(),
+      },
+    ]);
+  };
+
+  // Handler to delete a recipient card
+  const handleDeleteRecipient = (idx: number) => {
+    setRecipients(prev => prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev);
+  };
 
   const CONTRACT_TYPES = [
     'Standard Agreement',
@@ -622,6 +853,8 @@ const ContractsPage: React.FC = () => {
       setModalStep(2);
     } else if (modalStep === 2) {
       setModalStep(3);
+    } else if (modalStep === 3) {
+      setModalStep(4);
     } else {
       setShowNewContractForm(false);
       setModalStep(1);
@@ -1087,9 +1320,9 @@ const ContractsPage: React.FC = () => {
     if (selectedContract) {
       setEditableTitle(selectedContract.title);
       setSelectedType(selectedContract.type || 'Property Sale');
-      setEditableBuyer(selectedContract.buyer || '');
-      setEditableSeller(selectedContract.seller || '');
-      setEditableAgent(selectedContract.agent || '');
+      setEditableBuyer(selectedContract.buyer || selectedContract.parties?.split('&')[0]?.trim() || 'Robert Chen');
+      setEditableSeller(selectedContract.seller || selectedContract.parties?.split('&')[1]?.trim() || 'Eastside Properties');
+      setEditableAgent(selectedContract.agent || 'N/A');
       setEditableValue(selectedContract.value || '');
     }
   }, [selectedContract]);
@@ -1500,22 +1733,53 @@ const ContractsPage: React.FC = () => {
     };
   }, [openAssigneeDropdown]);
 
+  // Click-off behavior for each recipient role dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      recipients.forEach((recipient, idx) => {
+        const target = event.target as Node;
+        if (
+          recipient.roleButtonRef.current?.contains(target) ||
+          recipient.roleDropdownRef.current?.contains(target)
+        ) {
+          // Click inside button or dropdown: do nothing
+          return;
+        }
+        if (recipient.showRoleDropdown) {
+          setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showRoleDropdown: false } : r));
+        }
+        if (
+          recipient.signerRoleButtonRef.current?.contains(target) ||
+          recipient.signerRoleDropdownRef.current?.contains(target)
+        ) {
+          // Click inside signer role button or dropdown: do nothing
+          return;
+        }
+        if (recipient.showSignerRoleDropdown) {
+          setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showSignerRoleDropdown: false } : r));
+        }
+      });
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [recipients]);
+
   return (
     <>
-      <div className="space-y-4 select-none">
+      <div className="space-y-4 select-none cursor-default">
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0">
-          <div className="pb-1">
-            <h1 className="text-[30px] font-bold text-black dark:text-white mb-0">Contracts</h1>
-            <p className="text-gray-500 text-[16px] mt-0">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0 cursor-default select-none">
+          <div className="pb-1 cursor-default select-none">
+            <h1 className="text-[30px] font-bold text-black dark:text-white mb-0 cursor-default select-none">Contracts</h1>
+            <p className="text-gray-500 text-[16px] mt-0 cursor-default select-none">
               Manage & monitor all your contracts
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 w-full md:w-auto">
-            <div className="inline-block rounded-full bg-teal-50 px-2 py-0.5 text-teal-500 font-semibold text-xs border border-teal-100 self-start sm:self-center">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 w-full md:w-auto cursor-default select-none">
+            <div className="inline-block rounded-full bg-teal-50 px-2 py-0.5 text-teal-500 font-semibold text-xs border border-teal-100 self-start sm:self-center cursor-default select-none">
               Logged in as: Creator
             </div>
-            <div className="inline-flex self-start sm:self-center border border-gray-200 rounded-lg overflow-hidden">
+            <div className="inline-flex self-start sm:self-center border border-gray-200 rounded-lg overflow-hidden cursor-default select-none">
               {['admin', 'creator', 'editor', 'viewer'].map((role, idx, arr) => (
                 <button
                   key={role}
@@ -1527,9 +1791,8 @@ const ContractsPage: React.FC = () => {
                     idx === arr.length - 1 ? 'rounded-r-lg' : ''
                   } ${
                     activeRole === role
-                      ? 'bg-teal-50 text-teal-500'
-                      : 'bg-white text-gray-700 hover:bg-gray-50'
-                  }`}
+                      ? 'bg-teal-50 text-teal-500' : 'bg-white text-gray-700 hover:bg-gray-50'
+                  } cursor-pointer`}
                   onClick={() => setActiveRole(role)}
                 >
                   {role.charAt(0).toUpperCase() + role.slice(1)}
@@ -1538,7 +1801,7 @@ const ContractsPage: React.FC = () => {
             </div>
             <button 
               onClick={() => setShowNewContractForm(!showNewContractForm)}
-              className="flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold w-full sm:w-auto"
+              className="flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold w-full sm:w-auto cursor-pointer"
             >
               <MdOutlineAddToPhotos className="mr-2 text-lg" />
               New Contract
@@ -1546,7 +1809,7 @@ const ContractsPage: React.FC = () => {
           </div>
         </div>
 
-        <hr className="my-6 border-gray-300" />
+        <hr className="my-6 border-gray-300 cursor-default select-none" />
 
       {/* Stat Boxes or New Contract Modal */}
       {showNewContractForm ? (
@@ -1557,7 +1820,7 @@ const ContractsPage: React.FC = () => {
                 <HiOutlineDocumentText className="text-primary text-2xl" />
               </span>
               <div>
-                <h2 className="text-xl font-bold text-white leading-tight">Create New Contract</h2>
+                <h2 className="text-xl font-bold text-black dark:text-white leading-tight">Create New Contract</h2>
                 <p className="text-gray-500 text-sm leading-tight cursor-default select-none">Fill in the contract details to get started</p>
               </div>
             </div>
@@ -1575,7 +1838,7 @@ const ContractsPage: React.FC = () => {
           <div className="w-full overflow-x-auto">
             <div className="flex items-center justify-between mb-6 min-w-[340px] sm:min-w-0">
               <div className="flex items-center space-x-2 w-full flex-nowrap">
-                {[1, 2, 3].map((step, idx) => (
+                {[1, 2, 3, 4].map((step, idx) => (
                   <React.Fragment key={step}>
                     <button
                       type="button"
@@ -1589,11 +1852,12 @@ const ContractsPage: React.FC = () => {
                       <span className={`inline-block transition-all duration-300 ${modalStep === step ? 'opacity-100 mr-2' : 'opacity-0 w-0 mr-0'}`} style={{width: modalStep === step ? 18 : 0}}>
                         {modalStep === step && <Logo width={18} height={18} className="pointer-events-none" />}
                       </span>
-                      {step === 1 && 'Step 1: Details'}
-                      {step === 2 && 'Step 2: Parties'}
-                      {step === 3 && 'Step 3: Documents'}
+                      {step === 1 && 'Step 1: General'}
+                      {step === 2 && 'Step 2: Recipients'}
+                      {step === 3 && 'Step 3: Details'}
+                      {step === 4 && 'Step 4: Documents'}
                     </button>
-                    {idx < 2 && <div className="flex-1 h-0.5 bg-gray-200 dark:bg-gray-600 mx-2 min-w-[20px]" />}
+                    {idx < 3 && <div className="flex-1 h-0.5 bg-gray-200 dark:bg-gray-600 mx-2 min-w-[20px]" />}
                   </React.Fragment>
             ))}
           </div>
@@ -1613,7 +1877,7 @@ const ContractsPage: React.FC = () => {
                       name="title"
                       value={modalForm.title}
                       onChange={handleModalChange}
-                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white dark:border-gray-600 ${
+                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white dark:border-gray-600 ${
                         formErrors.title ? 'border-red-300' : 'border-gray-200 dark:border-gray-600'
                       }`}
                       placeholder="Enter contract title"
@@ -1631,7 +1895,7 @@ const ContractsPage: React.FC = () => {
                       name="escrowNumber"
                       value={modalForm.escrowNumber}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white"
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
                       placeholder="Enter escrow number"
                     />
                   </div>
@@ -1640,7 +1904,7 @@ const ContractsPage: React.FC = () => {
                     <div className="relative w-full" ref={contractTypeDropdownRef}>
                       <input
                         type="text"
-                        className={`w-full px-3 py-2 border-2 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white dark:bg-gray-800 ${
+                        className={`w-full px-3 py-2 border-2 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white dark:bg-gray-900 ${
                           formErrors.type ? 'border-red-300' : 'border-gray-200 dark:border-gray-600'
                         } caret-transparent`}
                         placeholder="Select contract type"
@@ -1687,7 +1951,7 @@ const ContractsPage: React.FC = () => {
                     <div className="relative w-full" ref={propertyTypeDropdownRef}>
                       <input
                         type="text"
-                        className={`w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white dark:bg-gray-800 caret-transparent`}
+                        className={`w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white dark:bg-gray-900 caret-transparent`}
                         placeholder="Select property type"
                         value={PROPERTY_TYPES.find(t => t === modalForm.propertyType) || ''}
                         readOnly
@@ -1728,7 +1992,7 @@ const ContractsPage: React.FC = () => {
                     <div className="relative w-full" ref={milestoneDropdownRef}>
                       <input
                         type="text"
-                        className={`w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white dark:bg-gray-800 caret-transparent`}
+                        className={`w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white dark:bg-gray-900 caret-transparent`}
                         placeholder="Select milestone template"
                         value={MILESTONE_TEMPLATES.find(t => t === modalForm.milestone) || ''}
                         readOnly
@@ -1772,7 +2036,7 @@ const ContractsPage: React.FC = () => {
                       name="value"
                       value={modalForm.value}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white"
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
                       placeholder="Enter contract value"
                       required
                     />
@@ -1792,7 +2056,7 @@ const ContractsPage: React.FC = () => {
                             setModalForm(prev => ({ ...prev, dueDate: '' }));
                           }
                         }}
-                        className={`w-full px-4 py-2 pr-10 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs text-black dark:text-white bg-white dark:bg-gray-800 [&::-webkit-calendar-picker-indicator]:hidden ${
+                        className={`w-full px-4 py-2 pr-10 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs text-black dark:text-white bg-white dark:bg-gray-900 [&::-webkit-calendar-picker-indicator]:hidden ${
                           formErrors.dueDate ? 'border-red-300' : 'border-gray-200 dark:border-gray-600'
                         }`}
                         required
@@ -1819,7 +2083,7 @@ const ContractsPage: React.FC = () => {
                       name="propertyAddress"
                       value={modalForm.propertyAddress}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white"
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
                       placeholder="Enter address"
                     />
                   </div>
@@ -1832,7 +2096,7 @@ const ContractsPage: React.FC = () => {
                       name="city"
                       value={modalForm.city}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white"
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
                       placeholder="Enter city"
                     />
                   </div>
@@ -1841,7 +2105,7 @@ const ContractsPage: React.FC = () => {
                     <div className="relative w-full" ref={stateDropdownRef}>
                       <input
                         type="text"
-                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 bg-white dark:bg-gray-800"
+                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 bg-white dark:bg-gray-900"
                         placeholder="Select State"
                         value={stateSearchTerm || US_STATES.find(s => s.value === modalForm.state)?.label || ''}
                         onChange={handleStateSearch}
@@ -1892,7 +2156,7 @@ const ContractsPage: React.FC = () => {
                       name="zipCode"
                       value={modalForm.zipCode}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white"
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
                       placeholder="Enter zip code"
                     />
                   </div>
@@ -1901,7 +2165,7 @@ const ContractsPage: React.FC = () => {
                     <div className="relative w-full" ref={countryDropdownRef}>
                       <input
                         type="text"
-                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 bg-white dark:bg-gray-800"
+                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 bg-white dark:bg-gray-900"
                         placeholder="Select Country"
                         value={countrySearchTerm || COUNTRIES.find(c => c.value === modalForm.country)?.label || ''}
                         onChange={handleCountrySearch}
@@ -1952,7 +2216,7 @@ const ContractsPage: React.FC = () => {
                     name="notes"
                     value={modalForm.notes}
                     onChange={handleModalChange}
-                    className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs min-h-[120px] dark:bg-gray-800 dark:text-white"
+                    className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs min-h-[120px] dark:bg-gray-900 dark:text-white"
                     placeholder="Enter any additional notes for this contract"
                   />
                 </div>
@@ -1962,122 +2226,185 @@ const ContractsPage: React.FC = () => {
               </form>
             )}
 
+
+
             {modalStep === 2 && (
               <form onSubmit={handleSubmit} noValidate>
+                <div className="space-y-4">
+                  {/* Only Signer Checkbox */}
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-4 h-4 border border-gray-300 rounded flex items-center justify-center cursor-pointer" onClick={() => {
+                      const newValue = !isOnlySigner;
+                      setIsOnlySigner(newValue);
+                      if (newValue) {
+                        // Automatically advance to next step when checked
+                        setTimeout(() => {
+                          setModalStep(3);
+                        }, 300); // Small delay for visual feedback
+                      }
+                    }}>
+                      {isOnlySigner && (
+                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                          <FaCheck className="text-white" size={8} />
+                        </div>
+                      )}
+                    </div>
+                    <label 
+                      className="text-xs font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                      onClick={() => {
+                        const newValue = !isOnlySigner;
+                        setIsOnlySigner(newValue);
+                        if (newValue) {
+                          // Automatically advance to next step when checked
+                          setTimeout(() => {
+                            setModalStep(3);
+                          }, 300); // Small delay for visual feedback
+                        }
+                      }}
+                    >
+                      I am the only signer
+                    </label>
+                  </div>
+                  
+                  {/* Render all recipient cards */}
+                  {recipients.map((recipient, idx) => (
+                      <div key={idx} className="relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 shadow-sm" style={{ borderLeft: '3px solid #e5e7eb' }}>
+                        {/* Header with role controls and delete button */}
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                          <div className="flex flex-col sm:flex-row gap-1">
+                            {/* Role selection button */}
+                            <div className="relative">
+                              <button
+                                ref={recipient.roleButtonRef}
+                                type="button"
+                                className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-700 dark:text-white border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-primary rounded-md hover:bg-gray-200 dark:hover:bg-primary-dark transition-colors"
+                                onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showRoleDropdown: !r.showRoleDropdown } : r))}
+                                tabIndex={0}
+                              >
+                                <LuPen className="w-3 h-3 text-primary dark:text-white" />
+                                <span>{recipient.role}</span>
+                                <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px]" />
+                              </button>
+                              {recipient.showRoleDropdown && (
+                                <div
+                                  ref={recipient.roleDropdownRef}
+                                  className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[160px]"
+                                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                                >
+                                  {['Needs to Sign', 'In Person Signer', 'Receives a Copy', 'Needs to View'].map((role) => (
+                                    <button
+                                      key={role}
+                                      className="w-full px-3 py-2 text-left text-xs hover:bg-primary/10 hover:text-primary text-gray-700 dark:text-gray-300"
+                                      style={{ background: 'none', border: 'none', boxShadow: 'none' }}
+                                      onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, role, showRoleDropdown: false } : r))}
+                                    >
+                                      {role}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Signer Role button */}
+                            <div className="relative">
+                              <button
+                                ref={recipient.signerRoleButtonRef}
+                                type="button"
+                                className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-700 dark:text-white border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-primary rounded-md hover:bg-gray-200 dark:hover:bg-primary-dark transition-colors whitespace-nowrap"
+                                onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showSignerRoleDropdown: !r.showSignerRoleDropdown } : r))}
+                                tabIndex={0}
+                              >
+                                <span>{recipient.signerRole || 'Signer Role'}</span>
+                                <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px]" />
+                              </button>
+                              {recipient.showSignerRoleDropdown && (
+                                <div
+                                  ref={recipient.signerRoleDropdownRef}
+                                  className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[160px]"
+                                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                                >
+                                  {['Standard', 'Buyer', 'Seller', 'Buyer Agent', 'Seller Agent', 'Closing Agent', 'Inspector', 'Appraiser'].map((signerRole) => (
+                                    <button
+                                      key={signerRole}
+                                      className="w-full px-3 py-2 text-left text-xs hover:bg-primary/10 hover:text-primary text-gray-700 dark:text-gray-300"
+                                      style={{ background: 'none', border: 'none', boxShadow: 'none' }}
+                                      onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, signerRole, showSignerRoleDropdown: false } : r))}
+                                    >
+                                      {signerRole}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Delete button */}
+                          <button 
+                            className="self-end sm:self-auto text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1" 
+                            onClick={() => handleDeleteRecipient(idx)} 
+                            disabled={recipients.length === 1}
+                          >
+                            <HiOutlineTrash className="w-4 h-4" />
+                          </button>
+                        </div>
+                        
+                        {/* Form fields */}
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                              Name <span className="text-primary">*</span>
+                            </label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                              </span>
+                              <input
+                                type="text"
+                                className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white"
+                                placeholder="Enter recipient's name..."
+                                style={{ fontFamily: 'Avenir, sans-serif' }}
+                                value={recipient.name}
+                                onChange={e => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, name: e.target.value } : r))}
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                              Email <span className="text-primary">*</span>
+                            </label>
+                            <input
+                              type="email"
+                              className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white"
+                              placeholder="Enter recipient's email address..."
+                              style={{ fontFamily: 'Avenir, sans-serif' }}
+                              value={recipient.email}
+                              onChange={e => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, email: e.target.value } : r))}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-xs sm:text-sm font-semibold mt-2"
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                      onClick={handleAddRecipient}
+                    >
+                      <TiUserAddOutline className="text-base sm:text-lg" />
+                      <span className="mt-[1px]">Add Recipient</span>
+                    </button>
+                  </div>
+                <div className="flex justify-between mt-6">
+                  <button type="button" onClick={() => { setModalStep(1); setCountrySearchTerm(''); setStateSearchTerm(''); }} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm">Previous</button>
+                  <button type="submit" className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm">Next</button>
+                </div>
+              </form>
+            )}
+
+            {modalStep === 3 && (
+              <form onSubmit={handleSubmit} noValidate>
                 <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <label htmlFor="buyer" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Buyer / Client</label>
-                    <input
-                      type="text"
-                      id="buyer"
-                      name="buyer"
-                      value={modalForm.buyer}
-                      onChange={handleModalChange}
-                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white ${
-                        formErrors.buyer ? 'border-red-300' : 'border-gray-200 dark:border-gray-600'
-                      }`}
-                      placeholder="Enter buyer or client name"
-                      required
-                    />
-                    {formErrors.buyer && (
-                      <p className="mt-1 text-xs text-red-600 font-medium cursor-default select-none">Please fill out this field</p>
-                    )}
-                  </div>
-                  <div>
-                    <label htmlFor="buyerEmail" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Buyer Email</label>
-                    <input
-                      type="email"
-                      id="buyerEmail"
-                      name="buyerEmail"
-                      value={modalForm.buyerEmail}
-                      onChange={handleModalChange}
-                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white ${
-                        emailErrors.buyerEmail ? 'border-red-300' : 'border-gray-200 dark:border-gray-600'
-                      }`}
-                      placeholder="Enter buyer email"
-                      required
-                    />
-                    {emailErrors.buyerEmail && (
-                      <p className="mt-1 text-sm text-red-600 cursor-default select-none">Please enter a valid email address</p>
-                    )}
-                  </div>
-                  <div>
-                    <label htmlFor="seller" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Seller / Provider</label>
-                    <input
-                      type="text"
-                      id="seller"
-                      name="seller"
-                      value={modalForm.seller}
-                      onChange={handleModalChange}
-                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white ${
-                        formErrors.seller ? 'border-red-300' : 'border-gray-200 dark:border-gray-600'
-                      }`}
-                      placeholder="Enter seller or provider name"
-                      required
-                    />
-                    {formErrors.seller && (
-                      <p className="mt-1 text-xs text-red-600 font-medium cursor-default select-none">Please fill out this field</p>
-                    )}
-                  </div>
-                  <div>
-                    <label htmlFor="sellerEmail" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Seller Email</label>
-                    <input
-                      type="email"
-                      id="sellerEmail"
-                      name="sellerEmail"
-                      value={modalForm.sellerEmail}
-                      onChange={handleModalChange}
-                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white ${
-                        emailErrors.sellerEmail ? 'border-red-300' : 'border-gray-200 dark:border-gray-600'
-                      }`}
-                      placeholder="Enter seller email"
-                      required
-                    />
-                    {emailErrors.sellerEmail && (
-                      <p className="mt-1 text-sm text-red-600 cursor-default select-none">Please enter a valid email address</p>
-                    )}
-                  </div>
-                  <div>
-                    <label htmlFor="agent" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Agent / Escrow Officer (Optional)</label>
-                    <input
-                      type="text"
-                      id="agent"
-                      name="agent"
-                      value={modalForm.agent}
-                      onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white"
-                      placeholder="Enter agent or escrow officer name"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="agentEmail" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Agent Email (Optional)</label>
-                    <input
-                      type="email"
-                      id="agentEmail"
-                      name="agentEmail"
-                      value={modalForm.agentEmail}
-                      onChange={handleModalChange}
-                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white ${
-                        emailErrors.agentEmail ? 'border-red-300' : 'border-gray-200 dark:border-gray-600'
-                      }`}
-                      placeholder="Enter agent email"
-                    />
-                    {emailErrors.agentEmail && (
-                      <p className="mt-1 text-sm text-red-600 cursor-default select-none">Please enter a valid email address</p>
-                    )}
-                  </div>
-                  <div>
-                    <label htmlFor="lenderName" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Lender Name</label>
-                    <input
-                      type="text"
-                      id="lenderName"
-                      name="lenderName"
-                      value={modalForm.lenderName}
-                      onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white"
-                      placeholder="Enter lender name"
-                    />
-                  </div>
                   <div>
                     <label htmlFor="titleCompany" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Title Company</label>
                     <input
@@ -2086,7 +2413,7 @@ const ContractsPage: React.FC = () => {
                       name="titleCompany"
                       value={modalForm.titleCompany}
                       onChange={handleModalChange}
-                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white ${
+                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white ${
                         formErrors.titleCompany ? 'border-red-300' : 'border-gray-200 dark:border-gray-600'
                       }`}
                       placeholder="Enter title company name"
@@ -2104,67 +2431,185 @@ const ContractsPage: React.FC = () => {
                       name="insuranceCompany"
                       value={modalForm.insuranceCompany}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white"
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
                       placeholder="Enter insurance company name"
                     />
                   </div>
                   <div>
-                    <label htmlFor="closingDate" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Expected Closing Date</label>
-                    <div className="relative">
+                    <label htmlFor="lenderName" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Buyer Financial Institution</label>
+                    <input
+                      type="text"
+                      id="lenderName"
+                      name="lenderName"
+                      value={modalForm.lenderName}
+                      onChange={handleModalChange}
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
+                      placeholder="Enter buyer financial institution"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="buyerFinancialInstitutionRoutingNumber" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Buyer Routing Number</label>
+                    <div className="relative bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-colors cursor-default select-none">
                       <input
-                        type="date"
-                        id="closingDate"
-                        name="closingDate"
-                        value={modalForm.closingDate}
-                        onChange={handleModalChange}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Backspace') {
+                        type="text"
+                        id="buyerFinancialInstitutionRoutingNumber"
+                        name="buyerFinancialInstitutionRoutingNumber"
+                        className="w-full px-4 py-2 bg-transparent text-xs text-gray-900 dark:text-white border-none focus:outline-none"
+                        style={{ fontFamily: buyerRoutingDisplay ? 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace' : 'Avenir, sans-serif' }}
+                        placeholder="Enter buyer routing number"
+                        maxLength={9}
+                        pattern="[0-9]*"
+                        inputMode="numeric"
+                        value={buyerRoutingDisplay}
+                        onKeyPress={(e) => {
+                          if (!/[0-9]/.test(e.key)) {
                             e.preventDefault();
-                            setModalForm(prev => ({ ...prev, closingDate: '' }));
                           }
                         }}
-                        className={`w-full px-4 py-2 pr-10 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs text-black dark:text-white bg-white dark:bg-gray-800 [&::-webkit-calendar-picker-indicator]:hidden ${
-                          formErrors.closingDate ? 'border-red-300' : 'border-gray-200 dark:border-gray-600'
-                        }`}
-                        required
+                        onChange={(e) => {
+                          handleRoutingNumberInput(
+                            e,
+                            modalForm.buyerFinancialInstitutionRoutingNumber,
+                            setBuyerRoutingDisplay,
+                            (value) => handleModalChange({ target: { name: 'buyerFinancialInstitutionRoutingNumber', value } } as any),
+                            buyerRoutingTimeoutRef
+                          );
+                        }}
                       />
+                    </div>
+                  </div>
+                  <div></div>
+                  <div>
+                    <label htmlFor="buyerAccountNumber" className="flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">
+                      Buyer Account Number
                       <button
                         type="button"
-                        onClick={() => (document.getElementById('closingDate') as HTMLInputElement)?.showPicker()}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 flex items-center justify-center"
+                        onClick={() => setBuyerAccountVisible(!buyerAccountVisible)}
+                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
                       >
-                        <LuCalendarFold className="w-4 h-4 text-white" />
+                        {buyerAccountVisible ? (
+                          <HiOutlineEyeOff className="h-3.5 w-3.5" />
+                        ) : (
+                          <HiOutlineEye className="h-3.5 w-3.5" />
+                        )}
                       </button>
+                    </label>
+                    <div className="relative bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-colors cursor-default select-none">
+                      <input
+                        type="text"
+                        id="buyerAccountNumber"
+                        name="buyerAccountNumber"
+                        className="w-full px-4 py-2 bg-transparent text-xs text-gray-900 dark:text-white border-none focus:outline-none"
+                        style={{ fontFamily: buyerAccountVisible ? 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace' : (buyerAccountDisplay ? 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace' : 'Avenir, sans-serif') }}
+                        placeholder="Enter buyer account number"
+                        maxLength={12}
+                        pattern="[0-9]*"
+                        inputMode="numeric"
+                        value={buyerAccountVisible ? modalForm.buyerAccountNumber : buyerAccountDisplay}
+                        onKeyPress={(e) => {
+                          if (!/[0-9]/.test(e.key)) {
+                            e.preventDefault();
+                          }
+                        }}
+                        onChange={(e) => {
+                          handleAccountNumberInput(
+                            e,
+                            modalForm.buyerAccountNumber,
+                            setBuyerAccountDisplay,
+                            (value) => handleModalChange({ target: { name: 'buyerAccountNumber', value } } as any),
+                            buyerAccountTimeoutRef
+                          );
+                        }}
+                      />
                     </div>
-                    {formErrors.closingDate && (
-                      <p className="mt-1 text-xs text-red-600 font-medium cursor-default select-none">Please select a closing date</p>
-                    )}
                   </div>
-                </div>
-                <div className="grid grid-cols-2 gap-6 mt-6">
                   <div>
-                    <label htmlFor="earnestMoney" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Earnest Money</label>
+                    <label htmlFor="sellerFinancialInstitution" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Seller Financial Institution</label>
                     <input
                       type="text"
-                      id="earnestMoney"
-                      name="earnestMoney"
-                      value={modalForm.earnestMoney}
+                      id="sellerFinancialInstitution"
+                      name="sellerFinancialInstitution"
+                      value={modalForm.sellerFinancialInstitution}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white"
-                      placeholder="Enter earnest money amount"
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
+                      placeholder="Enter seller financial institution"
                     />
                   </div>
                   <div>
-                    <label htmlFor="downPayment" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Down Payment</label>
-                    <input
-                      type="text"
-                      id="downPayment"
-                      name="downPayment"
-                      value={modalForm.downPayment}
-                      onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white"
-                      placeholder="Enter down payment amount"
-                    />
+                    <label htmlFor="sellerFinancialInstitutionRoutingNumber" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Seller Routing Number</label>
+                    <div className="relative bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-colors cursor-default select-none">
+                      <input
+                        type="text"
+                        id="sellerFinancialInstitutionRoutingNumber"
+                        name="sellerFinancialInstitutionRoutingNumber"
+                        className="w-full px-4 py-2 bg-transparent text-xs text-gray-900 dark:text-white border-none focus:outline-none"
+                        style={{ fontFamily: sellerRoutingDisplay ? 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace' : 'Avenir, sans-serif' }}
+                        placeholder="Enter seller routing number"
+                        maxLength={9}
+                        pattern="[0-9]*"
+                        inputMode="numeric"
+                        value={sellerRoutingDisplay}
+                        onKeyPress={(e) => {
+                          if (!/[0-9]/.test(e.key)) {
+                            e.preventDefault();
+                          }
+                        }}
+                        onChange={(e) => {
+                          handleRoutingNumberInput(
+                            e,
+                            modalForm.sellerFinancialInstitutionRoutingNumber,
+                            setSellerRoutingDisplay,
+                            (value) => handleModalChange({ target: { name: 'sellerFinancialInstitutionRoutingNumber', value } } as any),
+                            sellerRoutingTimeoutRef
+                          );
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div></div>
+                  <div>
+                    <label htmlFor="sellerAccountNumber" className="flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">
+                      Seller Account Number
+                      <button
+                        type="button"
+                        onClick={() => setSellerAccountVisible(!sellerAccountVisible)}
+                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
+                      >
+                        {sellerAccountVisible ? (
+                          <HiOutlineEyeOff className="h-3.5 w-3.5" />
+                        ) : (
+                          <HiOutlineEye className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                    </label>
+                    <div className="relative bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-colors cursor-default select-none">
+                      <input
+                        type="text"
+                        id="sellerAccountNumber"
+                        name="sellerAccountNumber"
+                        className="w-full px-4 py-2 bg-transparent text-xs text-gray-900 dark:text-white border-none focus:outline-none"
+                        style={{ fontFamily: sellerAccountVisible ? 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace' : (sellerAccountDisplay ? 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace' : 'Avenir, sans-serif') }}
+                        placeholder="Enter seller account number"
+                        maxLength={12}
+                        pattern="[0-9]*"
+                        inputMode="numeric"
+                        value={sellerAccountVisible ? modalForm.sellerAccountNumber : sellerAccountDisplay}
+                        onKeyPress={(e) => {
+                          if (!/[0-9]/.test(e.key)) {
+                            e.preventDefault();
+                          }
+                        }}
+                        onChange={(e) => {
+                          handleAccountNumberInput(
+                            e,
+                            modalForm.sellerAccountNumber,
+                            setSellerAccountDisplay,
+                            (value) => handleModalChange({ target: { name: 'sellerAccountNumber', value } } as any),
+                            sellerAccountTimeoutRef
+                          );
+                        }}
+                      />
+                    </div>
                   </div>
                   <div>
                     <label htmlFor="loanAmount" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Loan Amount</label>
@@ -2174,20 +2619,8 @@ const ContractsPage: React.FC = () => {
                       name="loanAmount"
                       value={modalForm.loanAmount}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white"
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
                       placeholder="Enter loan amount"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="interestRate" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Interest Rate (%)</label>
-                    <input
-                      type="text"
-                      id="interestRate"
-                      name="interestRate"
-                      value={modalForm.interestRate}
-                      onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white"
-                      placeholder="Enter interest rate"
                     />
                   </div>
                   <div>
@@ -2198,8 +2631,44 @@ const ContractsPage: React.FC = () => {
                       name="loanTerm"
                       value={modalForm.loanTerm}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white"
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
                       placeholder="Enter loan term"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="interestRate" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Interest Rate (%)</label>
+                    <input
+                      type="text"
+                      id="interestRate"
+                      name="interestRate"
+                      value={modalForm.interestRate}
+                      onChange={handleModalChange}
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
+                      placeholder="Enter interest rate"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="downPayment" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Down Payment</label>
+                    <input
+                      type="text"
+                      id="downPayment"
+                      name="downPayment"
+                      value={modalForm.downPayment}
+                      onChange={handleModalChange}
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
+                      placeholder="Enter down payment amount"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="earnestMoney" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Earnest Money</label>
+                    <input
+                      type="text"
+                      id="earnestMoney"
+                      name="earnestMoney"
+                      value={modalForm.earnestMoney}
+                      onChange={handleModalChange}
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
+                      placeholder="Enter earnest money amount"
                     />
                   </div>
                   <div>
@@ -2210,7 +2679,7 @@ const ContractsPage: React.FC = () => {
                       name="inspectionPeriod"
                       value={modalForm.inspectionPeriod}
                       onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-800 dark:text-white"
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
                       placeholder="Enter inspection period"
                     />
                   </div>
@@ -2222,18 +2691,18 @@ const ContractsPage: React.FC = () => {
                     name="contingencies"
                     value={modalForm.contingencies}
                     onChange={handleModalChange}
-                    className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs min-h-[80px] dark:bg-gray-800 dark:text-white"
+                    className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs min-h-[80px] dark:bg-gray-900 dark:text-white"
                     placeholder="Enter any contingencies for this contract"
                   />
                 </div>
                 <div className="flex justify-between mt-6">
-                  <button type="button" onClick={() => { setModalStep(1); setCountrySearchTerm(''); setStateSearchTerm(''); }} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm">Previous</button>
+                  <button type="button" onClick={() => { setModalStep(2); setCountrySearchTerm(''); setStateSearchTerm(''); }} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm">Previous</button>
                   <button type="submit" className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm">Next</button>
                 </div>
               </form>
             )}
 
-            {modalStep === 3 && (
+            {modalStep === 4 && (
               <form onSubmit={handleSubmit} noValidate>
                 <div className="space-y-6">
                   <div>
@@ -2263,7 +2732,7 @@ const ContractsPage: React.FC = () => {
                     )}
                   </div>
                   <div className="flex justify-between">
-                    <button type="button" onClick={() => setModalStep(2)} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm cursor-default select-none">Previous</button>
+                    <button type="button" onClick={() => setModalStep(3)} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm cursor-default select-none">Previous</button>
                     <button type="submit" className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm">Create Contract</button>
                   </div>
                 </div>
@@ -2273,87 +2742,87 @@ const ContractsPage: React.FC = () => {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 select-none">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 select-none cursor-default">
             {/* Total Contracts */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full">
-              <div className="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center border-2 border-teal-200">
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
+              <div className="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center border-2 border-teal-200 cursor-default select-none">
                 <HiOutlineDocumentText size={18} color="#06b6d4" />
               </div>
-              <div className="flex flex-col items-start h-full">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contracts</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{mockContracts.length}</p>
-                <p className="text-xs invisible">placeholder</p>
+              <div className="flex flex-col items-start h-full cursor-default select-none">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contracts</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{mockContracts.length}</p>
+                <p className="text-xs invisible cursor-default select-none">placeholder</p>
               </div>
             </div>
             {/* Pending Signatures */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full">
-              <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center border-2 border-purple-200">
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
+              <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center border-2 border-purple-200 cursor-default select-none">
                 <TbEdit size={20} color="#7c3aed" />
               </div>
-              <div className="flex flex-col items-start h-full">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Pending Signatures</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{mockContracts.filter(contract => contract.status === 'Signatures').length}</p>
+              <div className="flex flex-col items-start h-full cursor-default select-none">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Pending Signatures</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{mockContracts.filter(contract => contract.status === 'Signatures').length}</p>
                 <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">Requires action</p>
               </div>
             </div>
             {/* Awaiting Wire Instructions */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full">
-              <div className="h-10 w-10 rounded-lg bg-orange-100 flex items-center justify-center border-2 border-orange-200">
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
+              <div className="h-10 w-10 rounded-lg bg-orange-100 flex items-center justify-center border-2 border-orange-200 cursor-default select-none">
                 <PiBankBold size={20} color="#ea580c" />
               </div>
-              <div className="flex flex-col items-start h-full">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Awaiting Wire Details</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{mockContracts.filter(contract => contract.status === 'Wire Details').length}</p>
+              <div className="flex flex-col items-start h-full cursor-default select-none">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Awaiting Wire Details</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{mockContracts.filter(contract => contract.status === 'Wire Details').length}</p>
                 <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">Needs attention</p>
               </div>
             </div>
             {/* Avg. Completion Time */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full">
-              <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center border-2 border-blue-200">
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
+              <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center border-2 border-blue-200 cursor-default select-none">
                 <TbClockUp size={20} color="#3b82f6" />
               </div>
-              <div className="flex flex-col items-start h-full">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Average Completion Time</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">3.2 days</p>
+              <div className="flex flex-col items-start h-full cursor-default select-none">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Average Completion Time</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">3.2 days</p>
                 <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">Last 30 days</p>
               </div>
             </div>
 
           </div>
           {/* Total Contract Value Box */}
-          <div className="mb-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full select-none">
-            <div className="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center border-2 border-teal-200">
+          <div className="mb-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full select-none cursor-default">
+            <div className="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center border-2 border-teal-200 cursor-default select-none">
               <GrMoney size={20} color="#06b6d4" />
             </div>
-            <div className="flex flex-col items-start h-full">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contract Value</p>
-              <p className="text-2xl font-bold text-primary">{calculateTotalValue()}</p>
+            <div className="flex flex-col items-start h-full cursor-default select-none">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contract Value</p>
+              <p className="text-2xl font-bold text-primary cursor-default select-none">{calculateTotalValue()}</p>
               <p className="text-xs text-green-600 font-semibold cursor-default select-none">↑ 12% from last month</p>
             </div>
           </div>
         </>
       )}
 
-      <hr className="mb-6 border-gray-300" />
+      <hr className="mb-6 border-gray-300 cursor-default select-none" />
 
       {/* Search/Filter Bar */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-4 mb-6 flex items-center w-full mt-2 select-none">
-        <div className="flex items-center flex-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 min-w-0">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-4 mb-6 flex items-center w-full mt-2 select-none cursor-default">
+        <div className="flex items-center flex-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 min-w-0 cursor-default select-none">
           <FaSearch className="text-gray-400 mr-2" size={18} />
           <input
             type="text"
             placeholder="Search contracts, parties, documents or IDs"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 font-medium min-w-0"
+            className="flex-1 bg-white dark:bg-gray-900 border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 font-medium min-w-0"
             style={{ fontFamily: 'Avenir, sans-serif' }}
           />
         </div>
         {activeContentTab === 'contractList' && (
-          <div className="relative ml-1">
+          <div className="relative ml-1 cursor-default select-none">
             <button
               ref={statusDropdownRef as any}
-              className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
+              className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs min-w-[120px] relative whitespace-nowrap cursor-pointer"
               style={{ fontFamily: 'Avenir, sans-serif' }}
               onClick={(e) => {
                 e.preventDefault();
@@ -2371,16 +2840,16 @@ const ContractsPage: React.FC = () => {
             </button>
             {showStatusDropdown && (
               <div 
-                className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 status-filter-dropdown" 
+                className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 status-filter-dropdown cursor-default select-none" 
                 style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
               >
                 <button
-                  className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center text-gray-700 dark:text-gray-300"
+                  className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedStatuses.includes('All') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'} cursor-pointer`}
                   onClick={() => setSelectedStatuses(['All'])}
                 >
-                  <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                  <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center cursor-default select-none">
                     {selectedStatuses.includes('All') && (
-                      <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                      <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center cursor-default select-none">
                         <FaCheck className="text-white" size={8} />
                       </div>
                     )}
@@ -2390,7 +2859,7 @@ const ContractsPage: React.FC = () => {
                 {availableStatuses.filter(status => status !== 'All').map(status => (
                   <button
                     key={status}
-                    className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center text-gray-700 dark:text-gray-300"
+                    className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedStatuses.includes(status) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'} cursor-pointer`}
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
@@ -2408,9 +2877,9 @@ const ContractsPage: React.FC = () => {
                       }
                     }}
                   >
-                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center cursor-default select-none">
                       {selectedStatuses.includes(status) && (
-                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center cursor-default select-none">
                           <FaCheck className="text-white" size={8} />
                         </div>
                       )}
@@ -2424,10 +2893,10 @@ const ContractsPage: React.FC = () => {
         )}
         {activeContentTab === 'documents' && (
           <>
-            <div className="relative ml-1">
+            <div className="relative ml-1 cursor-default select-none">
               <button
                 ref={contractButtonRef}
-                className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
+                className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs min-w-[120px] relative whitespace-nowrap cursor-pointer"
                 style={{ fontFamily: 'Avenir, sans-serif' }}
                 onClick={() => { setOpenContractDropdown(v => !v); setOpenAssigneeDropdown(false); setShowStatusDropdown(false); }}
               >
@@ -2437,19 +2906,19 @@ const ContractsPage: React.FC = () => {
               </button>
               {openContractDropdown && (
                 <div 
-                  className="absolute left-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[400px] w-96 contract-dropdown" 
+                  className="absolute left-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[400px] w-96 contract-dropdown cursor-default select-none" 
                   style={{ fontFamily: 'Avenir, sans-serif' }}
                   onClick={(e) => e.stopPropagation()}
                 >
                   {/* Search Bar */}
-                  <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
-                    <div className="relative">
+                  <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700 cursor-default select-none">
+                    <div className="relative cursor-default select-none">
                       <input
                         type="text"
                         placeholder="Search contracts..."
                         value={contractSearch}
                         onChange={(e) => setContractSearch(e.target.value)}
-                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-black dark:text-white bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-black dark:text-white bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:border-primary transition-colors cursor-text"
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       />
                       <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -2457,12 +2926,12 @@ const ContractsPage: React.FC = () => {
                   </div>
 
                   <button
-                    className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center text-gray-700 dark:text-gray-300"
+                    className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedContracts.length === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-300'} cursor-pointer`}
                     onClick={() => setSelectedContracts([])}
                   >
-                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center cursor-default select-none">
                       {selectedContracts.length === 0 && (
-                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center cursor-default select-none">
                           <FaCheck className="text-white" size={8} />
                         </div>
                       )}
@@ -2477,7 +2946,7 @@ const ContractsPage: React.FC = () => {
                     .map(contract => (
                       <button
                         key={contract.id}
-                        className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center whitespace-nowrap truncate text-gray-700 dark:text-gray-300"
+                        className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center whitespace-nowrap truncate ${selectedContracts.includes(String(contract.id)) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'} cursor-pointer`}
                         onClick={() => {
                           setSelectedContracts(prev => {
                             if (prev.includes(String(contract.id))) {
@@ -2488,9 +2957,9 @@ const ContractsPage: React.FC = () => {
                           });
                         }}
                       >
-                        <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                        <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center cursor-default select-none">
                           {selectedContracts.includes(String(contract.id)) && (
-                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center cursor-default select-none">
                               <FaCheck className="text-white" size={8} />
                             </div>
                           )}
@@ -2501,10 +2970,10 @@ const ContractsPage: React.FC = () => {
                 </div>
               )}
             </div>
-            <div className="relative ml-1">
+            <div className="relative ml-1 cursor-default select-none">
               <button
                 ref={assigneeButtonRef}
-                className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
+                className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs min-w-[120px] relative whitespace-nowrap cursor-pointer"
                 style={{ fontFamily: 'Avenir, sans-serif' }}
                 onClick={() => { setOpenAssigneeDropdown(v => !v); setOpenContractDropdown(false); setShowStatusDropdown(false); }}
               >
@@ -2514,20 +2983,20 @@ const ContractsPage: React.FC = () => {
               </button>
               {openAssigneeDropdown && (
                 <div 
-                  className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 assignee-dropdown" 
+                  className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 assignee-dropdown cursor-default select-none" 
                   style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
                 >
                   <button
-                    className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center text-gray-700 dark:text-gray-300"
+                    className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedAssignees.length === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-300'} cursor-pointer`}
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
                       setSelectedAssignees([]);
                     }}
                   >
-                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center cursor-default select-none">
                       {selectedAssignees.length === 0 && (
-                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center cursor-default select-none">
                           <FaCheck className="text-white" size={8} />
                         </div>
                       )}
@@ -2535,7 +3004,7 @@ const ContractsPage: React.FC = () => {
                     All
                   </button>
                   <button
-                    className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center text-gray-700 dark:text-gray-300"
+                    className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedAssignees.includes('__ME__') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'} cursor-pointer`}
                     onClick={() => {
                       setSelectedAssignees(prev => {
                         if (prev.includes('__ME__')) {
@@ -2546,9 +3015,9 @@ const ContractsPage: React.FC = () => {
                       });
                     }}
                   >
-                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center cursor-default select-none">
                       {selectedAssignees.includes('__ME__') && (
-                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center cursor-default select-none">
                           <FaCheck className="text-white" size={8} />
                         </div>
                       )}
@@ -2558,7 +3027,7 @@ const ContractsPage: React.FC = () => {
                   {Array.from(new Set(sampleDocuments.map(doc => doc.assignee).filter((assignee): assignee is string => assignee !== undefined))).sort().map(assignee => (
                     <button
                       key={assignee}
-                      className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center text-gray-700 dark:text-gray-300"
+                      className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedAssignees.includes(assignee) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'} cursor-pointer`}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -2571,9 +3040,9 @@ const ContractsPage: React.FC = () => {
                         });
                       }}
                     >
-                      <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                      <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center cursor-default select-none">
                         {selectedAssignees.includes(assignee) && (
-                          <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                          <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center cursor-default select-none">
                             <FaCheck className="text-white" size={8} />
                           </div>
                         )}
@@ -2586,7 +3055,7 @@ const ContractsPage: React.FC = () => {
             </div>
           </>
         )}
-        <button className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs min-w-[150px] ml-1" style={{ fontFamily: 'Avenir, sans-serif' }}
+        <button className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs min-w-[150px] ml-1 cursor-pointer" style={{ fontFamily: 'Avenir, sans-serif' }}
           onClick={() => setLastUpdatedSort(prev => prev === 'desc' ? 'asc' : 'desc')}
         >
           <MdOutlineUpdate className="text-gray-400 w-4 h-4" />
@@ -2874,22 +3343,22 @@ const ContractsPage: React.FC = () => {
 
     {/* Modal for contract details */}
     {selectedContract && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-        <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 cursor-default select-none">
+        <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden cursor-default select-none">
           {/* Sticky Header with Download Summary and Close buttons */}
-          <div className="sticky top-0 z-40 bg-gray-50 dark:bg-gray-900 px-6 py-4">
-            <div className="flex items-start justify-between">
+          <div className="sticky top-0 z-40 bg-gray-50 dark:bg-gray-900 px-6 py-4 cursor-default select-none">
+            <div className="flex items-start justify-between cursor-default select-none">
               {/* Left: Contract ID and Status */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-4 mb-4">
-                  <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary">
+              <div className="flex-1 min-w-0 cursor-default select-none">
+                <div className="flex items-center gap-4 mb-4 cursor-default select-none">
+                  <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary cursor-default select-none">
                     # {selectedContract.id}
                   </span>
                 </div>
               </div>
               {/* Right: Close Button (original, now sticky) */}
               <button
-                className="text-gray-400 hover:text-gray-600 p-2 rounded-full ml-4 mt-1"
+                className="text-gray-400 hover:text-gray-600 p-2 rounded-full ml-4 mt-1 cursor-pointer"
                 onClick={() => setSelectedContract(null)}
                 aria-label="Close"
               >
@@ -2899,10 +3368,10 @@ const ContractsPage: React.FC = () => {
               </button>
             </div>
             {/* Centered Status Bar */}
-            <div className="w-full overflow-x-auto">
-              <div className="flex flex-col items-center w-full max-w-full">
+            <div className="w-full overflow-x-auto cursor-default select-none">
+              <div className="flex flex-col items-center w-full max-w-full cursor-default select-none">
                 {/* Progress Bar */}
-                <div className="relative w-full max-w-[1100px] h-2 mb-6 bg-gray-200 rounded-full">
+                <div className="relative w-full max-w-[1100px] h-2 mb-6 bg-gray-200 rounded-full cursor-default select-none">
                   {(() => {
                     const steps = [
                       { key: 'initiation', label: 'Initiation', number: 1 },
@@ -2916,12 +3385,12 @@ const ContractsPage: React.FC = () => {
                     const currentIdx = steps.findIndex(s => s.label.toLowerCase() === selectedContract.status.toLowerCase());
                     const percent = currentIdx === -1 ? 0 : (currentIdx + 1) / steps.length * 100;
                     return (
-                      <div className="absolute top-0 left-0 h-2 bg-primary rounded-full transition-all duration-500" style={{ width: `${percent}%` }} />
+                      <div className="absolute top-0 left-0 h-2 bg-primary rounded-full transition-all duration-500 cursor-default select-none" style={{ width: `${percent}%` }} />
                     );
                   })()}
                 </div>
                 {/* Steps */}
-                <div className="flex items-center justify-center gap-x-0 w-full max-w-[1100px]">
+                <div className="flex items-center justify-center gap-x-0 w-full max-w-[1100px] cursor-default select-none">
                   {(() => {
                     const steps = [
                       { key: 'initiation', label: 'Initiation', number: 1 },
@@ -2939,23 +3408,23 @@ const ContractsPage: React.FC = () => {
                       const isCompleted = idx < currentIdx;
                       const isCurrent = idx === currentIdx;
                       return (
-                        <div key={step.key} className="flex flex-col items-center" style={{ minWidth: 80, flex: 1 }}>
+                        <div key={step.key} className="flex flex-col items-center cursor-default select-none" style={{ minWidth: 80, flex: 1 }}>
                           <div className="relative flex items-center justify-center" style={{ width: 48 }}>
                             <div className={`flex items-center justify-center rounded-full border-2 transition-all duration-300 w-8 h-8 text-sm font-bold
-                              ${isCompleted ? 'bg-white border-gray-300 text-gray-500 dark:text-gray-400' : isCurrent ? 'bg-primary border-primary text-white' : 'bg-white border-gray-300 text-gray-400'}`}
+                              ${isCompleted ? 'bg-primary border-primary text-white' : isCurrent ? 'bg-primary border-primary text-white' : 'bg-white border-gray-300 text-gray-400'} cursor-default select-none`}
                             >
                               {isCompleted ? (
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                               ) : (
                                 step.number
                               )}
                             </div>
                             {/* Connector line */}
                             {idx < steps.length - 1 && (
-                              <div className="absolute top-1/2 left-full ml-0 h-1 -translate-y-1/2 z-0" style={{ width: connectorWidth, background: '#9ca3af' }} />
+                              <div className="absolute top-1/2 left-full ml-0 h-1 -translate-y-1/2 z-0 cursor-default select-none" style={{ width: connectorWidth, background: '#9ca3af' }} />
                             )}
                           </div>
-                          <div className={`mt-2 text-xs font-medium text-center ${isCurrent ? 'text-primary' : isCompleted ? 'text-gray-500 dark:text-gray-400' : 'text-gray-400'}`}>{step.label}</div>
+                          <div className={`mt-2 text-xs font-medium text-center ${isCurrent ? 'text-primary' : isCompleted ? 'text-gray-500 dark:text-gray-400' : 'text-gray-400'} cursor-default select-none`}>{step.label}</div>
                         </div>
                       );
                     });
@@ -2965,16 +3434,16 @@ const ContractsPage: React.FC = () => {
             </div>
           </div>
           {/* Modal Content (scrollable) and Sticky Footer as siblings */}
-          <div className="flex flex-col flex-1 min-h-0">
-            <div className="overflow-y-auto p-6 flex-1 bg-gray-50 dark:bg-gray-900 cursor-default">
+          <div className="flex flex-col flex-1 min-h-0 cursor-default select-none">
+            <div className="overflow-y-auto p-6 flex-1 bg-gray-50 dark:bg-gray-900 cursor-default select-none">
               {/* Modal Content Grid: 2 columns */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full h-full min-h-0 -mt-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full h-full min-h-0 -mt-2 items-start cursor-default select-none">
                 {/* LEFT COLUMN: Contract Details, Parties Involved, Wire Details */}
-                <div className="flex flex-col gap-6 w-full h-full min-h-0">
+                <div className="flex flex-col gap-6 w-full cursor-default select-none">
                   {/* Contract Details Box */}
-                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 w-full cursor-default">
+                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 w-full cursor-default select-none">
                     <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Contract Details</h3>
-                    <div className="grid grid-cols-2 gap-x-12 gap-y-4">
+                    <div className="grid grid-cols-2 gap-x-12 gap-y-4 cursor-default select-none">
                       {/* Row 1: Contract ID and Hash */}
                       <div>
                         <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Contract ID</div>
@@ -2984,7 +3453,7 @@ const ContractsPage: React.FC = () => {
                         <div className="text-gray-500 text-xs mb-1 cursor-default select-none">Contract Hash</div>
                         <div className="flex items-center">
                           <span
-                            className="text-xs font-mono text-gray-900 dark:text-white truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200"
+                            className="text-xs font-mono text-gray-900 dark:text-white truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-default select-none"
                             style={{ maxWidth: '120px' }}
                             title={getContractHash(selectedContract.id)}
                           >
@@ -2993,7 +3462,7 @@ const ContractsPage: React.FC = () => {
                           <div className="relative">
                             <button
                               type="button"
-                              className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                              className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
                               onClick={() => {
                                 navigator.clipboard.writeText(getContractHash(selectedContract.id));
                                 setCopiedContractId(selectedContract.id);
@@ -3006,12 +3475,12 @@ const ContractsPage: React.FC = () => {
                               <HiOutlineDuplicate className="w-4 h-4" />
                             </button>
                             {copiedContractId === selectedContract.id && (
-                              <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded">
+                              <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none">
                                 Copied!
                               </div>
                             )}
                             {hoveredContractId === selectedContract.id && copiedContractId !== selectedContract.id && (
-                              <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded">
+                              <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none">
                                 Copy
                               </div>
                             )}
@@ -3045,7 +3514,7 @@ const ContractsPage: React.FC = () => {
                           />
                         ) : (
                           <div
-                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 cursor-text hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600 transition-colors cursor-pointer"
                             onClick={() => setIsEditingTitle(true)}
                             tabIndex={0}
                             onKeyDown={e => { if (e.key === 'Enter') setIsEditingTitle(true); }}
@@ -3061,20 +3530,20 @@ const ContractsPage: React.FC = () => {
                       {/* Status Row */}
                       <div>
                         <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Status</div>
-                        <span className={`inline-flex items-center justify-center min-w-[130px] h-7 px-4 font-semibold rounded-full text-xs ${getStatusBadgeStyle(selectedContract.status)}`}>{selectedContract.status}</span>
+                        <span className={`inline-flex items-center justify-center min-w-[130px] h-7 px-4 font-semibold rounded-full text-xs ${getStatusBadgeStyle(selectedContract.status)} cursor-default select-none`}>{selectedContract.status}</span>
                       </div>
                       <div></div>
                       {/* Row 3: Current Milestone and Next Step */}
                       <div>
                         <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Current Milestone</div>
-                        <span className={`inline-flex items-center justify-center min-w-[130px] h-7 px-4 font-semibold rounded-full text-xs ${getStatusBadgeStyle('Wire Details')}`}>Wire Details</span>
+                        <span className={`inline-flex items-center justify-center min-w-[130px] h-7 px-4 font-semibold rounded-full text-xs ${getStatusBadgeStyle('Wire Details')} cursor-default select-none`}>Wire Details</span>
                       </div>
                       <div>
                         <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Next Milestone</div>
-                        <span className={`inline-flex items-center justify-center min-w-[130px] h-7 px-4 font-semibold rounded-full text-xs ${getStatusBadgeStyle('In Review')}`}>Document Review</span>
+                        <span className={`inline-flex items-center justify-center min-w-[130px] h-7 px-4 font-semibold rounded-full text-xs ${getStatusBadgeStyle('In Review')} cursor-default select-none`}>Document Review</span>
                       </div>
                       {/* Row 4: Created Date and Last Updated */}
-                      <div className="col-span-2 grid grid-cols-2 gap-x-12">
+                      <div className="col-span-2 grid grid-cols-2 gap-x-12 cursor-default select-none">
                         <div>
                           <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Created Date</div>
                           <div className="text-xs text-black dark:text-white select-none cursor-default">2024-05-01</div>
@@ -3111,7 +3580,7 @@ const ContractsPage: React.FC = () => {
                           />
                         ) : (
                           <div
-                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 cursor-text hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600 transition-colors cursor-pointer"
                             onClick={() => setIsEditingValue(true)}
                             tabIndex={0}
                             onKeyDown={e => { if (e.key === 'Enter') setIsEditingValue(true); }}
@@ -3123,9 +3592,9 @@ const ContractsPage: React.FC = () => {
                     </div>
                   </div>
                   {/* Parties Involved Box */}
-                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 w-full cursor-default">
+                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 w-full cursor-default select-none">
                     <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Parties Involved</h3>
-                    <div className="grid grid-cols-1 gap-y-4">
+                    <div className="grid grid-cols-1 gap-y-4 cursor-default select-none">
                       {/* Buyer */}
                       <div>
                         <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Buyer / Client</div>
@@ -3153,7 +3622,7 @@ const ContractsPage: React.FC = () => {
                           />
                         ) : (
                           <div
-                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 cursor-text hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600 transition-colors cursor-pointer"
                             onClick={() => setIsEditingBuyer(true)}
                             tabIndex={0}
                             onKeyDown={e => { if (e.key === 'Enter') setIsEditingBuyer(true); }}
@@ -3189,7 +3658,7 @@ const ContractsPage: React.FC = () => {
                           />
                         ) : (
                           <div
-                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 cursor-text hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600 transition-colors cursor-pointer"
                             onClick={() => setIsEditingSeller(true)}
                             tabIndex={0}
                             onKeyDown={e => { if (e.key === 'Enter') setIsEditingSeller(true); }}
@@ -3225,7 +3694,7 @@ const ContractsPage: React.FC = () => {
                           />
                         ) : (
                           <div
-                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 cursor-text hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600 transition-colors cursor-pointer"
                             onClick={() => setIsEditingAgent(true)}
                             tabIndex={0}
                             onKeyDown={e => { if (e.key === 'Enter') setIsEditingAgent(true); }}
@@ -3237,73 +3706,173 @@ const ContractsPage: React.FC = () => {
                     </div>
                   </div>
                   {/* Wire Details Box */}
-                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 w-full cursor-default">
+                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 w-full cursor-default select-none">
                     <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Wire Details</h3>
-                    <div className="grid grid-cols-1 gap-y-4">
-                      {/* Routing Number */}
-                      <div>
-                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Routing Number</div>
-                        <input
-                          type="text"
-                          className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white dark:bg-gray-900 text-black dark:text-white"
-                          placeholder="Enter routing number"
-                        />
+                    <div className="space-y-6 cursor-default select-none">
+                      {/* Buyer Information */}
+                      <div className="space-y-4">
+                        {/* Buyer Financial Institution */}
+                        <div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Buyer Financial Institution</div>
+                          <input
+                            type="text"
+                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white dark:bg-gray-900 text-black dark:text-white"
+                            placeholder="Enter buyer financial institution"
+                          />
+                        </div>
+                        {/* Buyer Routing Number */}
+                        <div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Buyer Routing Number</div>
+                          <div className="relative bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-colors cursor-default select-none">
+                            <input
+                              type="text"
+                              className="w-full px-4 py-2 bg-transparent text-xs text-gray-900 dark:text-white border-none focus:outline-none"
+                              style={{ fontFamily: contractRoutingDisplay ? 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace' : 'Avenir, sans-serif' }}
+                              placeholder="Enter buyer routing number"
+                              maxLength={9}
+                              pattern="[0-9]*"
+                              inputMode="numeric"
+                              value={contractRoutingDisplay}
+                              onKeyPress={(e) => {
+                                if (!/[0-9]/.test(e.key)) {
+                                  e.preventDefault();
+                                }
+                              }}
+                              onChange={(e) => {
+                                handleRoutingNumberInput(
+                                  e,
+                                  contractRoutingValue,
+                                  setContractRoutingDisplay,
+                                  setContractRoutingValue,
+                                  contractRoutingTimeoutRef
+                                );
+                              }}
+                            />
+                          </div>
+                        </div>
+                        {/* Buyer Account Number */}
+                        <div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Buyer Account Number</div>
+                          <div className="relative bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-colors cursor-default select-none">
+                            <input
+                              type="text"
+                              className="w-full px-4 py-2 bg-transparent text-xs text-gray-900 dark:text-white border-none focus:outline-none"
+                              style={{ fontFamily: contractAccountDisplay ? 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace' : 'Avenir, sans-serif' }}
+                              placeholder="Enter buyer account number"
+                              maxLength={12}
+                              pattern="[0-9]*"
+                              inputMode="numeric"
+                              value={contractAccountDisplay}
+                              onKeyPress={(e) => {
+                                if (!/[0-9]/.test(e.key)) {
+                                  e.preventDefault();
+                                }
+                              }}
+                              onChange={(e) => {
+                                handleAccountNumberInput(
+                                  e,
+                                  contractAccountValue,
+                                  setContractAccountDisplay,
+                                  setContractAccountValue,
+                                  contractAccountTimeoutRef
+                                );
+                              }}
+                            />
+                          </div>
+                        </div>
                       </div>
-                      {/* Account Number */}
-                      <div>
-                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Account Number</div>
-                        <input
-                          type="text"
-                          className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white dark:bg-gray-900 text-black dark:text-white"
-                          placeholder="Enter account number"
-                        />
-                      </div>
-                      {/* Bank Name */}
-                      <div>
-                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Bank Name</div>
-                        <input
-                          type="text"
-                          className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white dark:bg-gray-900 text-black dark:text-white"
-                          placeholder="Enter bank name"
-                        />
+                      
+                      {/* Divider */}
+                      <div className="border-t border-gray-200"></div>
+                      
+                      {/* Seller Information */}
+                      <div className="space-y-4">
+                        {/* Seller Financial Institution */}
+                        <div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Seller Financial Institution</div>
+                          <input
+                            type="text"
+                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white dark:bg-gray-900 text-black dark:text-white"
+                            placeholder="Enter seller financial institution"
+                          />
+                        </div>
+                        {/* Seller Routing Number */}
+                        <div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Seller Routing Number</div>
+                          <div className="relative bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-colors cursor-default select-none">
+                            <input
+                              type="text"
+                              className="w-full px-4 py-2 bg-transparent text-xs text-gray-900 dark:text-white border-none focus:outline-none"
+                              style={{ fontFamily: 'Avenir, sans-serif' }}
+                              placeholder="Enter seller routing number"
+                              maxLength={9}
+                              pattern="[0-9]*"
+                              inputMode="numeric"
+                            />
+                          </div>
+                        </div>
+                        {/* Seller Account Number */}
+                        <div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Seller Account Number</div>
+                          <div className="relative bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-colors cursor-default select-none">
+                            <input
+                              type="text"
+                              className="w-full px-4 py-2 bg-transparent text-xs text-gray-900 dark:text-white border-none focus:outline-none"
+                              style={{ fontFamily: 'Avenir, sans-serif' }}
+                              placeholder="Enter seller account number"
+                              maxLength={12}
+                              pattern="[0-9]*"
+                              inputMode="numeric"
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
                 {/* RIGHT COLUMN: Documents, Signature Status, Tasks */}
-                <div className="flex flex-col gap-6 w-full h-full min-h-0">
+                <div className="flex flex-col gap-6 w-full cursor-default select-none">
                   {/* Documents Box */}
-                  <div ref={documentsBoxRef} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 w-full box-border cursor-default">
-                    <div className="flex items-center justify-between">
+                  <div ref={documentsBoxRef} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 w-full box-border cursor-default select-none">
+                    <div className="flex items-center justify-between cursor-default select-none">
                       <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Documents</h3>
                       <button 
                         onClick={() => { setShowUploadModal(true); setUploadContractId(selectedContract?.id || null); }}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-primary text-gray-700 dark:text-white font-semibold text-xs hover:bg-gray-200 dark:hover:bg-primary-dark transition-colors" style={{ fontFamily: 'Avenir, sans-serif' }}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-primary text-gray-700 dark:text-white font-semibold text-xs hover:bg-gray-200 dark:hover:bg-primary-dark transition-colors cursor-pointer" style={{ fontFamily: 'Avenir, sans-serif' }}
                       >
                         <HiOutlineUpload className="text-base text-primary dark:text-white" /> Upload
                       </button>
                     </div>
-                    <div className="flex flex-col gap-3 overflow-y-auto mt-4" style={{ maxHeight: '352px' }}>
+                    <div className="flex flex-col gap-3 overflow-y-auto mt-4 cursor-default select-none" style={{ maxHeight: '352px', minHeight: '80px' }}>
                       {filteredDocuments
                         .filter(doc => doc.contractId === selectedContract.id)
                         .map(doc => (
-                        <div key={doc.id} className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
-                          <div className="flex items-center gap-3">
+                        <div key={doc.id} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-100 dark:border-gray-600 cursor-default select-none">
+                          <div className="flex items-center gap-3 cursor-default select-none">
                             <HiOutlineDocumentText className="w-5 h-5 text-primary" />
                             <div>
-                              <div className="font-semibold text-xs text-black hover:underline cursor-default">{doc.name}</div>
-                              <div className="text-xs text-gray-500 cursor-default">{doc.dateUploaded} &bull; {doc.type} &bull; {doc.size}</div>
+                              <div className="font-semibold text-xs text-black dark:text-white hover:underline cursor-default select-none">{doc.name}</div>
+                              <div className="text-xs text-gray-500 cursor-default select-none">{doc.dateUploaded} &bull; {doc.type} &bull; {doc.size}</div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors bg-white dark:bg-gray-700" title="View" onClick={() => { setSelectedPdf({ name: doc.name, url: `/documents/${doc.name}`, id: doc.id }); setShowPdfViewer(true); }}>
-                              <HiOutlineEye className="h-4 w-4" />
+                          <div className="flex items-center gap-2 cursor-default select-none">
+                            <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer" onClick={() => { setSelectedPdf({ name: doc.name, url: `/documents/${doc.name}`, id: doc.id }); setShowPdfViewer(true); }}>
+                              <HiOutlineEye className="h-4 w-4 transition-colors" />
+                              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                View
+                              </span>
                             </button>
-                            <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors bg-white dark:bg-gray-700" title="Download">
-                              <HiOutlineDownload className="h-4 w-4" />
+                            <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer">
+                              <HiOutlineDownload className="h-4 w-4 transition-colors" />
+                              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                Download
+                              </span>
                             </button>
-                            <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-red-500 hover:text-red-500 transition-colors bg-white dark:bg-gray-700" title="Delete">
-                              <HiOutlineTrash className="h-4 w-4" />
+                            <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group cursor-pointer">
+                              <HiOutlineTrash className="h-4 w-4 transition-colors" />
+                              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                Delete
+                              </span>
                             </button>
                           </div>
                         </div>
@@ -3311,88 +3880,88 @@ const ContractsPage: React.FC = () => {
                     </div>
                   </div>
                   {/* Signature Status Box */}
-                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 w-full cursor-default">
+                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 w-full cursor-default select-none">
                     <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Signature Status</h3>
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-3 cursor-default select-none">
                       {/* Use contract parties for signature status */}
                       {[
                         { name: selectedContract?.buyer || selectedContract?.parties?.split('&')[0]?.trim() || 'Robert Chen', role: 'Client', status: 'Signed', date: 'May 18, 2025' },
                         { name: selectedContract?.seller || selectedContract?.parties?.split('&')[1]?.trim() || 'Eastside Properties', role: 'Seller', status: 'Signed', date: 'May 17, 2025' },
                         { name: selectedContract?.agent || 'N/A', role: 'Escrow Officer', status: 'Pending', date: null },
                       ].map((sig) => (
-                        <div key={sig.name} className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-2.5 border border-gray-100">
+                        <div key={sig.name} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 rounded-lg px-4 py-2.5 border border-gray-100 dark:border-gray-600 cursor-default select-none">
                           <div>
-                            <div className="font-semibold text-gray-900 text-sm">{sig.name}</div>
-                            <div className="text-xs text-gray-500">{sig.role}</div>
+                            <div className="font-semibold text-gray-900 dark:text-white text-sm cursor-default select-none">{sig.name}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 cursor-default select-none">{sig.role}</div>
                           </div>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-4 cursor-default select-none">
                             {sig.status === 'Signed' ? (
-                              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
+                              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold cursor-default select-none">
                                 <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                                 Signed
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-semibold">
+                              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-semibold cursor-default select-none">
                                 <svg className="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3" /></svg>
                                 Pending
                               </span>
                             )}
-                            <span className="text-xs text-gray-400 font-medium min-w-[90px] text-right">{sig.date || ''}</span>
+                            <span className="text-xs text-gray-400 font-medium min-w-[90px] text-right cursor-default select-none">{sig.date || ''}</span>
                           </div>
                         </div>
                       ))}
                     </div>
                   </div>
                   {/* Tasks Box */}
-                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 w-full cursor-default">
-                    <div className="flex items-center justify-between mb-4">
+                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 w-full cursor-default select-none">
+                    <div className="flex items-center justify-between mb-4 cursor-default select-none">
                       <h3 className="text-sm font-semibold text-gray-900 dark:text-white cursor-default select-none">Tasks</h3>
-                      <button className="flex items-center gap-2 px-2 py-1 rounded-lg border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-primary text-gray-700 dark:text-white font-semibold text-xs hover:bg-gray-200 dark:hover:bg-primary-dark transition-colors" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                      <button className="flex items-center gap-2 px-2 py-1 rounded-lg border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-primary text-gray-700 dark:text-white font-semibold text-xs hover:bg-gray-200 dark:hover:bg-primary-dark transition-colors cursor-pointer" style={{ fontFamily: 'Avenir, sans-serif' }}>
                         <span className="text-base font-bold text-primary dark:text-white">+</span> New Task
                       </button>
                     </div>
-                    <div className="flex flex-col gap-3 overflow-y-auto" style={{ maxHeight: '352px' }}>
+                    <div className="flex flex-col gap-3 overflow-y-auto cursor-default select-none flex-1" style={{ minHeight: '710px' }}>
                       {selectedContract ? (
                         getTasksByContract(selectedContract.id).length > 0 ? (
                           getTasksByContract(selectedContract.id).map(task => (
-                            <div key={task.id} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 p-4 shadow-sm relative">
-                              {/* Task Number - Top Left */}
-                              <div className="mb-3">
-                                <span className="text-[10px] font-bold bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-200">
-                                  Task #{task.taskNumber}
-                                </span>
-                                <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20 ml-1">
-                                  # {task.contractId}
-                                </span>
+                            <div key={task.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-100 dark:border-gray-600 p-4 shadow-sm relative cursor-default select-none">
+                              {/* Task Number and Open Button - Top Row */}
+                              <div className="flex items-center justify-between mb-3 cursor-default select-none">
+                                <div className="cursor-default select-none">
+                                  <span className="text-[10px] font-bold bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-200 cursor-default select-none">
+                                    Task #{task.taskNumber}
+                                  </span>
+                                  <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20 ml-1 cursor-default select-none">
+                                    # {task.contractId}
+                                  </span>
+                                </div>
+                                {/* Open Task Button - Top Right */}
+                                <button 
+                                  className="border border-gray-300 dark:border-gray-500 rounded-md px-1 py-0.5 text-white hover:border-primary hover:text-primary transition-colors cursor-pointer relative group"
+                                >
+                                  <FaArrowUpRightFromSquare className="h-3 w-3" />
+                                  <span className="absolute -bottom-8 -right-1 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                    Open Task
+                                  </span>
+                                </button>
                               </div>
-
-                              {/* Open Task Button - Top Right */}
-                              <button 
-                                className="absolute top-3 right-3 border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors" 
-                                title="Open Task"
-                              >
-                                <FaArrowUpRightFromSquare className="h-3 w-3" />
-                              </button>
-
                               {/* Task Title */}
-                              <h3 className="text-xs font-bold text-gray-900 mb-2 cursor-default">{task.title}</h3>
-
+                              <h3 className="text-xs font-bold text-gray-900 dark:text-white mb-2 cursor-default select-none">{task.title}</h3>
                               {/* Due Date and Status */}
-                              <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-1">
+                              <div className="flex items-center justify-between mb-3 cursor-default select-none">
+                    <div className="flex items-center gap-1 cursor-default select-none">
                                   <LuCalendarFold className="text-gray-400 text-sm" />
-                                  <span className="text-xs text-gray-500">{formatDatePretty(task.due)}</span>
+                                  <span className="text-xs text-gray-500 cursor-default select-none">{formatDatePretty(task.due)}</span>
                     </div>
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${getTaskStatusBadgeStyle(task.status)}`}>
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${getTaskStatusBadgeStyle(task.status)} cursor-default select-none`}>
                                   {getTaskStatusLabel(task.status)}
                                 </span>
                               </div>
-
                               {/* Progress Section */}
-                              <div className="space-y-2 mb-3">
-                                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                              <div className="space-y-2 mb-3 cursor-default select-none">
+                                <div className="h-2 bg-gray-100 rounded-full overflow-hidden cursor-default select-none">
                                   <div
-                                    className="h-full bg-primary rounded-full"
+                                    className="h-full bg-primary rounded-full cursor-default select-none"
                                     style={{
                                       width: `${(() => {
                                         const taskSubtasks = task.subtasks || [];
@@ -3403,11 +3972,10 @@ const ContractsPage: React.FC = () => {
                                   />
                                 </div>
                               </div>
-
                               {/* Assignee and Progress */}
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-900 cursor-default">{task.assignee}</span>
-                                <span className="text-xs text-gray-900 cursor-default">{(() => {
+                              <div className="flex items-center justify-between cursor-default select-none">
+                                <span className="text-xs text-gray-900 dark:text-white cursor-default select-none">{task.assignee}</span>
+                                <span className="text-xs text-gray-900 dark:text-white cursor-default select-none">{(() => {
                                   const taskSubtasks = task.subtasks || [];
                                   const completed = taskSubtasks.filter(st => st.completed).length;
                                   return `${completed} of ${taskSubtasks.length}`;
@@ -3417,7 +3985,7 @@ const ContractsPage: React.FC = () => {
                           ))
                         ) : (
                           <div className="text-center py-8 text-gray-500 text-sm cursor-default select-none">
-                            <span className="text-xs text-gray-500 cursor-default select-none">No tasks for this contract. Click "New Task" to add one.</span>
+                            <span className="text-sm text-gray-500 cursor-default select-none">No tasks for this contract. Click "New Task" to add one.</span>
                           </div>
                         )
                       ) : (
@@ -3426,35 +3994,34 @@ const ContractsPage: React.FC = () => {
                         </div>
                       )}
                     </div>
+                                      </div>
                   </div>
                 </div>
-              </div>
 
               {/* Comments Box - Full Width */}
-              <div className="mt-6">
-                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 cursor-default">
+              <div className="mt-6 cursor-default select-none">
+                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 cursor-default select-none">
                   <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Comments</h3>
-                  
                   {/* Comment History */}
-                  <div className="space-y-4 mb-4 max-h-[300px] overflow-y-auto pr-2">
+                  <div className="space-y-4 mb-4 max-h-[300px] overflow-y-auto pr-2 cursor-default select-none">
                     {(selectedContract ? (contractComments[selectedContract.id] || []) : []).map((comment) => (
-                      <div key={comment.id} className="flex items-start gap-3">
-                        <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${comment.avatarColor}`}>
+                      <div key={comment.id} className="flex items-start gap-3 cursor-default select-none">
+                        <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${comment.avatarColor} cursor-default select-none`}>
                           <BsPerson className={`${comment.textColor} text-lg`} />
                         </span>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs font-semibold text-gray-900">{comment.author}</span>
-                            <span className="text-xs text-gray-500">{comment.timestamp}</span>
+                        <div className="flex-1 cursor-default select-none">
+                          <div className="flex items-center gap-2 mb-1 cursor-default select-none">
+                            <span className="text-xs font-semibold text-gray-900 cursor-default select-none">{comment.author}</span>
+                            <span className="text-xs text-gray-500 cursor-default select-none">{comment.timestamp}</span>
                           </div>
                           <div 
                             className="text-xs text-gray-900 font-medium mb-2 select-none cursor-default"
                             dangerouslySetInnerHTML={{ __html: comment.content }}
                           />
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 cursor-default select-none">
                             <button
                               onClick={() => handleEditContractComment(comment.id)}
-                              className="text-xs text-gray-500 hover:text-primary transition-colors flex items-center gap-1"
+                              className="text-xs text-gray-500 hover:text-primary transition-colors flex items-center gap-1 cursor-pointer"
                             >
                               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -3463,7 +4030,7 @@ const ContractsPage: React.FC = () => {
                             </button>
                             <button
                               onClick={() => handleDeleteContractComment(comment.id)}
-                              className="text-xs text-gray-500 hover:text-red-500 transition-colors flex items-center gap-1"
+                              className="text-xs text-gray-500 hover:text-red-500 transition-colors flex items-center gap-1 cursor-pointer"
                             >
                               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -3477,25 +4044,25 @@ const ContractsPage: React.FC = () => {
                   </div>
 
                   {/* Add Comment Section */}
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <div className="flex items-start gap-3">
-                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary/10">
+                  <div className="mt-4 pt-4 border-t border-gray-200 cursor-default select-none">
+                    <div className="flex items-start gap-3 cursor-default select-none">
+                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 cursor-default select-none">
                         <BsPerson className="text-primary text-lg" />
                       </span>
-                      <div className="flex-1">
+                      <div className="flex-1 cursor-default select-none">
                         {/* Toolbar */}
                         {commentEditor && (
                           <>
-                            <div className="flex gap-2 mb-2 bg-white dark:bg-gray-800 rounded-lg px-2 py-1 items-center">
-                              <button onClick={() => commentEditor.chain().focus().toggleBold().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('bold') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'}`} title="Bold"><b>B</b></button>
-                              <button onClick={() => commentEditor.chain().focus().toggleItalic().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('italic') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'}`} title="Italic"><i>I</i></button>
-                              <button onClick={() => commentEditor.chain().focus().toggleUnderline().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('underline') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'}`} title="Underline"><u>U</u></button>
-                              <button onClick={() => commentEditor.chain().focus().toggleStrike().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('strike') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'}`} title="Strikethrough"><s>S</s></button>
-                              <button onClick={() => commentEditor.chain().focus().toggleBulletList().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('bulletList') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'}`} title="Bullet List">• List</button>
-                              <button onClick={() => commentEditor.chain().focus().toggleOrderedList().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('orderedList') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'}`} title="Numbered List">1. List</button>
-                              <button onClick={handlePostContractComment} className="ml-auto -mr-4 text-xs px-2 py-1 rounded transition-colors flex items-center group relative" title="Send">
+                            <div className="flex gap-2 mb-2 bg-white dark:bg-gray-800 rounded-lg px-2 py-1 items-center cursor-default select-none">
+                              <button onClick={() => commentEditor.chain().focus().toggleBold().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('bold') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'} cursor-pointer`} title="Bold"><b>B</b></button>
+                              <button onClick={() => commentEditor.chain().focus().toggleItalic().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('italic') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'} cursor-pointer`} title="Italic"><i>I</i></button>
+                              <button onClick={() => commentEditor.chain().focus().toggleUnderline().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('underline') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'} cursor-pointer`} title="Underline"><u>U</u></button>
+                              <button onClick={() => commentEditor.chain().focus().toggleStrike().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('strike') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'} cursor-pointer`} title="Strikethrough"><s>S</s></button>
+                              <button onClick={() => commentEditor.chain().focus().toggleBulletList().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('bulletList') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'} cursor-pointer`} title="Bullet List">• List</button>
+                              <button onClick={() => commentEditor.chain().focus().toggleOrderedList().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('orderedList') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'} cursor-pointer`} title="Numbered List">1. List</button>
+                              <button onClick={handlePostContractComment} className="ml-auto -mr-4 text-xs px-2 py-1 rounded transition-colors flex items-center group relative cursor-pointer" title="Send">
                                 <BiCommentAdd className="w-5 h-5 text-gray-700 dark:text-white group-hover:text-primary transition-colors" />
-                                <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 cursor-default select-none">
                                   Send
                                 </span>
                               </button>
@@ -3505,13 +4072,13 @@ const ContractsPage: React.FC = () => {
                                     setEditingContractCommentId(null);
                                     commentEditor.commands.clearContent();
                                   }} 
-                                  className="text-xs px-2 py-1 rounded text-gray-500 hover:text-red-500 transition-colors"
+                                  className="text-xs px-2 py-1 rounded text-gray-500 hover:text-red-500 transition-colors cursor-pointer"
                                 >
                                   Cancel
                                 </button>
                               )}
                             </div>
-                            <div className="border-2 border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 focus-within:border-primary transition-colors">
+                            <div className="border-2 border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 focus-within:border-primary transition-colors cursor-default select-none">
                               <EditorContent
                                 editor={commentEditor}
                                 className="tiptap min-h-[48px] px-4 py-2 text-xs font-medium text-black dark:text-white font-sans outline-none"
@@ -3531,15 +4098,15 @@ const ContractsPage: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="bg-gray-50 dark:bg-gray-900 z-30 px-6 py-4 flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+            <div className="bg-gray-50 dark:bg-gray-900 z-30 px-6 py-4 flex flex-col md:flex-row md:justify-between md:items-center gap-3 cursor-default select-none">
               <button
-                className="flex items-center gap-2 px-5 py-2 rounded-lg border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-primary text-gray-700 dark:text-white font-semibold text-sm hover:bg-gray-200 dark:hover:bg-primary-dark transition-colors"
+                className="flex items-center gap-2 px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
               >
                 <HiOutlineClipboardList className="w-5 h-5 text-primary dark:text-white" />
                 Download Summary
               </button>
               <button
-                className="flex items-center justify-center px-5 py-2 rounded-lg bg-primary text-white font-semibold text-sm hover:bg-primary-dark transition-colors"
+                className="flex items-center justify-center px-5 py-2 rounded-lg bg-primary text-white font-semibold text-sm hover:bg-primary-dark transition-colors cursor-pointer"
                 onClick={() => setSelectedContract(null)}
               >
                 Close
@@ -3551,12 +4118,12 @@ const ContractsPage: React.FC = () => {
     )}
     
     {showUploadModal && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 upload-modal">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-bold text-gray-900">Upload Documents</h2>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 upload-modal cursor-default select-none">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 cursor-default select-none">
+          <div className="flex justify-between items-center mb-4 cursor-default select-none">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white cursor-default select-none">Upload Documents</h2>
               <button
-              className="text-gray-400 hover:text-gray-600"
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
               onClick={() => { setShowUploadModal(false); setUploadModalFiles([]); }}
               >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3564,25 +4131,25 @@ const ContractsPage: React.FC = () => {
                 </svg>
               </button>
             </div>
-          <div className="mb-4 text-xs text-gray-500">
+          <div className="mb-4 text-xs text-gray-500 dark:text-gray-400 cursor-default select-none">
             {uploadContractId && (
               <span>
-                For Contract: <span className="font-semibold text-primary">#{uploadContractId}</span>
+                For Contract: <span className="font-semibold text-primary cursor-default select-none">#{uploadContractId}</span>
               </span>
             )}
           </div>
           <form
-            className="p-0"
+            className="p-0 cursor-default select-none"
             onSubmit={e => {
               e.preventDefault();
               setShowUploadModal(false);
               setUploadModalFiles([]);
             }}
           >
-            <div className="flex flex-col gap-4 mb-4">
-              <div className="flex gap-4">
-                <div className="flex-1 w-0">
-                  <div className="text-gray-500 text-xs mb-1 cursor-default select-none">File Source</div>
+            <div className="flex flex-col gap-4 mb-4 cursor-default select-none">
+              <div className="flex gap-4 cursor-default select-none">
+                <div className="flex-1 w-0 cursor-default select-none">
+                  <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">File Source</div>
                   <div className="relative" ref={uploadDropdownRef}>
                     <button
                       type="button"
@@ -3590,30 +4157,30 @@ const ContractsPage: React.FC = () => {
                         e.stopPropagation();
                         setShowUploadDropdown(!showUploadDropdown);
                       }}
-                      className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 bg-white text-gray-900 text-xs focus:ring-0 focus:ring-primary focus:border-primary transition-colors flex items-center justify-end relative"
+                      className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs focus:ring-0 focus:ring-primary focus:border-primary transition-colors flex items-center justify-end relative cursor-pointer"
                       style={{ fontFamily: 'Avenir, sans-serif' }}
                     >
                       {selectedUploadSource ? (
-                        <span className="flex items-center gap-2 absolute left-4">
+                        <span className="flex items-center gap-2 absolute left-4 cursor-default select-none">
                           {selectedUploadSource === 'Desktop' && <TbDeviceDesktopPlus className="text-base text-primary" />}
                           {selectedUploadSource === 'Box' && <SiBox className="text-base text-primary" />}
                           {selectedUploadSource === 'Dropbox' && <SlSocialDropbox className="text-base text-primary" />}
                           {selectedUploadSource === 'Google Drive' && <TbBrandGoogleDrive className="text-base text-primary" />}
                           {selectedUploadSource === 'OneDrive' && <TbBrandOnedrive className="text-base text-primary" />}
-                          <span className="text-xs text-gray-900">{selectedUploadSource}</span>
+                          <span className="text-xs text-gray-900 cursor-default select-none">{selectedUploadSource}</span>
                         </span>
                       ) : (
-                        <span className="absolute left-4 text-xs text-gray-400">Choose a source...</span>
+                        <span className="absolute left-4 text-xs text-gray-400 cursor-default select-none">Choose a source...</span>
                       )}
                       <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     </button>
                     {showUploadDropdown && (
-                      <div className="absolute z-50 mt-1 w-full bg-white rounded-lg shadow-lg border border-gray-200">
-                        <div className="py-1">
-                          <label htmlFor="file-upload" className="block px-4 py-2 text-left hover:bg-primary/10 hover:text-primary cursor-pointer" onClick={() => { setSelectedUploadSource('Desktop'); setShowUploadDropdown(false); }}>
+                      <div className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 cursor-default select-none">
+                        <div className="py-2">
+                          <label htmlFor="file-upload" className="block px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setSelectedUploadSource('Desktop'); setShowUploadDropdown(false); }}>
                             <div className="flex items-center gap-2">
                               <TbDeviceDesktopPlus className="text-base text-primary" />
-                              <span className="text-xs">Desktop</span>
+                              <span className="text-xs cursor-default select-none">Desktop</span>
                             </div>
                           </label>
                           <input
@@ -3625,50 +4192,46 @@ const ContractsPage: React.FC = () => {
                             multiple
                             onChange={handleFileChange}
                           />
-                          <button className="w-full px-4 py-2 text-left hover:bg-primary/10 hover:text-primary flex items-center gap-2">
+                          <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setSelectedUploadSource('Box'); setShowUploadDropdown(false); }}>
                             <SiBox className="text-base text-primary" />
-                            <span className="text-xs">Box</span>
+                            <span className="text-xs cursor-default select-none">Box</span>
                           </button>
-                          <button className="w-full px-4 py-2 text-left hover:bg-primary/10 hover:text-primary flex items-center gap-2" onClick={() => { setSelectedUploadSource('Box'); setShowUploadDropdown(false); }}>
-                            <SiBox className="text-base text-primary" />
-                            <span className="text-xs">Box</span>
-                          </button>
-                          <button className="w-full px-4 py-2 text-left hover:bg-primary/10 hover:text-primary flex items-center gap-2" onClick={() => { setSelectedUploadSource('Dropbox'); setShowUploadDropdown(false); }}>
+                          <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setSelectedUploadSource('Dropbox'); setShowUploadDropdown(false); }}>
                             <SlSocialDropbox className="text-base text-primary" />
-                            <span className="text-xs">Dropbox</span>
+                            <span className="text-xs cursor-default select-none">Dropbox</span>
                           </button>
-                          <button className="w-full px-4 py-2 text-left hover:bg-primary/10 hover:text-primary flex items-center gap-2" onClick={() => { setSelectedUploadSource('Google Drive'); setShowUploadDropdown(false); }}>
+                          <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setSelectedUploadSource('Google Drive'); setShowUploadDropdown(false); }}>
                             <TbBrandGoogleDrive className="text-base text-primary" />
-                            <span className="text-xs">Google Drive</span>
+                            <span className="text-xs cursor-default select-none">Google Drive</span>
                           </button>
-                          <button className="w-full px-4 py-2 text-left hover:bg-primary/10 hover:text-primary flex items-center gap-2" onClick={() => { setSelectedUploadSource('OneDrive'); setShowUploadDropdown(false); }}>
+                          <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setSelectedUploadSource('OneDrive'); setShowUploadDropdown(false); }}>
                             <TbBrandOnedrive className="text-base text-primary" />
-                            <span className="text-xs">OneDrive</span>
+                            <span className="text-xs cursor-default select-none">OneDrive</span>
                           </button>
                         </div>
                       </div>
                     )}
                   </div>
                 </div>
-                <div className="flex-1 w-0" />
+                <div className="flex-1 w-0 cursor-default select-none" />
               </div>
-              <div className="flex gap-4">
-                <div className="flex-1 w-0">
-                  <label className="block text-xs text-gray-500 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Document Name</label>
+              <div className="flex gap-4 cursor-default select-none">
+                <div className="flex-1 w-0 cursor-default select-none">
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Document Name</label>
                   <input
                     type="text"
                     placeholder="Enter document name..."
-                    className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 bg-white text-gray-900 text-xs focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                    className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs focus:ring-2 focus:ring-primary focus:border-primary transition-colors cursor-text"
                     style={{ fontFamily: 'Avenir, sans-serif' }}
                   />
                 </div>
-                <div className="flex-1 w-0">
-                  <label className="block text-xs text-gray-500 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Assignee</label>
+                <div className="flex-1 w-0 cursor-default select-none">
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Assignee</label>
                   <div className="relative" ref={uploadModalAssigneeDropdownRef}>
                     <input
                       ref={uploadModalAssigneeInputRef}
                       type="text"
-                      className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 bg-white text-gray-900 text-xs focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                      className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs focus:ring-2 focus:ring-primary focus:border-primary transition-colors cursor-text"
                       placeholder="Choose an assignee..."
                       value={uploadModalAssignee}
                       onChange={(e) => setUploadModalAssignee(e.target.value)}
@@ -3677,12 +4240,12 @@ const ContractsPage: React.FC = () => {
                       autoComplete="off"
                     />
                     {showUploadModalAssigneeDropdown && (
-                      <div className="absolute left-0 right-0 mt-1 bg-white border-2 border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                      <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
                         {allAssignees.length > 0 ? (
                           allAssignees.map((assignee: string) => (
                             <div
                               key={assignee}
-                              className="px-4 py-2 text-xs cursor-pointer hover:bg-primary/10 hover:text-primary"
+                              className={`px-4 py-2 text-xs cursor-pointer ${uploadModalAssignee === assignee ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'} select-none`}
                               onClick={() => {
                                 setUploadModalAssignee(assignee);
                                 setShowUploadModalAssigneeDropdown(false);
@@ -3692,7 +4255,7 @@ const ContractsPage: React.FC = () => {
                             </div>
                           ))
                         ) : (
-                          <div className="px-4 py-2 text-xs text-gray-400">No assignees found</div>
+                          <div className="px-4 py-2 text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">No assignees found</div>
                         )}
                       </div>
                     )}
@@ -3700,11 +4263,11 @@ const ContractsPage: React.FC = () => {
                 </div>
               </div>
             </div>
-            <label htmlFor="upload-modal-file-upload" className="block cursor-pointer">
-              <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 py-8 px-4 text-center transition hover:border-primary">
-                <HiOutlineUpload className="h-4 w-4 text-gray-400 mb-2" />
-                <div className="text-xs text-gray-700 font-semibold cursor-default select-none">Click to upload or drag and drop</div>
-                <div className="text-[10px] text-gray-400 mt-1 cursor-default select-none">PDF, DOC, DOCX, or JPG (max. 10MB each)</div>
+            <label htmlFor="upload-modal-file-upload" className="block cursor-pointer select-none">
+              <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 py-8 px-4 text-center transition hover:border-primary cursor-pointer select-none">
+                <HiOutlineUpload className="h-4 w-4 text-gray-400 mb-2 select-none" />
+                <div className="text-xs text-gray-700 dark:text-gray-300 font-semibold select-none">Click to upload or drag and drop</div>
+                <div className="text-[10px] text-gray-400 dark:text-gray-500 mt-1 select-none">PDF, DOC, DOCX, or JPG (max. 10MB each)</div>
                 <input
                   id="upload-modal-file-upload"
                   name="upload-modal-file-upload"
@@ -3717,13 +4280,13 @@ const ContractsPage: React.FC = () => {
               </div>
             </label>
             {uploadModalFiles.length > 0 && (
-              <ul className="mt-3 text-sm text-gray-600 cursor-default select-none">
+              <ul className="mt-3 text-sm text-gray-600 dark:text-gray-400 select-none">
                 {uploadModalFiles.map((file, idx) => (
-                  <li key={idx} className="truncate">{file.name}</li>
+                  <li key={idx} className="truncate select-none">{file.name}</li>
                 ))}
               </ul>
             )}
-            <button type="submit" className="w-full mt-6 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold">
+            <button type="submit" className="w-full mt-6 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold cursor-pointer">
               Upload
             </button>
           </form>
@@ -3732,18 +4295,18 @@ const ContractsPage: React.FC = () => {
     )}
 
     {showPdfViewer && selectedPdf && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-        <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex justify-between items-center">
-              <div className="flex flex-col gap-2 items-start">
-                <span className="inline-block max-w-max text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 cursor-default select-none">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col cursor-default select-none">
+          <div className="p-6 border-b border-gray-200 dark:border-gray-700 cursor-default select-none">
+            <div className="flex justify-between items-center cursor-default select-none">
+              <div className="flex flex-col gap-2 items-start cursor-default select-none">
+                <span className="inline-block max-w-max text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20 cursor-default select-none">
                   # {selectedPdf.id || '1234'}
                 </span>
-                <h2 className="text-lg font-bold text-gray-900 mt-0.5">{selectedPdf.name}</h2>
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white mt-0.5 cursor-default select-none">{selectedPdf.name}</h2>
               </div>
               <button
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
                 onClick={() => setShowPdfViewer(false)}
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3752,9 +4315,9 @@ const ContractsPage: React.FC = () => {
               </button>
             </div>
           </div>
-          <div className="flex-1 p-6 overflow-auto flex items-center justify-center bg-gray-50">
+          <div className="flex-1 p-6 overflow-auto flex items-center justify-center bg-gray-50 dark:bg-gray-900 cursor-default select-none">
             {/* Blank area for PDF viewer */}
-            <span className="text-gray-400 text-lg cursor-default select-none">PDF Viewer will be implemented here</span>
+            <span className="text-gray-400 dark:text-gray-500 text-lg cursor-default select-none">PDF Viewer will be implemented here</span>
           </div>
         </div>
       </div>
@@ -3782,22 +4345,22 @@ const ContractsPage: React.FC = () => {
 
     {/* Document Details Modal */}
     {showDocumentModal && selectedDocument && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-        <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 cursor-default select-none">
+        <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden cursor-default select-none">
           {/* Sticky Header with Document ID and Close buttons */}
-          <div className="sticky top-0 z-40 bg-white dark:bg-gray-900 px-6 py-4">
-            <div className="flex items-start justify-between">
+          <div className="sticky top-0 z-40 bg-gray-50 dark:bg-gray-900 px-6 py-4 cursor-default select-none">
+            <div className="flex items-start justify-between cursor-default select-none">
               {/* Left: Document ID and Status */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-4 mb-4">
-                  <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary">
+              <div className="flex-1 min-w-0 cursor-default select-none">
+                <div className="flex items-center gap-4 mb-4 cursor-default select-none">
+                  <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary cursor-default select-none">
                     # {selectedDocument.id}
                   </span>
                 </div>
               </div>
               {/* Right: Close Button */}
               <button
-                className="text-gray-400 hover:text-gray-600 p-2 rounded-full ml-4 mt-1"
+                className="text-gray-400 hover:text-gray-600 p-2 rounded-full ml-4 mt-1 cursor-pointer"
                 onClick={() => setShowDocumentModal(false)}
                 aria-label="Close"
               >
@@ -3808,22 +4371,22 @@ const ContractsPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex flex-col flex-1 min-h-0">
-            <div className="overflow-y-auto p-6 flex-1">
+          <div className="flex flex-col flex-1 min-h-0 cursor-default select-none">
+            <div className="overflow-y-auto p-6 flex-1 bg-gray-50 dark:bg-gray-900 cursor-default select-none">
               {/* Document Details and File Information Grid */}
-              <div className="grid grid-cols-2 gap-6 mb-6">
+              <div className="grid grid-cols-2 gap-6 mb-6 cursor-default select-none">
                 {/* Document Details Box */}
-                <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 cursor-default select-none">
                   <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Document Details</h3>
-                  <div className="grid grid-cols-2 gap-x-12 gap-y-4">
-                            <div>
+                  <div className="grid grid-cols-2 gap-x-12 gap-y-4 cursor-default select-none">
+                    <div>
                       <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Document ID</div>
-                      <div className="text-xs text-black dark:text-white">{selectedDocument.id}</div>
-                            </div>
+                      <div className="text-xs text-black dark:text-white cursor-default select-none">{selectedDocument.id}</div>
+                    </div>
                     <div>
                       <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Contract ID</div>
-                      <div className="text-xs text-black dark:text-white">{selectedDocument.contractId}</div>
-                          </div>
+                      <div className="text-xs text-black dark:text-white cursor-default select-none">{selectedDocument.contractId}</div>
+                    </div>
                     <div>
                       <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Document Name</div>
                       <input
@@ -3833,19 +4396,19 @@ const ContractsPage: React.FC = () => {
                           const updatedDoc = { ...selectedDocument, name: e.target.value };
                           setSelectedDocument(updatedDoc);
                         }}
-                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       />
                     </div>
                     <div>
                       <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Contract Name</div>
-                      <div className="text-xs text-black dark:text-white mb-4 pt-2">{selectedDocument.contractTitle}</div>
+                      <div className="text-xs text-black dark:text-white mb-4 pt-2 cursor-default select-none">{selectedDocument.contractTitle}</div>
                     </div>
                     <div>
                       <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Document Hash</div>
-                      <div className="flex items-center">
+                      <div className="flex items-center cursor-default select-none">
                         <span
-                          className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
+                          className="text-xs font-mono text-gray-900 dark:text-white truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-default select-none"
                           style={{ maxWidth: '120px' }}
                           title={getContractHash(selectedDocument.id)}
                         >
@@ -3854,7 +4417,7 @@ const ContractsPage: React.FC = () => {
                         <div className="relative">
                           <button 
                             type="button"
-                            className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                            className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
                             onClick={() => {
                               navigator.clipboard.writeText(getContractHash(selectedDocument.id));
                               setCopiedContractId(selectedDocument.id);
@@ -3867,12 +4430,12 @@ const ContractsPage: React.FC = () => {
                             <HiOutlineDuplicate className="w-4 h-4" />
                           </button>
                           {copiedContractId === selectedDocument.id && (
-                            <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded">
+                            <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none">
                               Copied!
                             </div>
                           )}
                           {hoveredContractId === selectedDocument.id && copiedContractId !== selectedDocument.id && (
-                            <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded">
+                            <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none">
                               Copy
                             </div>
                           )}
@@ -3881,11 +4444,11 @@ const ContractsPage: React.FC = () => {
                     </div>
                     <div>
                       <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Assignee</div>
-                      <div className="relative w-full" ref={documentDetailsAssigneeDropdownRef}>
+                      <div className="relative w-full cursor-default select-none" ref={documentDetailsAssigneeDropdownRef}>
                         <input
                           ref={documentDetailsAssigneeInputRef}
                           type="text"
-                          className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                          className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                           placeholder={selectedDocument?.assignee || 'Select assignee...'}
                           value={selectedDocument?.assignee || ''}
                           onChange={(e) => {
@@ -3898,12 +4461,12 @@ const ContractsPage: React.FC = () => {
                           autoComplete="off"
                         />
                         {showAssigneeDropdown && (
-                          <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-700 border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                          <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
                             {allAssignees.length > 0 ? (
                               allAssignees.map((assignee: string) => (
                                 <div
                                   key={assignee}
-                                  className="px-4 py-2 text-xs cursor-pointer hover:bg-primary/10 hover:text-primary"
+                                  className={`px-4 py-2 text-xs cursor-pointer ${selectedDocument?.assignee === assignee ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                                   onClick={() => {
                                     const updatedDoc = { ...selectedDocument, assignee };
                                     setSelectedDocument(updatedDoc);
@@ -3914,7 +4477,7 @@ const ContractsPage: React.FC = () => {
                                 </div>
                               ))
                             ) : (
-                              <div className="px-4 py-2 text-xs text-gray-400">No assignees found</div>
+                              <div className="px-4 py-2 text-xs text-gray-400 dark:text-gray-500">No assignees found</div>
                             )}
                           </div>
                         )}
@@ -3924,33 +4487,33 @@ const ContractsPage: React.FC = () => {
                 </div>
 
                 {/* File Information Box */}
-                <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 cursor-default select-none">
                   <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">File Information</h3>
-                  <div className="grid grid-cols-2 gap-x-12 gap-y-4">
+                  <div className="grid grid-cols-2 gap-x-12 gap-y-4 cursor-default select-none">
                     <div>
                       <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Type</div>
-                      <div className="text-xs text-black dark:text-white mb-4">{selectedDocument.type}</div>
+                      <div className="text-xs text-black dark:text-white mb-4 cursor-default select-none">{selectedDocument.type}</div>
                     </div>
                     <div>
                       <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Size</div>
-                      <div className="text-xs text-black dark:text-white mb-4">{selectedDocument.size}</div>
+                      <div className="text-xs text-black dark:text-white mb-4 cursor-default select-none">{selectedDocument.size}</div>
                     </div>
                     <div>
                       <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Uploaded By</div>
-                      <div className="text-xs text-black dark:text-white mb-4">{selectedDocument.uploadedBy}</div>
+                      <div className="text-xs text-black dark:text-white mb-4 cursor-default select-none">{selectedDocument.uploadedBy}</div>
                     </div>
                     <div>
                       <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Date Uploaded</div>
-                      <div className="text-xs text-black dark:text-white mb-4">{selectedDocument.dateUploaded}</div>
+                      <div className="text-xs text-black dark:text-white mb-4 cursor-default select-none">{selectedDocument.dateUploaded}</div>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Document Preview Box - Full Width */}
-              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6 w-full cursor-default">
+              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 w-full cursor-default select-none">
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Document Preview</h3>
-                <div className="w-full h-[600px] bg-gray-50 rounded-lg flex items-center justify-center">
+                <div className="w-full h-[600px] bg-gray-50 dark:bg-gray-800 rounded-lg flex items-center justify-center cursor-default select-none">
                   <span className="text-gray-400 text-lg cursor-default select-none">PDF Viewer will be implemented here</span>
                 </div>
               </div>
