@@ -403,7 +403,7 @@ export default function BlockchainPage() {
   return (
     <div className="space-y-4">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0 mb-3 sm:mb-6">
         <div className="pb-1">
           <h1 className="text-[30px] font-bold text-black dark:text-white mb-0">Blockchain</h1>
           <p className="text-gray-500 text-[16px] mt-0">Review your smart contracts, on-chain activity & explorer integrations</p>
@@ -418,7 +418,7 @@ export default function BlockchainPage() {
         <NewContractModal isOpen={showNewContractModal} onClose={() => setShowNewContractModal(false)} />
       </div>
 
-      <hr className="my-6 border-gray-300" />
+      <hr className="my-3 md:my-6 border-gray-300 cursor-default select-none" />
 
       {/* Toggle Bar - Responsive Design */}
       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 mb-6">
@@ -477,6 +477,8 @@ export default function BlockchainPage() {
           ))}
         </div>
       </div>
+
+      <hr className="my-3 md:my-6 border-gray-300 cursor-default select-none" />
 
       {/* Tab Content */}
       {activeTab === 'smart-contracts' && (

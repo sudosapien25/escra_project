@@ -214,6 +214,8 @@ const ContractsPage: React.FC = () => {
   const [contractSearch, setContractSearch] = useState('');
   const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
   const [openAssigneeDropdown, setOpenAssigneeDropdown] = useState(false);
+  const [openRecentlyUpdatedDropdown, setOpenRecentlyUpdatedDropdown] = useState(false);
+  const [selectedRecentlyUpdated, setSelectedRecentlyUpdated] = useState('Last 30 days');
   const assigneeButtonRef = useRef<HTMLButtonElement>(null);
   const contractButtonRef = useRef<HTMLButtonElement>(null);
   const [showNewContractForm, setShowNewContractForm] = useState(false);
@@ -954,32 +956,46 @@ const ContractsPage: React.FC = () => {
     'Complete'
   ];
 
+  // Available options for recently updated dropdown
+  const availableRecentlyUpdatedOptions = [
+    'Last 24 hours',
+    'Last 7 days',
+    'Last 30 days',
+    'Last month',
+    'This quarter',
+    'Last quarter',
+    'Last 6 months',
+    'Last year',
+    'Last 2 years'
+  ];
+
   const getStatusBadgeStyle = (status: string) => {
     switch (status) {
-      case 'Initiation': return 'bg-blue-100 text-blue-800 border border-blue-500';
-      case 'Preparation': return 'bg-gray-100 text-gray-800 border border-gray-400';
-      case 'In Review': return 'bg-yellow-100 text-yellow-800 border border-yellow-500';
-      case 'Wire Details': return 'bg-orange-100 text-orange-800 border border-orange-400';
-      case 'Signatures': return 'bg-purple-100 text-purple-800 border border-purple-500';
-      case 'Funds Disbursed': return 'bg-teal-100 text-teal-800 border border-teal-500';
-      case 'Completed': return 'bg-green-100 text-green-800 border border-green-500';
-      case 'Verified': return 'bg-green-100 text-green-800 border border-green-500';
-      case 'Pending': return 'bg-yellow-100 text-yellow-800 border border-yellow-500';
-      case 'Rejected': return 'bg-red-100 text-red-800 border border-red-500';
-      default: return 'bg-gray-100 text-gray-800 border border-gray-400';
+      case 'Initiation': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 border border-blue-800 dark:border-blue-800';
+      case 'Preparation': return 'bg-gray-100 dark:bg-gray-700/30 text-gray-800 dark:text-gray-400 border border-gray-800 dark:border-gray-500';
+      case 'In Review': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 border border-yellow-800 dark:border-yellow-800';
+      case 'Wire Details': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-400 border border-orange-800 dark:border-orange-800';
+      case 'Signatures': return 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400 border border-purple-800 dark:border-purple-800';
+      case 'Funds Disbursed': return 'bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-400 border border-teal-800 dark:border-teal-800';
+      case 'Completed': return 'bg-green-100 dark:bg-green-900/30 text-green-500 dark:text-green-400 border border-green-200 dark:border-green-800';
+      case 'Complete': return 'bg-green-100 dark:bg-green-900/30 text-green-500 dark:text-green-400 border border-green-200 dark:border-green-800';
+      case 'Verified': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border border-green-800 dark:border-green-800';
+      case 'Pending': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 border border-yellow-800 dark:border-yellow-800';
+      case 'Rejected': return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 border border-red-800 dark:border-red-800';
+      default: return 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400 border border-gray-800 dark:border-gray-800';
     }
   };
 
   const getTaskStatusBadgeStyle = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'to do': return 'bg-gray-100 text-gray-800 border border-gray-400';
-      case 'in progress': return 'bg-blue-100 text-blue-800 border border-blue-500';
-      case 'in review': return 'bg-yellow-100 text-yellow-800 border border-yellow-500';
-      case 'done': return 'bg-green-100 text-green-800 border border-green-500';
-      case 'blocked': return 'bg-red-100 text-red-800 border border-red-500';
-      case 'on hold': return 'bg-orange-100 text-orange-800 border border-orange-400';
-      case 'canceled': return 'bg-gray-100 text-gray-800 border border-gray-400';
-      default: return 'bg-gray-100 text-gray-800 border border-gray-400';
+      case 'to do': return 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400 border border-gray-800 dark:border-gray-800';
+      case 'in progress': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 border border-blue-800 dark:border-blue-800';
+      case 'in review': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 border border-yellow-800 dark:border-yellow-800';
+      case 'done': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border border-green-800 dark:border-green-800';
+      case 'blocked': return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 border border-red-800 dark:border-red-800';
+      case 'on hold': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-400 border border-orange-800 dark:border-orange-800';
+      case 'canceled': return 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400 border border-gray-800 dark:border-gray-800';
+      default: return 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400 border border-gray-800 dark:border-gray-800';
     }
   };
 
@@ -1115,6 +1131,19 @@ const ContractsPage: React.FC = () => {
 
   // Ref for status dropdown
   const statusDropdownRef = useRef<HTMLDivElement>(null);
+  const statusButtonRef = useRef<HTMLButtonElement>(null);
+  const contractDropdownRef = useRef<HTMLDivElement>(null);
+  const assigneeDropdownRef = useRef<HTMLDivElement>(null);
+  const recentlyUpdatedDropdownRef = useRef<HTMLDivElement>(null);
+  const recentlyUpdatedButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileStatusButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileStatusDropdownRef = useRef<HTMLDivElement>(null);
+  const mobileContractButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileContractDropdownRef = useRef<HTMLDivElement>(null);
+  const mobileAssigneeButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileAssigneeDropdownRef = useRef<HTMLDivElement>(null);
+  const mobileRecentlyUpdatedButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileRecentlyUpdatedDropdownRef = useRef<HTMLDivElement>(null);
 
   const [showContractTypeDropdown, setShowContractTypeDropdown] = useState(false);
   const [showPropertyTypeDropdown, setShowPropertyTypeDropdown] = useState(false);
@@ -1673,18 +1702,24 @@ const ContractsPage: React.FC = () => {
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      const target = event.target as HTMLElement;
-      const dropdown = document.querySelector('.status-filter-dropdown');
-      const button = statusDropdownRef.current;
-
-      // Only close if clicking outside both the dropdown and button
-      if (showStatusDropdown && 
-          !dropdown?.contains(target) && 
-          !button?.contains(target)) {
-        setShowStatusDropdown(false);
+      const target = event.target as Node;
+      const desktopDropdown = statusDropdownRef.current;
+      const mobileDropdown = mobileStatusDropdownRef.current;
+      const desktopButton = statusButtonRef.current;
+      const mobileButton = mobileStatusButtonRef.current;
+      
+      // Only check if dropdown is open
+      if (showStatusDropdown) {
+        // Check if clicking inside either desktop or mobile dropdown, or either button
+        const isInsideDropdown = desktopDropdown?.contains(target) || mobileDropdown?.contains(target);
+        const isInsideButton = desktopButton?.contains(target) || mobileButton?.contains(target);
+        
+        // If clicking outside both dropdowns and buttons, close the dropdown
+        if (!isInsideDropdown && !isInsideButton) {
+          setShowStatusDropdown(false);
+        }
       }
     }
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
@@ -1694,18 +1729,24 @@ const ContractsPage: React.FC = () => {
   // Add click-outside handler for contract dropdown
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      const target = event.target as HTMLElement;
-      const dropdown = document.querySelector('.contract-dropdown');
-      const button = contractButtonRef.current;
-
-      // Only close if clicking outside both the dropdown and button
-      if (openContractDropdown && 
-          !dropdown?.contains(target) && 
-          !button?.contains(target)) {
-        setOpenContractDropdown(false);
+      const target = event.target as Node;
+      const desktopDropdown = contractDropdownRef.current;
+      const mobileDropdown = mobileContractDropdownRef.current;
+      const desktopButton = contractButtonRef.current;
+      const mobileButton = mobileContractButtonRef.current;
+      
+      // Only check if dropdown is open
+      if (openContractDropdown) {
+        // Check if clicking inside either desktop or mobile dropdown, or either button
+        const isInsideDropdown = desktopDropdown?.contains(target) || mobileDropdown?.contains(target);
+        const isInsideButton = desktopButton?.contains(target) || mobileButton?.contains(target);
+        
+        // If clicking outside both dropdowns and buttons, close the dropdown
+        if (!isInsideDropdown && !isInsideButton) {
+          setOpenContractDropdown(false);
+        }
       }
     }
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
@@ -1715,23 +1756,56 @@ const ContractsPage: React.FC = () => {
   // Add click-outside handler for assignee dropdown
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      const target = event.target as HTMLElement;
-      const dropdown = document.querySelector('.assignee-dropdown');
-      const button = assigneeButtonRef.current;
-
-      // Only close if clicking outside both the dropdown and button
-      if (openAssigneeDropdown && 
-          !dropdown?.contains(target) && 
-          !button?.contains(target)) {
-        setOpenAssigneeDropdown(false);
+      const target = event.target as Node;
+      const desktopDropdown = assigneeDropdownRef.current;
+      const mobileDropdown = mobileAssigneeDropdownRef.current;
+      const desktopButton = assigneeButtonRef.current;
+      const mobileButton = mobileAssigneeButtonRef.current;
+      
+      // Only check if dropdown is open
+      if (openAssigneeDropdown) {
+        // Check if clicking inside either desktop or mobile dropdown, or either button
+        const isInsideDropdown = desktopDropdown?.contains(target) || mobileDropdown?.contains(target);
+        const isInsideButton = desktopButton?.contains(target) || mobileButton?.contains(target);
+        
+        // If clicking outside both dropdowns and buttons, close the dropdown
+        if (!isInsideDropdown && !isInsideButton) {
+          setOpenAssigneeDropdown(false);
+        }
       }
     }
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [openAssigneeDropdown]);
+
+  // Add click-outside handler for recently updated dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+      const desktopDropdown = recentlyUpdatedDropdownRef.current;
+      const mobileDropdown = mobileRecentlyUpdatedDropdownRef.current;
+      const desktopButton = recentlyUpdatedButtonRef.current;
+      const mobileButton = mobileRecentlyUpdatedButtonRef.current;
+      
+      // Only check if dropdown is open
+      if (openRecentlyUpdatedDropdown) {
+        // Check if clicking inside either desktop or mobile dropdown, or either button
+        const isInsideDropdown = desktopDropdown?.contains(target) || mobileDropdown?.contains(target);
+        const isInsideButton = desktopButton?.contains(target) || mobileButton?.contains(target);
+        
+        // If clicking outside both dropdowns and buttons, close the dropdown
+        if (!isInsideDropdown && !isInsideButton) {
+          setOpenRecentlyUpdatedDropdown(false);
+        }
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openRecentlyUpdatedDropdown]);
 
   // Click-off behavior for each recipient role dropdown
   useEffect(() => {
@@ -1768,7 +1842,7 @@ const ContractsPage: React.FC = () => {
     <>
       <div className="space-y-4 select-none cursor-default">
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0 cursor-default select-none">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0 mb-3 sm:mb-6 cursor-default select-none">
           <div className="pb-1 cursor-default select-none">
             <h1 className="text-[30px] font-bold text-black dark:text-white mb-0 cursor-default select-none">Contracts</h1>
             <p className="text-gray-500 text-[16px] mt-0 cursor-default select-none">
@@ -1809,7 +1883,7 @@ const ContractsPage: React.FC = () => {
           </div>
         </div>
 
-        <hr className="my-6 border-gray-300 cursor-default select-none" />
+        <hr className="my-3 md:my-6 border-gray-300 cursor-default select-none" />
 
       {/* Stat Boxes or New Contract Modal */}
       {showNewContractForm ? (
@@ -2295,7 +2369,7 @@ const ContractsPage: React.FC = () => {
                                   {['Needs to Sign', 'In Person Signer', 'Receives a Copy', 'Needs to View'].map((role) => (
                                     <button
                                       key={role}
-                                      className="w-full px-3 py-2 text-left text-xs hover:bg-primary/10 hover:text-primary text-gray-700 dark:text-gray-300"
+                                      className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${recipient.role === role ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                                       style={{ background: 'none', border: 'none', boxShadow: 'none' }}
                                       onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, role, showRoleDropdown: false } : r))}
                                     >
@@ -2327,7 +2401,7 @@ const ContractsPage: React.FC = () => {
                                   {['Standard', 'Buyer', 'Seller', 'Buyer Agent', 'Seller Agent', 'Closing Agent', 'Inspector', 'Appraiser'].map((signerRole) => (
                                     <button
                                       key={signerRole}
-                                      className="w-full px-3 py-2 text-left text-xs hover:bg-primary/10 hover:text-primary text-gray-700 dark:text-gray-300"
+                                      className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${recipient.signerRole === signerRole ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                                       style={{ background: 'none', border: 'none', boxShadow: 'none' }}
                                       onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, signerRole, showSignerRoleDropdown: false } : r))}
                                     >
@@ -2745,8 +2819,8 @@ const ContractsPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 select-none cursor-default">
             {/* Total Contracts */}
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
-              <div className="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center border-2 border-teal-200 cursor-default select-none">
-                <HiOutlineDocumentText size={18} color="#06b6d4" />
+              <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800 cursor-default select-none">
+                <HiOutlineDocumentText size={18} className="text-teal-500 dark:text-teal-400" />
               </div>
               <div className="flex flex-col items-start h-full cursor-default select-none">
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contracts</p>
@@ -2756,8 +2830,8 @@ const ContractsPage: React.FC = () => {
             </div>
             {/* Pending Signatures */}
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
-              <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center border-2 border-purple-200 cursor-default select-none">
-                <TbEdit size={20} color="#7c3aed" />
+              <div className="h-10 w-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center border-2 border-purple-200 dark:border-purple-800 cursor-default select-none">
+                <TbEdit size={20} className="text-purple-500 dark:text-purple-400" />
               </div>
               <div className="flex flex-col items-start h-full cursor-default select-none">
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Pending Signatures</p>
@@ -2767,8 +2841,8 @@ const ContractsPage: React.FC = () => {
             </div>
             {/* Awaiting Wire Instructions */}
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
-              <div className="h-10 w-10 rounded-lg bg-orange-100 flex items-center justify-center border-2 border-orange-200 cursor-default select-none">
-                <PiBankBold size={20} color="#ea580c" />
+              <div className="h-10 w-10 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center border-2 border-orange-200 dark:border-orange-800 cursor-default select-none">
+                <PiBankBold size={20} className="text-orange-500 dark:text-orange-400" />
               </div>
               <div className="flex flex-col items-start h-full cursor-default select-none">
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Awaiting Wire Details</p>
@@ -2778,8 +2852,8 @@ const ContractsPage: React.FC = () => {
             </div>
             {/* Avg. Completion Time */}
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
-              <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center border-2 border-blue-200 cursor-default select-none">
-                <TbClockUp size={20} color="#3b82f6" />
+              <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center border-2 border-blue-200 dark:border-blue-800 cursor-default select-none">
+                <TbClockUp size={20} className="text-blue-500 dark:text-blue-400" />
               </div>
               <div className="flex flex-col items-start h-full cursor-default select-none">
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Average Completion Time</p>
@@ -2791,13 +2865,13 @@ const ContractsPage: React.FC = () => {
           </div>
           {/* Total Contract Value Box */}
           <div className="mb-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full select-none cursor-default">
-            <div className="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center border-2 border-teal-200 cursor-default select-none">
-              <GrMoney size={20} color="#06b6d4" />
+            <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800 cursor-default select-none">
+              <GrMoney size={20} className="text-teal-500 dark:text-teal-400" />
             </div>
             <div className="flex flex-col items-start h-full cursor-default select-none">
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contract Value</p>
               <p className="text-2xl font-bold text-primary cursor-default select-none">{calculateTotalValue()}</p>
-              <p className="text-xs text-green-600 font-semibold cursor-default select-none">↑ 12% from last month</p>
+              <p className="text-xs text-green-600 dark:text-green-400 font-semibold cursor-default select-none">↑ 12% from last month</p>
             </div>
           </div>
         </>
@@ -2805,263 +2879,616 @@ const ContractsPage: React.FC = () => {
 
       <hr className="mb-6 border-gray-300 cursor-default select-none" />
 
-      {/* Search/Filter Bar */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-4 mb-6 flex items-center w-full mt-2 select-none cursor-default">
-        <div className="flex items-center flex-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 min-w-0 cursor-default select-none">
-          <FaSearch className="text-gray-400 mr-2" size={18} />
-          <input
-            type="text"
-            placeholder="Search contracts, parties, documents or IDs"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1 bg-white dark:bg-gray-900 border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 font-medium min-w-0"
-            style={{ fontFamily: 'Avenir, sans-serif' }}
-          />
-        </div>
-        {activeContentTab === 'contractList' && (
-          <div className="relative ml-1 cursor-default select-none">
-            <button
-              ref={statusDropdownRef as any}
-              className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs min-w-[120px] relative whitespace-nowrap cursor-pointer"
+      {/* Search/Filter Bar - Responsive Design */}
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 mb-6 mt-2">
+        {/* Mobile: Stacked layout */}
+        <div className="lg:hidden">
+          {/* Search Bar */}
+          <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 w-full">
+            <FaSearch className="text-gray-400 mr-2" size={18} />
+            <input
+              type="text"
+              placeholder="Search contracts, parties, documents or IDs"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 dark:text-white placeholder-gray-400 font-medium"
               style={{ fontFamily: 'Avenir, sans-serif' }}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setShowStatusDropdown(prev => !prev);
-                if (!showStatusDropdown) {
-                  setOpenContractDropdown(false);
-                  setOpenAssigneeDropdown(false);
-                }
-              }}
-            >
-              <HiOutlineViewBoards className="text-gray-400 w-4 h-4" />
-              <span>Status</span>
-              <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
-            </button>
-            {showStatusDropdown && (
-              <div 
-                className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 status-filter-dropdown cursor-default select-none" 
-                style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
-              >
-                <button
-                  className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedStatuses.includes('All') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'} cursor-pointer`}
-                  onClick={() => setSelectedStatuses(['All'])}
-                >
-                  <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center cursor-default select-none">
-                    {selectedStatuses.includes('All') && (
-                      <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center cursor-default select-none">
-                        <FaCheck className="text-white" size={8} />
-                      </div>
-                    )}
-                  </div>
-                  All
-                </button>
-                {availableStatuses.filter(status => status !== 'All').map(status => (
-                  <button
-                    key={status}
-                    className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedStatuses.includes(status) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'} cursor-pointer`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      if (status === 'All') {
-                        setSelectedStatuses(['All']);
-                      } else {
-                        setSelectedStatuses(prev => {
-                          const newStatuses = prev.filter(s => s !== 'All');
-                          if (prev.includes(status)) {
-                            return newStatuses.filter(s => s !== status);
-                          } else {
-                            return [...newStatuses, status];
-                          }
-                        });
-                      }
-                    }}
-                  >
-                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center cursor-default select-none">
-                      {selectedStatuses.includes(status) && (
-                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center cursor-default select-none">
-                          <FaCheck className="text-white" size={8} />
-                        </div>
-                      )}
-                    </div>
-                    {status}
-                  </button>
-                ))}
-              </div>
-            )}
+            />
           </div>
-        )}
-        {activeContentTab === 'documents' && (
-          <>
-            <div className="relative ml-1 cursor-default select-none">
-              <button
-                ref={contractButtonRef}
-                className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs min-w-[120px] relative whitespace-nowrap cursor-pointer"
-                style={{ fontFamily: 'Avenir, sans-serif' }}
-                onClick={() => { setOpenContractDropdown(v => !v); setOpenAssigneeDropdown(false); setShowStatusDropdown(false); }}
-              >
-                <HiOutlineDocumentSearch className="text-gray-400 w-4 h-4" />
-                <span>Contract</span>
-                <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
-              </button>
-              {openContractDropdown && (
-                <div 
-                  className="absolute left-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[400px] w-96 contract-dropdown cursor-default select-none" 
+          {/* Filter Buttons - Stacked, full width */}
+          <div className="flex flex-col gap-2 mt-2">
+            {activeContentTab === 'contractList' && (
+              <div className="relative">
+                <button 
+                  ref={mobileStatusButtonRef}
+                  className="flex items-center justify-between w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-700 dark:text-gray-300 font-medium text-xs shadow-sm whitespace-nowrap" 
                   style={{ fontFamily: 'Avenir, sans-serif' }}
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowStatusDropdown(prev => !prev);
+                    setOpenContractDropdown(false);
+                    setOpenAssigneeDropdown(false);
+                  }}
                 >
-                  {/* Search Bar */}
-                  <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700 cursor-default select-none">
-                    <div className="relative cursor-default select-none">
-                      <input
-                        type="text"
-                        placeholder="Search contracts..."
-                        value={contractSearch}
-                        onChange={(e) => setContractSearch(e.target.value)}
-                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-black dark:text-white bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:border-primary transition-colors cursor-text"
-                        style={{ fontFamily: 'Avenir, sans-serif' }}
-                      />
-                      <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    </div>
-                  </div>
-
-                  <button
-                    className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedContracts.length === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-300'} cursor-pointer`}
-                    onClick={() => setSelectedContracts([])}
+                  <span className="flex items-center"><HiOutlineViewBoards className="text-gray-400 text-base mr-2" />Status</span>
+                  <HiMiniChevronDown className="text-gray-400" size={16} />
+                </button>
+                {showStatusDropdown && (
+                  <div 
+                    ref={mobileStatusDropdownRef}
+                    className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 status-filter-dropdown" 
+                    style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
                   >
-                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center cursor-default select-none">
-                      {selectedContracts.length === 0 && (
-                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center cursor-default select-none">
-                          <FaCheck className="text-white" size={8} />
-                        </div>
-                      )}
-                    </div>
-                    All
-                  </button>
-                  {mockContracts
-                    .filter(contract => 
-                      contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
-                      contract.title.toLowerCase().includes(contractSearch.toLowerCase())
-                    )
-                    .map(contract => (
-                      <button
-                        key={contract.id}
-                        className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center whitespace-nowrap truncate ${selectedContracts.includes(String(contract.id)) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'} cursor-pointer`}
-                        onClick={() => {
-                          setSelectedContracts(prev => {
-                            if (prev.includes(String(contract.id))) {
-                              return prev.filter(c => c !== String(contract.id));
-                            } else {
-                              return [...prev, String(contract.id)];
-                            }
-                          });
-                        }}
-                      >
-                        <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center cursor-default select-none">
-                          {selectedContracts.includes(String(contract.id)) && (
-                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center cursor-default select-none">
-                              <FaCheck className="text-white" size={8} />
-                            </div>
-                          )}
-                        </div>
-                        {contract.id} - {contract.title}
-                      </button>
-                    ))}
-                </div>
-              )}
-            </div>
-            <div className="relative ml-1 cursor-default select-none">
-              <button
-                ref={assigneeButtonRef}
-                className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs min-w-[120px] relative whitespace-nowrap cursor-pointer"
-                style={{ fontFamily: 'Avenir, sans-serif' }}
-                onClick={() => { setOpenAssigneeDropdown(v => !v); setOpenContractDropdown(false); setShowStatusDropdown(false); }}
-              >
-                <RiUserSearchLine className="text-gray-400 w-4 h-4" />
-                <span>Assignee</span>
-                <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
-              </button>
-              {openAssigneeDropdown && (
-                <div 
-                  className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 assignee-dropdown cursor-default select-none" 
-                  style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
-                >
-                  <button
-                    className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedAssignees.length === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-300'} cursor-pointer`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setSelectedAssignees([]);
-                    }}
-                  >
-                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center cursor-default select-none">
-                      {selectedAssignees.length === 0 && (
-                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center cursor-default select-none">
-                          <FaCheck className="text-white" size={8} />
-                        </div>
-                      )}
-                    </div>
-                    All
-                  </button>
-                  <button
-                    className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedAssignees.includes('__ME__') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'} cursor-pointer`}
-                    onClick={() => {
-                      setSelectedAssignees(prev => {
-                        if (prev.includes('__ME__')) {
-                          return prev.filter(a => a !== '__ME__');
-                        } else {
-                          return [...prev, '__ME__'];
-                        }
-                      });
-                    }}
-                  >
-                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center cursor-default select-none">
-                      {selectedAssignees.includes('__ME__') && (
-                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center cursor-default select-none">
-                          <FaCheck className="text-white" size={8} />
-                        </div>
-                      )}
-                    </div>
-                    Me
-                  </button>
-                  {Array.from(new Set(sampleDocuments.map(doc => doc.assignee).filter((assignee): assignee is string => assignee !== undefined))).sort().map(assignee => (
                     <button
-                      key={assignee}
-                      className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedAssignees.includes(assignee) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'} cursor-pointer`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setSelectedAssignees(prev => {
-                          if (prev.includes(assignee)) {
-                            return prev.filter(a => a !== assignee);
-                          } else {
-                            return [...prev, assignee];
-                          }
-                        });
-                      }}
+                      className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedStatuses.includes('All') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                      onClick={() => setSelectedStatuses(['All'])}
                     >
-                      <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center cursor-default select-none">
-                        {selectedAssignees.includes(assignee) && (
-                          <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center cursor-default select-none">
+                      <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                        {selectedStatuses.includes('All') && (
+                          <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
                             <FaCheck className="text-white" size={8} />
                           </div>
                         )}
                       </div>
-                      {assignee}
+                      All
+                    </button>
+                    {availableStatuses.filter(status => status !== 'All').map(status => (
+                      <button
+                        key={status}
+                        className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedStatuses.includes(status) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          if (status === 'All') {
+                            setSelectedStatuses(['All']);
+                          } else {
+                            setSelectedStatuses(prev => {
+                              const newStatuses = prev.filter(s => s !== 'All');
+                              if (prev.includes(status)) {
+                                return newStatuses.filter(s => s !== status);
+                              } else {
+                                return [...newStatuses, status];
+                              }
+                            });
+                          }
+                        }}
+                      >
+                        <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                          {selectedStatuses.includes(status) && (
+                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                              <FaCheck className="text-white" size={8} />
+                            </div>
+                          )}
+                        </div>
+                        {status}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            {activeContentTab === 'documents' && (
+              <>
+                <div className="relative">
+                  <button
+                    ref={mobileContractButtonRef}
+                    className="flex items-center justify-between w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-700 dark:text-gray-300 font-medium text-xs shadow-sm whitespace-nowrap"
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                    onClick={() => { setOpenContractDropdown(v => !v); setOpenAssigneeDropdown(false); setShowStatusDropdown(false); }}
+                  >
+                    <span className="flex items-center"><HiOutlineDocumentSearch className="text-gray-400 text-base mr-2" />Contract</span>
+                    <HiMiniChevronDown className="text-gray-400" size={16} />
+                  </button>
+                  {openContractDropdown && (
+                    <div 
+                      ref={mobileContractDropdownRef}
+                      className="absolute top-full left-0 mt-2 min-w-[180px] w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 contract-dropdown" 
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                    >
+                      {/* Search Bar */}
+                      <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+                        <div className="relative">
+                          <input
+                            type="text"
+                            placeholder="Search contracts..."
+                            value={contractSearch}
+                            onChange={(e) => setContractSearch(e.target.value)}
+                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-700 dark:text-white bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                            style={{ fontFamily: 'Avenir, sans-serif' }}
+                          />
+                          <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        </div>
+                      </div>
+
+                      <button
+                        className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedContracts.length === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                        onClick={() => setSelectedContracts([])}
+                      >
+                        <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                          {selectedContracts.length === 0 && (
+                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                              <FaCheck className="text-white" size={8} />
+                            </div>
+                          )}
+                        </div>
+                        All
+                      </button>
+                      {mockContracts
+                        .filter(contract => 
+                          contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
+                          contract.title.toLowerCase().includes(contractSearch.toLowerCase())
+                        )
+                        .map(contract => (
+                          <button
+                            key={contract.id}
+                            className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center whitespace-nowrap truncate ${selectedContracts.includes(String(contract.id)) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                            onClick={() => {
+                              setSelectedContracts(prev => {
+                                if (prev.includes(String(contract.id))) {
+                                  return prev.filter(c => c !== String(contract.id));
+                                } else {
+                                  return [...prev, String(contract.id)];
+                                }
+                              });
+                            }}
+                          >
+                            <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                              {selectedContracts.includes(String(contract.id)) && (
+                                <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                                  <FaCheck className="text-white" size={8} />
+                                </div>
+                              )}
+                            </div>
+                            {contract.id} - {contract.title}
+                          </button>
+                        ))}
+                    </div>
+                  )}
+                </div>
+                <div className="relative">
+                  <button
+                    ref={mobileAssigneeButtonRef}
+                    className="flex items-center justify-between w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-700 dark:text-gray-300 font-medium text-xs shadow-sm whitespace-nowrap"
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                    onClick={() => { setOpenAssigneeDropdown(v => !v); setOpenContractDropdown(false); setShowStatusDropdown(false); }}
+                  >
+                    <span className="flex items-center"><RiUserSearchLine className="text-gray-400 text-base mr-2" />Assignee</span>
+                    <HiMiniChevronDown className="text-gray-400" size={16} />
+                  </button>
+                  {openAssigneeDropdown && (
+                    <div 
+                      ref={mobileAssigneeDropdownRef}
+                      className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 assignee-dropdown" 
+                      style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                    >
+                      <button
+                        className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedAssignees.length === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setSelectedAssignees([]);
+                        }}
+                      >
+                        <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                          {selectedAssignees.length === 0 && (
+                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                              <FaCheck className="text-white" size={8} />
+                            </div>
+                          )}
+                        </div>
+                        All
+                      </button>
+                      <button
+                        className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedAssignees.includes('__ME__') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                        onClick={() => {
+                          setSelectedAssignees(prev => {
+                            if (prev.includes('__ME__')) {
+                              return prev.filter(a => a !== '__ME__');
+                            } else {
+                              return [...prev, '__ME__'];
+                            }
+                          });
+                        }}
+                      >
+                        <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                          {selectedAssignees.includes('__ME__') && (
+                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                              <FaCheck className="text-white" size={8} />
+                            </div>
+                          )}
+                        </div>
+                        Me
+                      </button>
+                      {Array.from(new Set(sampleDocuments.map(doc => doc.assignee).filter((assignee): assignee is string => assignee !== undefined))).sort().map(assignee => (
+                        <button
+                          key={assignee}
+                          className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedAssignees.includes(assignee) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setSelectedAssignees(prev => {
+                              if (prev.includes(assignee)) {
+                                return prev.filter(a => a !== assignee);
+                              } else {
+                                return [...prev, assignee];
+                              }
+                            });
+                          }}
+                        >
+                          <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                            {selectedAssignees.includes(assignee) && (
+                              <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                                <FaCheck className="text-white" size={8} />
+                              </div>
+                            )}
+                          </div>
+                          {assignee}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+            <div className="relative">
+              <button 
+                ref={mobileRecentlyUpdatedButtonRef}
+                className="flex items-center justify-between w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-700 dark:text-gray-300 font-medium text-xs shadow-sm whitespace-nowrap" 
+                style={{ fontFamily: 'Avenir, sans-serif' }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setOpenRecentlyUpdatedDropdown(prev => !prev);
+                  if (!openRecentlyUpdatedDropdown) {
+                    setShowStatusDropdown(false);
+                    setOpenContractDropdown(false);
+                    setOpenAssigneeDropdown(false);
+                  }
+                }}
+              >
+                <span className="flex items-center"><MdOutlineUpdate className="text-gray-400 text-base mr-2" />{selectedRecentlyUpdated}</span>
+                <HiMiniChevronDown className="text-gray-400" size={16} />
+              </button>
+              {openRecentlyUpdatedDropdown && (
+                <div 
+                  ref={mobileRecentlyUpdatedDropdownRef}
+                  className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" 
+                  style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                >
+                  {availableRecentlyUpdatedOptions.map((option) => (
+                    <button
+                      key={option}
+                      className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedRecentlyUpdated === option ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedRecentlyUpdated(option);
+                      }}
+                    >
+                      <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                        {selectedRecentlyUpdated === option && (
+                          <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                            <FaCheck className="text-white" size={8} />
+                          </div>
+                        )}
+                      </div>
+                      {option}
                     </button>
                   ))}
                 </div>
               )}
             </div>
-          </>
-        )}
-        <button className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs min-w-[150px] ml-1 cursor-pointer" style={{ fontFamily: 'Avenir, sans-serif' }}
-          onClick={() => setLastUpdatedSort(prev => prev === 'desc' ? 'asc' : 'desc')}
-        >
-          <MdOutlineUpdate className="text-gray-400 w-4 h-4" />
-          <span>Recently Updated</span>
-          <HiMiniChevronUpDown className="ml-1 inline-block align-middle text-gray-400 transition-transform duration-200" style={{ transform: lastUpdatedSort === 'asc' ? 'rotate(180deg)' : 'rotate(0deg)' }} size={16} />
-        </button>
+          </div>
+        </div>
+
+        {/* Desktop: Horizontal layout */}
+        <div className="hidden lg:flex items-center gap-1">
+          {/* Search Bar */}
+          <div className={`flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 min-w-0 ${activeContentTab === 'documents' ? 'flex-[1.5]' : 'flex-1'}`}>
+            <FaSearch className="text-gray-400 mr-2" size={18} />
+            <input
+              type="text"
+              placeholder="Search contracts, parties, documents or IDs"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 dark:text-white placeholder-gray-400 font-medium min-w-0"
+              style={{ fontFamily: 'Avenir, sans-serif' }}
+            />
+          </div>
+          {/* Filter Buttons - fixed width based on max content */}
+          <div className="flex items-center flex-shrink-0">
+            {activeContentTab === 'contractList' && (
+              <div className="relative flex-shrink-0">
+                <button
+                  ref={statusButtonRef}
+                  className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs w-[140px] relative whitespace-nowrap"
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowStatusDropdown(prev => !prev);
+                    if (!showStatusDropdown) {
+                      setOpenContractDropdown(false);
+                      setOpenAssigneeDropdown(false);
+                    }
+                  }}
+                >
+                  <HiOutlineViewBoards className="text-gray-400 w-4 h-4" />
+                  <span>Status</span>
+                  <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+                </button>
+                {showStatusDropdown && (
+                  <div 
+                    ref={statusDropdownRef}
+                    className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 status-filter-dropdown" 
+                    style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                  >
+                    <button
+                      className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedStatuses.includes('All') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                      onClick={() => setSelectedStatuses(['All'])}
+                    >
+                      <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                        {selectedStatuses.includes('All') && (
+                          <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                            <FaCheck className="text-white" size={8} />
+                          </div>
+                        )}
+                      </div>
+                      All
+                    </button>
+                    {availableStatuses.filter(status => status !== 'All').map(status => (
+                      <button
+                        key={status}
+                        className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedStatuses.includes(status) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          if (status === 'All') {
+                            setSelectedStatuses(['All']);
+                          } else {
+                            setSelectedStatuses(prev => {
+                              const newStatuses = prev.filter(s => s !== 'All');
+                              if (prev.includes(status)) {
+                                return newStatuses.filter(s => s !== status);
+                              } else {
+                                return [...newStatuses, status];
+                              }
+                            });
+                          }
+                        }}
+                      >
+                        <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                          {selectedStatuses.includes(status) && (
+                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                              <FaCheck className="text-white" size={8} />
+                            </div>
+                          )}
+                        </div>
+                        {status}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            {activeContentTab === 'documents' && (
+              <>
+                <div className="relative flex-shrink-0">
+                  <button
+                    ref={contractButtonRef}
+                    className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs w-[140px] relative whitespace-nowrap"
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                    onClick={() => { setOpenContractDropdown(v => !v); setOpenAssigneeDropdown(false); setShowStatusDropdown(false); }}
+                  >
+                    <HiOutlineDocumentSearch className="text-gray-400 w-4 h-4" />
+                    <span>Contract</span>
+                    <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+                  </button>
+                  {openContractDropdown && (
+                    <div 
+                      ref={contractDropdownRef}
+                      className="absolute left-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[400px] w-96 contract-dropdown" 
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {/* Search Bar */}
+                      <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+                        <div className="relative">
+                          <input
+                            type="text"
+                            placeholder="Search contracts..."
+                            value={contractSearch}
+                            onChange={(e) => setContractSearch(e.target.value)}
+                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-700 dark:text-white bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                            style={{ fontFamily: 'Avenir, sans-serif' }}
+                          />
+                          <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        </div>
+                      </div>
+
+                      <button
+                        className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedContracts.length === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                        onClick={() => setSelectedContracts([])}
+                      >
+                        <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                          {selectedContracts.length === 0 && (
+                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                              <FaCheck className="text-white" size={8} />
+                            </div>
+                          )}
+                        </div>
+                        All
+                      </button>
+                      {mockContracts
+                        .filter(contract => 
+                          contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
+                          contract.title.toLowerCase().includes(contractSearch.toLowerCase())
+                        )
+                        .map(contract => (
+                          <button
+                            key={contract.id}
+                            className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center whitespace-nowrap truncate ${selectedContracts.includes(String(contract.id)) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                            onClick={() => {
+                              setSelectedContracts(prev => {
+                                if (prev.includes(String(contract.id))) {
+                                  return prev.filter(c => c !== String(contract.id));
+                                } else {
+                                  return [...prev, String(contract.id)];
+                                }
+                              });
+                            }}
+                          >
+                            <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                              {selectedContracts.includes(String(contract.id)) && (
+                                <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                                  <FaCheck className="text-white" size={8} />
+                                </div>
+                              )}
+                            </div>
+                            {contract.id} - {contract.title}
+                          </button>
+                        ))}
+                    </div>
+                  )}
+                </div>
+                <div className="relative flex-shrink-0 ml-1">
+                  <button
+                    ref={assigneeButtonRef}
+                    className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs w-[140px] relative whitespace-nowrap"
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                    onClick={() => { setOpenAssigneeDropdown(v => !v); setOpenContractDropdown(false); setShowStatusDropdown(false); }}
+                  >
+                    <RiUserSearchLine className="text-gray-400 w-4 h-4" />
+                    <span>Assignee</span>
+                    <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+                  </button>
+                  {openAssigneeDropdown && (
+                    <div 
+                      ref={assigneeDropdownRef}
+                      className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 assignee-dropdown" 
+                      style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                    >
+                      <button
+                        className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedAssignees.length === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setSelectedAssignees([]);
+                        }}
+                      >
+                        <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                          {selectedAssignees.length === 0 && (
+                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                              <FaCheck className="text-white" size={8} />
+                            </div>
+                          )}
+                        </div>
+                        All
+                      </button>
+                      <button
+                        className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedAssignees.includes('__ME__') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                        onClick={() => {
+                          setSelectedAssignees(prev => {
+                            if (prev.includes('__ME__')) {
+                              return prev.filter(a => a !== '__ME__');
+                            } else {
+                              return [...prev, '__ME__'];
+                            }
+                          });
+                        }}
+                      >
+                        <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                          {selectedAssignees.includes('__ME__') && (
+                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                              <FaCheck className="text-white" size={8} />
+                            </div>
+                          )}
+                        </div>
+                        Me
+                      </button>
+                      {Array.from(new Set(sampleDocuments.map(doc => doc.assignee).filter((assignee): assignee is string => assignee !== undefined))).sort().map(assignee => (
+                        <button
+                          key={assignee}
+                          className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedAssignees.includes(assignee) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setSelectedAssignees(prev => {
+                              if (prev.includes(assignee)) {
+                                return prev.filter(a => a !== assignee);
+                              } else {
+                                return [...prev, assignee];
+                              }
+                            });
+                          }}
+                        >
+                          <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                            {selectedAssignees.includes(assignee) && (
+                              <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                                <FaCheck className="text-white" size={8} />
+                              </div>
+                            )}
+                          </div>
+                          {assignee}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+            <div className="relative flex-shrink-0 ml-1">
+              <button
+                ref={recentlyUpdatedButtonRef}
+                className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs w-[160px] relative whitespace-nowrap"
+                style={{ fontFamily: 'Avenir, sans-serif' }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setOpenRecentlyUpdatedDropdown(prev => !prev);
+                  if (!openRecentlyUpdatedDropdown) {
+                    setShowStatusDropdown(false);
+                    setOpenContractDropdown(false);
+                    setOpenAssigneeDropdown(false);
+                  }
+                }}
+              >
+                <MdOutlineUpdate className="text-gray-400 w-4 h-4" />
+                <span>{selectedRecentlyUpdated}</span>
+                <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+              </button>
+              {openRecentlyUpdatedDropdown && (
+                <div 
+                  ref={recentlyUpdatedDropdownRef}
+                  className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" 
+                  style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                >
+                  {availableRecentlyUpdatedOptions.map((option) => (
+                    <button
+                      key={option}
+                      className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedRecentlyUpdated === option ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedRecentlyUpdated(option);
+                      }}
+                    >
+                      <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                        {selectedRecentlyUpdated === option && (
+                          <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                            <FaCheck className="text-white" size={8} />
+                          </div>
+                        )}
+                      </div>
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Table Section with Tabs in Outlined Box */}
@@ -3847,7 +4274,7 @@ const ContractsPage: React.FC = () => {
                       {filteredDocuments
                         .filter(doc => doc.contractId === selectedContract.id)
                         .map(doc => (
-                        <div key={doc.id} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-100 dark:border-gray-600 cursor-default select-none">
+                        <div key={doc.id} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600 cursor-default select-none">
                           <div className="flex items-center gap-3 cursor-default select-none">
                             <HiOutlineDocumentText className="w-5 h-5 text-primary" />
                             <div>
@@ -3889,7 +4316,7 @@ const ContractsPage: React.FC = () => {
                         { name: selectedContract?.seller || selectedContract?.parties?.split('&')[1]?.trim() || 'Eastside Properties', role: 'Seller', status: 'Signed', date: 'May 17, 2025' },
                         { name: selectedContract?.agent || 'N/A', role: 'Escrow Officer', status: 'Pending', date: null },
                       ].map((sig) => (
-                        <div key={sig.name} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 rounded-lg px-4 py-2.5 border border-gray-100 dark:border-gray-600 cursor-default select-none">
+                        <div key={sig.name} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-2.5 border border-gray-200 dark:border-gray-600 cursor-default select-none">
                           <div>
                             <div className="font-semibold text-gray-900 dark:text-white text-sm cursor-default select-none">{sig.name}</div>
                             <div className="text-xs text-gray-500 dark:text-gray-400 cursor-default select-none">{sig.role}</div>
@@ -3924,7 +4351,7 @@ const ContractsPage: React.FC = () => {
                       {selectedContract ? (
                         getTasksByContract(selectedContract.id).length > 0 ? (
                           getTasksByContract(selectedContract.id).map(task => (
-                            <div key={task.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-100 dark:border-gray-600 p-4 shadow-sm relative cursor-default select-none">
+                            <div key={task.id} className="bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 p-4 shadow-sm relative cursor-default select-none">
                               {/* Task Number and Open Button - Top Row */}
                               <div className="flex items-center justify-between mb-3 cursor-default select-none">
                                 <div className="cursor-default select-none">
@@ -3959,7 +4386,7 @@ const ContractsPage: React.FC = () => {
                               </div>
                               {/* Progress Section */}
                               <div className="space-y-2 mb-3 cursor-default select-none">
-                                <div className="h-2 bg-gray-100 rounded-full overflow-hidden cursor-default select-none">
+                                <div className="h-2 bg-gray-300 dark:bg-gray-900 rounded-full overflow-hidden cursor-default select-none">
                                   <div
                                     className="h-full bg-primary rounded-full cursor-default select-none"
                                     style={{

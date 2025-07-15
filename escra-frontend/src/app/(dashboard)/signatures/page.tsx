@@ -804,7 +804,7 @@ export default function SignaturesPage() {
   return (
     <div className="space-y-4">
       {/* Signatures Title and Button */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-8 gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 sm:mb-6 gap-4">
         <div>
           <h1 className="text-[30px] font-bold text-black dark:text-white mb-1">Signatures</h1>
           <p className="text-gray-500 dark:text-gray-400 text-[16px] mt-0">Manage electronic signatures for all your contracts</p>
@@ -819,72 +819,74 @@ export default function SignaturesPage() {
         </button>
       </div>
 
-      <hr className="my-3 sm:my-6 border-gray-300 dark:border-gray-700" />
+      <hr className="my-3 sm:my-6 border-gray-300 cursor-default select-none" />
 
       {/* Stat Boxes */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {/* Action Required */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
-          <div className="h-10 w-10 rounded-lg bg-orange-100 flex items-center justify-center border-2 border-orange-200">
-            <PiWarningDiamondBold size={20} color="#f97316" />
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full">
+          <div className="h-10 w-10 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center border-2 border-orange-200 dark:border-orange-800">
+            <PiWarningDiamondBold size={20} className="text-orange-500 dark:text-orange-400" />
           </div>
           <div className="flex flex-col items-start h-full">
-            <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Action Required</p>
-            <p className="text-2xl font-bold text-gray-900">{statBoxesData.actionRequired}</p>
-            <p className="text-xs text-gray-400">Needs your attention</p>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Action Required</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">{statBoxesData.actionRequired}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">Needs your attention</p>
           </div>
         </div>
 
         {/* Waiting for Others */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
-          <div className="h-10 w-10 rounded-lg bg-yellow-100 flex items-center justify-center border-2 border-yellow-200">
-            <TbClockEdit size={20} color="#f59e0b" />
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full">
+          <div className="h-10 w-10 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center border-2 border-yellow-200 dark:border-yellow-800">
+            <TbClockEdit size={20} className="text-yellow-500 dark:text-yellow-400" />
           </div>
           <div className="flex flex-col items-start h-full">
-            <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Waiting on Others</p>
-            <p className="text-2xl font-bold text-gray-900">{signaturesData.filter(sig => sig.status === 'Pending' && sig.signatures.split(' of ')[0] !== '0').length}</p>
-            <p className="text-xs text-gray-400">Requires action</p>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Waiting on Others</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">{signaturesData.filter(sig => sig.status === 'Pending' && sig.signatures.split(' of ')[0] !== '0').length}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">Requires action</p>
           </div>
         </div>
 
         {/* Expiring Soon */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
-          <div className="h-10 w-10 rounded-lg bg-red-100 flex items-center justify-center border-2 border-red-200">
-            <LuCalendarClock size={18} color="#ef4444" />
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full">
+          <div className="h-10 w-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center border-2 border-red-200 dark:border-red-800">
+            <LuCalendarClock size={18} className="text-red-500 dark:text-red-400" />
           </div>
           <div className="flex flex-col items-start h-full">
-            <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Expiring Soon</p>
-            <p className="text-2xl font-bold text-gray-900">{statBoxesData.expiringSoon}</p>
-            <p className="text-xs text-gray-400">Within 3 days</p>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Expiring Soon</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">{statBoxesData.expiringSoon}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">Within 3 days</p>
           </div>
         </div>
 
         {/* Completed */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center gap-4 shadow-sm h-full">
-          <div className="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center border-2 border-green-200">
-            <FaRegSquareCheck size={18} color="#22c55e" />
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full">
+          <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center border-2 border-green-200 dark:border-green-800">
+            <FaRegSquareCheck size={18} className="text-green-500 dark:text-green-400" />
           </div>
           <div className="flex flex-col items-start h-full">
-            <p className="text-sm font-medium text-gray-500 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Completed</p>
-            <p className="text-2xl font-bold text-gray-900">{statBoxesData.completed}</p>
-            <p className="text-xs text-gray-400">This month</p>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Completed</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">{statBoxesData.completed}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">This month</p>
           </div>
         </div>
       </div>
 
+      <hr className="my-3 md:my-6 border-gray-300 cursor-default select-none" />
+
       {/* Search/Filter Bar - Responsive Design */}
-      <div className="bg-white border border-gray-200 rounded-xl px-4 py-4 mb-6 mt-2">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 mb-6 mt-2">
         {/* Mobile: Stacked layout */}
         <div className="lg:hidden">
           {/* Search Bar */}
-          <div className="flex items-center bg-white border border-gray-200 rounded-lg px-4 py-2 w-full">
+          <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 w-full">
             <FaSearch className="text-gray-400 mr-2" size={18} />
             <input
               type="text"
               placeholder="Search documents, recipients, contracts or IDs"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 placeholder-gray-400 font-medium"
+              className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 dark:text-white placeholder-gray-400 font-medium"
               style={{ fontFamily: "Avenir, sans-serif" }}
             />
           </div>
@@ -894,7 +896,7 @@ export default function SignaturesPage() {
             <div className="relative">
               <button 
                 ref={mobileStatusButtonRef}
-                className="flex items-center justify-between w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 font-medium text-xs shadow-sm whitespace-nowrap" 
+                className="flex items-center justify-between w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-700 dark:text-gray-300 font-medium text-xs shadow-sm whitespace-nowrap" 
                 style={{ fontFamily: 'Avenir, sans-serif' }}
                 onClick={(e) => {
                   e.preventDefault();
@@ -911,11 +913,11 @@ export default function SignaturesPage() {
                 <HiMiniChevronDown className="text-gray-400" size={16} />
               </button>
               {showStatusDropdown && (
-                <div ref={mobileStatusDropdownRef} className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
+                <div ref={mobileStatusDropdownRef} className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
                   {availableStatuses.map((status) => (
                     <button
                       key={status}
-                      className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                      className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedStatuses.includes(status) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -953,7 +955,7 @@ export default function SignaturesPage() {
             <div className="relative">
               <button
                 ref={mobileContractButtonRef}
-                className="flex items-center justify-between w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 font-medium text-xs shadow-sm whitespace-nowrap"
+                className="flex items-center justify-between w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-700 dark:text-gray-300 font-medium text-xs shadow-sm whitespace-nowrap"
                 style={{ fontFamily: 'Avenir, sans-serif' }}
                 onClick={(e) => {
                   e.preventDefault();
@@ -971,18 +973,18 @@ export default function SignaturesPage() {
               {openContractDropdown && (
                 <div 
                   ref={mobileContractDropdownRef}
-                  className="absolute top-full left-0 mt-2 min-w-[180px] w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 contract-dropdown" 
+                  className="absolute top-full left-0 mt-2 min-w-[180px] w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 contract-dropdown" 
                   style={{ fontFamily: 'Avenir, sans-serif' }}
                 >
                   {/* Search Bar */}
-                  <div className="px-4 py-2 border-b border-gray-100">
+                  <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
                     <div className="relative">
                       <input
                         type="text"
                         placeholder="Search contracts..."
                         value={contractSearch}
                         onChange={(e) => setContractSearch(e.target.value)}
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-700 dark:text-white bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       />
                       <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -990,7 +992,7 @@ export default function SignaturesPage() {
                   </div>
 
                   <button
-                    className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center"
+                    className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedContracts.length === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                     onClick={(e) => {
                       e.preventDefault();
                       setSelectedContracts([]);
@@ -1013,7 +1015,7 @@ export default function SignaturesPage() {
                     .map(contract => (
                       <button
                         key={contract.id}
-                        className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center whitespace-nowrap truncate"
+                        className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center whitespace-nowrap truncate ${selectedContracts.includes(String(contract.id)) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                         onClick={(e) => {
                           e.preventDefault();
                           setSelectedContracts(prev => {
@@ -1043,7 +1045,7 @@ export default function SignaturesPage() {
             <div className="relative">
               <button
                 ref={mobileSenderButtonRef}
-                className="flex items-center justify-between w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 font-medium text-xs shadow-sm whitespace-nowrap"
+                className="flex items-center justify-between w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-700 dark:text-gray-300 font-medium text-xs shadow-sm whitespace-nowrap"
                 style={{ fontFamily: 'Avenir, sans-serif' }}
                 onClick={(e) => {
                   e.preventDefault();
@@ -1062,13 +1064,13 @@ export default function SignaturesPage() {
               {showSenderDropdown && (
                 <div 
                   ref={mobileSenderDropdownRef}
-                  className="absolute top-full left-0 mt-2 min-w-[180px] w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 sender-dropdown" 
+                  className="absolute top-full left-0 mt-2 min-w-[180px] w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 sender-dropdown" 
                   style={{ fontFamily: 'Avenir, sans-serif' }}
                 >
                   {availableSenders.map((option) => (
                     <button
                       key={option}
-                      className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center"
+                      className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedSender === option ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                       onClick={(e) => {
                         e.preventDefault();
                         setSelectedSender(option);
@@ -1092,7 +1094,7 @@ export default function SignaturesPage() {
             <div className="relative">
               <button
                 ref={mobileAssigneeButtonRef}
-                className="flex items-center justify-between w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 font-medium text-xs shadow-sm whitespace-nowrap" 
+                className="flex items-center justify-between w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-700 dark:text-gray-300 font-medium text-xs shadow-sm whitespace-nowrap" 
                 style={{ fontFamily: 'Avenir, sans-serif' }}
                 onClick={(e) => {
                   e.preventDefault();
@@ -1109,9 +1111,9 @@ export default function SignaturesPage() {
                 <HiMiniChevronDown className="text-gray-400" size={16} />
               </button>
               {showAssigneeDropdown && (
-                <div ref={mobileAssigneeDropdownRef} className="absolute top-full left-0 mt-2 min-w-[180px] w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                <div ref={mobileAssigneeDropdownRef} className="absolute top-full left-0 mt-2 min-w-[180px] w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" style={{ fontFamily: 'Avenir, sans-serif' }}>
                   <button
-                    className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                    className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedAssignees.length === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
@@ -1128,7 +1130,7 @@ export default function SignaturesPage() {
                     All
                   </button>
                   <button
-                    className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                    className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedAssignees.includes('__ME__') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
@@ -1151,7 +1153,7 @@ export default function SignaturesPage() {
                   {availableAssignees.map((assignee) => (
                     <button
                       key={assignee}
-                      className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                      className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedAssignees.includes(assignee) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -1202,24 +1204,24 @@ export default function SignaturesPage() {
         {/* Desktop: Horizontal layout */}
         <div className="hidden lg:flex items-center gap-1">
           {/* Search Bar */}
-          <div className="flex items-center bg-white border border-gray-200 rounded-lg px-4 py-2 flex-1 min-w-0">
+          <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex-1 min-w-0">
             <FaSearch className="text-gray-400 mr-2" size={18} />
             <input
               type="text"
               placeholder="Search documents, recipients, contracts or IDs"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 placeholder-gray-400 font-medium min-w-0"
+              className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 dark:text-white placeholder-gray-400 font-medium min-w-0"
               style={{ fontFamily: "Avenir, sans-serif" }}
             />
           </div>
-          {/* Filter Buttons - match blockchain page spacing */}
-          <div className="flex items-center">
+          {/* Filter Buttons - fixed width based on max content */}
+          <div className="flex items-center flex-shrink-0">
                     {/* Status Filter */}
             <div className="relative flex-shrink-0">
         <button 
                 ref={statusButtonRef}
-                className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
+                className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs w-[140px] relative whitespace-nowrap"
           style={{ fontFamily: 'Avenir, sans-serif' }}
           onClick={(e) => {
             e.preventDefault();
@@ -1237,11 +1239,11 @@ export default function SignaturesPage() {
                 <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
               </button>
               {showStatusDropdown && (
-                <div ref={statusDropdownRef} className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
+                <div ref={statusDropdownRef} className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
                   {availableStatuses.map((status) => (
                     <button
                       key={status}
-                      className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                      className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedStatuses.includes(status) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -1278,7 +1280,7 @@ export default function SignaturesPage() {
             <div className="relative flex-shrink-0 ml-1">
               <button
                 ref={contractButtonRef}
-                className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
+                className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs w-[140px] relative whitespace-nowrap"
                 style={{ fontFamily: 'Avenir, sans-serif' }}
                           onClick={(e) => {
             e.preventDefault();
@@ -1297,18 +1299,18 @@ export default function SignaturesPage() {
                         {openContractDropdown && (
             <div 
               ref={contractDropdownRef}
-              className="absolute top-full left-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-2 min-w-[400px] w-96 contract-dropdown" 
+              className="absolute top-full left-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[400px] w-96 contract-dropdown" 
               style={{ fontFamily: 'Avenir, sans-serif' }}
             >
                   {/* Search Bar */}
-                  <div className="px-4 py-2 border-b border-gray-100">
+                  <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
                     <div className="relative">
                       <input
                         type="text"
                         placeholder="Search contracts..."
                         value={contractSearch}
                         onChange={(e) => setContractSearch(e.target.value)}
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-700 dark:text-white bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       />
                       <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -1316,7 +1318,7 @@ export default function SignaturesPage() {
                   </div>
 
                   <button
-                    className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center"
+                    className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedContracts.length === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                     onClick={(e) => {
                       e.preventDefault();
                       setSelectedContracts([]);
@@ -1339,7 +1341,7 @@ export default function SignaturesPage() {
                     .map(contract => (
                       <button
                         key={contract.id}
-                        className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center whitespace-nowrap truncate"
+                        className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center whitespace-nowrap truncate ${selectedContracts.includes(String(contract.id)) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                         onClick={(e) => {
                           e.preventDefault();
                           setSelectedContracts(prev => {
@@ -1368,7 +1370,7 @@ export default function SignaturesPage() {
             <div className="relative flex-shrink-0 ml-1">
           <button
             ref={senderButtonRef}
-            className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
+            className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs w-[140px] relative whitespace-nowrap"
             style={{ fontFamily: 'Avenir, sans-serif' }}
             onClick={(e) => {
               e.preventDefault();
@@ -1388,13 +1390,13 @@ export default function SignaturesPage() {
                         {showSenderDropdown && (
             <div 
               ref={senderDropdownRef}
-              className="absolute top-full left-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-2 min-w-[200px] sender-dropdown" 
+              className="absolute top-full left-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[200px] sender-dropdown" 
               style={{ fontFamily: 'Avenir, sans-serif' }}
             >
                   {availableSenders.map((option) => (
                     <button
                       key={option}
-                      className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center"
+                      className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedSender === option ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                       onClick={(e) => {
                         e.preventDefault();
                         setSelectedSender(option);
@@ -1417,7 +1419,7 @@ export default function SignaturesPage() {
             <div className="relative flex-shrink-0 ml-1">
         <button
                 ref={assigneeButtonRef}
-                className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap" 
+                className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs w-[140px] relative whitespace-nowrap" 
           style={{ fontFamily: 'Avenir, sans-serif' }}
           onClick={(e) => {
             e.preventDefault();
@@ -1435,9 +1437,9 @@ export default function SignaturesPage() {
                 <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
               </button>
                         {showAssigneeDropdown && (
-            <div ref={assigneeDropdownRef} className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
+            <div ref={assigneeDropdownRef} className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
                   <button
-                    className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                    className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedAssignees.length === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
@@ -1454,7 +1456,7 @@ export default function SignaturesPage() {
                     All
                   </button>
                   <button
-                    className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                    className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedAssignees.includes('__ME__') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
@@ -1477,7 +1479,7 @@ export default function SignaturesPage() {
                   {availableAssignees.map((assignee) => (
                     <button
                       key={assignee}
-                      className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                      className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedAssignees.includes(assignee) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -1503,7 +1505,7 @@ export default function SignaturesPage() {
             </div>
             {/* Last 30 Days Filter */}
             <button 
-              className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap flex-shrink-0 ml-1" 
+              className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs w-[160px] relative whitespace-nowrap flex-shrink-0 ml-1" 
               style={{ fontFamily: 'Avenir, sans-serif' }}
               onClick={(e) => {
                 e.preventDefault();
@@ -1529,9 +1531,10 @@ export default function SignaturesPage() {
       {/* Page content - Tabs and Signature List */}
       <div className="space-y-4">
         {/* White Box Container */}
-        <div className="bg-white border border-gray-200 rounded-xl p-6">
-          {/* Tabs */}
-          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 border-b border-gray-200 pb-4">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+          {/* Tabs Row with Divider */}
+          <div className="border-b border-gray-200 dark:border-gray-700">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
             {activeTab === 'inbox' ? (
               <>
                 <button
@@ -1632,7 +1635,7 @@ export default function SignaturesPage() {
               <>
                 <button
                   className={clsx(
-                    "pb-3 sm:pb-2 border-b-2 text-sm font-bold transition-colors duration-200",
+                    "pb-2 border-b-2 text-sm font-semibold transition-colors duration-200",
                     "w-full sm:w-auto text-center sm:text-left px-4 py-2 sm:px-0 sm:py-0",
                     pendingTab === 'all' ? "border-primary text-primary" : "border-transparent text-gray-500 hover:text-gray-700"
                   )}
@@ -1643,7 +1646,7 @@ export default function SignaturesPage() {
                 </button>
                 <button
                   className={clsx(
-                    "pb-3 sm:pb-2 border-b-2 text-sm font-bold transition-colors duration-200",
+                    "pb-2 border-b-2 text-sm font-semibold transition-colors duration-200",
                     "w-full sm:w-auto text-center sm:text-left px-4 py-2 sm:px-0 sm:py-0",
                     pendingTab === 'waiting' ? "border-primary text-primary" : "border-transparent text-gray-500 hover:text-gray-700"
                   )}
@@ -1654,7 +1657,7 @@ export default function SignaturesPage() {
                 </button>
                 <button
                   className={clsx(
-                    "pb-3 sm:pb-2 border-b-2 text-sm font-bold transition-colors duration-200",
+                    "pb-2 border-b-2 text-sm font-semibold transition-colors duration-200",
                     "w-full sm:w-auto text-center sm:text-left px-4 py-2 sm:px-0 sm:py-0",
                     pendingTab === 'expiring' ? "border-primary text-primary" : "border-transparent text-gray-500 hover:text-gray-700"
                   )}
@@ -1665,81 +1668,82 @@ export default function SignaturesPage() {
                 </button>
               </>
             )}
+            </div>
           </div>
 
           {/* Signature List Content based on Active Tab */}
           <div className="mt-4">
             <div style={{ height: 'calc(10 * 3.5rem)', minHeight: '350px' }} className="relative overflow-x-auto overflow-y-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="sticky top-0 z-10 bg-gray-50">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700">
                   <tr>
                     <th 
-                      className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" 
+                      className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" 
                       style={{ minWidth: '100px' }}
                       onClick={handleIdSort}
                     >
                       Document ID
                     </th>
                     <th 
-                      className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-left" 
+                      className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-left" 
                       style={{ minWidth: '200px' }}
                       onClick={handleDocumentSort}
                     >
                       Document
                     </th>
-                    <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-left" style={{ minWidth: '187px' }}>Recipients</th>
+                    <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-left" style={{ minWidth: '187px' }}>Recipients</th>
                     <th 
-                      className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" 
+                      className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" 
                       style={{ minWidth: '120px' }}
                       onClick={handleStatusSort}
                     >
                       Status
                     </th>
-                    <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '120px' }}>Signatures</th>
+                    <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '120px' }}>Signatures</th>
                     <th 
-                      className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" 
+                      className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" 
                       style={{ minWidth: '120px' }}
                       onClick={handleContractIdSort}
                     >
                       Contract ID
                     </th>
                     <th 
-                      className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-left" 
+                      className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-left" 
                       style={{ minWidth: '200px' }}
                       onClick={handleContractSort}
                     >
                       Contract
                     </th>
                     <th 
-                      className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-left" 
+                      className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-left" 
                       style={{ minWidth: '120px' }}
                       onClick={handleAssigneeSort}
                     >
                       Assignee
                     </th>
                     <th 
-                      className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" 
+                      className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" 
                       style={{ minWidth: '120px' }}
                       onClick={handleDateSentSort}
                     >
                       Date Sent
                     </th>
                     <th 
-                      className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" 
+                      className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" 
                       style={{ minWidth: '120px' }}
                       onClick={handleDueDateSort}
                     >
                       Due Date
                     </th>
-                    <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '120px' }}>Actions</th>
+                    <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '120px' }}>Actions</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                   {filteredRows.map((row) => {
                     return (
                       <tr 
                         key={row.id}
-                        className="hover:bg-gray-50 cursor-pointer" 
+                        className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" 
                         onClick={() => {
                           setSelectedDocument({
                             id: row.id,
@@ -1759,12 +1763,12 @@ export default function SignaturesPage() {
                           <span className="text-primary underline font-semibold cursor-pointer">{row.id}</span>
                         </td>
                         <td className="px-6 py-2.5 whitespace-nowrap text-sm">
-                          <div className="text-xs font-bold text-gray-900">{row.document}</div>
+                          <div className="text-xs font-bold text-gray-900 dark:text-white">{row.document}</div>
                         </td>
                         <td className="px-6 py-2.5 text-xs">
                           <div className="flex flex-col space-y-1">
                             {row.parties.map((party, index) => (
-                              <div key={index} className="text-gray-900">{party}</div>
+                              <div key={index} className="text-gray-900 dark:text-white">{party}</div>
                             ))}
                           </div>
                         </td>
@@ -1780,22 +1784,22 @@ export default function SignaturesPage() {
                             {row.status}
                           </span>
                         </td>
-                        <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs text-gray-600">{row.signatures}</td>
+                        <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs text-gray-500 dark:text-gray-400">{row.signatures}</td>
                         <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
                           <span className="text-primary underline font-semibold cursor-pointer">{row.contractId}</span>
                         </td>
                         <td className="px-6 py-2.5 whitespace-nowrap text-sm">
-                          <div className="text-xs font-bold text-gray-900">{row.contract}</div>
+                          <div className="text-xs font-bold text-gray-900 dark:text-white">{row.contract}</div>
                         </td>
                         <td className="px-6 py-2.5 whitespace-nowrap text-sm">
-                          <div className="text-xs text-gray-900">{row.assignee}</div>
+                          <div className="text-xs text-gray-900 dark:text-white">{row.assignee}</div>
                         </td>
-                        <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">{row.dateSent}</td>
-                        <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">{row.dueDate}</td>
+                        <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs text-gray-500 dark:text-gray-400">{row.dateSent}</td>
+                        <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs text-gray-500 dark:text-gray-400">{row.dueDate}</td>
                         <td className="px-6 py-2.5 whitespace-nowrap text-center">
                           <div className="flex items-center justify-center space-x-1">
                             <button 
-                              className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" 
+                              className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary" 
                               title="View"
                               onClick={(e) => {
                                 e.preventDefault();
@@ -1806,7 +1810,7 @@ export default function SignaturesPage() {
                               <HiOutlineEye className="text-sm sm:text-base" />
                             </button>
                             <button 
-                              className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" 
+                              className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary" 
                               title="Send Reminder"
                               onClick={(e) => {
                                 e.preventDefault();
@@ -1817,7 +1821,7 @@ export default function SignaturesPage() {
                               <LuBellRing className="text-sm sm:text-base" />
                             </button>
                             <button 
-                              className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" 
+                              className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary" 
                               title="Download"
                               onClick={(e) => {
                                 e.preventDefault();
@@ -1828,7 +1832,7 @@ export default function SignaturesPage() {
                               <HiOutlineDownload className="text-sm sm:text-base" />
                             </button>
                             <button 
-                              className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 hover:border-red-500 hover:text-red-500 transition-colors" 
+                              className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500" 
                               title="Void"
                               onClick={(e) => {
                                 e.preventDefault();
@@ -1852,22 +1856,22 @@ export default function SignaturesPage() {
 
       {/* Signature Details Modal */}
       {selectedDocument && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-2 sm:p-4">
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-[1400px] max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-2 sm:p-4 cursor-default select-none">
+          <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-[1400px] max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden cursor-default select-none">
             {/* Sticky Header with Document ID and Close buttons */}
-            <div className="sticky top-0 z-40 bg-white px-4 sm:px-6 py-4">
-              <div className="flex items-start justify-between">
+            <div className="sticky top-0 z-40 bg-gray-50 dark:bg-gray-900 px-4 sm:px-6 py-4 cursor-default select-none">
+              <div className="flex items-start justify-between cursor-default select-none">
                 {/* Left: Document ID and Status */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 sm:gap-4 mb-4">
-                    <span className="text-[10px] font-bold bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-700">
+                <div className="flex-1 min-w-0 cursor-default select-none">
+                  <div className="flex items-center gap-2 sm:gap-4 mb-4 cursor-default select-none">
+                    <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary cursor-default select-none">
                       # {selectedDocument.id}
                     </span>
                   </div>
                 </div>
                 {/* Right: Close Button */}
                 <button
-                  className="text-gray-400 hover:text-gray-600 p-2 rounded-full ml-2 sm:ml-4 mt-1"
+                  className="text-gray-400 hover:text-gray-600 p-2 rounded-full ml-2 sm:ml-4 mt-1 cursor-pointer"
                   onClick={() => setSelectedDocument(null)}
                   aria-label="Close"
                 >
@@ -1878,26 +1882,26 @@ export default function SignaturesPage() {
               </div>
             </div>
 
-            <div className="flex flex-col flex-1 min-h-0">
-              <div className="overflow-y-auto p-4 sm:p-6 flex-1">
+            <div className="flex flex-col flex-1 min-h-0 cursor-default select-none">
+              <div className="overflow-y-auto p-4 sm:p-6 flex-1 bg-gray-50 dark:bg-gray-900 cursor-default select-none">
                 {/* Modal Content Grid: 2 columns on desktop, 1 column on mobile */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 w-full h-full min-h-0">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 w-full h-full min-h-0 -mt-2 items-start cursor-default select-none">
                   {/* LEFT COLUMN: Document Details */}
-                  <div className="flex flex-col gap-4 sm:gap-6 w-full h-full min-h-0">
+                  <div className="flex flex-col gap-4 sm:gap-6 w-full cursor-default select-none">
                     {/* Document Details Box */}
-                    <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 w-full h-full flex flex-col">
-                      <h3 className="text-sm font-semibold text-gray-900 mb-4">Document Details</h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-x-12 gap-y-4">
+                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 w-full cursor-default select-none">
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Document Details</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-x-12 gap-y-4 cursor-default select-none">
                         {/* Row 1: Document ID, Document Hash, and Contract ID */}
                         <div>
-                          <div className="text-gray-500 text-xs mb-1">Document ID</div>
-                          <div className="text-xs text-black mb-4">{selectedDocument?.id}</div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Document ID</div>
+                          <div className="text-xs text-black dark:text-white select-none cursor-default">{selectedDocument?.id}</div>
                         </div>
                         <div>
-                          <div className="text-gray-500 text-xs mb-1">Document Hash</div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Document Hash</div>
                           <div className="flex items-center">
                             <span
-                              className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
+                              className="text-xs font-mono text-gray-900 dark:text-white truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-default select-none"
                               style={{ maxWidth: '120px' }}
                               title={selectedDocument ? getDocumentHash(selectedDocument.id) : ''}
                             >
@@ -1906,7 +1910,7 @@ export default function SignaturesPage() {
                             <div className="relative">
                               <button 
                                 type="button"
-                                className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                                className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
                                 onClick={() => {
                                   if (selectedDocument) {
                                     navigator.clipboard.writeText(getDocumentHash(selectedDocument.id));
@@ -1921,12 +1925,12 @@ export default function SignaturesPage() {
                                 <HiOutlineDuplicate className="w-4 h-4" />
                               </button>
                               {copiedDocumentId === selectedDocument?.id && (
-                                <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded">
+                                <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none">
                                   Copied!
                                 </div>
                               )}
                               {hoveredDocumentId === selectedDocument?.id && copiedDocumentId !== selectedDocument?.id && (
-                                <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded">
+                                <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none">
                                   Copy
                                 </div>
                               )}
@@ -1934,19 +1938,19 @@ export default function SignaturesPage() {
                           </div>
                         </div>
                         <div>
-                          <div className="text-gray-500 text-xs mb-1">Contract ID</div>
-                          <div className="text-xs text-black mb-4">{selectedDocument?.contractId}</div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Contract ID</div>
+                          <div className="text-xs text-black dark:text-white select-none cursor-default">{selectedDocument?.contractId}</div>
                         </div>
                         {/* Row 2: Document Name and Contract Name */}
                         <div>
-                          <div className="text-gray-500 text-xs mb-1">Document Name</div>
-                          <div className="text-xs text-black mb-4">{selectedDocument?.document}</div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Document Name</div>
+                          <div className="text-xs text-black dark:text-white select-none cursor-default">{selectedDocument?.document}</div>
                         </div>
                         <div>
-                          <div className="text-gray-500 text-xs mb-1">Contract Hash</div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Contract Hash</div>
                           <div className="flex items-center">
                             <span
-                              className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
+                              className="text-xs font-mono text-gray-900 dark:text-white truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-default select-none"
                               style={{ maxWidth: '120px' }}
                               title={selectedDocument ? getDocumentHash(selectedDocument.contractId) : ''}
                             >
@@ -1955,7 +1959,7 @@ export default function SignaturesPage() {
                             <div className="relative">
                               <button 
                                 type="button"
-                                className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                                className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
                                 onClick={() => {
                                   if (selectedDocument) {
                                     navigator.clipboard.writeText(getDocumentHash(selectedDocument.contractId));
@@ -1970,12 +1974,12 @@ export default function SignaturesPage() {
                                 <HiOutlineDuplicate className="w-4 h-4" />
                               </button>
                               {copiedDocumentId === selectedDocument?.contractId && (
-                                <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded">
+                                <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none">
                                   Copied!
                                 </div>
                               )}
                               {hoveredDocumentId === selectedDocument?.contractId && copiedDocumentId !== selectedDocument?.contractId && (
-                                <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded">
+                                <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none">
                                   Copy
                                 </div>
                               )}
@@ -1983,13 +1987,13 @@ export default function SignaturesPage() {
                           </div>
                         </div>
                         <div>
-                          <div className="text-gray-500 text-xs mb-1">Contract Name</div>
-                          <div className="text-xs text-black mb-4">{selectedDocument?.contract}</div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Contract Name</div>
+                          <div className="text-xs text-black dark:text-white select-none cursor-default">{selectedDocument?.contract}</div>
                         </div>
                         {/* Message Field */}
                         <div className="col-span-1 sm:col-span-2 lg:col-span-3">
-                          <div className="text-gray-500 text-xs mb-1">Message</div>
-                          <div className="w-full min-h-24 px-4 py-2 text-xs font-medium text-black border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Message</div>
+                          <div className="w-full min-h-24 px-4 py-2 text-xs font-medium text-black dark:text-white border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900">
                             Please review and sign the attached document at your earliest convenience. This document requires your signature to proceed with the transaction.
                           </div>
                         </div>
@@ -1998,26 +2002,26 @@ export default function SignaturesPage() {
                   </div>
 
                   {/* RIGHT COLUMN: Signature Details */}
-                  <div className="flex flex-col gap-4 sm:gap-6 w-full h-full min-h-0">
+                  <div className="flex flex-col gap-4 sm:gap-6 w-full cursor-default select-none">
                     {/* Signature Details Box */}
-                    <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 w-full h-full flex flex-col">
-                      <h3 className="text-sm font-semibold text-gray-900 mb-4">Signature Details</h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-x-12 gap-y-4">
+                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 w-full cursor-default select-none">
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Signature Details</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-x-12 gap-y-4 cursor-default select-none">
                         {/* Row 1: Parties and Signatures */}
                         <div className="col-span-1 sm:col-span-2">
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-x-12">
                             <div>
-                              <div className="text-gray-500 text-xs mb-1">Parties</div>
-                              <div className="text-xs text-black mb-4">
+                              <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Parties</div>
+                              <div className="text-xs text-black dark:text-white select-none cursor-default mb-4">
                                 {selectedDocument?.parties.map((party, idx) => (
                                   <div key={idx}>{party}</div>
                                 ))}
                               </div>
                             </div>
                             <div>
-                              <div className="text-gray-500 text-xs mb-1">Signatures</div>
-                              <div className="text-xs text-black mb-4 flex flex-col gap-2">
-                                <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                              <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Signatures</div>
+                              <div className="text-xs text-black dark:text-white select-none cursor-default mb-4 flex flex-col gap-2">
+                                <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                                   <div 
                                     className="h-full bg-primary rounded-full" 
                                     style={{ 
@@ -2033,35 +2037,35 @@ export default function SignaturesPage() {
                         </div>
                         {/* Row 2: Status */}
                         <div className="col-span-1 sm:col-span-2">
-                          <div className="text-gray-500 text-xs mb-1">Status</div>
-                          <span className={`inline-flex items-center justify-center min-w-[130px] h-7 px-4 font-semibold rounded-full text-xs ${
-                            selectedDocument?.status === 'Pending' ? 'bg-yellow-100 text-yellow-800 border border-yellow-500' :
-                            selectedDocument?.status === 'Completed' ? 'bg-green-100 text-green-800 border border-green-500' :
-                            selectedDocument?.status === 'Rejected' ? 'bg-red-100 text-red-800 border border-red-500' :
-                            'bg-gray-100 text-gray-800 border border-gray-500'
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Status</div>
+                          <span className={`inline-flex items-center justify-center min-w-[130px] h-7 px-4 font-semibold rounded-full text-xs cursor-default select-none ${
+                            selectedDocument?.status === 'Pending' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 border border-yellow-500 dark:border-yellow-800' :
+                            selectedDocument?.status === 'Completed' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border border-green-500 dark:border-green-800' :
+                            selectedDocument?.status === 'Rejected' ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 border border-red-500 dark:border-red-800' :
+                            'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400 border border-gray-500 dark:border-gray-800'
                           }`}>{selectedDocument?.status}</span>
                         </div>
                         {/* Row 3: Due Date, Last Reminder Date, and Date Sent */}
                         <div className="col-span-1 sm:col-span-2">
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-x-12">
                             <div>
-                              <div className="text-gray-500 text-xs mb-1">Due Date</div>
-                              <div className="text-xs text-black mb-4">{selectedDocument?.dueDate}</div>
+                              <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Due Date</div>
+                              <div className="text-xs text-black dark:text-white select-none cursor-default mb-4">{selectedDocument?.dueDate}</div>
                             </div>
                             <div>
-                              <div className="text-gray-500 text-xs mb-1">Last Reminder Date</div>
-                              <div className="text-xs text-black mb-4"></div>
+                              <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Last Reminder Date</div>
+                              <div className="text-xs text-black dark:text-white select-none cursor-default mb-4"></div>
                             </div>
                             <div>
-                              <div className="text-gray-500 text-xs mb-1">Date Sent</div>
-                              <div className="text-xs text-black mb-4">{selectedDocument?.dateSent}</div>
+                              <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Date Sent</div>
+                              <div className="text-xs text-black dark:text-white select-none cursor-default mb-4">{selectedDocument?.dateSent}</div>
                             </div>
                           </div>
                         </div>
                         {/* Row 4: Assignee */}
                         <div>
-                          <div className="text-gray-500 text-xs mb-1">Assignee</div>
-                          <div className="text-xs text-black mb-4">{selectedDocument?.assignee}</div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Assignee</div>
+                          <div className="text-xs text-black dark:text-white select-none cursor-default mb-4">{selectedDocument?.assignee}</div>
                         </div>
                         <div className="hidden sm:block"></div>
                       </div>
@@ -2070,15 +2074,15 @@ export default function SignaturesPage() {
                 </div>
                 {/* Recipients Box - New Section */}
                 <div className="col-span-1 lg:col-span-2 mt-4 sm:mt-6">
-                  <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 w-full" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>Recipients</h3>
-                    <div className="w-full" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 w-full cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Recipients</h3>
+                    <div className="w-full cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
                       {/* Mobile: Card-based layout */}
                       <div className="lg:hidden space-y-3">
                         {selectedDocument?.parties.map((party, idx) => {
                           const email = party.toLowerCase().replace(/[^a-z0-9]/g, '.') + '@example.com';
                           return (
-                            <div key={party} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div key={party} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600 cursor-default select-none">
                               <div className="flex items-center gap-3 mb-3">
                                 <div className="text-center font-semibold text-sm bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center">
                                   {idx + 1}
@@ -2086,23 +2090,23 @@ export default function SignaturesPage() {
                                 <div className="h-5 w-5 rounded-lg bg-primary flex items-center justify-center border-2 border-primary">
                                   <FaCheck className="text-white" size={10} />
                                 </div>
-                                <div className="font-bold text-sm">{party}</div>
+                                <div className="font-bold text-sm text-gray-900 dark:text-white">{party}</div>
                               </div>
-                              <div className="grid grid-cols-2 gap-4 text-xs text-gray-600">
+                              <div className="grid grid-cols-2 gap-4 text-xs text-gray-600 dark:text-gray-400">
                                 <div>
-                                  <span className="text-gray-500">Email:</span>
-                                  <div className="text-gray-700">{email}</div>
+                                  <span className="text-gray-500 dark:text-gray-400">Email:</span>
+                                  <div className="text-gray-700 dark:text-gray-300">{email}</div>
                                 </div>
                                 <div>
-                                  <span className="text-gray-500">Status:</span>
+                                  <span className="text-gray-500 dark:text-gray-400">Status:</span>
                                   <div className="font-semibold text-primary">Signed</div>
                                 </div>
                                 <div>
-                                  <span className="text-gray-500">Date/Time:</span>
-                                  <div className="text-gray-700">12/31/2024 | 12:00:00 pm</div>
+                                  <span className="text-gray-500 dark:text-gray-400">Date/Time:</span>
+                                  <div className="text-gray-700 dark:text-gray-300">12/31/2024 | 12:00:00 pm</div>
                                 </div>
                                 <div>
-                                  <span className="text-gray-500">Location:</span>
+                                  <span className="text-gray-500 dark:text-gray-400">Location:</span>
                                   <div>
                                     <a href="#" className="text-primary underline hover:text-primary-dark">Signed in location</a>
                                   </div>
@@ -2115,7 +2119,7 @@ export default function SignaturesPage() {
                       
                       {/* Desktop: Original table layout */}
                       <div className="hidden lg:block">
-                        <div className="grid grid-cols-[40px_40px_1.5fr_2fr_1fr_1.5fr_1.5fr] gap-2 px-2 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                        <div className="grid grid-cols-[40px_40px_1.5fr_2fr_1fr_1.5fr_1.5fr] gap-2 px-2 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
                           <div className="text-center">#</div>
                           <div></div>
                           <div className="text-left">Name</div>
@@ -2129,7 +2133,7 @@ export default function SignaturesPage() {
                           // Generate a placeholder email from the party name
                           const email = party.toLowerCase().replace(/[^a-z0-9]/g, '.') + '@example.com';
                           return (
-                            <div key={party} className="grid grid-cols-[40px_40px_1.5fr_2fr_1fr_1.5fr_1.5fr] gap-2 items-center px-2 py-4 border-b border-gray-100 text-xs text-gray-800" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                            <div key={party} className="grid grid-cols-[40px_40px_1.5fr_2fr_1fr_1.5fr_1.5fr] gap-2 items-center px-2 py-4 border-b border-gray-100 dark:border-gray-700 text-xs text-gray-800 dark:text-gray-200 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
                               <div className="text-center font-semibold">{idx + 1}</div>
                               <div className="flex justify-center items-center">
                                 <div className="h-5 w-5 rounded-lg bg-primary flex items-center justify-center border-2 border-primary">
@@ -2137,11 +2141,11 @@ export default function SignaturesPage() {
                                 </div>
                               </div>
                               <div className="font-bold">{party}</div>
-                              <div className="text-gray-500">{email}</div>
+                              <div className="text-gray-500 dark:text-gray-400">{email}</div>
                               <div className="font-semibold text-primary flex items-center gap-1">
                                 <span>Signed</span>
                               </div>
-                              <div className="text-gray-700">12/31/2024 | 12:00:00 pm</div>
+                              <div className="text-gray-700 dark:text-gray-300">12/31/2024 | 12:00:00 pm</div>
                               <div>
                                 <a href="#" className="text-primary underline hover:text-primary-dark">Signed in location</a>
                               </div>

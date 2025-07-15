@@ -13,7 +13,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-4">
       {/* Dashboard Title and Subtitle Group */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0 mb-3 sm:mb-6">
         {/* Group title and subtitle with controlled spacing */}
         <div className="pb-1">
           <h1 className="text-[30px] font-bold text-black dark:text-white mb-0">Dashboard</h1>
@@ -30,7 +30,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Horizontal line below subtitle */}
-      <hr className="my-6 border-gray-300" />
+      <hr className="my-3 md:my-6 border-gray-300 cursor-default select-none" />
 
       {/* Key Metrics Section */}
       <h2 className="text-[15px] font-bold text-gray-700 pt-6 mb-4">KEY METRICS</h2>

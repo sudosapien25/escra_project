@@ -546,7 +546,7 @@ export default function WorkflowsPage() {
   return (
     <div className="space-y-4">
       {/* Workflow Title and Button */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-8 gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 sm:mb-6 gap-4">
         <div>
           <h1 className="text-[30px] font-bold text-black dark:text-white mb-1">Tasks</h1>
           <p className="text-gray-500 dark:text-gray-400 text-[16px] mt-0">Track &amp; manage your activity</p>
@@ -560,7 +560,7 @@ export default function WorkflowsPage() {
         </button>
       </div>
 
-      <hr className="my-3 md:my-6 border-gray-300 dark:border-gray-700" />
+      <hr className="my-3 md:my-6 border-gray-300 cursor-default select-none" />
 
       {/* Workflow Stats and Filters Section */}
       <div className="space-y-4">
@@ -634,6 +634,8 @@ export default function WorkflowsPage() {
             </div>
           </div>
         </div>
+
+        <hr className="my-3 md:my-6 border-gray-300 cursor-default select-none" />
 
         {/* Filter Bar - Responsive Design */}
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 mb-6 mt-2">
@@ -1168,8 +1170,6 @@ export default function WorkflowsPage() {
           </div>
         </div>
       </div>
-
-      <hr className="my-6 border-gray-300" />
 
       {/* Kanban Board Section (filtered by tab) */}
       {kanbanTab === 'All' && (
