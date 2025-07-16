@@ -4282,7 +4282,7 @@ const ContractsPage: React.FC = () => {
                               <div className="text-xs text-gray-500 cursor-default select-none">{doc.dateUploaded} &bull; {doc.type} &bull; {doc.size}</div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 cursor-default select-none">
+                          <div className="flex items-center justify-center space-x-1 cursor-default select-none">
                             <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer" onClick={() => { setSelectedPdf({ name: doc.name, url: `/documents/${doc.name}`, id: doc.id }); setShowPdfViewer(true); }}>
                               <HiOutlineEye className="h-4 w-4 transition-colors" />
                               <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
@@ -4739,9 +4739,23 @@ const ContractsPage: React.FC = () => {
                 ))}
               </ul>
             )}
-            <button type="submit" className="w-full mt-6 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold cursor-pointer">
-              Upload
-            </button>
+            <div className="flex justify-end gap-1 mt-6">
+              <button
+                type="button"
+                onClick={() => { setShowUploadModal(false); setUploadModalFiles([]); }}
+                className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
+                style={{ fontFamily: 'Avenir, sans-serif' }}
+              >
+                Close
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+                style={{ fontFamily: 'Avenir, sans-serif' }}
+              >
+                Upload
+              </button>
+            </div>
           </form>
         </div>
       </div>

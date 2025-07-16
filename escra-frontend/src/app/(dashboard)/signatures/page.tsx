@@ -24,6 +24,7 @@ import { MdOutlineLightMode, MdOutlineDarkMode } from 'react-icons/md';
 import { FaDochub } from 'react-icons/fa6';
 import { SiAdobe } from 'react-icons/si';
 import { mockContracts } from '@/data/mockContracts';
+import { useAssigneeStore } from '@/data/assigneeStore';
 
 interface SignatureDocument {
   id: string;
@@ -57,6 +58,29 @@ export default function SignaturesPage() {
   const [showDocuSignModal, setShowDocuSignModal] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [docuSignUploadedFiles, setDocuSignUploadedFiles] = useState<File[]>([]);
+  const [editingFileName, setEditingFileName] = useState<string | null>(null);
+  const [editingDocuSignFileName, setEditingDocuSignFileName] = useState<string | null>(null);
+  const [customFileNames, setCustomFileNames] = useState<{[key: string]: string}>({});
+  const [customDocuSignFileNames, setCustomDocuSignFileNames] = useState<{[key: string]: string}>({});
+  
+  // Contract association modal state
+  const [showContractModal, setShowContractModal] = useState(false);
+  const [currentUploadingFile, setCurrentUploadingFile] = useState<File | null>(null);
+  const [currentUploadingFileName, setCurrentUploadingFileName] = useState('');
+  const [currentUploadingContract, setCurrentUploadingContract] = useState('');
+  const [currentUploadingAssignee, setCurrentUploadingAssignee] = useState('');
+  const [isDocuSignUpload, setIsDocuSignUpload] = useState(false);
+  const [uploadedFileContracts, setUploadedFileContracts] = useState<{[key: string]: string}>({});
+  const [docuSignUploadedFileContracts, setDocuSignUploadedFileContracts] = useState<{[key: string]: string}>({});
+  const [uploadedFileAssignees, setUploadedFileAssignees] = useState<{[key: string]: string}>({});
+  const [docuSignUploadedFileAssignees, setDocuSignUploadedFileAssignees] = useState<{[key: string]: string}>({});
+  
+  // Contract dropdown state for modal
+  const [showModalContractDropdown, setShowModalContractDropdown] = useState(false);
+  const [modalContractSearch, setModalContractSearch] = useState('');
+  const modalContractDropdownRef = useRef<HTMLDivElement>(null);
+  const [showModalAssigneeDropdown, setShowModalAssigneeDropdown] = useState(false);
+  const modalAssigneeDropdownRef = useRef<HTMLDivElement>(null);
   const [showDocumentDropdown, setShowDocumentDropdown] = useState(false);
   const [showDocuSignDocumentDropdown, setShowDocuSignDocumentDropdown] = useState(false);
   const [documentSearch, setDocumentSearch] = useState('');
@@ -157,6 +181,9 @@ export default function SignaturesPage() {
   const mobileContractButtonRef = useRef<HTMLButtonElement>(null);
   const mobileStatusButtonRef = useRef<HTMLButtonElement>(null);
 
+  // Get assignees from store
+  const { allAssignees } = useAssigneeStore();
+
   // Handler to add a new recipient card
   const handleAddRecipient = () => {
     setRecipients(prev => [
@@ -242,6 +269,8 @@ export default function SignaturesPage() {
     'Sent by me',
     'Sent to me'
   ];
+
+
 
   // Available options for recently updated dropdown
   const availableRecentlyUpdatedOptions = [
@@ -595,7 +624,16 @@ export default function SignaturesPage() {
     const validFiles = files.filter(file =>
       ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "image/jpeg"].includes(file.type) && file.size <= 10 * 1024 * 1024
     );
-    setUploadedFiles(validFiles);
+    
+    // Show contract association modal for the first file
+    if (validFiles.length > 0) {
+      setCurrentUploadingFile(validFiles[0]);
+      setCurrentUploadingFileName(validFiles[0].name);
+      setCurrentUploadingContract('');
+      setCurrentUploadingAssignee('');
+      setIsDocuSignUpload(false);
+      setShowContractModal(true);
+    }
   };
 
   const handleDocuSignFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -605,8 +643,124 @@ export default function SignaturesPage() {
     const validFiles = files.filter(file =>
       ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "image/jpeg"].includes(file.type) && file.size <= 10 * 1024 * 1024
     );
-    setDocuSignUploadedFiles(validFiles);
+    
+    // Show contract association modal for the first file
+    if (validFiles.length > 0) {
+      setCurrentUploadingFile(validFiles[0]);
+      setCurrentUploadingFileName(validFiles[0].name);
+      setCurrentUploadingContract('');
+      setCurrentUploadingAssignee('');
+      setIsDocuSignUpload(true);
+      setShowContractModal(true);
+    }
   };
+
+  // Helper function to get file key for uploaded files
+  const getFileKey = (file: File, index: number) => `${file.name}-${index}`;
+
+  // Helper function to get display name for uploaded files
+  const getDisplayFileName = (file: File, index: number, isDocuSign: boolean = false) => {
+    const fileKey = getFileKey(file, index);
+    const customNames = isDocuSign ? customDocuSignFileNames : customFileNames;
+    return customNames[fileKey] || file.name;
+  };
+
+  // Handle file name edit start
+  const handleStartEditFileName = (file: File, index: number, isDocuSign: boolean = false) => {
+    const fileKey = getFileKey(file, index);
+    if (isDocuSign) {
+      setEditingDocuSignFileName(fileKey);
+    } else {
+      setEditingFileName(fileKey);
+    }
+  };
+
+  // Handle file name edit save
+  const handleSaveFileName = (file: File, index: number, newName: string, isDocuSign: boolean = false) => {
+    const fileKey = getFileKey(file, index);
+    if (isDocuSign) {
+      setCustomDocuSignFileNames(prev => ({ ...prev, [fileKey]: newName }));
+      setEditingDocuSignFileName(null);
+    } else {
+      setCustomFileNames(prev => ({ ...prev, [fileKey]: newName }));
+      setEditingFileName(null);
+    }
+  };
+
+  // Handle file name edit cancel
+  const handleCancelFileNameEdit = (isDocuSign: boolean = false) => {
+    if (isDocuSign) {
+      setEditingDocuSignFileName(null);
+    } else {
+      setEditingFileName(null);
+    }
+  };
+
+  // Contract association modal handlers
+  const handleContractModalSave = () => {
+    if (currentUploadingFile && currentUploadingContract && currentUploadingAssignee) {
+      const fileKey = getFileKey(currentUploadingFile, 0);
+      
+      if (isDocuSignUpload) {
+        // Add to DocuSign uploaded files
+        setDocuSignUploadedFiles(prev => [...prev, currentUploadingFile]);
+        setCustomDocuSignFileNames(prev => ({ ...prev, [fileKey]: currentUploadingFileName }));
+        setDocuSignUploadedFileContracts(prev => ({ ...prev, [fileKey]: currentUploadingContract }));
+        setDocuSignUploadedFileAssignees(prev => ({ ...prev, [fileKey]: currentUploadingAssignee }));
+      } else {
+        // Add to regular uploaded files
+        setUploadedFiles(prev => [...prev, currentUploadingFile]);
+        setCustomFileNames(prev => ({ ...prev, [fileKey]: currentUploadingFileName }));
+        setUploadedFileContracts(prev => ({ ...prev, [fileKey]: currentUploadingContract }));
+        setUploadedFileAssignees(prev => ({ ...prev, [fileKey]: currentUploadingAssignee }));
+      }
+    }
+    
+    // Reset modal state
+    setShowContractModal(false);
+    setCurrentUploadingFile(null);
+    setCurrentUploadingFileName('');
+    setCurrentUploadingContract('');
+    setCurrentUploadingAssignee('');
+  };
+
+  const handleContractModalCancel = () => {
+    setShowContractModal(false);
+    setCurrentUploadingFile(null);
+    setCurrentUploadingFileName('');
+    setCurrentUploadingContract('');
+    setCurrentUploadingAssignee('');
+  };
+
+  // Click outside handler for modal contract dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const dropdown = modalContractDropdownRef.current;
+      if (showModalContractDropdown && dropdown && !dropdown.contains(event.target as Node)) {
+        setShowModalContractDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showModalContractDropdown]);
+
+  // Click outside handler for modal assignee dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const dropdown = modalAssigneeDropdownRef.current;
+      if (showModalAssigneeDropdown && dropdown && !dropdown.contains(event.target as Node)) {
+        setShowModalAssigneeDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showModalAssigneeDropdown]);
 
   // Sample documents data (same as contracts page)
   const sampleDocuments = [
@@ -2451,58 +2605,58 @@ export default function SignaturesPage() {
           <div className="flex flex-row gap-6 w-full justify-center">
             {/* Escra Native */}
             <button
-              className="flex flex-col items-center border border-gray-200 rounded-xl p-4 sm:p-6 w-48 sm:w-64 bg-white hover:shadow-lg transition-shadow focus:outline-none"
+              className="flex flex-col items-center border border-gray-200 dark:border-gray-700 rounded-xl p-4 sm:p-6 w-48 sm:w-64 bg-white dark:bg-gray-800 hover:shadow-lg transition-shadow focus:outline-none"
               onClick={() => {
                 setShowToolSelectorModal(false);
                 setShowRequestSignatureModal(true);
               }}
             >
-              <div className="h-10 w-10 sm:h-14 sm:w-14 rounded-full bg-teal-50 flex items-center justify-center mb-3 sm:mb-4">
+              <div className="h-10 w-10 sm:h-14 sm:w-14 rounded-full bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center mb-3 sm:mb-4">
                 <img 
                   src="/assets/logos/escra-logo-teal.png" 
                   alt="Escra Logo" 
                   className="w-6 h-6 sm:w-9 sm:h-9 object-contain"
                 />
               </div>
-              <div className="text-sm sm:text-lg font-semibold mb-1">Escra</div>
-              <div className="text-xs text-gray-500 mb-2 text-center">Native signature solution with blockchain security</div>
-              <span className="text-xs bg-teal-50 text-teal-500 px-2 sm:px-3 py-1 rounded-full font-semibold">Recommended</span>
+              <div className="text-sm sm:text-lg font-semibold mb-1 text-gray-900 dark:text-white">Escra</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-2 text-center">Native signature solution with blockchain security</div>
+              <span className="text-xs bg-teal-50 dark:bg-teal-900/30 text-teal-500 dark:text-teal-400 px-2 sm:px-3 py-1 rounded-full font-semibold">Recommended</span>
             </button>
             {/* DocuSign */}
             <button
-              className="flex flex-col items-center border border-gray-200 rounded-xl p-4 sm:p-6 w-48 sm:w-64 bg-white hover:shadow-lg transition-shadow focus:outline-none"
+              className="flex flex-col items-center border border-gray-200 dark:border-gray-700 rounded-xl p-4 sm:p-6 w-48 sm:w-64 bg-white dark:bg-gray-800 hover:shadow-lg transition-shadow focus:outline-none"
               onClick={() => {
                 setShowToolSelectorModal(false);
                 setShowDocuSignModal(true);
               }}
             >
-              <div className="h-10 w-10 sm:h-14 sm:w-14 rounded-full bg-blue-50 flex items-center justify-center mb-3 sm:mb-4">
-                <FaDochub className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500 transform translate-x-[2px]" />
+              <div className="h-10 w-10 sm:h-14 sm:w-14 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center mb-3 sm:mb-4">
+                <FaDochub className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500 dark:text-blue-400 transform translate-x-[2px]" />
               </div>
-              <div className="text-sm sm:text-lg font-semibold mb-1">DocuSign</div>
-              <div className="text-xs text-gray-500 mb-2 text-center">
+              <div className="text-sm sm:text-lg font-semibold mb-1 text-gray-900 dark:text-white">DocuSign</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-2 text-center">
                 Industry-leading<br />
                 e-signature platform
               </div>
-              <span className="text-xs bg-gray-100 text-gray-700 px-2 sm:px-3 py-1 rounded-full font-semibold">External</span>
+              <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 sm:px-3 py-1 rounded-full font-semibold">External</span>
             </button>
             {/* Adobe Sign */}
             <button
-              className="flex flex-col items-center border border-gray-200 rounded-xl p-4 sm:p-6 w-48 sm:w-64 bg-white hover:shadow-lg transition-shadow focus:outline-none"
+              className="flex flex-col items-center border border-gray-200 dark:border-gray-700 rounded-xl p-4 sm:p-6 w-48 sm:w-64 bg-white dark:bg-gray-800 hover:shadow-lg transition-shadow focus:outline-none"
               onClick={() => {
                 setShowToolSelectorModal(false);
                 // TODO: Add Adobe Sign logic here
               }}
             >
-              <div className="h-10 w-10 sm:h-14 sm:w-14 rounded-full bg-red-50 flex items-center justify-center mb-3 sm:mb-4">
-                <SiAdobe className="w-6 h-6 sm:w-8 sm:h-8 text-red-400" />
+              <div className="h-10 w-10 sm:h-14 sm:w-14 rounded-full bg-red-50 dark:bg-red-900/30 flex items-center justify-center mb-3 sm:mb-4">
+                <SiAdobe className="w-6 h-6 sm:w-8 sm:h-8 text-red-400 dark:text-red-400" />
               </div>
-              <div className="text-sm sm:text-lg font-semibold mb-1">Adobe Sign</div>
-              <div className="text-xs text-gray-500 mb-2 text-center">
+              <div className="text-sm sm:text-lg font-semibold mb-1 text-gray-900 dark:text-white">Adobe Sign</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-2 text-center">
                 Professional<br />
                 PDF Signing Solution
               </div>
-              <span className="text-xs bg-gray-100 text-gray-700 px-2 sm:px-3 py-1 rounded-full font-semibold">External</span>
+              <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 sm:px-3 py-1 rounded-full font-semibold">External</span>
             </button>
           </div>
         </div>
@@ -2514,13 +2668,13 @@ export default function SignaturesPage() {
           <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden">
             {/* Sticky Header */}
             <div className="sticky top-0 z-40 bg-gray-50 dark:bg-gray-900 px-6 py-4">
-                              <div className="flex items-start justify-between">
+              <div className="flex items-start justify-between">
                   <h2 className="text-lg font-bold text-gray-900 dark:text-white" style={{ fontFamily: 'Avenir, sans-serif' }}>Request Signature</h2>
-                  <button
+                <button
                     className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-full ml-4 mt-1"
                     onClick={() => { setShowRequestSignatureModal(false); setUploadedFiles([]); setSelectedDocuments([]); }}
-                    aria-label="Close"
-                  >
+                  aria-label="Close"
+                >
                   <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -2535,140 +2689,140 @@ export default function SignaturesPage() {
                     {/* Two Column Layout for Documents */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       {/* Left Column: Add Documents Box */}
-                      <div 
+                    <div 
                         className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 relative"
-                        onDragOver={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setIsDraggingOver(true);
-                        }}
-                        onDragLeave={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setIsDraggingOver(false);
-                        }}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setIsDraggingOver(false);
-                          const files = Array.from(e.dataTransfer.files);
-                          setUploadedFiles(prev => [...prev, ...files]);
-                        }}
-                      >
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setIsDraggingOver(true);
+                      }}
+                      onDragLeave={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setIsDraggingOver(false);
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setIsDraggingOver(false);
+                        const files = Array.from(e.dataTransfer.files);
+                        setUploadedFiles(prev => [...prev, ...files]);
+                      }}
+                    >
                         <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 relative z-10" style={{ fontFamily: 'Avenir, sans-serif' }}>Add Documents</h3>
                         
                         {/* Upload interface - always visible */}
-                        <div className="flex flex-col items-center mb-4">
-                          <div className="h-11 w-11 rounded-lg bg-teal-50 flex items-center justify-center border-2 border-teal-200 mb-2">
-                            <HiOutlineDocumentText size={22} color="#06b6d4" />
-                          </div>
+                      <div className="flex flex-col items-center mb-4">
+                          <div className="h-11 w-11 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800 mb-2">
+                            <HiOutlineDocumentText size={22} className="text-teal-500 dark:text-teal-400" />
+                        </div>
                           <div className="text-xs text-gray-500 dark:text-gray-400 font-semibold">Drop your files here or...</div>
-                          {isDraggingOver && (
-                            <div className="absolute inset-x-0 flex flex-col items-center justify-center" style={{ top: '0', height: '100%' }}>
-                              <div className="h-full w-full flex flex-col items-center justify-center bg-white/95 rounded-lg" style={{ marginTop: '1px' }}>
-                                <div className="h-11 w-11 rounded-lg bg-teal-50 flex items-center justify-center border-2 border-teal-200 mb-1.5">
-                                  <HiOutlineUpload size={22} color="#06b6d4" />
-                                </div>
-                                <div className="text-xs text-gray-700 font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                                  Supported Formats: PDF, DOC, DOCX, OR JPG (max. 10 MB each)
-                                </div>
+                        {isDraggingOver && (
+                          <div className="absolute inset-x-0 flex flex-col items-center justify-center" style={{ top: '0', height: '100%' }}>
+                            <div className="h-full w-full flex flex-col items-center justify-center bg-white/95 rounded-lg" style={{ marginTop: '1px' }}>
+                                <div className="h-11 w-11 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800 mb-1.5">
+                                  <HiOutlineUpload size={22} className="text-teal-500 dark:text-teal-400" />
+                              </div>
+                              <div className="text-xs text-gray-700 font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                Supported Formats: PDF, DOC, DOCX, OR JPG (max. 10 MB each)
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <div className={`flex justify-center gap-1 ${isDraggingOver ? 'blur-sm' : ''}`}>
+                        <div className="relative" ref={documentDropdownRef}>
+                          <button
+                            type="button"
+                            onClick={handleDocumentButtonClick}
+                              className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-xs sm:text-sm font-semibold"
+                          >
+                            Select
+                            <HiMiniChevronDown size={17} className="text-white -mt-[1px]" />
+                          </button>
+                          {showDocumentDropdown && (
+                              <div className="absolute z-50 mt-1 w-[300px] bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
+                              <div className="p-2">
+                                <input
+                                  type="text"
+                                  placeholder="Search documents..."
+                                  value={documentSearch}
+                                  onChange={(e) => setDocumentSearch(e.target.value)}
+                                    className="w-full px-3 py-2 text-xs border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-800 text-gray-700 dark:text-white"
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              </div>
+                              <div className="max-h-[300px] overflow-y-auto">
+                                {filteredDocuments.map((doc) => (
+                                  <button
+                                    key={doc.id}
+                                      onClick={(e) => handleDocumentItemClick(e, doc.id)}
+                                      className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex flex-col"
+                                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                                  >
+                                    <div className="flex items-center">
+                                        <div className={`w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center ${selectedDocuments.includes(doc.id) ? 'bg-primary' : 'border border-gray-300'}`}>
+                                        {selectedDocuments.includes(doc.id) && (
+                                            <FaCheck className="text-white" size={8} />
+                                        )}
+                                      </div>
+                                        <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{doc.name}</span>
+                                    </div>
+                                      <div className="ml-6 text-gray-500 dark:text-gray-400 text-[10px]">{doc.contractTitle} ({doc.contractId})</div>
+                                  </button>
+                                ))}
                               </div>
                             </div>
                           )}
                         </div>
-                        <div className={`flex justify-center gap-1 ${isDraggingOver ? 'blur-sm' : ''}`}>
-                          <div className="relative" ref={documentDropdownRef}>
-                            <button
-                              type="button"
-                              onClick={handleDocumentButtonClick}
-                              className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-xs sm:text-sm font-semibold"
-                            >
-                              Select
-                              <HiMiniChevronDown size={17} className="text-white -mt-[1px]" />
-                            </button>
-                            {showDocumentDropdown && (
-                              <div className="absolute z-50 mt-1 w-[300px] bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
-                                <div className="p-2">
-                                  <input
-                                    type="text"
-                                    placeholder="Search documents..."
-                                    value={documentSearch}
-                                    onChange={(e) => setDocumentSearch(e.target.value)}
-                                    className="w-full px-3 py-2 text-xs border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-800 text-gray-700 dark:text-white"
-                                    onClick={(e) => e.stopPropagation()}
-                                  />
-                                </div>
-                                <div className="max-h-[300px] overflow-y-auto">
-                                  {filteredDocuments.map((doc) => (
-                                    <button
-                                      key={doc.id}
-                                      onClick={(e) => handleDocumentItemClick(e, doc.id)}
-                                      className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex flex-col"
-                                      style={{ fontFamily: 'Avenir, sans-serif' }}
-                                    >
-                                      <div className="flex items-center">
-                                        <div className={`w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center ${selectedDocuments.includes(doc.id) ? 'bg-primary' : 'border border-gray-300'}`}>
-                                          {selectedDocuments.includes(doc.id) && (
-                                            <FaCheck className="text-white" size={8} />
-                                          )}
-                                        </div>
-                                        <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{doc.name}</span>
-                                      </div>
-                                      <div className="ml-6 text-gray-500 dark:text-gray-400 text-[10px]">{doc.contractTitle} ({doc.contractId})</div>
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                          <div className="relative" ref={uploadDropdownRef}>
-                            <button
-                              type="button"
-                              onClick={() => setShowUploadDropdown(!showUploadDropdown)}
+                        <div className="relative" ref={uploadDropdownRef}>
+                          <button
+                            type="button"
+                            onClick={() => setShowUploadDropdown(!showUploadDropdown)}
                               className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs sm:text-sm hover:bg-gray-200 transition-colors"
-                              style={{ fontFamily: 'Avenir, sans-serif' }}
-                            >
-                              <HiOutlineUpload className="text-sm sm:text-base text-primary" /> Upload
-                            </button>
-                            {showUploadDropdown && (
+                            style={{ fontFamily: 'Avenir, sans-serif' }}
+                          >
+                            <HiOutlineUpload className="text-sm sm:text-base text-primary" /> Upload
+                          </button>
+                          {showUploadDropdown && (
                               <div className="absolute z-50 mt-1 w-[200px] bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700">
                                 <div className="py-2">
                                   <label htmlFor="file-upload" className="block px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer">
-                                    <div className="flex items-center gap-2">
-                                      <TbDeviceDesktopPlus className="text-base text-primary" />
-                                      <span className="text-xs">Desktop</span>
-                                    </div>
-                                  </label>
-                                  <input
-                                    id="file-upload"
-                                    name="file-upload"
-                                    type="file"
-                                    accept=".pdf,.doc,.docx,.jpg,.jpeg"
-                                    className="hidden"
-                                    multiple
-                                    onChange={handleFileChange}
-                                  />
+                                  <div className="flex items-center gap-2">
+                                    <TbDeviceDesktopPlus className="text-base text-primary" />
+                                    <span className="text-xs">Desktop</span>
+                                  </div>
+                                </label>
+                                <input
+                                  id="file-upload"
+                                  name="file-upload"
+                                  type="file"
+                                  accept=".pdf,.doc,.docx,.jpg,.jpeg"
+                                  className="hidden"
+                                  multiple
+                                  onChange={handleFileChange}
+                                />
                                   <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                                    <SiBox className="text-base text-primary" />
-                                    <span className="text-xs">Box</span>
-                                  </button>
+                                  <SiBox className="text-base text-primary" />
+                                  <span className="text-xs">Box</span>
+                                </button>
                                   <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                                    <SlSocialDropbox className="text-base text-primary" />
-                                    <span className="text-xs">Dropbox</span>
-                                  </button>
+                                  <SlSocialDropbox className="text-base text-primary" />
+                                  <span className="text-xs">Dropbox</span>
+                                </button>
                                   <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                                    <TbBrandGoogleDrive className="text-base text-primary" />
-                                    <span className="text-xs">Google Drive</span>
-                                  </button>
+                                  <TbBrandGoogleDrive className="text-base text-primary" />
+                                  <span className="text-xs">Google Drive</span>
+                                </button>
                                   <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                                    <TbBrandOnedrive className="text-base text-primary" />
-                                    <span className="text-xs">OneDrive</span>
-                                  </button>
-                                </div>
+                                  <TbBrandOnedrive className="text-base text-primary" />
+                                  <span className="text-xs">OneDrive</span>
+                                </button>
                               </div>
-                            )}
-                          </div>
+                            </div>
+                          )}
                         </div>
+                      </div>
                       </div>
 
                       {/* Right Column: Documents Box */}
@@ -2679,9 +2833,9 @@ export default function SignaturesPage() {
                         {(selectedDocuments.length > 0 || uploadedFiles.length > 0) ? (
                           <div className="space-y-3">
                             {/* Selected Documents */}
-                            {selectedDocuments.map(docId => {
-                              const doc = sampleDocuments.find(d => d.id === docId);
-                              return doc ? (
+                          {selectedDocuments.map(docId => {
+                            const doc = sampleDocuments.find(d => d.id === docId);
+                            return doc ? (
                                 <div key={docId} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600">
                                   <div className="flex items-center gap-3">
                                     <HiOutlineDocumentText className="w-5 h-5 text-primary" />
@@ -2690,7 +2844,19 @@ export default function SignaturesPage() {
                                       <div className="text-xs text-gray-500">{doc.dateUploaded} &bull; {doc.type} &bull; {doc.size}</div>
                                     </div>
                                   </div>
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center justify-center space-x-1">
+                                    <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
+                                      <HiOutlineEye className="h-4 w-4 transition-colors" />
+                                      <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                        View
+                                      </span>
+                                    </button>
+                                    <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
+                                      <HiOutlineDownload className="h-4 w-4 transition-colors" />
+                                      <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                        Download
+                                      </span>
+                                    </button>
                                     <button
                                       type="button"
                                       onClick={() => setSelectedDocuments(prev => prev.filter(id => id !== docId))}
@@ -2698,25 +2864,107 @@ export default function SignaturesPage() {
                                     >
                                       <HiOutlineTrash className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                                        Remove
+                                        Delete
                                       </span>
                                     </button>
                                   </div>
                                 </div>
-                              ) : null;
-                            })}
+                            ) : null;
+                          })}
                             
                             {/* Uploaded Files */}
-                            {uploadedFiles.map((file, idx) => (
-                              <div key={idx} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600">
-                                <div className="flex items-center gap-3">
-                                  <HiOutlineDocumentText className="w-5 h-5 text-primary" />
-                                  <div>
-                                    <div className="font-semibold text-xs text-black dark:text-white">{file.name}</div>
-                                    <div className="text-xs text-gray-500">{file.type} &bull; {(file.size / 1024 / 1024).toFixed(1)} MB</div>
+                            {uploadedFiles.map((file, idx) => {
+                              const fileKey = getFileKey(file, idx);
+                              const isEditing = editingFileName === fileKey;
+                              const displayName = getDisplayFileName(file, idx);
+                              const associatedContract = uploadedFileContracts[fileKey];
+                              const associatedAssignee = uploadedFileAssignees[fileKey];
+                              
+                              return (
+                                <div key={idx} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600">
+                                  <div className="flex items-center gap-3">
+                                    <HiOutlineDocumentText className="w-5 h-5 text-primary" />
+                                    <div className="flex-1 min-w-0">
+                                      {isEditing ? (
+                                        <div className="flex items-center gap-2">
+                                          <input
+                                            type="text"
+                                            value={displayName}
+                                            onChange={(e) => {
+                                              const fileKey = getFileKey(file, idx);
+                                              setCustomFileNames(prev => ({ ...prev, [fileKey]: e.target.value }));
+                                            }}
+                                            onKeyDown={(e) => {
+                                              if (e.key === 'Enter') {
+                                                handleSaveFileName(file, idx, displayName);
+                                              } else if (e.key === 'Escape') {
+                                                handleCancelFileNameEdit();
+                                              }
+                                            }}
+                                            onBlur={() => handleSaveFileName(file, idx, displayName)}
+                                            className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded bg-white dark:bg-gray-800 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                                            style={{ fontFamily: 'Avenir, sans-serif' }}
+                                            autoFocus
+                                          />
+                                          <button
+                                            type="button"
+                                            onClick={() => handleSaveFileName(file, idx, displayName)}
+                                            className="text-green-800 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 p-1"
+                                          >
+                                            <FaCheck className="w-3 h-3" />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleCancelFileNameEdit()}
+                                            className="text-red-500 dark:text-red-500 hover:text-red-600 dark:hover:text-red-400 p-1"
+                                          >
+                                            <FaTimes className="w-3 h-3" />
+                                          </button>
+                                        </div>
+                                      ) : (
+                                        <div className="flex items-center gap-2 group">
+                                          <div 
+                                            className="font-semibold text-xs text-black dark:text-white cursor-pointer hover:text-primary transition-colors flex-1 min-w-0 truncate"
+                                            onClick={() => handleStartEditFileName(file, idx)}
+                                            title="Click to edit name"
+                                          >
+                                            {displayName}
+                                          </div>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleStartEditFileName(file, idx)}
+                                            className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-primary transition-all p-1"
+                                          >
+                                            <LuPen className="w-3 h-3" />
+                                          </button>
+                                        </div>
+                                      )}
+                                      <div className="text-xs text-gray-500">{file.type} &bull; {(file.size / 1024 / 1024).toFixed(1)} MB</div>
+                                      {associatedContract && (
+                                        <div className="text-xs text-primary font-medium mt-1">
+                                          {mockContracts.find(c => c.id === associatedContract)?.id} - {mockContracts.find(c => c.id === associatedContract)?.title || associatedContract}
+                                        </div>
+                                      )}
+                                      {associatedAssignee && (
+                                        <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                          Assignee: {associatedAssignee}
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
-                                </div>
-                                                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center justify-center space-x-1">
+                                    <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
+                                      <HiOutlineEye className="h-4 w-4 transition-colors" />
+                                      <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                        View
+                                      </span>
+                                    </button>
+                                    <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
+                                      <HiOutlineDownload className="h-4 w-4 transition-colors" />
+                                      <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                        Download
+                                      </span>
+                                    </button>
                                     <button
                                       type="button"
                                       onClick={() => setUploadedFiles(prev => prev.filter((_, i) => i !== idx))}
@@ -2724,12 +2972,13 @@ export default function SignaturesPage() {
                                     >
                                       <HiOutlineTrash className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                                        Remove
+                                        Delete
                                       </span>
                                     </button>
                                   </div>
-                              </div>
-                            ))}
+                                </div>
+                              );
+                            })}
                           </div>
                         ) : (
                           <div className="flex flex-col items-center justify-center py-8 text-gray-500 dark:text-gray-400">
@@ -2911,9 +3160,9 @@ export default function SignaturesPage() {
                                   onClick={() => handleDeleteRecipient(idx)} 
                                   disabled={recipients.length === 1}
                                 >
-                                  <HiOutlineTrash className="w-4 h-4" />
-                                </button>
-                              </div>
+                                    <HiOutlineTrash className="w-4 h-4" />
+                                  </button>
+                                </div>
                             </div>
                             
                             {/* Form fields */}
@@ -2951,7 +3200,7 @@ export default function SignaturesPage() {
                               </div>
                             </div>
                           </div>
-                        </div>
+                          </div>
                         ))}
                         <button
                           type="button"
@@ -3042,7 +3291,7 @@ export default function SignaturesPage() {
                 <div className="flex items-center gap-3">
                   <div className="h-8 w-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
                     <FaDochub className="w-5 h-5 text-blue-500 dark:text-blue-400 transform translate-x-[1px]" />
-                  </div>
+    </div>
                   <h2 className="text-lg font-bold text-gray-900 dark:text-white" style={{ fontFamily: 'Avenir, sans-serif' }}>Request Signature via DocuSign</h2>
                 </div>
                                   <button
@@ -3088,15 +3337,15 @@ export default function SignaturesPage() {
                         
                         {/* Upload interface - always visible */}
                         <div className="flex flex-col items-center mb-4">
-                          <div className="h-11 w-11 rounded-lg bg-blue-50 flex items-center justify-center border-2 border-blue-200 mb-2">
-                            <HiOutlineDocumentText size={22} color="#3b82f6" />
+                          <div className="h-11 w-11 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center border-2 border-blue-200 dark:border-blue-800 mb-2">
+                            <HiOutlineDocumentText size={22} className="text-blue-500 dark:text-blue-400" />
                           </div>
                           <div className="text-xs text-gray-500 dark:text-gray-400 font-semibold">Drop your files here or...</div>
                           {isDocuSignDraggingOver && (
                             <div className="absolute inset-x-0 flex flex-col items-center justify-center" style={{ top: '0', height: '100%' }}>
                               <div className="h-full w-full flex flex-col items-center justify-center bg-white/95 rounded-lg" style={{ marginTop: '1px' }}>
-                                <div className="h-11 w-11 rounded-lg bg-blue-50 flex items-center justify-center border-2 border-blue-200 mb-1.5">
-                                  <HiOutlineUpload size={22} color="#3b82f6" />
+                                <div className="h-11 w-11 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center border-2 border-blue-200 dark:border-blue-800 mb-1.5">
+                                  <HiOutlineUpload size={22} className="text-blue-500 dark:text-blue-400" />
                                 </div>
                                 <div className="text-xs text-gray-700 font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>
                                   Supported Formats: PDF, DOC, DOCX, OR JPG (max. 10 MB each)
@@ -3230,7 +3479,19 @@ export default function SignaturesPage() {
                                       <div className="text-xs text-gray-500">{doc.dateUploaded} &bull; {doc.type} &bull; {doc.size}</div>
                                     </div>
                                   </div>
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center justify-center space-x-1">
+                                    <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
+                                      <HiOutlineEye className="h-4 w-4 transition-colors" />
+                                      <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                        View
+                                      </span>
+                                    </button>
+                                    <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
+                                      <HiOutlineDownload className="h-4 w-4 transition-colors" />
+                                      <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                        Download
+                                      </span>
+                                    </button>
                                     <button
                                       type="button"
                                       onClick={() => setDocuSignSelectedDocuments(prev => prev.filter(id => id !== docId))}
@@ -3238,7 +3499,7 @@ export default function SignaturesPage() {
                                     >
                                       <HiOutlineTrash className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                                        Remove
+                                        Delete
                                       </span>
                                     </button>
                                   </div>
@@ -3247,16 +3508,98 @@ export default function SignaturesPage() {
                             })}
                             
                             {/* Uploaded Files */}
-                            {docuSignUploadedFiles.map((file, idx) => (
-                              <div key={idx} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600">
-                                <div className="flex items-center gap-3">
-                                  <HiOutlineDocumentText className="w-5 h-5 text-primary" />
-                                  <div>
-                                    <div className="font-semibold text-xs text-black dark:text-white">{file.name}</div>
-                                    <div className="text-xs text-gray-500">{file.type} &bull; {(file.size / 1024 / 1024).toFixed(1)} MB</div>
+                            {docuSignUploadedFiles.map((file, idx) => {
+                              const fileKey = getFileKey(file, idx);
+                              const isEditing = editingDocuSignFileName === fileKey;
+                              const displayName = getDisplayFileName(file, idx, true);
+                              const associatedContract = docuSignUploadedFileContracts[fileKey];
+                              const associatedAssignee = docuSignUploadedFileAssignees[fileKey];
+                              
+                              return (
+                                <div key={idx} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600">
+                                  <div className="flex items-center gap-3">
+                                    <HiOutlineDocumentText className="w-5 h-5 text-primary" />
+                                    <div className="flex-1 min-w-0">
+                                      {isEditing ? (
+                                        <div className="flex items-center gap-2">
+                                          <input
+                                            type="text"
+                                            value={displayName}
+                                            onChange={(e) => {
+                                              const fileKey = getFileKey(file, idx);
+                                              setCustomDocuSignFileNames(prev => ({ ...prev, [fileKey]: e.target.value }));
+                                            }}
+                                            onKeyDown={(e) => {
+                                              if (e.key === 'Enter') {
+                                                handleSaveFileName(file, idx, displayName, true);
+                                              } else if (e.key === 'Escape') {
+                                                handleCancelFileNameEdit(true);
+                                              }
+                                            }}
+                                            onBlur={() => handleSaveFileName(file, idx, displayName, true)}
+                                            className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded bg-white dark:bg-gray-800 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            style={{ fontFamily: 'Avenir, sans-serif' }}
+                                            autoFocus
+                                          />
+                                          <button
+                                            type="button"
+                                            onClick={() => handleSaveFileName(file, idx, displayName, true)}
+                                            className="text-green-800 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 p-1"
+                                          >
+                                            <FaCheck className="w-3 h-3" />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleCancelFileNameEdit(true)}
+                                            className="text-red-500 dark:text-red-500 hover:text-red-600 dark:hover:text-red-400 p-1"
+                                          >
+                                            <FaTimes className="w-3 h-3" />
+                                          </button>
+                                        </div>
+                                      ) : (
+                                        <div className="flex items-center gap-2 group">
+                                          <div 
+                                            className="font-semibold text-xs text-black dark:text-white cursor-pointer hover:text-blue-500 transition-colors flex-1 min-w-0 truncate"
+                                            onClick={() => handleStartEditFileName(file, idx, true)}
+                                            title="Click to edit name"
+                                          >
+                                            {displayName}
+                                          </div>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleStartEditFileName(file, idx, true)}
+                                            className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-blue-500 transition-all p-1"
+                                          >
+                                            <LuPen className="w-3 h-3" />
+                                          </button>
+                                        </div>
+                                      )}
+                                      <div className="text-xs text-gray-500">{file.type} &bull; {(file.size / 1024 / 1024).toFixed(1)} MB</div>
+                                      {associatedContract && (
+                                        <div className="text-xs text-primary font-medium mt-1">
+                                          {mockContracts.find(c => c.id === associatedContract)?.id} - {mockContracts.find(c => c.id === associatedContract)?.title || associatedContract}
+                                        </div>
+                                      )}
+                                      {associatedAssignee && (
+                                        <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                          Assignee: {associatedAssignee}
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
-                                </div>
-                                                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center justify-center space-x-1">
+                                    <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
+                                      <HiOutlineEye className="h-4 w-4 transition-colors" />
+                                      <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                        View
+                                      </span>
+                                    </button>
+                                    <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
+                                      <HiOutlineDownload className="h-4 w-4 transition-colors" />
+                                      <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                        Download
+                                      </span>
+                                    </button>
                                     <button
                                       type="button"
                                       onClick={() => setDocuSignUploadedFiles(prev => prev.filter((_, i) => i !== idx))}
@@ -3264,12 +3607,13 @@ export default function SignaturesPage() {
                                     >
                                       <HiOutlineTrash className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                                        Remove
+                                        Delete
                                       </span>
                                     </button>
                                   </div>
-                              </div>
-                            ))}
+                                </div>
+                              );
+                            })}
                           </div>
                         ) : (
                           <div className="flex flex-col items-center justify-center py-8 text-gray-500 dark:text-gray-400">
@@ -3568,6 +3912,203 @@ export default function SignaturesPage() {
                 </form>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Contract Association Modal */}
+      {showContractModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 upload-modal cursor-default select-none">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 cursor-default select-none">
+            <div className="flex justify-between items-center mb-4 cursor-default select-none">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Associate Document with Contract</h2>
+              <button
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
+                onClick={handleContractModalCancel}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <form
+              className="p-0 cursor-default select-none"
+              onSubmit={e => {
+                e.preventDefault();
+                handleContractModalSave();
+              }}
+            >
+              <div className="flex flex-col gap-4 mb-4 cursor-default select-none">
+                <div className="flex gap-4 cursor-default select-none">
+                  <div className="flex-1 w-0 cursor-default select-none">
+                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Document Name <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      placeholder="Enter document name..."
+                      className={`w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs transition-colors cursor-text ${isDocuSignUpload ? 'focus:ring-2 focus:ring-blue-500 focus:border-blue-500' : 'focus:ring-2 focus:ring-primary focus:border-primary'}`}
+                      value={currentUploadingFileName}
+                      onChange={(e) => setCurrentUploadingFileName(e.target.value)}
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-4 cursor-default select-none">
+                  <div className="flex-1 w-0 cursor-default select-none">
+                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Contract <span className="text-red-500">*</span></label>
+                    <div className="relative" ref={modalContractDropdownRef}>
+                      <button
+                        type="button"
+                        onClick={() => setShowModalContractDropdown(!showModalContractDropdown)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Backspace' && currentUploadingContract) {
+                            e.preventDefault();
+                            setCurrentUploadingContract('');
+                          }
+                        }}
+                        className={`w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs transition-colors flex items-center justify-between cursor-pointer ${isDocuSignUpload ? 'focus:ring-0 focus:ring-blue-500 focus:border-blue-500' : 'focus:ring-0 focus:ring-primary focus:border-primary'}`}
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                        tabIndex={0}
+                      >
+                        {currentUploadingContract ? (
+                          <span className="text-gray-900 dark:text-white">
+                            {mockContracts.find(c => c.id === currentUploadingContract)?.id} - {mockContracts.find(c => c.id === currentUploadingContract)?.title || currentUploadingContract}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">Select a contract...</span>
+                        )}
+                        <HiMiniChevronDown className="text-gray-400" size={16} />
+                      </button>
+                      {showModalContractDropdown && (
+                        <div className="absolute top-full left-0 mt-1 min-w-[280px] w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 contract-dropdown">
+                          {/* Search Bar */}
+                          <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+                            <div className="relative">
+                              <input
+                                type="text"
+                                placeholder="Search contracts..."
+                                value={modalContractSearch}
+                                onChange={(e) => setModalContractSearch(e.target.value)}
+                                className={`w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-700 dark:text-white bg-white dark:bg-gray-900 transition-colors ${isDocuSignUpload ? 'focus:ring-2 focus:ring-blue-500 focus:border-blue-500' : 'focus:ring-2 focus:ring-primary focus:border-primary'}`}
+                                style={{ fontFamily: 'Avenir, sans-serif' }}
+                              />
+                              <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                            </div>
+                          </div>
+
+                          {mockContracts
+                            .filter(contract => 
+                              contract.id.toLowerCase().includes(modalContractSearch.toLowerCase()) ||
+                              contract.title.toLowerCase().includes(modalContractSearch.toLowerCase())
+                            )
+                            .map(contract => (
+                              <button
+                                key={contract.id}
+                                className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center whitespace-nowrap truncate ${currentUploadingContract === contract.id ? (isDocuSignUpload ? 'text-blue-500' : 'text-primary') : 'text-gray-700 dark:text-gray-300'}`}
+                                onClick={() => {
+                                  setCurrentUploadingContract(contract.id);
+                                  setShowModalContractDropdown(false);
+                                }}
+                              >
+                                <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                                  {currentUploadingContract === contract.id && (
+                                    <div className={`w-3 h-3 rounded-sm flex items-center justify-center ${isDocuSignUpload ? 'bg-blue-500' : 'bg-primary'}`}>
+                                      <FaCheck className="text-white" size={8} />
+                                    </div>
+                                  )}
+                                </div>
+                                {contract.id} - {contract.title}
+                              </button>
+                            ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-4 cursor-default select-none">
+                  <div className="flex-1 w-0 cursor-default select-none">
+                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Assignee <span className="text-red-500">*</span></label>
+                    <div className="relative" ref={modalAssigneeDropdownRef}>
+                      <input
+                        type="text"
+                        className={`w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs transition-colors cursor-text ${isDocuSignUpload ? 'focus:ring-2 focus:ring-blue-500 focus:border-blue-500' : 'focus:ring-2 focus:ring-primary focus:border-primary'}`}
+                        placeholder="Choose an assignee..."
+                        value={currentUploadingAssignee}
+                        onChange={(e) => setCurrentUploadingAssignee(e.target.value)}
+                        onFocus={() => setShowModalAssigneeDropdown(true)}
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                        autoComplete="off"
+                      />
+                      {showModalAssigneeDropdown && (
+                        <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                          {allAssignees.length > 0 ? (
+                            <>
+                              {allAssignees.map((assignee: string) => (
+                                <div
+                                  key={assignee}
+                                  className={`px-4 py-2 text-xs cursor-pointer ${currentUploadingAssignee === assignee ? (isDocuSignUpload ? 'bg-blue-500/10 text-blue-500' : 'bg-primary/10 text-primary') : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'} select-none`}
+                                  onClick={() => {
+                                    setCurrentUploadingAssignee(assignee);
+                                    setShowModalAssigneeDropdown(false);
+                                  }}
+                                >
+                                  {assignee}
+                                </div>
+                              ))}
+                              <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                              <div
+                                className={`px-4 py-2 text-xs cursor-pointer ${isDocuSignUpload ? 'text-blue-500 hover:bg-blue-500/10' : 'text-primary hover:bg-primary/10'} select-none flex items-center gap-2`}
+                                onClick={() => {
+                                  // TODO: Add logic to create new assignee
+                                  setShowModalAssigneeDropdown(false);
+                                }}
+                              >
+                                <FaPlus className="text-xs" />
+                                Add new assignee
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="px-4 py-2 text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">No assignees found</div>
+                              <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                              <div
+                                className={`px-4 py-2 text-xs cursor-pointer ${isDocuSignUpload ? 'text-blue-500 hover:bg-blue-500/10' : 'text-primary hover:bg-primary/10'} select-none flex items-center gap-2`}
+                                onClick={() => {
+                                  // TODO: Add logic to create new assignee
+                                  setShowModalAssigneeDropdown(false);
+                                }}
+                              >
+                                <FaPlus className="text-xs" />
+                                Add new assignee
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-1 mt-6">
+                <button 
+                  type="button"
+                  onClick={handleContractModalCancel}
+                  className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                >
+                  Close
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={!currentUploadingContract || !currentUploadingFileName.trim() || !currentUploadingAssignee.trim()}
+                  className={`px-4 py-2 text-white rounded-lg transition-colors text-sm font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${isDocuSignUpload ? 'bg-blue-500 hover:bg-blue-600' : 'bg-primary hover:bg-primary-dark'}`}
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                >
+                  Save
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

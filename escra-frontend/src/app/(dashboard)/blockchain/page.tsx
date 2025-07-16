@@ -29,17 +29,18 @@ const getContractHash = (id: string) => `0x${id}${'0'.repeat(66 - 2 - id.length)
 // Helper function for status badge styling (from contract details modal)
 const getStatusBadgeStyle = (status: string) => {
   switch (status) {
-    case 'Initiation': return 'bg-blue-100 text-blue-700 border border-blue-500';
-    case 'Preparation': return 'bg-gray-100 text-gray-700 border border-gray-400';
-    case 'In Review': return 'bg-yellow-100 text-yellow-700 border border-yellow-500';
-    case 'Wire Details': return 'bg-orange-100 text-orange-700 border border-orange-400';
-    case 'Signatures': return 'bg-purple-100 text-purple-700 border border-purple-500';
-    case 'Funds Disbursed': return 'bg-teal-100 text-teal-700 border border-teal-500';
-    case 'Complete': return 'bg-green-100 text-green-700 border border-green-500';
-    case 'Verified': return 'bg-green-100 text-green-700 border border-green-500';
-    case 'Pending': return 'bg-yellow-100 text-yellow-700 border border-yellow-500';
-    case 'Rejected': return 'bg-red-100 text-red-700 border border-red-500';
-    default: return 'bg-gray-100 text-gray-700 border border-gray-400';
+    case 'Initiation': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 border border-blue-800 dark:border-blue-400';
+    case 'Preparation': return 'bg-gray-100 dark:bg-gray-700/30 text-gray-800 dark:text-gray-400 border border-gray-800 dark:border-gray-500';
+    case 'In Review': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 border border-yellow-800 dark:border-yellow-800';
+    case 'Wire Details': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-400 border border-orange-800 dark:border-orange-800';
+    case 'Signatures': return 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400 border border-purple-800 dark:border-purple-400';
+    case 'Funds Disbursed': return 'bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-400 border border-teal-800 dark:border-teal-800';
+    case 'Completed': return 'bg-green-100 dark:bg-green-900/30 text-green-500 dark:text-green-400 border border-green-200 dark:border-green-800';
+    case 'Complete': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border border-green-800 dark:border-green-800';
+    case 'Verified': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border border-green-800 dark:border-green-800';
+    case 'Pending': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 border border-yellow-800 dark:border-yellow-800';
+    case 'Rejected': return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 border border-red-800 dark:border-red-800';
+    default: return 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400 border border-gray-800 dark:border-gray-800';
   }
 };
 
@@ -47,24 +48,10 @@ const contracts = mockContracts.map(contract => ({
   title: contract.title,
   version: 'v1.0.0',
   badges: [
-    { label: contract.status === 'Complete' ? 'MainNet' : 'TestNet', color: contract.status === 'Complete' ? 'bg-green-100 text-green-700 border border-green-500' : 'bg-gray-100 text-gray-700 border border-gray-400' },
+    { label: contract.status === 'Complete' ? 'MainNet' : 'TestNet', color: contract.status === 'Complete' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border border-green-800 dark:border-green-400' : 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400 border border-gray-800 dark:border-gray-400' },
     { 
       label: contract.status, 
-      color: (() => {
-        switch (contract.status) {
-          case 'Initiation': return 'bg-blue-100 text-blue-700 border border-blue-500';
-          case 'Preparation': return 'bg-gray-100 text-gray-700 border border-gray-400';
-          case 'In Review': return 'bg-yellow-100 text-yellow-700 border border-yellow-500';
-          case 'Wire Details': return 'bg-orange-100 text-orange-700 border border-orange-400';
-          case 'Signatures': return 'bg-purple-100 text-purple-700 border border-purple-500';
-          case 'Funds Disbursed': return 'bg-teal-100 text-teal-700 border border-teal-500';
-          case 'Complete': return 'bg-green-100 text-green-700 border border-green-500';
-          case 'Verified': return 'bg-green-100 text-green-700 border border-green-500';
-          case 'Pending': return 'bg-yellow-100 text-yellow-700 border border-yellow-500';
-          case 'Rejected': return 'bg-red-100 text-red-700 border border-red-500';
-          default: return 'bg-gray-100 text-gray-700 border border-gray-400';
-        }
-      })()
+      color: getStatusBadgeStyle(contract.status)
     },
   ],
   id: contract.id,
@@ -483,18 +470,18 @@ export default function BlockchainPage() {
       {/* Tab Content */}
       {activeTab === 'smart-contracts' && (
         <>
-          <div className="bg-white border border-gray-200 rounded-xl px-4 py-4 mb-6">
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 mb-6">
             {/* Mobile: Stacked layout */}
             <div className="lg:hidden space-y-2">
               {/* Search Bar */}
-              <div className="flex items-center bg-white border border-gray-200 rounded-lg px-4 py-2 w-full">
+              <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 w-full">
                 <FaSearch className="text-gray-400 mr-2" size={18} />
                 <input
                   type="text"
                   placeholder="Search contracts, parties, or IDs"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 placeholder-gray-400 font-medium"
+                  className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 dark:text-white placeholder-gray-400 font-medium"
                   style={{ fontFamily: 'Avenir, sans-serif' }}
                 />
               </div>
@@ -503,7 +490,7 @@ export default function BlockchainPage() {
                 <div className="relative">
                   <button
                     ref={mobileStatusButtonRef}
-                    className="flex items-center justify-between w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 font-medium text-xs shadow-sm whitespace-nowrap"
+                    className="flex items-center justify-between w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-700 dark:text-gray-300 font-medium text-xs shadow-sm whitespace-nowrap"
                     style={{ fontFamily: 'Avenir, sans-serif' }}
                     onClick={(e) => {
                       e.preventDefault();
@@ -520,11 +507,11 @@ export default function BlockchainPage() {
                   {showStatusDropdown && (
                     <div 
                       ref={statusDropdownContainerRef}
-                      className="absolute top-full left-0 mt-2 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 status-filter-dropdown" 
+                      className="absolute top-full left-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 status-filter-dropdown" 
                       style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
                     >
                       <button
-                        className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                        className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedStatuses.includes('All') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                         onClick={() => {
                           setSelectedStatuses(['All']);
                         }}
@@ -541,7 +528,7 @@ export default function BlockchainPage() {
                       {availableStatuses.filter(status => status !== 'All').map(status => (
                         <button
                           key={status}
-                          className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                          className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedStatuses.includes(status) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                           onClick={() => {
                             setSelectedStatuses(prev => {
                               const newStatuses = prev.filter(s => s !== 'All');
@@ -569,7 +556,7 @@ export default function BlockchainPage() {
                 <div className="relative">
                   <button
                     ref={mobileContractButtonRef}
-                    className="flex items-center justify-between w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 font-medium text-xs shadow-sm whitespace-nowrap"
+                    className="flex items-center justify-between w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-700 dark:text-gray-300 font-medium text-xs shadow-sm whitespace-nowrap"
                     style={{ fontFamily: 'Avenir, sans-serif' }}
                     onClick={(e) => {
                       e.preventDefault();
@@ -586,7 +573,7 @@ export default function BlockchainPage() {
                   {openContractDropdown && (
                     <div 
                       ref={contractDropdownContainerRef}
-                      className="absolute top-full left-0 mt-2 min-w-[180px] w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 contract-dropdown" 
+                      className="absolute top-full left-0 mt-2 min-w-[180px] w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 contract-dropdown" 
                       style={{ 
                         fontFamily: 'Avenir, sans-serif',
                         maxWidth: 'calc(100vw - 2rem)',
@@ -596,14 +583,14 @@ export default function BlockchainPage() {
                       onClick={(e) => e.stopPropagation()}
                     >
                       {/* Search Bar */}
-                      <div className="px-4 py-2 border-b border-gray-100">
+                      <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
                         <div className="relative">
                           <input
                             type="text"
                             placeholder="Search contracts..."
                             value={contractSearch}
                             onChange={(e) => setContractSearch(e.target.value)}
-                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-black dark:text-white bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                             style={{ fontFamily: 'Avenir, sans-serif' }}
                           />
                           <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -611,7 +598,7 @@ export default function BlockchainPage() {
                       </div>
 
                       <button
-                        className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center"
+                        className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedContracts.length === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                         onClick={() => {
                           setSelectedContracts([]);
                         }}
@@ -633,7 +620,7 @@ export default function BlockchainPage() {
                         .map(contract => (
                           <button
                             key={contract.id}
-                            className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center whitespace-nowrap truncate"
+                            className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center whitespace-nowrap truncate ${selectedContracts.includes(String(contract.id)) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                             onClick={() => {
                               setSelectedContracts(prev => {
                                 if (prev.includes(String(contract.id))) {
@@ -663,14 +650,14 @@ export default function BlockchainPage() {
             {/* Desktop: Horizontal layout */}
             <div className="hidden lg:flex items-center gap-1">
               {/* Search Bar */}
-              <div className="flex items-center bg-white border border-gray-200 rounded-lg px-4 py-2 flex-1 min-w-0">
+              <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex-1 min-w-0">
                 <FaSearch className="text-gray-400 mr-2" size={18} />
                 <input
                   type="text"
                   placeholder="Search contracts, parties, or IDs"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 placeholder-gray-400 font-medium min-w-0"
+                  className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 dark:text-white placeholder-gray-400 font-medium min-w-0"
                   style={{ fontFamily: 'Avenir, sans-serif' }}
                 />
               </div>
@@ -680,7 +667,7 @@ export default function BlockchainPage() {
                 <div className="relative flex-shrink-0">
                   <button
                     ref={statusDropdownRef}
-                    className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
+                    className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
                     style={{ fontFamily: 'Avenir, sans-serif' }}
                     onClick={(e) => {
                       e.preventDefault();
@@ -698,11 +685,11 @@ export default function BlockchainPage() {
                   {showStatusDropdown && (
                     <div 
                       ref={statusDropdownDesktopRef}
-                      className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 status-filter-dropdown" 
+                      className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 status-filter-dropdown" 
                       style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
                     >
                       <button
-                        className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                        className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedStatuses.includes('All') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                         onClick={() => {
                           setSelectedStatuses(['All']);
                         }}
@@ -719,7 +706,7 @@ export default function BlockchainPage() {
                       {availableStatuses.filter(status => status !== 'All').map(status => (
                         <button
                           key={status}
-                          className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                          className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedStatuses.includes(status) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                           onClick={() => {
                             setSelectedStatuses(prev => {
                               const newStatuses = prev.filter(s => s !== 'All');
@@ -748,7 +735,7 @@ export default function BlockchainPage() {
                 <div className="relative flex-shrink-0 ml-1">
                   <button
                     ref={contractButtonRef}
-                    className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
+                    className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
                     style={{ fontFamily: 'Avenir, sans-serif' }}
                     onClick={(e) => {
                       e.preventDefault();
@@ -766,7 +753,7 @@ export default function BlockchainPage() {
                   {openContractDropdown && (
                     <div 
                       ref={contractDropdownDesktopRef}
-                      className="absolute right-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 min-w-[300px] max-w-[90vw] w-80 contract-dropdown" 
+                      className="absolute right-0 mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[300px] max-w-[90vw] w-80 contract-dropdown" 
                       style={{ 
                         fontFamily: 'Avenir, sans-serif',
                         maxWidth: 'calc(100vw - 2rem)',
@@ -776,14 +763,14 @@ export default function BlockchainPage() {
                       onClick={(e) => e.stopPropagation()}
                     >
                       {/* Search Bar */}
-                      <div className="px-4 py-2 border-b border-gray-100">
+                      <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
                         <div className="relative">
                           <input
                             type="text"
                             placeholder="Search contracts..."
                             value={contractSearch}
                             onChange={(e) => setContractSearch(e.target.value)}
-                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-black dark:text-white bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                             style={{ fontFamily: 'Avenir, sans-serif' }}
                           />
                           <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -791,7 +778,7 @@ export default function BlockchainPage() {
                       </div>
 
                       <button
-                        className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center"
+                        className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedContracts.length === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                         onClick={() => {
                           setSelectedContracts([]);
                         }}
@@ -813,7 +800,7 @@ export default function BlockchainPage() {
                         .map(contract => (
                           <button
                             key={contract.id}
-                            className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center whitespace-nowrap truncate"
+                            className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center whitespace-nowrap truncate ${selectedContracts.includes(String(contract.id)) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                             onClick={() => {
                               setSelectedContracts(prev => {
                                 if (prev.includes(String(contract.id))) {
@@ -844,13 +831,13 @@ export default function BlockchainPage() {
             {filteredContracts.map((contract, idx) => (
               <Card 
                 key={idx} 
-                className="rounded-xl border border-gray-200 p-4 cursor-pointer hover:shadow-md transition-shadow"
+                className="rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 p-4 cursor-pointer hover:shadow-md transition-shadow"
                 onClick={() => setSelectedSmartContract(contract)}
               >
                 <div className="flex justify-between items-start mb-2">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-sm font-bold text-black truncate" style={{ fontFamily: 'Avenir, sans-serif' }}>{contract.title}</h3>
+                      <h3 className="text-sm font-bold text-black dark:text-white truncate" style={{ fontFamily: 'Avenir, sans-serif' }}>{contract.title}</h3>
                       <span className="text-[10px] text-gray-400 font-semibold flex-shrink-0" style={{ fontFamily: 'Avenir, sans-serif' }}>{contract.version}</span>
                     </div>
                     <div className="flex flex-wrap mt-2">
@@ -869,7 +856,7 @@ export default function BlockchainPage() {
                 </div>
                 <div className="flex items-center">
                   <span
-                    className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
+                    className="text-xs font-mono text-black dark:text-white truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
                     style={{ maxWidth: '100px' }}
                     title={getContractHash(contract.id)}
                   >
@@ -903,8 +890,8 @@ export default function BlockchainPage() {
                     )}
                   </div>
                 </div>
-                <p className="text-[12px] text-gray-600 mb-3 truncate italic" style={{ fontFamily: 'Avenir, sans-serif' }} title={contract.description}>{contract.description}</p>
-                <div className="flex items-center text-[11px] text-gray-500 mb-2" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                <p className="text-[12px] text-gray-400 mb-3 truncate italic" style={{ fontFamily: 'Avenir, sans-serif' }} title={contract.description}>{contract.description}</p>
+                <div className="flex items-center text-[11px] text-black dark:text-white mb-2" style={{ fontFamily: 'Avenir, sans-serif' }}>
                   <span className="mr-4 flex items-center truncate"><MdOutlineUpdate className="mr-1 text-gray-400 flex-shrink-0 text-base" />Last Updated: {contract.deployed}</span>
                   <span className="flex items-center truncate"><FaTimeline className="mr-1 text-gray-400 flex-shrink-0 text-base" />{contract.transactions} Transactions</span>
                 </div>
@@ -919,18 +906,18 @@ export default function BlockchainPage() {
       )}
       {activeTab === 'on-chain-activity' && (
         <div>
-          <div className="bg-white border border-gray-200 rounded-xl px-4 py-4 mb-6">
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 mb-6">
             {/* Mobile: Stacked layout */}
             <div className="lg:hidden space-y-2">
               {/* Search Bar */}
-              <div className="flex items-center bg-white border border-gray-200 rounded-lg px-4 py-2 w-full">
+              <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 w-full">
                 <FaSearch className="text-gray-400 mr-2" size={18} />
                 <input
                   type="text"
                   placeholder="Search transactions, descriptions, or IDs"
                   value={activitySearchTerm}
                   onChange={(e) => setActivitySearchTerm(e.target.value)}
-                  className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 placeholder-gray-400 font-medium"
+                  className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 dark:text-white placeholder-gray-400 font-medium"
                   style={{ fontFamily: 'Avenir, sans-serif' }}
                 />
               </div>
@@ -939,7 +926,7 @@ export default function BlockchainPage() {
                 <div className="relative">
                   <button
                     ref={mobileActivityTypeButtonRef}
-                    className="flex items-center justify-between w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 font-medium text-xs shadow-sm whitespace-nowrap"
+                    className="flex items-center justify-between w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-700 dark:text-gray-300 font-medium text-xs shadow-sm whitespace-nowrap"
                     style={{ fontFamily: 'Avenir, sans-serif' }}
                     onClick={(e) => {
                       e.preventDefault();
@@ -956,7 +943,7 @@ export default function BlockchainPage() {
                   {showActivityTypeDropdown && (
                     <div 
                       ref={activityTypeDropdownContainerRef}
-                      className="absolute top-full left-0 mt-2 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 activity-type-dropdown" 
+                      className="absolute top-full left-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 activity-type-dropdown" 
                       style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
                     >
                       <button
@@ -1005,7 +992,7 @@ export default function BlockchainPage() {
                 <div className="relative">
                   <button
                     ref={mobileActivityContractButtonRef}
-                    className="flex items-center justify-between w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 font-medium text-xs shadow-sm whitespace-nowrap"
+                    className="flex items-center justify-between w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-700 dark:text-gray-300 font-medium text-xs shadow-sm whitespace-nowrap"
                     style={{ fontFamily: 'Avenir, sans-serif' }}
                     onClick={(e) => {
                       e.preventDefault();
@@ -1022,7 +1009,7 @@ export default function BlockchainPage() {
                   {openActivityContractDropdown && (
                     <div 
                       ref={activityContractDropdownContainerRef}
-                      className="absolute top-full left-0 mt-2 w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 min-w-[300px] max-w-[90vw] activity-contract-dropdown" 
+                      className="absolute top-full left-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[300px] max-w-[90vw] activity-contract-dropdown" 
                       style={{ 
                         fontFamily: 'Avenir, sans-serif',
                         maxWidth: 'calc(100vw - 2rem)',
@@ -1032,14 +1019,14 @@ export default function BlockchainPage() {
                       onClick={(e) => e.stopPropagation()}
                     >
                       {/* Search Bar */}
-                      <div className="px-4 py-2 border-b border-gray-100">
+                      <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
                         <div className="relative">
                           <input
                             type="text"
                             placeholder="Search contracts..."
                             value={activityContractSearch}
                             onChange={(e) => setActivityContractSearch(e.target.value)}
-                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-black dark:text-white bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                             style={{ fontFamily: 'Avenir, sans-serif' }}
                           />
                           <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -1099,14 +1086,14 @@ export default function BlockchainPage() {
             {/* Desktop: Horizontal layout */}
             <div className="hidden lg:flex items-center gap-1">
               {/* Search Bar */}
-              <div className="flex items-center bg-white border border-gray-200 rounded-lg px-4 py-2 flex-1 min-w-0">
+              <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex-1 min-w-0">
                 <FaSearch className="text-gray-400 mr-2" size={18} />
                 <input
                   type="text"
                   placeholder="Search transactions, descriptions, or IDs"
                   value={activitySearchTerm}
                   onChange={(e) => setActivitySearchTerm(e.target.value)}
-                  className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 placeholder-gray-400 font-medium min-w-0"
+                  className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 dark:text-white placeholder-gray-400 font-medium min-w-0"
                   style={{ fontFamily: 'Avenir, sans-serif' }}
                 />
               </div>
@@ -1210,14 +1197,14 @@ export default function BlockchainPage() {
                       onClick={(e) => e.stopPropagation()}
                     >
                       {/* Search Bar */}
-                      <div className="px-4 py-2 border-b border-gray-100">
+                      <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
                         <div className="relative">
                           <input
                             type="text"
                             placeholder="Search contracts..."
                             value={activityContractSearch}
                             onChange={(e) => setActivityContractSearch(e.target.value)}
-                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-black dark:text-white bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                             style={{ fontFamily: 'Avenir, sans-serif' }}
                           />
                           <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />

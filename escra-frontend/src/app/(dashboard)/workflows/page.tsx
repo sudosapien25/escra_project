@@ -1724,7 +1724,7 @@ export default function WorkflowsPage() {
                     </div>
                     <div className="space-y-2 cursor-default select-none">
                       {selectedTask?.subtasks?.map((subtask) => (
-                        <div key={subtask.id} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-100 dark:border-gray-600">
+                        <div key={subtask.id} className="flex items-center gap-3 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
                           <div className="flex-1">
                             <span className="text-xs font-medium text-gray-900 dark:text-white">{subtask.title}</span>
                           </div>
@@ -1781,7 +1781,7 @@ export default function WorkflowsPage() {
                             <div className="text-xs text-gray-500 dark:text-gray-400">2025-05-15 &bull; PDF &bull; 2.4 MB</div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 cursor-default select-none">
+                        <div className="flex items-center justify-center space-x-1 cursor-default select-none">
                           <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer">
                             <HiOutlineEye className="h-4 w-4 transition-colors" />
                             <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
@@ -1810,7 +1810,7 @@ export default function WorkflowsPage() {
                             <div className="text-xs text-gray-500 dark:text-gray-400">2025-05-16 &bull; XLSX &bull; 1.8 MB</div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 cursor-default select-none">
+                        <div className="flex items-center justify-center space-x-1 cursor-default select-none">
                           <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer">
                             <HiOutlineEye className="h-4 w-4 transition-colors" />
                             <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
@@ -1839,7 +1839,7 @@ export default function WorkflowsPage() {
                             <div className="text-xs text-gray-500 dark:text-gray-400">2025-05-17 &bull; DOCX &bull; 1.2 MB</div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 cursor-default select-none">
+                        <div className="flex items-center justify-center space-x-1 cursor-default select-none">
                           <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer">
                             <HiOutlineEye className="h-4 w-4 transition-colors" />
                             <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
@@ -1868,7 +1868,7 @@ export default function WorkflowsPage() {
                             <div className="text-xs text-gray-500 dark:text-gray-400">2025-05-18 &bull; DOCX &bull; 0.8 MB</div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 cursor-default select-none">
+                        <div className="flex items-center justify-center space-x-1 cursor-default select-none">
                           <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer">
                             <HiOutlineEye className="h-4 w-4 transition-colors" />
                             <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
@@ -1897,7 +1897,7 @@ export default function WorkflowsPage() {
                             <div className="text-xs text-gray-500 dark:text-gray-400">2025-05-19 &bull; XLSX &bull; 1.5 MB</div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 cursor-default select-none">
+                        <div className="flex items-center justify-center space-x-1 cursor-default select-none">
                           <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer">
                             <HiOutlineEye className="h-4 w-4 transition-colors" />
                             <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">

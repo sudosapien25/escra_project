@@ -96,7 +96,7 @@ export const Modal: React.FC<ModalProps> = ({
               leaveTo="opacity-0 scale-95"
             >
               <Dialog.Panel className={clsx(
-                "w-full transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all",
+                "w-full transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl transition-all",
                 sizeClasses[size]
               )}>
                 {/* Header */}
@@ -115,13 +115,13 @@ export const Modal: React.FC<ModalProps> = ({
                         {title && (
                           <Dialog.Title
                             as="h3"
-                            className="text-lg font-medium leading-6 text-gray-900"
+                            className="text-lg font-medium leading-6 text-gray-900 dark:text-white"
                           >
                             {title}
                           </Dialog.Title>
                         )}
                         {description && (
-                          <p className="mt-1 text-sm text-gray-500">
+                          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                             {description}
                           </p>
                         )}
@@ -130,7 +130,7 @@ export const Modal: React.FC<ModalProps> = ({
                     {showCloseButton && (
                       <button
                         type="button"
-                        className="text-gray-400 hover:text-gray-500 focus:outline-none"
+                        className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none"
                         onClick={onClose}
                       >
                         <HiX className="h-6 w-6" />
