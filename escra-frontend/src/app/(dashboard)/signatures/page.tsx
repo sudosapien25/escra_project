@@ -3,9 +3,9 @@
 import React, { useState, useRef, useEffect, RefObject, createRef } from 'react';
 import { FaSearch, FaUser, FaFilter, FaSort, FaCheckCircle, FaPlus, FaTimes, FaChevronDown, FaChevronUp, FaCheck } from 'react-icons/fa';
 import { FaRegSquareCheck } from 'react-icons/fa6';
-import { HiOutlineEye, HiOutlineDownload, HiOutlineViewBoards, HiOutlineTrash, HiOutlineUpload, HiOutlineDocumentText, HiOutlineBell, HiOutlineCog, HiOutlineDuplicate, HiOutlineDocumentSearch, HiOutlineUserGroup } from 'react-icons/hi';
+import { HiOutlineEye, HiOutlineDownload, HiOutlineViewBoards, HiOutlineTrash, HiOutlineUpload, HiOutlineDocumentText, HiOutlineBell, HiOutlineCog, HiOutlineDuplicate, HiOutlineDocumentSearch, HiOutlineUserGroup, HiOutlineX } from 'react-icons/hi';
 import { HiMiniChevronUpDown, HiMiniChevronDown } from 'react-icons/hi2';
-import { LuPen, LuCalendarClock, LuBellRing, LuPenLine } from 'react-icons/lu';
+import { LuPen, LuCalendarClock, LuBellRing, LuPenLine, LuCalendarFold, LuEraser } from 'react-icons/lu';
 import { MdCancelPresentation } from 'react-icons/md';
 import { FaRegClock } from 'react-icons/fa';
 import { BsPerson } from 'react-icons/bs';
@@ -54,10 +54,15 @@ export default function SignaturesPage() {
   const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
   const [selectedDocument, setSelectedDocument] = useState<SignatureDocument | null>(null);
   const [showRequestSignatureModal, setShowRequestSignatureModal] = useState(false);
+  const [showDocuSignModal, setShowDocuSignModal] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [docuSignUploadedFiles, setDocuSignUploadedFiles] = useState<File[]>([]);
   const [showDocumentDropdown, setShowDocumentDropdown] = useState(false);
+  const [showDocuSignDocumentDropdown, setShowDocuSignDocumentDropdown] = useState(false);
   const [documentSearch, setDocumentSearch] = useState('');
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
+  const [docuSignDocumentSearch, setDocuSignDocumentSearch] = useState('');
+  const [docuSignSelectedDocuments, setDocuSignSelectedDocuments] = useState<string[]>([]);
   const [copiedDocumentId, setCopiedDocumentId] = useState<string | null>(null);
   const [hoveredDocumentId, setHoveredDocumentId] = useState<string | null>(null);
   const [sortConfig, setSortConfig] = useState<{
@@ -68,10 +73,16 @@ export default function SignaturesPage() {
   const senderDropdownRef = useRef<HTMLDivElement>(null);
   const assigneeDropdownRef = useRef<HTMLDivElement>(null);
   const documentDropdownRef = useRef<HTMLDivElement>(null);
+  const docuSignDocumentDropdownRef = useRef<HTMLDivElement>(null);
   const uploadDropdownRef = useRef<HTMLDivElement>(null);
+  const docuSignUploadDropdownRef = useRef<HTMLDivElement>(null);
+
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [showUploadDropdown, setShowUploadDropdown] = useState(false);
+  const [showDocuSignUploadDropdown, setShowDocuSignUploadDropdown] = useState(false);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [isDocuSignDraggingOver, setIsDocuSignDraggingOver] = useState(false);
+
   const [showRecipientRoleDropdown, setShowRecipientRoleDropdown] = useState(false);
   const recipientRoleButtonRef = useRef<HTMLButtonElement>(null);
   const recipientRoleDropdownRef = useRef<HTMLDivElement>(null);
@@ -84,21 +95,47 @@ export default function SignaturesPage() {
     name: string;
     email: string;
     role: string;
+    signerRole: string;
     showRoleDropdown: boolean;
+    showSignerRoleDropdown: boolean;
     roleButtonRef: RefObject<HTMLButtonElement>;
     roleDropdownRef: RefObject<HTMLDivElement>;
+    signerRoleButtonRef: RefObject<HTMLButtonElement>;
+    signerRoleDropdownRef: RefObject<HTMLDivElement>;
   };
   const [recipients, setRecipients] = useState<Recipient[]>([
     {
       name: '',
       email: '',
       role: 'Needs to Sign',
+      signerRole: '',
       showRoleDropdown: false,
+      showSignerRoleDropdown: false,
       roleButtonRef: createRef<HTMLButtonElement>(),
       roleDropdownRef: createRef<HTMLDivElement>(),
+      signerRoleButtonRef: createRef<HTMLButtonElement>(),
+      signerRoleDropdownRef: createRef<HTMLDivElement>(),
+    },
+  ]);
+  const [docuSignRecipients, setDocuSignRecipients] = useState<Recipient[]>([
+    {
+      name: '',
+      email: '',
+      role: 'Needs to Sign',
+      signerRole: '',
+      showRoleDropdown: false,
+      showSignerRoleDropdown: false,
+      roleButtonRef: createRef<HTMLButtonElement>(),
+      roleDropdownRef: createRef<HTMLDivElement>(),
+      signerRoleButtonRef: createRef<HTMLButtonElement>(),
+      signerRoleDropdownRef: createRef<HTMLDivElement>(),
     },
   ]);
   const [showToolSelectorModal, setShowToolSelectorModal] = useState(false);
+  const [isOnlySigner, setIsOnlySigner] = useState(false);
+  const [isDocuSignOnlySigner, setIsDocuSignOnlySigner] = useState(false);
+  const [setSigningOrder, setSetSigningOrder] = useState(false);
+  const [setDocuSignSigningOrder, setSetDocuSignSigningOrder] = useState(false);
 
   const [selectedRecentlyUpdated, setSelectedRecentlyUpdated] = useState('Last 24 hours');
   const [openRecentlyUpdatedDropdown, setOpenRecentlyUpdatedDropdown] = useState(false);
@@ -128,9 +165,32 @@ export default function SignaturesPage() {
         name: '',
         email: '',
         role: 'Needs to Sign',
+        signerRole: '',
         showRoleDropdown: false,
+        showSignerRoleDropdown: false,
         roleButtonRef: createRef<HTMLButtonElement>(),
         roleDropdownRef: createRef<HTMLDivElement>(),
+        signerRoleButtonRef: createRef<HTMLButtonElement>(),
+        signerRoleDropdownRef: createRef<HTMLDivElement>(),
+      },
+    ]);
+  };
+
+  // Handler to add a new DocuSign recipient card
+  const handleAddDocuSignRecipient = () => {
+    setDocuSignRecipients(prev => [
+      ...prev,
+      {
+        name: '',
+        email: '',
+        role: 'Needs to Sign',
+        signerRole: '',
+        showRoleDropdown: false,
+        showSignerRoleDropdown: false,
+        roleButtonRef: createRef<HTMLButtonElement>(),
+        roleDropdownRef: createRef<HTMLDivElement>(),
+        signerRoleButtonRef: createRef<HTMLButtonElement>(),
+        signerRoleDropdownRef: createRef<HTMLDivElement>(),
       },
     ]);
   };
@@ -138,6 +198,11 @@ export default function SignaturesPage() {
   // Handler to delete a recipient card
   const handleDeleteRecipient = (idx: number) => {
     setRecipients(prev => prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev);
+  };
+
+  // Handler to delete a DocuSign recipient card
+  const handleDeleteDocuSignRecipient = (idx: number) => {
+    setDocuSignRecipients(prev => prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev);
   };
 
   // Mock data for stat boxes
@@ -495,6 +560,34 @@ export default function SignaturesPage() {
     };
   }, []);
 
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (docuSignDocumentDropdownRef.current && !docuSignDocumentDropdownRef.current.contains(event.target as Node)) {
+        setShowDocuSignDocumentDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (docuSignUploadDropdownRef.current && !docuSignUploadDropdownRef.current.contains(event.target as Node)) {
+        setShowDocuSignUploadDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     const files = Array.from(e.target.files);
@@ -503,6 +596,16 @@ export default function SignaturesPage() {
       ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "image/jpeg"].includes(file.type) && file.size <= 10 * 1024 * 1024
     );
     setUploadedFiles(validFiles);
+  };
+
+  const handleDocuSignFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const files = Array.from(e.target.files);
+    // Only allow PDF, DOC, DOCX, JPG and max 10MB each
+    const validFiles = files.filter(file =>
+      ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "image/jpeg"].includes(file.type) && file.size <= 10 * 1024 * 1024
+    );
+    setDocuSignUploadedFiles(validFiles);
   };
 
   // Sample documents data (same as contracts page)
@@ -634,9 +737,33 @@ export default function SignaturesPage() {
     setShowDocumentDropdown(!showDocumentDropdown);
   };
 
-  const handleDocumentItemClick = (e: React.MouseEvent) => {
+  const handleDocuSignDocumentButtonClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Don't close the dropdown when clicking on items
+    setShowDocuSignDocumentDropdown(!showDocuSignDocumentDropdown);
+  };
+
+  const handleDocumentItemClick = (e: React.MouseEvent, docId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedDocuments(prev => {
+      if (prev.includes(docId)) {
+        return prev.filter(id => id !== docId);
+      } else {
+        return [...prev, docId];
+      }
+    });
+  };
+
+  const handleDocuSignDocumentItemClick = (e: React.MouseEvent, docId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDocuSignSelectedDocuments(prev => {
+      if (prev.includes(docId)) {
+        return prev.filter(id => id !== docId);
+      } else {
+        return [...prev, docId];
+      }
+    });
   };
 
   // Click-off behavior for recipient role dropdown
@@ -664,7 +791,9 @@ export default function SignaturesPage() {
         const target = event.target as Node;
         if (
           recipient.roleButtonRef.current?.contains(target) ||
-          recipient.roleDropdownRef.current?.contains(target)
+          recipient.roleDropdownRef.current?.contains(target) ||
+          recipient.signerRoleButtonRef.current?.contains(target) ||
+          recipient.signerRoleDropdownRef.current?.contains(target)
         ) {
           // Click inside button or dropdown: do nothing
           return;
@@ -672,11 +801,40 @@ export default function SignaturesPage() {
         if (recipient.showRoleDropdown) {
           setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showRoleDropdown: false } : r));
         }
+        if (recipient.showSignerRoleDropdown) {
+          setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showSignerRoleDropdown: false } : r));
+        }
       });
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [recipients]);
+
+  // Click-off behavior for each DocuSign recipient role dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      docuSignRecipients.forEach((recipient, idx) => {
+        const target = event.target as Node;
+        if (
+          recipient.roleButtonRef.current?.contains(target) ||
+          recipient.roleDropdownRef.current?.contains(target) ||
+          recipient.signerRoleButtonRef.current?.contains(target) ||
+          recipient.signerRoleDropdownRef.current?.contains(target)
+        ) {
+          // Click inside button or dropdown: do nothing
+          return;
+        }
+        if (recipient.showRoleDropdown) {
+          setDocuSignRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showRoleDropdown: false } : r));
+        }
+        if (recipient.showSignerRoleDropdown) {
+          setDocuSignRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showSignerRoleDropdown: false } : r));
+        }
+      });
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [docuSignRecipients]);
 
   // Show Tool Selector Modal when Request Signature is clicked
   const handleRequestSignatureClick = () => {
@@ -2315,7 +2473,7 @@ export default function SignaturesPage() {
               className="flex flex-col items-center border border-gray-200 rounded-xl p-4 sm:p-6 w-48 sm:w-64 bg-white hover:shadow-lg transition-shadow focus:outline-none"
               onClick={() => {
                 setShowToolSelectorModal(false);
-                // TODO: Add DocuSign logic here
+                setShowDocuSignModal(true);
               }}
             >
               <div className="h-10 w-10 sm:h-14 sm:w-14 rounded-full bg-blue-50 flex items-center justify-center mb-3 sm:mb-4">
@@ -2353,16 +2511,16 @@ export default function SignaturesPage() {
       {/* Request Signature Modal */}
       {showRequestSignatureModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="relative bg-white rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden">
+          <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden">
             {/* Sticky Header */}
-            <div className="sticky top-0 z-40 bg-white px-6 py-4">
-              <div className="flex items-start justify-between">
-                <h2 className="text-lg font-bold text-gray-900" style={{ fontFamily: 'Avenir, sans-serif' }}>Request Signature</h2>
-                <button
-                  className="text-gray-400 hover:text-gray-600 p-2 rounded-full ml-4 mt-1"
-                  onClick={() => { setShowRequestSignatureModal(false); setUploadedFiles([]); }}
-                  aria-label="Close"
-                >
+            <div className="sticky top-0 z-40 bg-gray-50 dark:bg-gray-900 px-6 py-4">
+                              <div className="flex items-start justify-between">
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white" style={{ fontFamily: 'Avenir, sans-serif' }}>Request Signature</h2>
+                  <button
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-full ml-4 mt-1"
+                    onClick={() => { setShowRequestSignatureModal(false); setUploadedFiles([]); setSelectedDocuments([]); }}
+                    aria-label="Close"
+                  >
                   <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -2371,199 +2529,316 @@ export default function SignaturesPage() {
             </div>
 
             <div className="flex flex-col flex-1 min-h-0">
-              <div className="overflow-y-auto p-6 flex-1">
-                <form onSubmit={(e) => { e.preventDefault(); setShowRequestSignatureModal(false); setUploadedFiles([]); }}>
+              <div className="overflow-y-auto p-6 flex-1 bg-gray-50 dark:bg-gray-900">
+                <form onSubmit={(e) => { e.preventDefault(); setShowRequestSignatureModal(false); setUploadedFiles([]); setSelectedDocuments([]); }}>
                   <div className="space-y-6">
-                    {/* Upload Area Box */}
-                    <div 
-                      className="bg-white border border-gray-200 rounded-lg p-6 relative"
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setIsDraggingOver(true);
-                      }}
-                      onDragLeave={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setIsDraggingOver(false);
-                      }}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setIsDraggingOver(false);
-                        const files = Array.from(e.dataTransfer.files);
-                        setUploadedFiles(prev => [...prev, ...files]);
-                      }}
-                    >
-                      <h3 className="text-sm font-semibold text-gray-900 mb-4 relative z-10" style={{ fontFamily: 'Avenir, sans-serif' }}>Add Documents</h3>
-                      <div className="flex flex-col items-center mb-4">
-                        <div className="h-11 w-11 rounded-lg bg-teal-50 flex items-center justify-center border-2 border-teal-200 mb-2">
-                          <HiOutlineDocumentText size={22} color="#06b6d4" />
-                        </div>
-                        <div className="text-xs text-gray-700 font-semibold">Drop your files here or...</div>
-                        {isDraggingOver && (
-                          <div className="absolute inset-x-0 flex flex-col items-center justify-center" style={{ top: '0', height: '100%' }}>
-                            <div className="h-full w-full flex flex-col items-center justify-center bg-white/95 rounded-lg" style={{ marginTop: '1px' }}>
-                              <div className="h-11 w-11 rounded-lg bg-teal-50 flex items-center justify-center border-2 border-teal-200 mb-1.5">
-                                <HiOutlineUpload size={22} color="#06b6d4" />
-                              </div>
-                              <div className="text-xs text-gray-700 font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                                Supported Formats: PDF, DOC, DOCX, OR JPG (max. 10 MB each)
+                    {/* Two Column Layout for Documents */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Left Column: Add Documents Box */}
+                      <div 
+                        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 relative"
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setIsDraggingOver(true);
+                        }}
+                        onDragLeave={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setIsDraggingOver(false);
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setIsDraggingOver(false);
+                          const files = Array.from(e.dataTransfer.files);
+                          setUploadedFiles(prev => [...prev, ...files]);
+                        }}
+                      >
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 relative z-10" style={{ fontFamily: 'Avenir, sans-serif' }}>Add Documents</h3>
+                        
+                        {/* Upload interface - always visible */}
+                        <div className="flex flex-col items-center mb-4">
+                          <div className="h-11 w-11 rounded-lg bg-teal-50 flex items-center justify-center border-2 border-teal-200 mb-2">
+                            <HiOutlineDocumentText size={22} color="#06b6d4" />
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 font-semibold">Drop your files here or...</div>
+                          {isDraggingOver && (
+                            <div className="absolute inset-x-0 flex flex-col items-center justify-center" style={{ top: '0', height: '100%' }}>
+                              <div className="h-full w-full flex flex-col items-center justify-center bg-white/95 rounded-lg" style={{ marginTop: '1px' }}>
+                                <div className="h-11 w-11 rounded-lg bg-teal-50 flex items-center justify-center border-2 border-teal-200 mb-1.5">
+                                  <HiOutlineUpload size={22} color="#06b6d4" />
+                                </div>
+                                <div className="text-xs text-gray-700 font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                  Supported Formats: PDF, DOC, DOCX, OR JPG (max. 10 MB each)
+                                </div>
                               </div>
                             </div>
+                          )}
+                        </div>
+                        <div className={`flex justify-center gap-1 ${isDraggingOver ? 'blur-sm' : ''}`}>
+                          <div className="relative" ref={documentDropdownRef}>
+                            <button
+                              type="button"
+                              onClick={handleDocumentButtonClick}
+                              className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-xs sm:text-sm font-semibold"
+                            >
+                              Select
+                              <HiMiniChevronDown size={17} className="text-white -mt-[1px]" />
+                            </button>
+                            {showDocumentDropdown && (
+                              <div className="absolute z-50 mt-1 w-[300px] bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
+                                <div className="p-2">
+                                  <input
+                                    type="text"
+                                    placeholder="Search documents..."
+                                    value={documentSearch}
+                                    onChange={(e) => setDocumentSearch(e.target.value)}
+                                    className="w-full px-3 py-2 text-xs border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-800 text-gray-700 dark:text-white"
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
+                                </div>
+                                <div className="max-h-[300px] overflow-y-auto">
+                                  {filteredDocuments.map((doc) => (
+                                    <button
+                                      key={doc.id}
+                                      onClick={(e) => handleDocumentItemClick(e, doc.id)}
+                                      className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex flex-col"
+                                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                                    >
+                                      <div className="flex items-center">
+                                        <div className={`w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center ${selectedDocuments.includes(doc.id) ? 'bg-primary' : 'border border-gray-300'}`}>
+                                          {selectedDocuments.includes(doc.id) && (
+                                            <FaCheck className="text-white" size={8} />
+                                          )}
+                                        </div>
+                                        <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{doc.name}</span>
+                                      </div>
+                                      <div className="ml-6 text-gray-500 dark:text-gray-400 text-[10px]">{doc.contractTitle} ({doc.contractId})</div>
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <div className="relative" ref={uploadDropdownRef}>
+                            <button
+                              type="button"
+                              onClick={() => setShowUploadDropdown(!showUploadDropdown)}
+                              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs sm:text-sm hover:bg-gray-200 transition-colors"
+                              style={{ fontFamily: 'Avenir, sans-serif' }}
+                            >
+                              <HiOutlineUpload className="text-sm sm:text-base text-primary" /> Upload
+                            </button>
+                            {showUploadDropdown && (
+                              <div className="absolute z-50 mt-1 w-[200px] bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700">
+                                <div className="py-2">
+                                  <label htmlFor="file-upload" className="block px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer">
+                                    <div className="flex items-center gap-2">
+                                      <TbDeviceDesktopPlus className="text-base text-primary" />
+                                      <span className="text-xs">Desktop</span>
+                                    </div>
+                                  </label>
+                                  <input
+                                    id="file-upload"
+                                    name="file-upload"
+                                    type="file"
+                                    accept=".pdf,.doc,.docx,.jpg,.jpeg"
+                                    className="hidden"
+                                    multiple
+                                    onChange={handleFileChange}
+                                  />
+                                  <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                                    <SiBox className="text-base text-primary" />
+                                    <span className="text-xs">Box</span>
+                                  </button>
+                                  <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                                    <SlSocialDropbox className="text-base text-primary" />
+                                    <span className="text-xs">Dropbox</span>
+                                  </button>
+                                  <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                                    <TbBrandGoogleDrive className="text-base text-primary" />
+                                    <span className="text-xs">Google Drive</span>
+                                  </button>
+                                  <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                                    <TbBrandOnedrive className="text-base text-primary" />
+                                    <span className="text-xs">OneDrive</span>
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right Column: Documents Box */}
+                      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>Documents</h3>
+                        
+                        {/* Show document thumbnails when documents are selected */}
+                        {(selectedDocuments.length > 0 || uploadedFiles.length > 0) ? (
+                          <div className="space-y-3">
+                            {/* Selected Documents */}
+                            {selectedDocuments.map(docId => {
+                              const doc = sampleDocuments.find(d => d.id === docId);
+                              return doc ? (
+                                <div key={docId} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600">
+                                  <div className="flex items-center gap-3">
+                                    <HiOutlineDocumentText className="w-5 h-5 text-primary" />
+                                    <div>
+                                      <div className="font-semibold text-xs text-black dark:text-white">{doc.name}</div>
+                                      <div className="text-xs text-gray-500">{doc.dateUploaded} &bull; {doc.type} &bull; {doc.size}</div>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => setSelectedDocuments(prev => prev.filter(id => id !== docId))}
+                                      className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group"
+                                    >
+                                      <HiOutlineTrash className="h-4 w-4 transition-colors" />
+                                      <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                        Remove
+                                      </span>
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : null;
+                            })}
+                            
+                            {/* Uploaded Files */}
+                            {uploadedFiles.map((file, idx) => (
+                              <div key={idx} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600">
+                                <div className="flex items-center gap-3">
+                                  <HiOutlineDocumentText className="w-5 h-5 text-primary" />
+                                  <div>
+                                    <div className="font-semibold text-xs text-black dark:text-white">{file.name}</div>
+                                    <div className="text-xs text-gray-500">{file.type} &bull; {(file.size / 1024 / 1024).toFixed(1)} MB</div>
+                                  </div>
+                                </div>
+                                                                  <div className="flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => setUploadedFiles(prev => prev.filter((_, i) => i !== idx))}
+                                      className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group"
+                                    >
+                                      <HiOutlineTrash className="h-4 w-4 transition-colors" />
+                                      <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                        Remove
+                                      </span>
+                                    </button>
+                                  </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center py-8 text-gray-500 dark:text-gray-400">
+                            <HiOutlineDocumentText size={32} className="mb-2" />
+                            <p className="text-sm">No documents selected</p>
+                            <p className="text-xs">Select or upload documents from the left panel</p>
                           </div>
                         )}
                       </div>
-                      <div className={`flex justify-center gap-1 ${isDraggingOver ? 'blur-sm' : ''}`}>
-                        <div className="relative" ref={documentDropdownRef}>
-                          <button
-                            type="button"
-                            onClick={handleDocumentButtonClick}
-                            className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-[10.75px] bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-xs sm:text-sm font-semibold"
-                          >
-                            Select
-                            <HiMiniChevronDown size={17} className="text-white -mt-[1px]" />
-                          </button>
-                          {showDocumentDropdown && (
-                            <div className="absolute z-50 mt-1 w-[300px] bg-white rounded-lg shadow-lg border border-gray-200">
-                              <div className="p-2">
-                                <input
-                                  type="text"
-                                  placeholder="Search documents..."
-                                  value={documentSearch}
-                                  onChange={(e) => setDocumentSearch(e.target.value)}
-                                  className="w-full px-3 py-2 text-xs border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                                  onClick={(e) => e.stopPropagation()}
-                                />
-                              </div>
-                              <div className="max-h-[300px] overflow-y-auto">
-                                {filteredDocuments.map((doc) => (
-                                  <button
-                                    key={doc.id}
-                                    onClick={handleDocumentItemClick}
-                                    className="w-full px-4 py-2 text-left hover:bg-primary/10 hover:text-primary flex flex-col"
-                                    style={{ fontFamily: 'Avenir, sans-serif' }}
-                                  >
-                                    <div className="flex items-center">
-                                      <div className={`w-3 h-3 rounded-sm mr-2 flex items-center justify-center ${selectedDocuments.includes(doc.id) ? 'bg-primary' : 'border border-gray-300'}`}>
-                                        {selectedDocuments.includes(doc.id) && (
-                                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
-                                        )}
-                                      </div>
-                                      <span className="text-xs font-medium">{doc.name}</span>
-                                    </div>
-                                    <div className="ml-5 text-gray-500 text-[10px]">{doc.contractTitle} ({doc.contractId})</div>
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        <div className="relative" ref={uploadDropdownRef}>
-                          <button
-                            type="button"
-                            onClick={() => setShowUploadDropdown(!showUploadDropdown)}
-                            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs sm:text-sm hover:bg-gray-200 transition-colors"
-                            style={{ fontFamily: 'Avenir, sans-serif' }}
-                          >
-                            <HiOutlineUpload className="text-sm sm:text-base text-primary" /> Upload
-                          </button>
-                          {showUploadDropdown && (
-                            <div className="absolute z-50 mt-1 w-[200px] bg-white rounded-lg shadow-lg border border-gray-200">
-                              <div className="py-1">
-                                <label htmlFor="file-upload" className="block px-4 py-2 text-left hover:bg-primary/10 hover:text-primary cursor-pointer">
-                                  <div className="flex items-center gap-2">
-                                    <TbDeviceDesktopPlus className="text-base text-primary" />
-                                    <span className="text-xs">Desktop</span>
-                                  </div>
-                                </label>
-                                <input
-                                  id="file-upload"
-                                  name="file-upload"
-                                  type="file"
-                                  accept=".pdf,.doc,.docx,.jpg,.jpeg"
-                                  className="hidden"
-                                  multiple
-                                  onChange={handleFileChange}
-                                />
-                                <button className="w-full px-4 py-2 text-left hover:bg-primary/10 hover:text-primary flex items-center gap-2">
-                                  <SiBox className="text-base text-primary" />
-                                  <span className="text-xs">Box</span>
-                                </button>
-                                <button className="w-full px-4 py-2 text-left hover:bg-primary/10 hover:text-primary flex items-center gap-2">
-                                  <SlSocialDropbox className="text-base text-primary" />
-                                  <span className="text-xs">Dropbox</span>
-                                </button>
-                                <button className="w-full px-4 py-2 text-left hover:bg-primary/10 hover:text-primary flex items-center gap-2">
-                                  <TbBrandGoogleDrive className="text-base text-primary" />
-                                  <span className="text-xs">Google Drive</span>
-                                </button>
-                                <button className="w-full px-4 py-2 text-left hover:bg-primary/10 hover:text-primary flex items-center gap-2">
-                                  <TbBrandOnedrive className="text-base text-primary" />
-                                  <span className="text-xs">OneDrive</span>
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      {/* Show selected documents */}
-                      {selectedDocuments.length > 0 && (
-                        <ul className="mt-3 text-sm text-gray-600">
-                          {selectedDocuments.map(docId => {
-                            const doc = sampleDocuments.find(d => d.id === docId);
-                            return doc ? (
-                              <li key={docId} className="truncate">{doc.name} ({doc.contractTitle})</li>
-                            ) : null;
-                          })}
-                        </ul>
-                      )}
-                      {/* Show uploaded files */}
-                      {uploadedFiles.length > 0 && (
-                        <ul className="mt-3 text-sm text-gray-600">
-                          {uploadedFiles.map((file, idx) => (
-                            <li key={idx} className="truncate">{file.name}</li>
-                          ))}
-                        </ul>
-                      )}
                     </div>
 
                     {/* Add Recipients Box */}
-                    <div className="bg-white border border-gray-200 rounded-lg p-6">
-                      <h3 className="text-sm font-semibold text-gray-900 mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>Add Recipients</h3>
+                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>Add Recipients</h3>
                       <div className="space-y-4">
+                        {/* I am the only signer checkbox */}
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 border border-gray-300 rounded flex items-center justify-center cursor-pointer" onClick={() => {
+                            const newValue = !isOnlySigner;
+                            setIsOnlySigner(newValue);
+                          }}>
+                            {isOnlySigner && (
+                              <div className="w-4 h-4 bg-primary rounded-sm flex items-center justify-center">
+                                <FaCheck className="text-white" size={10} />
+                              </div>
+                            )}
+                          </div>
+                          <label 
+                            className="text-xs font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
+                            style={{ fontFamily: 'Avenir, sans-serif' }}
+                            onClick={() => {
+                              const newValue = !isOnlySigner;
+                              setIsOnlySigner(newValue);
+                            }}
+                          >
+                            I am the only signer
+                          </label>
+                        </div>
+                        
+                        {/* Set signing order checkbox */}
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 border border-gray-300 rounded flex items-center justify-center cursor-pointer" onClick={() => {
+                            const newValue = !setSigningOrder;
+                            setSetSigningOrder(newValue);
+                          }}>
+                            {setSigningOrder && (
+                              <div className="w-4 h-4 bg-primary rounded-sm flex items-center justify-center">
+                                <FaCheck className="text-white" size={10} />
+                              </div>
+                            )}
+                          </div>
+                          <label 
+                            className="text-xs font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
+                            style={{ fontFamily: 'Avenir, sans-serif' }}
+                            onClick={() => {
+                              const newValue = !setSigningOrder;
+                              setSetSigningOrder(newValue);
+                            }}
+                          >
+                            Set signing order
+                          </label>
+                        </div>
+                        
                         {/* Render all recipient cards */}
                         {recipients.map((recipient, idx) => (
-                          <div key={idx} className="relative bg-white border border-gray-200 rounded-lg p-6 shadow-sm flex flex-col md:flex-row md:items-start" style={{ borderLeft: '3px solid #e5e7eb' }}>
-                            <div className="flex-1 space-y-4 max-w-[30%]">
-                              <div>
-                                <div className="relative w-[800px]">
-                                  <label className="block text-xs font-medium text-gray-700 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                                    Name <span className="text-primary">*</span>
-                                  </label>
-                                  {/* Invisible button for role selection */}
+                          <div key={idx} className="flex items-start gap-3">
+                            {/* Signing order number field */}
+                            {setSigningOrder && (
+                              <div className="flex-shrink-0 mt-4">
+                                <input
+                                  type="number"
+                                  min="1"
+                                  max={recipients.length}
+                                  className="w-12 h-8 text-center border border-gray-300 rounded text-xs font-medium bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+                                  value={idx + 1}
+                                  onChange={(e) => {
+                                    // Handle signing order change logic here
+                                  }}
+                                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                                />
+                              </div>
+                            )}
+                            <div className="flex-1 relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 shadow-sm" style={{ borderLeft: '3px solid #e5e7eb' }}>
+                            {/* Header with role controls and delete button */}
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                              <div className="flex flex-col sm:flex-row gap-1">
+                                {/* Role selection button */}
+                                <div className="relative">
                                   <button
                                     ref={recipient.roleButtonRef}
                                     type="button"
-                                    className="absolute top-0 left-[504px] flex items-center gap-1 focus:outline-none"
-                                    style={{ background: 'none', border: 'none', padding: 0, margin: 0, boxShadow: 'none', cursor: 'pointer' }}
+                                    className="flex items-center gap-1 px-3 py-1.5 text-xs text-white border border-gray-200 dark:border-transparent bg-primary rounded-md hover:bg-primary-dark transition-colors"
                                     onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showRoleDropdown: !r.showRoleDropdown } : r))}
                                     tabIndex={0}
                                   >
-                                    <LuPen className="w-3.5 h-3.5 text-gray-500" />
-                                    <span className="text-xs text-gray-500">{recipient.role}</span>
-                                    <HiMiniChevronDown size={16} className="inline-block align-middle -mt-[3px] text-gray-500" />
+                                    <LuPen className="w-3 h-3 text-white" />
+                                    <span>{recipient.role}</span>
+                                    <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px] text-white" />
                                   </button>
                                   {recipient.showRoleDropdown && (
                                     <div
                                       ref={recipient.roleDropdownRef}
-                                      className="absolute left-[504px] top-6 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[180px]"
+                                      className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[160px]"
                                       style={{ fontFamily: 'Avenir, sans-serif' }}
                                     >
                                       {['Needs to Sign', 'In Person Signer', 'Receives a Copy', 'Needs to View'].map((role) => (
                                         <button
                                           key={role}
-                                          className="w-full px-4 py-2 text-left text-xs hover:bg-primary/10 hover:text-primary text-gray-700"
+                                          className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${recipient.role === role ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                                           style={{ background: 'none', border: 'none', boxShadow: 'none' }}
                                           onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, role, showRoleDropdown: false } : r))}
                                         >
@@ -2572,18 +2847,88 @@ export default function SignaturesPage() {
                                       ))}
                                     </div>
                                   )}
-                                  <span className="absolute top-0 left-[638px] text-xs text-gray-500">Customize <HiMiniChevronDown size={16} className="inline-block align-middle -mt-[3px]" /></span>
-                                  <button className="absolute top-0 left-[1220px] text-gray-400 hover:text-gray-600 transition-colors" onClick={() => handleDeleteRecipient(idx)} disabled={recipients.length === 1}>
-                                    <HiOutlineTrash className="w-4 h-4" />
+                                </div>
+                                
+                                {/* Signer Role button */}
+                                <div className="relative">
+                                  <button
+                                    ref={recipient.signerRoleButtonRef}
+                                    type="button"
+                                    className="flex items-center gap-1 px-3 py-1.5 text-xs text-white border border-gray-200 dark:border-transparent bg-primary rounded-md hover:bg-primary-dark transition-colors whitespace-nowrap"
+                                    onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showSignerRoleDropdown: !r.showSignerRoleDropdown } : r))}
+                                    tabIndex={0}
+                                  >
+                                    <span>{recipient.signerRole || 'Signer Role'}</span>
+                                    <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px] text-white" />
+                                  </button>
+                                  {recipient.showSignerRoleDropdown && (
+                                    <div
+                                      ref={recipient.signerRoleDropdownRef}
+                                      className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[160px]"
+                                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                                    >
+                                      {['Standard', 'Buyer', 'Seller', 'Buyer Agent', 'Seller Agent', 'Closing Agent', 'Inspector', 'Appraiser'].map((signerRole) => (
+                                        <button
+                                          key={signerRole}
+                                          className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${recipient.signerRole === signerRole ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                                          style={{ background: 'none', border: 'none', boxShadow: 'none' }}
+                                          onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, signerRole, showSignerRoleDropdown: false } : r))}
+                                        >
+                                          {signerRole}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                {/* Customize button */}
+                                <div className="relative">
+                                  <button
+                                    type="button"
+                                    className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-700 border border-gray-200 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors whitespace-nowrap"
+                                    tabIndex={0}
+                                  >
+                                    <span>Customize</span>
+                                    <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px]" />
                                   </button>
                                 </div>
+                              </div>
+                              
+                              {/* Clear and Delete buttons */}
+                              <div className="flex items-center gap-1">
+                                <button 
+                                  className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1" 
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, name: '', email: '' } : r));
+                                  }}
+                                >
+                                  <LuEraser className="w-4 h-4" />
+                                </button>
+                                <button 
+                                  className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1" 
+                                  onClick={() => handleDeleteRecipient(idx)} 
+                                  disabled={recipients.length === 1}
+                                >
+                                  <HiOutlineTrash className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                            
+                            {/* Form fields */}
+                            <div className="space-y-4">
+                              <div>
+                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                  Name <span className="text-primary">*</span>
+                                </label>
                                 <div className="relative">
                                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                                     <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
                                   </span>
                                   <input
                                     type="text"
-                                    className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                                    className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white"
                                     placeholder="Enter recipient's name..."
                                     style={{ fontFamily: 'Avenir, sans-serif' }}
                                     value={recipient.name}
@@ -2592,12 +2937,12 @@ export default function SignaturesPage() {
                                 </div>
                               </div>
                               <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
                                   Email <span className="text-primary">*</span>
                                 </label>
                                 <input
                                   type="email"
-                                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                                  className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white"
                                   placeholder="Enter recipient's email address..."
                                   style={{ fontFamily: 'Avenir, sans-serif' }}
                                   value={recipient.email}
@@ -2605,16 +2950,16 @@ export default function SignaturesPage() {
                                 />
                               </div>
                             </div>
-                            {/* Right-side buttons remain unchanged for now */}
                           </div>
+                        </div>
                         ))}
                         <button
                           type="button"
-                          className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-[9.5px] bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-xs sm:text-sm font-semibold mt-2"
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-primary text-gray-700 dark:text-white font-semibold text-xs hover:bg-gray-200 dark:hover:bg-primary-dark transition-colors cursor-pointer mt-2"
                           style={{ fontFamily: 'Avenir, sans-serif' }}
                           onClick={handleAddRecipient}
                         >
-                          <TiUserAddOutline className="text-base sm:text-lg" />
+                          <TiUserAddOutline className="text-base sm:text-lg text-primary dark:text-white" />
                           <span className="mt-[1px]">Add Recipient</span>
                         </button>
                       </div>
@@ -2622,23 +2967,42 @@ export default function SignaturesPage() {
 
                     {/* Due Date Field */}
                     <div>
-                      <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Due Date</div>
-                      <div className="relative flex items-center" style={{ width: '115px', minWidth: '115px' }}>
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Due Date</div>
+                      <div className="relative flex items-center" style={{ width: '140px', minWidth: '140px' }}>
                         <input
                           type="date"
-                          className="pl-3 pr-2 py-2 border-2 border-gray-200 rounded-lg text-xs text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors w-full"
+                          className="w-full px-4 py-2 pr-10 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs text-black dark:text-white bg-white dark:bg-gray-900 [&::-webkit-calendar-picker-indicator]:hidden"
                           style={{ fontFamily: 'Avenir, sans-serif' }}
                         />
+                        <button
+                          type="button"
+                          onClick={() => (document.querySelector('input[type="date"]') as HTMLInputElement)?.showPicker()}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 flex items-center justify-center"
+                        >
+                          <LuCalendarFold className="w-4 h-4 text-gray-400" />
+                        </button>
                       </div>
                     </div>
 
                     {/* Message Field */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2" style={{ fontFamily: 'Avenir, sans-serif' }}>Message to Recipients</label>
+                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>Add Message</h3>
+                      
+                      {/* Subject Field */}
+                      <div className="mb-4">
+                        <input
+                          type="text"
+                          className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-xs font-medium bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                          placeholder="Enter subject..."
+                          style={{ fontFamily: 'Avenir, sans-serif' }}
+                        />
+                      </div>
+                      
+                      {/* Message Textarea */}
                       <textarea
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-xs font-medium bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                         rows={4}
-                        placeholder="Enter a message for the recipients"
+                        placeholder="Enter your message..."
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       />
                     </div>
@@ -2646,18 +3010,558 @@ export default function SignaturesPage() {
                     <div className="flex justify-end gap-1">
                       <button
                         type="button"
-                        onClick={() => { setShowRequestSignatureModal(false); setUploadedFiles([]); }}
-                        className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-xs sm:text-sm font-semibold"
+                        onClick={() => { setShowRequestSignatureModal(false); setUploadedFiles([]); setSelectedDocuments([]); }}
+                        className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="px-3 sm:px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-xs sm:text-sm font-semibold"
+                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       >
                         Request Signature
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DocuSign Request Signature Modal */}
+      {showDocuSignModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden">
+            {/* Sticky Header */}
+            <div className="sticky top-0 z-40 bg-gray-50 dark:bg-gray-900 px-6 py-4">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+                    <FaDochub className="w-5 h-5 text-blue-500 dark:text-blue-400 transform translate-x-[1px]" />
+                  </div>
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white" style={{ fontFamily: 'Avenir, sans-serif' }}>Request Signature via DocuSign</h2>
+                </div>
+                                  <button
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-full ml-4 mt-1"
+                    onClick={() => { setShowDocuSignModal(false); setDocuSignUploadedFiles([]); setDocuSignSelectedDocuments([]); }}
+                    aria-label="Close"
+                  >
+                    <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-col flex-1 min-h-0">
+                <div className="overflow-y-auto p-6 flex-1 bg-gray-50 dark:bg-gray-900">
+                <form onSubmit={(e) => { e.preventDefault(); setShowDocuSignModal(false); setDocuSignUploadedFiles([]); setDocuSignSelectedDocuments([]); }}>
+                  <div className="space-y-6">
+                    {/* Two Column Layout for Documents */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Left Column: Add Documents Box */}
+                      <div 
+                        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 relative"
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setIsDocuSignDraggingOver(true);
+                        }}
+                        onDragLeave={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setIsDocuSignDraggingOver(false);
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setIsDocuSignDraggingOver(false);
+                          const files = Array.from(e.dataTransfer.files);
+                          setDocuSignUploadedFiles(prev => [...prev, ...files]);
+                        }}
+                      >
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 relative z-10" style={{ fontFamily: 'Avenir, sans-serif' }}>Add Documents</h3>
+                        
+                        {/* Upload interface - always visible */}
+                        <div className="flex flex-col items-center mb-4">
+                          <div className="h-11 w-11 rounded-lg bg-blue-50 flex items-center justify-center border-2 border-blue-200 mb-2">
+                            <HiOutlineDocumentText size={22} color="#3b82f6" />
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 font-semibold">Drop your files here or...</div>
+                          {isDocuSignDraggingOver && (
+                            <div className="absolute inset-x-0 flex flex-col items-center justify-center" style={{ top: '0', height: '100%' }}>
+                              <div className="h-full w-full flex flex-col items-center justify-center bg-white/95 rounded-lg" style={{ marginTop: '1px' }}>
+                                <div className="h-11 w-11 rounded-lg bg-blue-50 flex items-center justify-center border-2 border-blue-200 mb-1.5">
+                                  <HiOutlineUpload size={22} color="#3b82f6" />
+                                </div>
+                                <div className="text-xs text-gray-700 font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                  Supported Formats: PDF, DOC, DOCX, OR JPG (max. 10 MB each)
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <div className={`flex justify-center gap-1 ${isDocuSignDraggingOver ? 'blur-sm' : ''}`}>
+                          <div className="relative" ref={docuSignDocumentDropdownRef}>
+                            <button
+                              type="button"
+                              onClick={handleDocuSignDocumentButtonClick}
+                              className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-xs sm:text-sm font-semibold"
+                            >
+                              Select
+                              <HiMiniChevronDown size={17} className="text-white -mt-[1px]" />
+                            </button>
+                            {showDocuSignDocumentDropdown && (
+                              <div className="absolute z-50 mt-1 w-[300px] bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
+                                <div className="p-2">
+                                  <input
+                                    type="text"
+                                    placeholder="Search documents..."
+                                    value={docuSignDocumentSearch}
+                                    onChange={(e) => setDocuSignDocumentSearch(e.target.value)}
+                                    className="w-full px-3 py-2 text-xs border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-800 text-gray-700 dark:text-white"
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
+                                </div>
+                                <div className="max-h-[300px] overflow-y-auto">
+                                  {sampleDocuments
+                                    .filter(doc => {
+                                      const search = docuSignDocumentSearch.toLowerCase();
+                                      return (
+                                        doc.name.toLowerCase().includes(search) ||
+                                        doc.id.toLowerCase().includes(search) ||
+                                        doc.type.toLowerCase().includes(search) ||
+                                        doc.contractTitle?.toLowerCase().includes(search) ||
+                                        doc.contractId?.toLowerCase().includes(search)
+                                      );
+                                    })
+                                    .map((doc) => (
+                                      <button
+                                        key={doc.id}
+                                        onClick={(e) => handleDocuSignDocumentItemClick(e, doc.id)}
+                                        className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex flex-col"
+                                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                                      >
+                                        <div className="flex items-center">
+                                          <div className={`w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center ${docuSignSelectedDocuments.includes(doc.id) ? 'bg-primary' : 'border border-gray-300'}`}>
+                                            {docuSignSelectedDocuments.includes(doc.id) && (
+                                              <FaCheck className="text-white" size={8} />
+                                            )}
+                                          </div>
+                                          <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{doc.name}</span>
+                                        </div>
+                                        <div className="ml-6 text-gray-500 dark:text-gray-400 text-[10px]">{doc.contractTitle} ({doc.contractId})</div>
+                                      </button>
+                                    ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <div className="relative" ref={docuSignUploadDropdownRef}>
+                            <button
+                              type="button"
+                              onClick={() => setShowDocuSignUploadDropdown(!showDocuSignUploadDropdown)}
+                              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs sm:text-sm hover:bg-gray-200 transition-colors"
+                              style={{ fontFamily: 'Avenir, sans-serif' }}
+                            >
+                              <HiOutlineUpload className="text-sm sm:text-base text-blue-500" /> Upload
+                            </button>
+                            {showDocuSignUploadDropdown && (
+                              <div className="absolute z-50 mt-1 w-[200px] bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700">
+                                <div className="py-2">
+                                  <label htmlFor="docuSign-file-upload" className="block px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer">
+                                    <div className="flex items-center gap-2">
+                                      <TbDeviceDesktopPlus className="text-base text-blue-500" />
+                                      <span className="text-xs">Desktop</span>
+                                    </div>
+                                  </label>
+                                  <input
+                                    id="docuSign-file-upload"
+                                    name="docuSign-file-upload"
+                                    type="file"
+                                    accept=".pdf,.doc,.docx,.jpg,.jpeg"
+                                    className="hidden"
+                                    multiple
+                                    onChange={handleDocuSignFileChange}
+                                  />
+                                  <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                                    <SiBox className="text-base text-blue-500" />
+                                    <span className="text-xs">Box</span>
+                                  </button>
+                                  <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                                    <SlSocialDropbox className="text-base text-blue-500" />
+                                    <span className="text-xs">Dropbox</span>
+                                  </button>
+                                  <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                                    <TbBrandGoogleDrive className="text-base text-blue-500" />
+                                    <span className="text-xs">Google Drive</span>
+                                  </button>
+                                  <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                                    <TbBrandOnedrive className="text-base text-blue-500" />
+                                    <span className="text-xs">OneDrive</span>
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right Column: Documents Box */}
+                      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>Documents</h3>
+                        
+                        {/* Show document thumbnails when documents are selected */}
+                        {(docuSignSelectedDocuments.length > 0 || docuSignUploadedFiles.length > 0) ? (
+                          <div className="space-y-3">
+                            {/* Selected Documents */}
+                            {docuSignSelectedDocuments.map(docId => {
+                              const doc = sampleDocuments.find(d => d.id === docId);
+                              return doc ? (
+                                <div key={docId} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600">
+                                  <div className="flex items-center gap-3">
+                                    <HiOutlineDocumentText className="w-5 h-5 text-primary" />
+                                    <div>
+                                      <div className="font-semibold text-xs text-black dark:text-white">{doc.name}</div>
+                                      <div className="text-xs text-gray-500">{doc.dateUploaded} &bull; {doc.type} &bull; {doc.size}</div>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => setDocuSignSelectedDocuments(prev => prev.filter(id => id !== docId))}
+                                      className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group"
+                                    >
+                                      <HiOutlineTrash className="h-4 w-4 transition-colors" />
+                                      <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                        Remove
+                                      </span>
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : null;
+                            })}
+                            
+                            {/* Uploaded Files */}
+                            {docuSignUploadedFiles.map((file, idx) => (
+                              <div key={idx} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600">
+                                <div className="flex items-center gap-3">
+                                  <HiOutlineDocumentText className="w-5 h-5 text-primary" />
+                                  <div>
+                                    <div className="font-semibold text-xs text-black dark:text-white">{file.name}</div>
+                                    <div className="text-xs text-gray-500">{file.type} &bull; {(file.size / 1024 / 1024).toFixed(1)} MB</div>
+                                  </div>
+                                </div>
+                                                                  <div className="flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => setDocuSignUploadedFiles(prev => prev.filter((_, i) => i !== idx))}
+                                      className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group"
+                                    >
+                                      <HiOutlineTrash className="h-4 w-4 transition-colors" />
+                                      <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                        Remove
+                                      </span>
+                                    </button>
+                                  </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center py-8 text-gray-500 dark:text-gray-400">
+                            <HiOutlineDocumentText size={32} className="mb-2" />
+                            <p className="text-sm">No documents selected</p>
+                            <p className="text-xs">Select or upload documents from the left panel</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Add Recipients Box */}
+                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>Add Recipients</h3>
+                      <div className="space-y-4">
+                        {/* I am the only signer checkbox */}
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 border border-gray-300 rounded flex items-center justify-center cursor-pointer" onClick={() => {
+                            const newValue = !isDocuSignOnlySigner;
+                            setIsDocuSignOnlySigner(newValue);
+                          }}>
+                            {isDocuSignOnlySigner && (
+                              <div className="w-4 h-4 bg-blue-500 rounded-sm flex items-center justify-center">
+                                <FaCheck className="text-white" size={10} />
+                              </div>
+                            )}
+                          </div>
+                          <label 
+                            className="text-xs font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
+                            style={{ fontFamily: 'Avenir, sans-serif' }}
+                            onClick={() => {
+                              const newValue = !isDocuSignOnlySigner;
+                              setIsDocuSignOnlySigner(newValue);
+                            }}
+                          >
+                            I am the only signer
+                          </label>
+                        </div>
+                        
+                        {/* Set signing order checkbox */}
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 border border-gray-300 rounded flex items-center justify-center cursor-pointer" onClick={() => {
+                            const newValue = !setDocuSignSigningOrder;
+                            setSetDocuSignSigningOrder(newValue);
+                          }}>
+                            {setDocuSignSigningOrder && (
+                              <div className="w-4 h-4 bg-blue-500 rounded-sm flex items-center justify-center">
+                                <FaCheck className="text-white" size={10} />
+                              </div>
+                            )}
+                          </div>
+                          <label 
+                            className="text-xs font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
+                            style={{ fontFamily: 'Avenir, sans-serif' }}
+                            onClick={() => {
+                              const newValue = !setDocuSignSigningOrder;
+                              setSetDocuSignSigningOrder(newValue);
+                            }}
+                          >
+                            Set signing order
+                          </label>
+                        </div>
+                        
+                        {/* Render all DocuSign recipient cards */}
+                        {docuSignRecipients.map((recipient, idx) => (
+                          <div key={idx} className="flex items-start gap-3">
+                            {/* Signing order number field */}
+                            {setDocuSignSigningOrder && (
+                              <div className="flex-shrink-0 mt-4">
+                                <input
+                                  type="number"
+                                  min="1"
+                                  max={docuSignRecipients.length}
+                                  className="w-12 h-8 text-center border border-gray-300 rounded text-xs font-medium bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+                                  value={idx + 1}
+                                  onChange={(e) => {
+                                    // Handle signing order change logic here
+                                  }}
+                                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                                />
+                              </div>
+                            )}
+                            <div className="flex-1 relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 shadow-sm" style={{ borderLeft: '3px solid #e5e7eb' }}>
+                            {/* Header with role controls and delete button */}
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                              <div className="flex flex-col sm:flex-row gap-1">
+                                {/* Role selection button */}
+                                <div className="relative">
+                                  <button
+                                    ref={recipient.roleButtonRef}
+                                    type="button"
+                                    className="flex items-center gap-1 px-3 py-1.5 text-xs text-white border border-gray-200 dark:border-transparent bg-blue-500 rounded-md hover:bg-blue-600 transition-colors"
+                                    onClick={() => setDocuSignRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showRoleDropdown: !r.showRoleDropdown } : r))}
+                                    tabIndex={0}
+                                  >
+                                    <LuPen className="w-3 h-3 text-white" />
+                                    <span>{recipient.role}</span>
+                                    <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px] text-white" />
+                                  </button>
+                                  {recipient.showRoleDropdown && (
+                                    <div
+                                      ref={recipient.roleDropdownRef}
+                                      className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[160px]"
+                                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                                    >
+                                      {['Needs to Sign', 'In Person Signer', 'Receives a Copy', 'Needs to View'].map((role) => (
+                                        <button
+                                          key={role}
+                                          className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${recipient.role === role ? 'text-blue-500' : 'text-gray-700 dark:text-gray-300'}`}
+                                          style={{ background: 'none', border: 'none', boxShadow: 'none' }}
+                                          onClick={() => setDocuSignRecipients(prev => prev.map((r, i) => i === idx ? { ...r, role, showRoleDropdown: false } : r))}
+                                        >
+                                          {role}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                {/* Signer Role button */}
+                                <div className="relative">
+                                  <button
+                                    ref={recipient.signerRoleButtonRef}
+                                    type="button"
+                                    className="flex items-center gap-1 px-3 py-1.5 text-xs text-white border border-gray-200 dark:border-transparent bg-blue-500 rounded-md hover:bg-blue-600 transition-colors whitespace-nowrap"
+                                    onClick={() => setDocuSignRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showSignerRoleDropdown: !r.showSignerRoleDropdown } : r))}
+                                    tabIndex={0}
+                                  >
+                                    <span>{recipient.signerRole || 'Signer Role'}</span>
+                                    <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px] text-white" />
+                                  </button>
+                                  {recipient.showSignerRoleDropdown && (
+                                    <div
+                                      ref={recipient.signerRoleDropdownRef}
+                                      className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[160px]"
+                                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                                    >
+                                      {['Standard', 'Buyer', 'Seller', 'Buyer Agent', 'Seller Agent', 'Closing Agent', 'Inspector', 'Appraiser'].map((signerRole) => (
+                                        <button
+                                          key={signerRole}
+                                          className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${recipient.signerRole === signerRole ? 'text-blue-500' : 'text-gray-700 dark:text-gray-300'}`}
+                                          style={{ background: 'none', border: 'none', boxShadow: 'none' }}
+                                          onClick={() => setDocuSignRecipients(prev => prev.map((r, i) => i === idx ? { ...r, signerRole, showSignerRoleDropdown: false } : r))}
+                                        >
+                                          {signerRole}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                {/* Customize button */}
+                                <div className="relative">
+                                  <button
+                                    type="button"
+                                    className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-700 border border-gray-200 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors whitespace-nowrap"
+                                    tabIndex={0}
+                                  >
+                                    <span>Customize</span>
+                                    <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px]" />
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              {/* Clear and Delete buttons */}
+                              <div className="flex items-center gap-1">
+                                <button 
+                                  className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1" 
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setDocuSignRecipients(prev => prev.map((r, i) => i === idx ? { ...r, name: '', email: '' } : r));
+                                  }}
+                                >
+                                  <LuEraser className="w-4 h-4" />
+                                </button>
+                                <button 
+                                  className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1" 
+                                  onClick={() => handleDeleteDocuSignRecipient(idx)} 
+                                  disabled={docuSignRecipients.length === 1}
+                                >
+                                  <HiOutlineTrash className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                            
+                            {/* Form fields */}
+                            <div className="space-y-4">
+                              <div>
+                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                  Name <span className="text-blue-500">*</span>
+                                </label>
+                                <div className="relative">
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                                  </span>
+                                  <input
+                                    type="text"
+                                    className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white dark:bg-gray-900 dark:text-white"
+                                    placeholder="Enter recipient's name..."
+                                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                                    value={recipient.name}
+                                    onChange={e => setDocuSignRecipients(prev => prev.map((r, i) => i === idx ? { ...r, name: e.target.value } : r))}
+                                  />
+                                </div>
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                  Email <span className="text-blue-500">*</span>
+                                </label>
+                                <input
+                                  type="email"
+                                  className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white dark:bg-gray-900 dark:text-white"
+                                  placeholder="Enter recipient's email address..."
+                                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                                  value={recipient.email}
+                                  onChange={e => setDocuSignRecipients(prev => prev.map((r, i) => i === idx ? { ...r, email: e.target.value } : r))}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        ))}
+                        <button
+                          type="button"
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-blue-500 text-gray-700 dark:text-white font-semibold text-xs hover:bg-gray-200 dark:hover:bg-blue-600 transition-colors cursor-pointer mt-2"
+                          style={{ fontFamily: 'Avenir, sans-serif' }}
+                          onClick={handleAddDocuSignRecipient}
+                        >
+                          <TiUserAddOutline className="text-base sm:text-lg text-blue-500 dark:text-white" />
+                          <span className="mt-[1px]">Add Recipient</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Due Date Field */}
+                    <div>
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Due Date</div>
+                      <div className="relative flex items-center" style={{ width: '140px', minWidth: '140px' }}>
+                        <input
+                          type="date"
+                          className="w-full px-4 py-2 pr-10 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-xs text-black dark:text-white bg-white dark:bg-gray-900 [&::-webkit-calendar-picker-indicator]:hidden"
+                          style={{ fontFamily: 'Avenir, sans-serif' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => (document.querySelector('input[type="date"]') as HTMLInputElement)?.showPicker()}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 flex items-center justify-center"
+                        >
+                          <LuCalendarFold className="w-4 h-4 text-gray-400" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Message Field */}
+                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>Add Message</h3>
+                      
+                      {/* Subject Field */}
+                      <div className="mb-4">
+                        <input
+                          type="text"
+                          className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-xs font-medium bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                          placeholder="Enter subject..."
+                          style={{ fontFamily: 'Avenir, sans-serif' }}
+                        />
+                      </div>
+                      
+                      {/* Message Textarea */}
+                      <textarea
+                        className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-xs font-medium bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                        rows={4}
+                        placeholder="Enter your message..."
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                      />
+                    </div>
+
+                    <div className="flex justify-end gap-1">
+                      <button
+                        type="button"
+                        onClick={() => { setShowDocuSignModal(false); setDocuSignUploadedFiles([]); setDocuSignSelectedDocuments([]); }}
+                        className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-semibold"
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                      >
+                        Send to DocuSign
                       </button>
                     </div>
                   </div>
