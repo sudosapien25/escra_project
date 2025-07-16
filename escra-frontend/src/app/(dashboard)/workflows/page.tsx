@@ -9,15 +9,18 @@ import { HiOutlineDocumentText, HiOutlineViewBoards, HiOutlineUpload, HiOutlineE
 import { HiMiniChevronDown } from 'react-icons/hi2';
 import { CgPlayPauseR, CgPlayStopR } from 'react-icons/cg';
 import { BsPerson } from 'react-icons/bs';
-import { LuCalendarClock, LuSendHorizontal } from 'react-icons/lu';
+import { LuCalendarClock, LuSendHorizontal, LuCalendarFold } from 'react-icons/lu';
 import { FaPlus, FaSearch, FaRetweet, FaCheckCircle, FaCheck } from 'react-icons/fa';
 import { PiListMagnifyingGlassBold, PiListPlusBold, PiDotsThreeOutline } from 'react-icons/pi';
 import { FaRegSquareCheck } from 'react-icons/fa6';
-import { BiDotsHorizontal } from 'react-icons/bi';
+import { BiDotsHorizontal, BiCommentAdd } from 'react-icons/bi';
 import { MdCancelPresentation, MdOutlineLibraryAddCheck } from 'react-icons/md';
 import { MdOutlineLightMode, MdOutlineDarkMode } from 'react-icons/md';
 import { RiUserSearchLine } from 'react-icons/ri';
 import { HiOutlineDocumentSearch } from 'react-icons/hi';
+import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive } from 'react-icons/tb';
+import { SiBox } from 'react-icons/si';
+import { SlSocialDropbox } from 'react-icons/sl';
 
 // TipTap
 import { useEditor, EditorContent, BubbleMenu } from '@tiptap/react';
@@ -97,6 +100,8 @@ export default function WorkflowsPage() {
   const [showAssigneeDropdown, setShowAssigneeDropdown] = React.useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = React.useState(false);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
+  const [showModalStatusDropdown, setShowModalStatusDropdown] = React.useState(false);
+  const modalStatusDropdownRef = useRef<HTMLDivElement>(null);
   const [editingCommentId, setEditingCommentId] = React.useState<string | null>(null);
   const [showNewTaskModal, setShowNewTaskModal] = React.useState(false);
   const [showUploadModal, setShowUploadModal] = React.useState(false);
@@ -121,6 +126,18 @@ export default function WorkflowsPage() {
   const mobileAssigneeDropdownRef = useRef<HTMLDivElement>(null);
   const mobileContractDropdownRef = useRef<HTMLDivElement>(null);
   const mobileStatusDropdownRef = useRef<HTMLDivElement>(null);
+  // Ref for Kanban board container
+  const kanbanBoardRef = React.useRef<HTMLDivElement>(null);
+  // Add state and ref near other upload modal state
+  const [selectedUploadSource, setSelectedUploadSource] = useState<string | null>(null);
+  const [showUploadDropdown, setShowUploadDropdown] = useState(false);
+  const uploadDropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Add state for upload modal assignee dropdown
+  const [uploadModalAssignee, setUploadModalAssignee] = useState<string>('');
+  const [showUploadModalAssigneeDropdown, setShowUploadModalAssigneeDropdown] = useState(false);
+  const uploadModalAssigneeDropdownRef = useRef<HTMLDivElement>(null);
+  const uploadModalAssigneeInputRef = useRef<HTMLInputElement>(null);
 
   // Use the task store
   const {
@@ -459,6 +476,26 @@ export default function WorkflowsPage() {
     };
   }, [showAssigneeDropdown]);
 
+  // Add click-off behavior for upload modal assignee dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      const dropdown = uploadModalAssigneeDropdownRef.current;
+      const input = uploadModalAssigneeInputRef.current;
+
+      if (showUploadModalAssigneeDropdown && 
+          !dropdown?.contains(target) && 
+          !input?.contains(target)) {
+        setShowUploadModalAssigneeDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showUploadModalAssigneeDropdown]);
+
   // Add this useEffect for the mobile assignee filter dropdown click-outside handler
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -542,6 +579,33 @@ export default function WorkflowsPage() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showStatusDropdown]);
+
+  // Add click-outside handler for modal status dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+      const dropdown = modalStatusDropdownRef.current;
+      
+      if (showModalStatusDropdown && dropdown && !dropdown.contains(target)) {
+        setShowModalStatusDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showModalStatusDropdown]);
+
+  // Horizontal scroll on wheel
+  const handleKanbanWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (kanbanBoardRef.current) {
+      if (e.deltaY !== 0) {
+        e.preventDefault();
+        kanbanBoardRef.current.scrollLeft += e.deltaY;
+      }
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -642,117 +706,24 @@ export default function WorkflowsPage() {
           {/* Mobile: Stacked layout */}
           <div className="lg:hidden">
             {/* Search Bar */}
-            <div className="flex items-center bg-white border border-gray-200 rounded-lg px-4 py-2 w-full">
+            <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 w-full">
               <FaSearch className="text-gray-400 mr-2" size={18} />
               <input
                 type="text"
                 placeholder="Search tasks, assignees, contracts or IDs"
                 value={taskSearchTerm}
                 onChange={(e) => setTaskSearchTerm(e.target.value)}
-                className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 placeholder-gray-400 font-medium"
+                className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 dark:text-white placeholder-gray-400 font-medium"
                 style={{ fontFamily: "Avenir, sans-serif" }}
               />
             </div>
             {/* Filter Buttons - Stacked, full width */}
             <div className="flex flex-col gap-2 mt-2">
-              {/* Assignee Filter */}
-              <div className="relative">
-                <button
-                  ref={mobileAssigneeButtonRef}
-                  className="flex items-center justify-between w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 font-medium text-xs shadow-sm whitespace-nowrap"
-                  style={{ fontFamily: 'Avenir, sans-serif' }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setOpenAssigneeDropdown(v => !v);
-                    if (!openAssigneeDropdown) {
-                      setOpenContractDropdown(false);
-                      setShowStatusDropdown(false);
-                    }
-                  }}
-                >
-                  <span className="flex items-center"><RiUserSearchLine className="text-gray-400 text-base mr-2" />Assignee</span>
-                  <HiMiniChevronDown className="text-gray-400" size={16} />
-                </button>
-                {openAssigneeDropdown && (
-                  <div ref={mobileAssigneeDropdownRef} className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 assignee-dropdown" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
-                    <button
-                      className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
-                      onClick={(e: React.MouseEvent) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setSelectedAssignees([]);
-                        // Do NOT close the dropdown here
-                      }}
-                    >
-                      <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                        {selectedAssignees.length === 0 && (
-                          <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
-                            <FaCheck className="text-white" size={8} />
-                          </div>
-                        )}
-                      </div>
-                      All
-                    </button>
-                    <button
-                      className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setSelectedAssignees(prev => {
-                          if (prev.includes('__ME__')) {
-                            return prev.filter(a => a !== '__ME__');
-                          } else {
-                            return [...prev, '__ME__'];
-                          }
-                        });
-                        // Do NOT close the dropdown here
-                      }}
-                    >
-                      <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                        {selectedAssignees.includes('__ME__') && (
-                          <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
-                            <FaCheck className="text-white" size={8} />
-                          </div>
-                        )}
-                      </div>
-                      Me
-                    </button>
-                    {uniqueAssignees.map(assignee => (
-                      <button
-                        key={assignee}
-                        className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setSelectedAssignees(prev => {
-                            if (prev.includes(assignee)) {
-                              return prev.filter(a => a !== assignee);
-                            } else {
-                              return [...prev, assignee];
-                            }
-                          });
-                          // Do NOT close the dropdown here
-                        }}
-                      >
-                        <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                          {selectedAssignees.includes(assignee) && (
-                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
-                              <FaCheck className="text-white" size={8} />
-                            </div>
-                          )}
-                        </div>
-                        {assignee}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
               {/* Contract Filter */}
               <div className="relative">
                 <button
                   ref={mobileContractButtonRef}
-                  className="flex items-center justify-between w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 font-medium text-xs shadow-sm whitespace-nowrap"
+                  className="flex items-center justify-between w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-700 dark:text-gray-300 font-medium text-xs shadow-sm whitespace-nowrap"
                   style={{ fontFamily: 'Avenir, sans-serif' }}
                   onClick={(e) => {
                     e.preventDefault();
@@ -768,16 +739,16 @@ export default function WorkflowsPage() {
                   <HiMiniChevronDown className="text-gray-400" size={16} />
                 </button>
                 {openContractDropdown && (
-                  <div ref={mobileContractDropdownRef} className="absolute top-full left-0 mt-2 min-w-[180px] w-full bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 contract-dropdown" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                  <div ref={mobileContractDropdownRef} className="absolute top-full left-0 mt-2 min-w-[180px] w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 contract-dropdown" style={{ fontFamily: 'Avenir, sans-serif' }}>
                     {/* Search Bar */}
-                    <div className="px-4 py-2 border-b border-gray-100">
+                    <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
                       <div className="relative">
                         <input
                           type="text"
                           placeholder="Search contracts..."
                           value={contractSearch}
                           onChange={(e) => setContractSearch(e.target.value)}
-                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                          className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-700 dark:text-white bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                           style={{ fontFamily: 'Avenir, sans-serif' }}
                         />
                         <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -785,7 +756,7 @@ export default function WorkflowsPage() {
                     </div>
 
                     <button
-                      className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center"
+                      className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedContracts.length === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -810,7 +781,7 @@ export default function WorkflowsPage() {
                       .map(contract => (
                         <button
                           key={contract.id}
-                          className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center whitespace-nowrap truncate"
+                          className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center whitespace-nowrap truncate ${selectedContracts.includes(String(contract.id)) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -837,11 +808,104 @@ export default function WorkflowsPage() {
                   </div>
                 )}
               </div>
+              {/* Assignee Filter */}
+              <div className="relative">
+                <button
+                  ref={mobileAssigneeButtonRef}
+                  className="flex items-center justify-between w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-700 dark:text-gray-300 font-medium text-xs shadow-sm whitespace-nowrap"
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setOpenAssigneeDropdown(v => !v);
+                    if (!openAssigneeDropdown) {
+                      setOpenContractDropdown(false);
+                      setShowStatusDropdown(false);
+                    }
+                  }}
+                >
+                  <span className="flex items-center"><RiUserSearchLine className="text-gray-400 text-base mr-2" />Assignee</span>
+                  <HiMiniChevronDown className="text-gray-400" size={16} />
+                </button>
+                {openAssigneeDropdown && (
+                  <div ref={mobileAssigneeDropdownRef} className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 assignee-dropdown" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
+                    <button
+                      className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedAssignees.length === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                      onClick={(e: React.MouseEvent) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedAssignees([]);
+                        // Do NOT close the dropdown here
+                      }}
+                    >
+                      <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                        {selectedAssignees.length === 0 && (
+                          <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                            <FaCheck className="text-white" size={8} />
+                          </div>
+                        )}
+                      </div>
+                      All
+                    </button>
+                    <button
+                      className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedAssignees.includes('__ME__') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedAssignees(prev => {
+                          if (prev.includes('__ME__')) {
+                            return prev.filter(a => a !== '__ME__');
+                          } else {
+                            return [...prev, '__ME__'];
+                          }
+                        });
+                        // Do NOT close the dropdown here
+                      }}
+                    >
+                      <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                        {selectedAssignees.includes('__ME__') && (
+                          <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                            <FaCheck className="text-white" size={8} />
+                          </div>
+                        )}
+                      </div>
+                      Me
+                    </button>
+                    {uniqueAssignees.map(assignee => (
+                      <button
+                        key={assignee}
+                        className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedAssignees.includes(assignee) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setSelectedAssignees(prev => {
+                            if (prev.includes(assignee)) {
+                              return prev.filter(a => a !== assignee);
+                            } else {
+                              return [...prev, assignee];
+                            }
+                          });
+                          // Do NOT close the dropdown here
+                        }}
+                      >
+                        <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                          {selectedAssignees.includes(assignee) && (
+                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                              <FaCheck className="text-white" size={8} />
+                            </div>
+                          )}
+                        </div>
+                        {assignee}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               {/* Status Filter */}
               <div className="relative">
                 <button
                   ref={mobileStatusButtonRef}
-                  className="flex items-center justify-between w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 font-medium text-xs shadow-sm whitespace-nowrap"
+                  className="flex items-center justify-between w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-700 dark:text-gray-300 font-medium text-xs shadow-sm whitespace-nowrap"
                   style={{ fontFamily: 'Avenir, sans-serif' }}
                   onClick={(e) => {
                     e.preventDefault();
@@ -857,9 +921,9 @@ export default function WorkflowsPage() {
                   <HiMiniChevronDown className="text-gray-400" size={16} />
                 </button>
                 {showStatusDropdown && (
-                  <div ref={mobileStatusDropdownRef} className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 status-filter-dropdown" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
+                  <div ref={mobileStatusDropdownRef} className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 status-filter-dropdown" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
                     <button
-                      className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                      className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedStatuses.includes('All') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -878,7 +942,7 @@ export default function WorkflowsPage() {
                     {statusOptions.map(status => (
                       <button
                         key={status.key}
-                        className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                        className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedStatuses.includes(status.key as StatusOption) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
@@ -912,111 +976,24 @@ export default function WorkflowsPage() {
           {/* Desktop: Horizontal layout */}
           <div className="hidden lg:flex items-center gap-1">
             {/* Search Bar */}
-            <div className="flex items-center bg-white border border-gray-200 rounded-lg px-4 py-2 flex-1 min-w-0">
+            <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex-1 min-w-0">
               <FaSearch className="text-gray-400 mr-2" size={18} />
               <input
                 type="text"
                 placeholder="Search tasks, assignees, contracts or IDs"
                 value={taskSearchTerm}
                 onChange={(e) => setTaskSearchTerm(e.target.value)}
-                className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 placeholder-gray-400 font-medium min-w-0"
+                className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 dark:text-white placeholder-gray-400 font-medium min-w-0"
                 style={{ fontFamily: "Avenir, sans-serif" }}
               />
             </div>
             {/* Filter Buttons */}
             <div className="flex items-center">
-              {/* Assignee Filter */}
+              {/* Contract Filter */}
               <div className="relative flex-shrink-0">
                 <button
-                  ref={assigneeButtonRef}
-                  className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
-                  style={{ fontFamily: 'Avenir, sans-serif' }}
-                  onClick={() => { setOpenAssigneeDropdown(v => !v); setOpenContractDropdown(false); setShowStatusDropdown(false); }}
-                >
-                  <RiUserSearchLine className="text-gray-400 w-4 h-4" />
-                  <span>Assignee</span>
-                  <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
-                </button>
-                {openAssigneeDropdown && (
-                  <div 
-                    ref={assigneeDropdownRef}
-                    className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-2 assignee-dropdown" 
-                    style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
-                  >
-                    <button
-                      className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
-                      onClick={(e: React.MouseEvent) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setSelectedAssignees([]);
-                      }}
-                    >
-                      <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                        {selectedAssignees.length === 0 && (
-                          <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
-                            <FaCheck className="text-white" size={8} />
-                          </div>
-                        )}
-                      </div>
-                      All
-                    </button>
-                    <button
-                      className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setSelectedAssignees(prev => {
-                          if (prev.includes('__ME__')) {
-                            return prev.filter(a => a !== '__ME__');
-                          } else {
-                            return [...prev, '__ME__'];
-                          }
-                        });
-                      }}
-                    >
-                      <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                        {selectedAssignees.includes('__ME__') && (
-                          <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
-                            <FaCheck className="text-white" size={8} />
-                          </div>
-                        )}
-                      </div>
-                      Me
-                    </button>
-                    {uniqueAssignees.map(assignee => (
-                      <button
-                        key={assignee}
-                        className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setSelectedAssignees(prev => {
-                            if (prev.includes(assignee)) {
-                              return prev.filter(a => a !== assignee);
-                            } else {
-                              return [...prev, assignee];
-                            }
-                          });
-                        }}
-                      >
-                        <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                          {selectedAssignees.includes(assignee) && (
-                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
-                              <FaCheck className="text-white" size={8} />
-                            </div>
-                          )}
-                        </div>
-                        {assignee}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-              {/* Contract Filter */}
-              <div className="relative flex-shrink-0 ml-1">
-                <button
                   ref={contractButtonRef}
-                  className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
+                  className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
                   style={{ fontFamily: 'Avenir, sans-serif' }}
                   onClick={() => { setOpenContractDropdown(v => !v); setOpenAssigneeDropdown(false); setShowStatusDropdown(false); }}
                 >
@@ -1027,19 +1004,19 @@ export default function WorkflowsPage() {
                 {openContractDropdown && (
                   <div 
                     ref={contractDropdownRef}
-                    className="absolute left-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-100 z-50 py-2 min-w-[400px] w-96 contract-dropdown" 
+                    className="absolute left-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[400px] w-96 contract-dropdown" 
                     style={{ fontFamily: 'Avenir, sans-serif' }}
                     onClick={(e) => e.stopPropagation()}
                   >
                     {/* Search Bar */}
-                    <div className="px-4 py-2 border-b border-gray-100">
+                    <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
                       <div className="relative">
                         <input
                           type="text"
                           placeholder="Search contracts..."
                           value={contractSearch}
                           onChange={(e) => setContractSearch(e.target.value)}
-                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                          className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-700 dark:text-white bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                           style={{ fontFamily: 'Avenir, sans-serif' }}
                         />
                         <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -1047,7 +1024,7 @@ export default function WorkflowsPage() {
                     </div>
 
                     <button
-                      className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center"
+                      className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedContracts.length === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -1072,7 +1049,7 @@ export default function WorkflowsPage() {
                       .map(contract => (
                         <button
                           key={contract.id}
-                          className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center whitespace-nowrap truncate"
+                          className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center whitespace-nowrap truncate ${selectedContracts.includes(String(contract.id)) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -1099,11 +1076,98 @@ export default function WorkflowsPage() {
                   </div>
                 )}
               </div>
+              {/* Assignee Filter */}
+              <div className="relative flex-shrink-0 ml-1">
+                <button
+                  ref={assigneeButtonRef}
+                  className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                  onClick={() => { setOpenAssigneeDropdown(v => !v); setOpenContractDropdown(false); setShowStatusDropdown(false); }}
+                >
+                  <RiUserSearchLine className="text-gray-400 w-4 h-4" />
+                  <span>Assignee</span>
+                  <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+                </button>
+                {openAssigneeDropdown && (
+                  <div 
+                    ref={assigneeDropdownRef}
+                    className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 assignee-dropdown" 
+                    style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                  >
+                    <button
+                      className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedAssignees.length === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                      onClick={(e: React.MouseEvent) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedAssignees([]);
+                      }}
+                    >
+                      <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                        {selectedAssignees.length === 0 && (
+                          <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                            <FaCheck className="text-white" size={8} />
+                          </div>
+                        )}
+                      </div>
+                      All
+                    </button>
+                    <button
+                      className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedAssignees.includes('__ME__') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedAssignees(prev => {
+                          if (prev.includes('__ME__')) {
+                            return prev.filter(a => a !== '__ME__');
+                          } else {
+                            return [...prev, '__ME__'];
+                          }
+                        });
+                      }}
+                    >
+                      <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                        {selectedAssignees.includes('__ME__') && (
+                          <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                            <FaCheck className="text-white" size={8} />
+                          </div>
+                        )}
+                      </div>
+                      Me
+                    </button>
+                    {uniqueAssignees.map(assignee => (
+                      <button
+                        key={assignee}
+                        className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedAssignees.includes(assignee) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setSelectedAssignees(prev => {
+                            if (prev.includes(assignee)) {
+                              return prev.filter(a => a !== assignee);
+                            } else {
+                              return [...prev, assignee];
+                            }
+                          });
+                        }}
+                      >
+                        <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                          {selectedAssignees.includes(assignee) && (
+                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                              <FaCheck className="text-white" size={8} />
+                            </div>
+                          )}
+                        </div>
+                        {assignee}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               {/* Status Filter */}
               <div className="relative flex-shrink-0 ml-1">
                 <button
                   ref={statusButtonRef}
-                  className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap" 
+                  className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs min-w-[120px] relative whitespace-nowrap" 
                   style={{ fontFamily: 'Avenir, sans-serif' }}
                   onClick={() => { setShowStatusDropdown(v => !v); setOpenAssigneeDropdown(false); setOpenContractDropdown(false); }}
                 >
@@ -1114,11 +1178,11 @@ export default function WorkflowsPage() {
                 {showStatusDropdown && (
                   <div 
                     ref={statusDropdownRef}
-                    className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 status-filter-dropdown" 
+                    className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 status-filter-dropdown" 
                     style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
                   >
                     <button
-                      className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                      className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedStatuses.includes('All') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -1137,7 +1201,7 @@ export default function WorkflowsPage() {
                     {statusOptions.map(status => (
                       <button
                         key={status.key}
-                        className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                        className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedStatuses.includes(status.key as StatusOption) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
@@ -1174,7 +1238,11 @@ export default function WorkflowsPage() {
       {/* Kanban Board Section (filtered by tab) */}
       {kanbanTab === 'All' && (
         <DragDropContext onDragEnd={onDragEnd}>
-          <div className="flex flex-grow overflow-x-auto space-x-6 p-4 rounded-lg">
+          <div
+            ref={kanbanBoardRef}
+            onWheel={handleKanbanWheel}
+            className="flex flex-grow overflow-x-auto space-x-6 p-4 rounded-lg [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500"
+          >
             {kanbanColumns
               .filter(col => selectedStatuses.includes('All') || selectedStatuses.includes(col.key as TaskStatus))
               .map((col) => (
@@ -1183,18 +1251,18 @@ export default function WorkflowsPage() {
                     <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
-                      className="flex-shrink-0 w-80 bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden"
+                      className="flex-shrink-0 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden"
                     >
                       {/* Sticky Header */}
-                      <div className="sticky top-0 z-10 bg-white border-b border-gray-200">
+                      <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                         <div className={`flex items-center justify-between rounded-t-md py-2 px-4 text-lg font-semibold`}>
                           <div className="flex items-center">
                             {React.cloneElement(col.icon, { className: col.icon.props.className, style: { ...col.icon.props.style, color: col.icon.props.color }, color: col.icon.props.color })}
-                            <h3 className="text-lg font-semibold ml-2" style={{ color: col.icon.props.color }}>{col.title}</h3>
+                            <h3 className="text-lg font-semibold ml-2 text-black dark:text-white">{col.title}</h3>
                           </div>
                         </div>
                       </div>
-                      <div className="p-4 overflow-y-auto h-[600px]">
+                      <div className="p-4 overflow-y-auto h-[600px] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
                         <div className="space-y-3">
                           {filterTasks(col.tasks).map((task, index) => (
                             <Draggable key={task.code} draggableId={task.code} index={index}>
@@ -1203,7 +1271,7 @@ export default function WorkflowsPage() {
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
-                                  className={`bg-white rounded-lg border border-gray-200 p-4 shadow-sm transition-shadow relative ${
+                                  className={`bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 p-4 shadow-sm transition-shadow relative ${
                                     snapshot.isDragging ? 'shadow-lg' : ''
                                   }`}
                                   onClick={() => {
@@ -1214,7 +1282,7 @@ export default function WorkflowsPage() {
                                   {/* Task Menu - Positioned at top right */}
                                   <div className="absolute top-3 right-3">
                                     <button
-                                      className="border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors"
+                                      className="border border-gray-300 dark:border-gray-600 rounded-md px-1 py-0.5 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors"
                                       onClick={e => {
                                         e.stopPropagation();
                                         setOpenMenuTask(openMenuTask === task.code ? null : task.code);
@@ -1238,7 +1306,7 @@ export default function WorkflowsPage() {
 
                                   {/* Task Number - Top Left */}
                                   <div className="mb-3">
-                                    <span className="text-[10px] font-bold bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-700">
+                                    <span className="text-[10px] font-bold bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded border border-gray-700 dark:border-gray-500">
                                       # {task.taskNumber}
                                     </span>
                                     <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary ml-1">
@@ -1247,7 +1315,7 @@ export default function WorkflowsPage() {
                                   </div>
 
                                   {/* Task Title */}
-                                  <h3 className="text-xs font-bold text-gray-900 mb-2">{task.title}</h3>
+                                  <h3 className="text-xs font-bold text-gray-900 dark:text-white mb-2">{task.title}</h3>
 
                                   {/* Contract Info */}
                                   <div className="flex items-center justify-between mb-1">
@@ -1262,7 +1330,7 @@ export default function WorkflowsPage() {
 
                                   {/* Progress Section */}
                                   <div className="space-y-2 mb-3">
-                                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                    <div className="h-2 bg-gray-100 dark:bg-gray-600 rounded-full overflow-hidden">
                                       <div
                                         className="h-full bg-primary rounded-full"
                                         style={{
@@ -1278,8 +1346,8 @@ export default function WorkflowsPage() {
 
                                   {/* Assignee and Progress */}
                                   <div className="flex items-center justify-between">
-                                    <span className="text-xs text-gray-900">{task.assignee}</span>
-                                    <span className="text-xs text-gray-900">{(() => {
+                                    <span className="text-xs text-gray-900 dark:text-white">{task.assignee}</span>
+                                    <span className="text-xs text-gray-900 dark:text-white">{(() => {
                                       const taskSubtasks = task.subtasks || [];
                                       const completed = taskSubtasks.filter(st => st.completed).length;
                                       return `${completed} of ${taskSubtasks.length}`;
@@ -1301,7 +1369,11 @@ export default function WorkflowsPage() {
       )}
       {kanbanTab === 'Active' && (
         <DragDropContext onDragEnd={onDragEnd}>
-          <div className="flex flex-grow overflow-x-auto space-x-6 p-4 rounded-lg">
+          <div
+            ref={kanbanBoardRef}
+            onWheel={handleKanbanWheel}
+            className="flex flex-grow overflow-x-auto space-x-6 p-4 rounded-lg [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500"
+          >
             {kanbanColumns
               .filter(col => col.key !== 'Done' && col.key !== 'Canceled')
               .map((col) => (
@@ -1310,18 +1382,18 @@ export default function WorkflowsPage() {
                     <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
-                      className="flex-shrink-0 w-80 bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden"
+                      className="flex-shrink-0 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden"
                     >
                       {/* Sticky Header */}
-                      <div className="sticky top-0 z-10 bg-white border-b border-gray-200">
+                      <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                         <div className={`flex items-center justify-between rounded-t-md py-2 px-4 text-lg font-semibold`}>
                           <div className="flex items-center">
                             {React.cloneElement(col.icon, { className: col.icon.props.className, style: { ...col.icon.props.style, color: col.icon.props.color }, color: col.icon.props.color })}
-                            <h3 className="text-lg font-semibold ml-2" style={{ color: col.icon.props.color }}>{col.title}</h3>
+                            <h3 className="text-lg font-semibold ml-2 text-black dark:text-white">{col.title}</h3>
                           </div>
                         </div>
                       </div>
-                      <div className="p-4 overflow-y-auto h-[600px]">
+                      <div className="p-4 overflow-y-auto h-[600px] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
                         <div className="space-y-3">
                           {filterTasks(col.tasks).map((task, index) => (
                             <Draggable key={task.code} draggableId={task.code} index={index}>
@@ -1339,7 +1411,7 @@ export default function WorkflowsPage() {
                                   {/* Task Menu - Positioned at top right */}
                                   <div className="absolute top-3 right-3">
                                     <button
-                                      className="border border-gray-300 rounded-md px-1 py-0.5 text-gray-700 hover:border-primary hover:text-primary transition-colors"
+                                      className="border border-gray-300 dark:border-gray-600 rounded-md px-1 py-0.5 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors"
                                       onClick={e => {
                                         e.stopPropagation();
                                         setOpenMenuTask(openMenuTask === task.code ? null : task.code);
@@ -1422,18 +1494,18 @@ export default function WorkflowsPage() {
 
       {/* Task Details Modal */}
       {selectedTask && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="relative bg-white rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 cursor-default select-none">
+          <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden cursor-default select-none">
             {/* Sticky Header with Task ID and Close buttons */}
-            <div className="sticky top-0 z-40 bg-white px-6 py-4">
-              <div className="flex items-start justify-between">
+            <div className="sticky top-0 z-40 bg-gray-50 dark:bg-gray-900 px-6 py-4 cursor-default select-none">
+              <div className="flex items-start justify-between cursor-default select-none">
                 {/* Left: Task ID and Contract ID */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center mb-4">
-                    <span className="text-[10px] font-bold bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-700">
+                <div className="flex-1 min-w-0 cursor-default select-none">
+                  <div className="flex items-center mb-4 cursor-default select-none">
+                    <span className="text-[10px] font-bold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded border border-gray-700 dark:border-gray-600 cursor-default select-none">
                       # {selectedTask.taskNumber}
                     </span>
-                    <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary ml-1">
+                    <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary ml-1 cursor-default select-none">
                       # {selectedTask.contractId}
                     </span>
                   </div>
@@ -1452,35 +1524,35 @@ export default function WorkflowsPage() {
             </div>
 
             {/* Modal Content */}
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="grid grid-cols-2 gap-6">
+            <div className="flex-1 overflow-y-auto p-6 bg-gray-50 dark:bg-gray-900 cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Left Column */}
                 <div className="space-y-6">
                   {/* Task Details Box */}
-                  <div className="bg-white border border-gray-200 rounded-lg p-6 min-h-[420px]">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4">Task Details</h3>
+                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 min-h-[420px] cursor-default select-none">
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Task Details</h3>
                     {/* Task ID and Contract ID Row */}
-                    <div className="grid grid-cols-2 gap-6 mb-4">
+                    <div className="grid grid-cols-2 gap-6 mb-4 cursor-default select-none">
                       <div>
-                        <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Task ID</div>
-                        <div className="text-xs font-medium text-gray-900" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Task ID</div>
+                        <div className="text-xs font-medium text-gray-900 dark:text-white select-none cursor-default" style={{ fontFamily: 'Avenir, sans-serif' }}>
                           {selectedTask.taskNumber}
                         </div>
                       </div>
                       <div>
-                        <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Contract ID</div>
-                        <div className="text-xs font-medium text-gray-900" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Contract ID</div>
+                        <div className="text-xs font-medium text-gray-900 dark:text-white select-none cursor-default" style={{ fontFamily: 'Avenir, sans-serif' }}>
                           {selectedTask.contractId}
                         </div>
                       </div>
                     </div>
                     {/* Row 1: Task Title | Contract Title */}
-                    <div className="grid grid-cols-2 gap-6 mb-4">
+                    <div className="grid grid-cols-2 gap-6 mb-4 cursor-default select-none">
                       <div>
-                        <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Task Title</div>
+                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Task Title</div>
                         <input
                           type="text"
-                          className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                          className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900"
                           placeholder={selectedTask?.title || ''}
                           value={editedTaskTitle}
                           onChange={e => setEditedTaskTitle(e.target.value)}
@@ -1488,21 +1560,21 @@ export default function WorkflowsPage() {
                         />
                       </div>
                       <div style={{ position: 'relative' }} ref={contractDropdownRef}>
-                        <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Contract</div>
-                        <div className="w-full pl-0 pr-4 py-2 text-xs font-medium text-black" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Contract</div>
+                        <div className="w-full pl-0 pr-4 py-2 text-xs font-medium text-gray-900 dark:text-white select-none cursor-default" style={{ fontFamily: 'Avenir, sans-serif' }}>
                           {mockContracts.find(c => c.id === selectedTask?.contractId)?.title || ''}
                         </div>
                       </div>
                     </div>
                     {/* Row 2: Assignee | Status */}
-                    <div className="grid grid-cols-2 gap-6 mb-4">
+                    <div className="grid grid-cols-2 gap-6 mb-4 cursor-default select-none">
                       <div>
-                        <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Assignee</div>
+                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Assignee</div>
                         <div className="relative w-full" ref={taskDetailsAssigneeDropdownRef}>
                           <input
                             ref={taskDetailsAssigneeInputRef}
                             type="text"
-                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900"
                             placeholder={selectedTask?.assignee || ''}
                             value={editedAssignee}
                             onChange={e => setEditedAssignee(e.target.value)}
@@ -1511,9 +1583,9 @@ export default function WorkflowsPage() {
                             autoComplete="off"
                           />
                           {showAssigneeDropdown && (
-                            <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                            <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ fontFamily: 'Avenir, sans-serif' }}>
                               <div
-                                className="px-4 py-2 text-xs cursor-pointer hover:bg-primary/10 hover:text-primary"
+                                className="px-4 py-2 text-xs cursor-pointer hover:bg-primary/10 hover:text-primary text-gray-900 dark:text-white"
                                 onClick={() => {
                                   handleAssigneeChange(currentUserName);
                                 }}
@@ -1524,7 +1596,7 @@ export default function WorkflowsPage() {
                                 uniqueAssignees.map(assignee => (
                                   <div
                                     key={assignee}
-                                    className="px-4 py-2 text-xs cursor-pointer hover:bg-primary/10 hover:text-primary"
+                                    className="px-4 py-2 text-xs cursor-pointer hover:bg-primary/10 hover:text-primary text-gray-900 dark:text-white"
                                     onClick={() => {
                                       handleAssigneeChange(assignee);
                                     }}
@@ -1533,32 +1605,32 @@ export default function WorkflowsPage() {
                                   </div>
                                 ))
                               ) : (
-                                <div className="px-4 py-2 text-xs text-gray-400">No assignees found</div>
+                                <div className="px-4 py-2 text-xs text-gray-400 dark:text-gray-500">No assignees found</div>
                               )}
                             </div>
                           )}
                         </div>
                       </div>
                       <div>
-                        <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Status</div>
+                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Status</div>
                         <div className="relative w-full">
                           <input
                             type="text"
-                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10"
+                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 bg-white dark:bg-gray-900"
                             placeholder={kanbanColumns.find(col => col.tasks.some(t => t.code === selectedTask.code))?.title || 'To Do'}
                             value={kanbanColumns.find(col => col.tasks.some(t => t.code === selectedTask.code))?.title || 'To Do'}
-                            onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+                            onClick={() => setShowModalStatusDropdown(!showModalStatusDropdown)}
                             readOnly
                             style={{ fontFamily: 'Avenir, sans-serif' }}
                           />
                           <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                          {showStatusDropdown && (
-                            <div className="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 status-dropdown" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
+                          {showModalStatusDropdown && (
+                            <div ref={modalStatusDropdownRef} className="absolute left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 status-dropdown" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
                               {statusOptions.map(status => (
                                 <button
                                   key={status.key}
                                   className={`w-full text-left px-4 py-2 text-xs font-medium ${
-                                    selectedTask?.status === status.key ? 'bg-primary/10 text-primary' : 'text-gray-900 hover:bg-primary/10 hover:text-primary'
+                                    selectedTask?.status === status.key ? 'bg-primary/10 text-primary' : 'text-gray-900 dark:text-gray-300 hover:bg-primary/10 hover:text-primary'
                                   }`}
                                   onClick={(e) => {
                                     e.preventDefault();
@@ -1575,39 +1647,54 @@ export default function WorkflowsPage() {
                       </div>
                     </div>
                     {/* Row 2.5: Due Date (left) | Created Date & Last Updated (right) */}
-                    <div className="grid grid-cols-2 gap-6 mb-4">
+                    <div className="grid grid-cols-2 gap-6 mb-4 cursor-default select-none">
                       {/* Due Date (left) */}
                       <div>
-                        <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Due Date</div>
-                        <div className="relative flex items-center" style={{ width: '115px', minWidth: '115px' }}>
+                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Due Date</div>
+                        <div className="relative">
                           <input
                             type="date"
-                            className="pl-3 pr-2 py-2 border-2 border-gray-200 rounded-lg text-xs text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors w-full"
                             value={editedDueDate}
-                            placeholder={selectedTask?.due ? formatDateToInput(selectedTask.due) : ''}
                             onChange={e => handleDueDateChange(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Backspace') {
+                                e.preventDefault();
+                                handleDueDateChange('');
+                              }
+                            }}
+                            className="w-full px-4 py-2 pr-10 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs text-gray-900 dark:text-white bg-white dark:bg-gray-900 [&::-webkit-calendar-picker-indicator]:hidden"
                             style={{ fontFamily: 'Avenir, sans-serif' }}
                           />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const dateInput = document.querySelector('input[type="date"]') as HTMLInputElement;
+                              if (dateInput) dateInput.showPicker();
+                            }}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 flex items-center justify-center"
+                          >
+                            <LuCalendarFold className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                          </button>
                         </div>
                       </div>
                       {/* Created/Updated Dates (right) */}
                       <div>
                         <div className="flex gap-6">
-                          <div>
-                            <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Created Date</div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Created Date</div>
                           </div>
-                          <div style={{ marginLeft: '75px' }}>
-                            <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Last Updated</div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Last Updated</div>
                           </div>
                         </div>
                         <div className="flex gap-6 mt-3">
-                          <div style={{ width: '90px' }}>
-                            <div className="text-xs text-black" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-xs text-gray-900 dark:text-white select-none cursor-default" style={{ fontFamily: 'Avenir, sans-serif' }}>
                               2024-05-01
                             </div>
                           </div>
-                          <div style={{ width: '90px', marginLeft: '58px' }}>
-                            <div className="text-xs text-black" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-xs text-gray-900 dark:text-white select-none cursor-default" style={{ fontFamily: 'Avenir, sans-serif' }}>
                               2024-05-02
                             </div>
                           </div>
@@ -1616,10 +1703,10 @@ export default function WorkflowsPage() {
                     </div>
 
                     {/* Description Field */}
-                    <div className="mb-4">
-                      <div className="text-gray-500 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Description</div>
+                    <div className="mb-4 cursor-default select-none">
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Description</div>
                       <textarea
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors resize-none"
+                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors resize-none bg-white dark:bg-gray-900"
                         rows={3}
                         placeholder="Enter task description..."
                         style={{ fontFamily: 'Avenir, sans-serif' }}
@@ -1628,60 +1715,43 @@ export default function WorkflowsPage() {
                   </div>
 
                   {/* Subtasks Box */}
-                  <div className="bg-white border border-gray-200 rounded-lg p-6 min-h-[336px]">
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-sm font-semibold text-gray-900" style={{ fontFamily: 'Avenir, sans-serif' }}>Subtasks</span>
-                      <button className="flex items-center gap-2 px-2 py-1 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                        <span className="text-base font-bold text-primary">+</span> New Subtask
+                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 min-h-[336px] cursor-default select-none">
+                    <div className="flex items-center justify-between mb-4 cursor-default select-none">
+                      <span className="text-sm font-semibold text-gray-900 dark:text-white cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Subtasks</span>
+                      <button className="flex items-center gap-2 px-2 py-1 rounded-lg border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-primary text-gray-700 dark:text-white font-semibold text-xs hover:bg-gray-200 dark:hover:bg-primary-dark transition-colors cursor-pointer" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                        <span className="text-base font-bold text-primary dark:text-white">+</span> New Subtask
                       </button>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-2 cursor-default select-none">
                       {selectedTask?.subtasks?.map((subtask) => (
-                        <div key={subtask.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                        <div key={subtask.id} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-100 dark:border-gray-600">
                           <div className="flex-1">
-                            <span className="text-xs font-medium text-gray-900">{subtask.title}</span>
+                            <span className="text-xs font-medium text-gray-900 dark:text-white">{subtask.title}</span>
                           </div>
-                          <label className="relative flex items-center cursor-pointer select-none">
-                            <input
-                              type="checkbox"
-                              checked={subtask.completed}
-                              onChange={() => {
-                                const fullTask = tasks.find(t => t.code === selectedTask.code);
-                                if (fullTask) {
-                                  const updatedSubtasks = fullTask.subtasks.map(st =>
-                                    st.id === subtask.id ? { ...st, completed: !st.completed } : st
-                                  );
-                                  updateTask(fullTask.code, { subtasks: updatedSubtasks });
-                                  // After updating, get the latest task from the store and set it as selected
-                                  setTimeout(() => {
-                                    const refreshedTask = useTaskStore.getState().tasks.find(t => t.code === fullTask.code);
-                                    setSelectedTask(refreshedTask || { ...fullTask, subtasks: updatedSubtasks });
-                                  }, 0);
-                                }
-                              }}
-                              className="peer absolute opacity-0 w-5 h-5 cursor-pointer"
-                              tabIndex={0}
-                              aria-checked={subtask.completed}
-                            />
-                            <span
-                              className={
-                                `w-5 h-5 flex items-center justify-center rounded-md border transition-colors duration-150 ` +
-                                (subtask.completed
-                                  ? 'bg-primary border-primary'
-                                  : 'bg-white border-gray-300 hover:border-primary')
-                              }
-                            >
-                              {subtask.completed && (
-                                <svg className="w-3 h-3" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                  <path d="M5 10.5L9 14.5L15 7.5" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                              )}
-                            </span>
-                          </label>
+                          <div className="w-5 h-5 border border-gray-300 rounded flex items-center justify-center cursor-pointer" onClick={() => {
+                            const fullTask = tasks.find(t => t.code === selectedTask.code);
+                            if (fullTask) {
+                              const updatedSubtasks = fullTask.subtasks.map(st =>
+                                st.id === subtask.id ? { ...st, completed: !st.completed } : st
+                              );
+                              updateTask(fullTask.code, { subtasks: updatedSubtasks });
+                              // After updating, get the latest task from the store and set it as selected
+                              setTimeout(() => {
+                                const refreshedTask = useTaskStore.getState().tasks.find(t => t.code === fullTask.code);
+                                setSelectedTask(refreshedTask || { ...fullTask, subtasks: updatedSubtasks });
+                              }, 0);
+                            }
+                          }}>
+                            {subtask.completed && (
+                              <div className="w-4 h-4 bg-primary rounded-sm flex items-center justify-center">
+                                <FaCheck className="text-white" size={10} />
+                              </div>
+                            )}
+                          </div>
                         </div>
                       ))}
                       {(!selectedTask?.subtasks || selectedTask.subtasks.length === 0) && (
-                        <div className="text-center py-8 text-gray-500 text-sm">
+                        <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-sm cursor-default select-none">
                           No subtasks yet. Click "New Subtask" to add one.
                         </div>
                       )}
@@ -1692,114 +1762,159 @@ export default function WorkflowsPage() {
                 {/* Right Column */}
                 <div className="space-y-6">
                   {/* Documents Box */}
-                  <div className="bg-white border border-gray-200 rounded-lg p-6 min-h-[420px]">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-sm font-semibold text-gray-900">Documents</h3>
+                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 min-h-[420px] cursor-default select-none">
+                    <div className="flex items-center justify-between mb-4 cursor-default select-none">
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white cursor-default select-none">Documents</h3>
                       <button 
                         onClick={() => { setShowUploadModal(true); setUploadContractId(selectedTask?.contractId || null); }}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors" style={{ fontFamily: 'Avenir, sans-serif' }}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-primary text-gray-700 dark:text-white font-semibold text-xs hover:bg-gray-200 dark:hover:bg-primary-dark transition-colors cursor-pointer" style={{ fontFamily: 'Avenir, sans-serif' }}
                       >
-                        <HiOutlineUpload className="text-base text-primary" /> Upload
+                        <HiOutlineUpload className="text-base text-primary dark:text-white" /> Upload
                       </button>
                     </div>
-                    <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
-                      <div className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
-                        <div className="flex items-center gap-3">
+                    <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
+                      <div className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600 cursor-default select-none">
+                        <div className="flex items-center gap-3 cursor-default select-none">
                           <HiOutlineDocumentText className="w-5 h-5 text-primary" />
                           <div>
-                            <div className="font-semibold text-xs text-black cursor-pointer hover:underline">Contract Agreement</div>
-                            <div className="text-xs text-gray-500">2025-05-15 &bull; PDF &bull; 2.4 MB</div>
+                            <div className="font-semibold text-xs text-gray-900 dark:text-white cursor-pointer hover:underline">Contract Agreement</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">2025-05-15 &bull; PDF &bull; 2.4 MB</div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="View">
-                            <HiOutlineEye className="h-4 w-4" />
+                        <div className="flex items-center gap-2 cursor-default select-none">
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer">
+                            <HiOutlineEye className="h-4 w-4 transition-colors" />
+                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                              View
+                            </span>
                           </button>
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Download">
-                            <HiOutlineDownload className="h-4 w-4" />
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer">
+                            <HiOutlineDownload className="h-4 w-4 transition-colors" />
+                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                              Download
+                            </span>
                           </button>
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Delete">
-                            <HiOutlineTrash className="h-4 w-4" />
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group cursor-pointer">
+                            <HiOutlineTrash className="h-4 w-4 transition-colors" />
+                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                              Delete
+                            </span>
                           </button>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
-                        <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600 cursor-default select-none">
+                        <div className="flex items-center gap-3 cursor-default select-none">
                           <HiOutlineDocumentText className="w-5 h-5 text-primary" />
                           <div>
-                            <div className="font-semibold text-xs text-black cursor-pointer hover:underline">Payment Schedule</div>
-                            <div className="text-xs text-gray-500">2025-05-16 &bull; XLSX &bull; 1.8 MB</div>
+                            <div className="font-semibold text-xs text-gray-900 dark:text-white cursor-pointer hover:underline">Payment Schedule</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">2025-05-16 &bull; XLSX &bull; 1.8 MB</div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="View">
-                            <HiOutlineEye className="h-4 w-4" />
+                        <div className="flex items-center gap-2 cursor-default select-none">
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer">
+                            <HiOutlineEye className="h-4 w-4 transition-colors" />
+                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                              View
+                            </span>
                           </button>
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Download">
-                            <HiOutlineDownload className="h-4 w-4" />
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer">
+                            <HiOutlineDownload className="h-4 w-4 transition-colors" />
+                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                              Download
+                            </span>
                           </button>
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Delete">
-                            <HiOutlineTrash className="h-4 w-4" />
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group cursor-pointer">
+                            <HiOutlineTrash className="h-4 w-4 transition-colors" />
+                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                              Delete
+                            </span>
                           </button>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
-                        <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600 cursor-default select-none">
+                        <div className="flex items-center gap-3 cursor-default select-none">
                           <HiOutlineDocumentText className="w-5 h-5 text-primary" />
                           <div>
-                            <div className="font-semibold text-xs text-black cursor-pointer hover:underline">Terms and Conditions</div>
-                            <div className="text-xs text-gray-500">2025-05-17 &bull; DOCX &bull; 1.2 MB</div>
+                            <div className="font-semibold text-xs text-gray-900 dark:text-white cursor-pointer hover:underline">Terms and Conditions</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">2025-05-17 &bull; DOCX &bull; 1.2 MB</div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="View">
-                            <HiOutlineEye className="h-4 w-4" />
+                        <div className="flex items-center gap-2 cursor-default select-none">
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer">
+                            <HiOutlineEye className="h-4 w-4 transition-colors" />
+                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                              View
+                            </span>
                           </button>
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Download">
-                            <HiOutlineDownload className="h-4 w-4" />
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer">
+                            <HiOutlineDownload className="h-4 w-4 transition-colors" />
+                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                              Download
+                            </span>
                           </button>
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Delete">
-                            <HiOutlineTrash className="h-4 w-4" />
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group cursor-pointer">
+                            <HiOutlineTrash className="h-4 w-4 transition-colors" />
+                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                              Delete
+                            </span>
                           </button>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
-                        <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600 cursor-default select-none">
+                        <div className="flex items-center gap-3 cursor-default select-none">
                           <HiOutlineDocumentText className="w-5 h-5 text-primary" />
                           <div>
-                            <div className="font-semibold text-xs text-black cursor-pointer hover:underline">Meeting Notes</div>
-                            <div className="text-xs text-gray-500">2025-05-18 &bull; DOCX &bull; 0.8 MB</div>
+                            <div className="font-semibold text-xs text-gray-900 dark:text-white cursor-pointer hover:underline">Meeting Notes</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">2025-05-18 &bull; DOCX &bull; 0.8 MB</div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="View">
-                            <HiOutlineEye className="h-4 w-4" />
+                        <div className="flex items-center gap-2 cursor-default select-none">
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer">
+                            <HiOutlineEye className="h-4 w-4 transition-colors" />
+                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                              View
+                            </span>
                           </button>
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Download">
-                            <HiOutlineDownload className="h-4 w-4" />
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer">
+                            <HiOutlineDownload className="h-4 w-4 transition-colors" />
+                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                              Download
+                            </span>
                           </button>
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Delete">
-                            <HiOutlineTrash className="h-4 w-4" />
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group cursor-pointer">
+                            <HiOutlineTrash className="h-4 w-4 transition-colors" />
+                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                              Delete
+                            </span>
                           </button>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
-                        <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600 cursor-default select-none">
+                        <div className="flex items-center gap-3 cursor-default select-none">
                           <HiOutlineDocumentText className="w-5 h-5 text-primary" />
                           <div>
-                            <div className="font-semibold text-xs text-black cursor-pointer hover:underline">Project Timeline</div>
-                            <div className="text-xs text-gray-500">2025-05-19 &bull; XLSX &bull; 1.5 MB</div>
+                            <div className="font-semibold text-xs text-gray-900 dark:text-white cursor-pointer hover:underline">Project Timeline</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">2025-05-19 &bull; XLSX &bull; 1.5 MB</div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="View">
-                            <HiOutlineEye className="h-4 w-4" />
+                        <div className="flex items-center gap-2 cursor-default select-none">
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer">
+                            <HiOutlineEye className="h-4 w-4 transition-colors" />
+                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                              View
+                            </span>
                           </button>
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Download">
-                            <HiOutlineDownload className="h-4 w-4" />
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer">
+                            <HiOutlineDownload className="h-4 w-4 transition-colors" />
+                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                              Download
+                            </span>
                           </button>
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors" title="Delete">
-                            <HiOutlineTrash className="h-4 w-4" />
+                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group cursor-pointer">
+                            <HiOutlineTrash className="h-4 w-4 transition-colors" />
+                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                              Delete
+                            </span>
                           </button>
                         </div>
                       </div>
@@ -1807,67 +1922,67 @@ export default function WorkflowsPage() {
                   </div>
 
                   {/* Recent Activity Box */}
-                  <div className="bg-white border border-gray-200 rounded-lg p-6 min-h-[300px]">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4">Recent Activity</h3>
-                    <div className="flex flex-col gap-5">
+                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 min-h-[300px] cursor-default select-none">
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Recent Activity</h3>
+                    <div className="flex flex-col gap-5 cursor-default select-none">
                       {/* Activity 1 */}
-                      <div className="flex items-start gap-3">
-                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100">
-                          <BsPerson className="text-blue-500 text-lg" />
+                      <div className="flex items-start gap-3 cursor-default select-none">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30">
+                          <BsPerson className="text-blue-500 dark:text-blue-400 text-lg" />
                         </span>
                         <div>
-                          <div className="text-xs font-medium text-gray-900">
+                          <div className="text-xs font-medium text-gray-900 dark:text-white">
                             <span className="font-semibold">Sarah Miller</span> assigned task to <span className="font-semibold">Michael Brown</span>
                           </div>
-                          <div className="text-xs text-gray-500 mt-0.5">May 19, 2025 at 10:30 AM</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">May 19, 2025 at 10:30 AM</div>
                         </div>
                       </div>
                       {/* Activity 2 */}
-                      <div className="flex items-start gap-3">
-                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100">
-                          <BsPerson className="text-green-500 text-lg" />
+                      <div className="flex items-start gap-3 cursor-default select-none">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30">
+                          <BsPerson className="text-green-500 dark:text-green-400 text-lg" />
                         </span>
                         <div>
-                          <div className="text-xs font-medium text-gray-900">
+                          <div className="text-xs font-medium text-gray-900 dark:text-white">
                             <span className="font-semibold">Michael Brown</span> marked subtask as complete
                           </div>
-                          <div className="text-xs text-gray-500 mt-0.5">May 18, 2025 at 3:45 PM</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">May 18, 2025 at 3:45 PM</div>
                         </div>
                       </div>
                       {/* Activity 3 */}
-                      <div className="flex items-start gap-3">
-                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-purple-100">
-                          <BsPerson className="text-purple-500 text-lg" />
+                      <div className="flex items-start gap-3 cursor-default select-none">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/30">
+                          <BsPerson className="text-purple-500 dark:text-purple-400 text-lg" />
                         </span>
                         <div>
-                          <div className="text-xs font-medium text-gray-900">
+                          <div className="text-xs font-medium text-gray-900 dark:text-white">
                             <span className="font-semibold">Emily Davis</span> uploaded a document
                           </div>
-                          <div className="text-xs text-gray-500 mt-0.5">May 17, 2025 at 9:15 AM</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">May 17, 2025 at 9:15 AM</div>
                         </div>
                       </div>
                       {/* Activity 4 */}
-                      <div className="flex items-start gap-3">
-                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100">
-                          <LuCalendarClock className="text-orange-500 text-lg" />
+                      <div className="flex items-start gap-3 cursor-default select-none">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900/30">
+                          <LuCalendarClock className="text-orange-500 dark:text-orange-400 text-lg" />
                         </span>
                         <div>
-                          <div className="text-xs font-medium text-gray-900">
+                          <div className="text-xs font-medium text-gray-900 dark:text-white">
                             Due date updated to <span className="font-semibold">May 24, 2025</span>
                           </div>
-                          <div className="text-xs text-gray-500 mt-0.5">May 16, 2025 at 11:20 AM</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">May 16, 2025 at 11:20 AM</div>
                         </div>
                       </div>
                       {/* Activity 5 */}
-                      <div className="flex items-start gap-3">
-                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-teal-100">
-                          <FaPlus className="text-teal-500 text-lg" />
+                      <div className="flex items-start gap-3 cursor-default select-none">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-teal-100 dark:bg-teal-900/30">
+                          <FaPlus className="text-teal-500 dark:text-teal-400 text-lg" />
                         </span>
                         <div>
-                          <div className="text-xs font-medium text-gray-900">
+                          <div className="text-xs font-medium text-gray-900 dark:text-white">
                             Task created by <span className="font-semibold">Alex Johnson</span>
                           </div>
-                          <div className="text-xs text-gray-500 mt-0.5">May 15, 2025 at 2:00 PM</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">May 15, 2025 at 2:00 PM</div>
                         </div>
                       </div>
                     </div>
@@ -1876,24 +1991,24 @@ export default function WorkflowsPage() {
               </div>
 
               {/* Comments Box - Full Width */}
-              <div className="mt-6">
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-4">Comments</h3>
+              <div className="mt-6 cursor-default select-none">
+                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 cursor-default select-none">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Comments</h3>
                   
                   {/* Comment History */}
-                  <div className="space-y-4 mb-4 max-h-[300px] overflow-y-auto pr-2">
+                  <div className="space-y-4 mb-4 max-h-[300px] overflow-y-auto pr-2 cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
                     {(selectedTask ? (taskComments[selectedTask.code] || []) : []).map((comment) => (
-                      <div key={comment.id} className="flex items-start gap-3">
+                      <div key={comment.id} className="flex items-start gap-3 cursor-default select-none">
                         <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${comment.avatarColor}`}>
                           <BsPerson className={`${comment.textColor} text-lg`} />
                         </span>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs font-semibold text-gray-900">{comment.author}</span>
-                            <span className="text-xs text-gray-500">{comment.timestamp}</span>
+                            <span className="text-xs font-semibold text-gray-900 dark:text-white">{comment.author}</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">{comment.timestamp}</span>
                           </div>
                           <div 
-                            className="text-xs text-gray-900 font-medium mb-2"
+                            className="text-xs text-gray-900 dark:text-white font-medium mb-2"
                             dangerouslySetInnerHTML={{ __html: comment.content }}
                           />
                           <div className="flex items-center gap-3">
@@ -1931,15 +2046,18 @@ export default function WorkflowsPage() {
                         {/* Toolbar */}
                         {commentEditor && (
                           <>
-                            <div className="flex gap-2 mb-2 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 items-center">
-                              <button onClick={() => commentEditor.chain().focus().toggleBold().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('bold') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'}`} title="Bold"><b>B</b></button>
-                              <button onClick={() => commentEditor.chain().focus().toggleItalic().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('italic') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'}`} title="Italic"><i>I</i></button>
-                              <button onClick={() => commentEditor.chain().focus().toggleUnderline().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('underline') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'}`} title="Underline"><u>U</u></button>
-                              <button onClick={() => commentEditor.chain().focus().toggleStrike().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('strike') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'}`} title="Strikethrough"><s>S</s></button>
-                              <button onClick={() => commentEditor.chain().focus().toggleBulletList().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('bulletList') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'}`} title="Bullet List">• List</button>
-                              <button onClick={() => commentEditor.chain().focus().toggleOrderedList().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('orderedList') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'}`} title="Numbered List">1. List</button>
-                              <button onClick={handlePostComment} className="ml-auto text-xs px-2 py-1 rounded transition-colors flex items-center group" title={editingCommentId ? "Update Comment" : "Post Comment"}>
-                                <LuSendHorizontal className="w-4 h-4 text-black group-hover:text-primary transition-colors" />
+                            <div className="flex gap-2 mb-2 bg-white dark:bg-gray-800 rounded-lg px-2 py-1 items-center cursor-default select-none">
+                              <button onClick={() => commentEditor.chain().focus().toggleBold().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('bold') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'} cursor-pointer`} title="Bold"><b>B</b></button>
+                              <button onClick={() => commentEditor.chain().focus().toggleItalic().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('italic') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'} cursor-pointer`} title="Italic"><i>I</i></button>
+                              <button onClick={() => commentEditor.chain().focus().toggleUnderline().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('underline') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'} cursor-pointer`} title="Underline"><u>U</u></button>
+                              <button onClick={() => commentEditor.chain().focus().toggleStrike().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('strike') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'} cursor-pointer`} title="Strikethrough"><s>S</s></button>
+                              <button onClick={() => commentEditor.chain().focus().toggleBulletList().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('bulletList') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'} cursor-pointer`} title="Bullet List">• List</button>
+                              <button onClick={() => commentEditor.chain().focus().toggleOrderedList().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('orderedList') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'} cursor-pointer`} title="Numbered List">1. List</button>
+                              <button onClick={handlePostComment} className="ml-auto -mr-4 text-xs px-2 py-1 rounded transition-colors flex items-center group relative cursor-pointer" title="Send">
+                                <BiCommentAdd className="w-5 h-5 text-gray-700 dark:text-white group-hover:text-primary transition-colors" />
+                                <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 cursor-default select-none">
+                                  Send
+                                </span>
                               </button>
                               {editingCommentId && (
                                 <button 
@@ -1947,16 +2065,16 @@ export default function WorkflowsPage() {
                                     setEditingCommentId(null);
                                     commentEditor.commands.clearContent();
                                   }} 
-                                  className="text-xs px-2 py-1 rounded text-gray-500 hover:text-red-500 transition-colors"
+                                  className="text-xs px-2 py-1 rounded text-gray-500 hover:text-red-500 transition-colors cursor-pointer"
                                 >
                                   Cancel
                                 </button>
                               )}
                             </div>
-                            <div className="border-2 border-gray-200 rounded-lg bg-white focus-within:border-primary transition-colors">
+                            <div className="border-2 border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 focus-within:border-primary transition-colors cursor-default select-none">
                               <EditorContent
                                 editor={commentEditor}
-                                className="tiptap min-h-[48px] px-4 py-2 text-xs font-medium text-black font-sans outline-none"
+                                className="tiptap min-h-[48px] px-4 py-2 text-xs font-medium text-black dark:text-white font-sans outline-none"
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter' && !e.shiftKey) {
                                     e.preventDefault();
@@ -1980,22 +2098,23 @@ export default function WorkflowsPage() {
       {/* Upload Modal */}
       {showUploadModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 cursor-default select-none">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-900">Upload Documents</h2>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Upload Documents</h2>
               <button
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 onClick={() => { setShowUploadModal(false); setUploadModalFiles([]); }}
+                aria-label="Close"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            <div className="mb-4 text-xs text-gray-500">
+            <div className="mb-4 text-xs text-gray-500 dark:text-gray-400">
               {uploadContractId && (
                 <span>
-                  For Contract: <span className="font-semibold text-primary">#{uploadContractId}</span>
+                  For Task: <span className="font-semibold text-primary">#{uploadContractId}</span>
                 </span>
               )}
             </div>
@@ -2007,33 +2126,184 @@ export default function WorkflowsPage() {
                 setUploadModalFiles([]);
               }}
             >
-              <label className="block text-xs font-medium text-gray-700 mb-2">Upload Documents (Optional)</label>
-              <label htmlFor="upload-modal-file-upload" className="block cursor-pointer">
-                <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 py-8 px-4 text-center transition hover:border-primary">
-                  <HiOutlineUpload className="h-4 w-4 text-gray-400 mb-2" />
-                  <div className="text-xs text-gray-700 font-medium">Click to upload or drag and drop</div>
-                  <div className="text-[10px] text-gray-400 mt-1">PDF, DOC, DOCX, or JPG (max. 10MB each)</div>
-                  <input
-                    id="upload-modal-file-upload"
-                    name="upload-modal-file-upload"
-                    type="file"
-                    accept=".pdf,.doc,.docx,.jpg,.jpeg"
-                    className="hidden"
-                    multiple
-                    onChange={handleUploadModalFileChange}
-                  />
+              <div className="flex flex-col gap-4 mb-4">
+                {/* File Source - Left Column Width with Empty Right Column */}
+                <div className="flex gap-4">
+                  <div className="flex-1 w-0">
+                    <div className="text-gray-500 dark:text-gray-400 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>File Source</div>
+                    <div className="relative" ref={uploadDropdownRef}>
+                      <button
+                        type="button"
+                        onClick={e => { e.stopPropagation(); setShowUploadDropdown(!showUploadDropdown); }}
+                        className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs focus:ring-0 focus:ring-primary focus:border-primary transition-colors flex items-center justify-end relative cursor-pointer"
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                      >
+                        {selectedUploadSource ? (
+                          <span className="flex items-center gap-2 absolute left-4 cursor-default select-none">
+                            {selectedUploadSource === 'Desktop' && <TbDeviceDesktopPlus className="text-base text-primary" />}
+                            {selectedUploadSource === 'Box' && <SiBox className="text-base text-primary" />}
+                            {selectedUploadSource === 'Dropbox' && <SlSocialDropbox className="text-base text-primary" />}
+                            {selectedUploadSource === 'Google Drive' && <TbBrandGoogleDrive className="text-base text-primary" />}
+                            {selectedUploadSource === 'OneDrive' && <TbBrandOnedrive className="text-base text-primary" />}
+                            <span className="text-xs text-gray-900 cursor-default select-none">{selectedUploadSource}</span>
+                          </span>
+                        ) : (
+                          <span className="absolute left-4 text-xs text-gray-400 cursor-default select-none">Choose a source...</span>
+                        )}
+                        <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      </button>
+                      {showUploadDropdown && (
+                        <div className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 cursor-default select-none">
+                          <div className="py-2">
+                            <label htmlFor="upload-modal-file-upload" className="block px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setSelectedUploadSource('Desktop'); setShowUploadDropdown(false); }}>
+                              <div className="flex items-center gap-2">
+                                <TbDeviceDesktopPlus className="text-base text-primary" />
+                                <span className="text-xs cursor-default select-none">Desktop</span>
+                              </div>
+                            </label>
+                            <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setSelectedUploadSource('Box'); setShowUploadDropdown(false); }}>
+                              <SiBox className="text-base text-primary" />
+                              <span className="text-xs cursor-default select-none">Box</span>
+                            </button>
+                            <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setSelectedUploadSource('Dropbox'); setShowUploadDropdown(false); }}>
+                              <SlSocialDropbox className="text-base text-primary" />
+                              <span className="text-xs cursor-default select-none">Dropbox</span>
+                            </button>
+                            <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setSelectedUploadSource('Google Drive'); setShowUploadDropdown(false); }}>
+                              <TbBrandGoogleDrive className="text-base text-primary" />
+                              <span className="text-xs cursor-default select-none">Google Drive</span>
+                            </button>
+                            <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setSelectedUploadSource('OneDrive'); setShowUploadDropdown(false); }}>
+                              <TbBrandOnedrive className="text-base text-primary" />
+                              <span className="text-xs cursor-default select-none">OneDrive</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex-1 w-0">
+                    {/* Empty right column */}
+                  </div>
                 </div>
-              </label>
-              {uploadModalFiles.length > 0 && (
-                <ul className="mt-3 text-sm text-gray-600">
-                  {uploadModalFiles.map((file, idx) => (
-                    <li key={idx} className="truncate">{file.name}</li>
-                  ))}
-                </ul>
-              )}
-              <button type="submit" className="w-full mt-6 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold">
-                Upload
-              </button>
+
+                {/* Document Name and Assignee - Side by Side */}
+                <div className="flex gap-4">
+                  <div className="flex-1 w-0">
+                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Document Name</label>
+                    <input
+                      type="text"
+                      placeholder="Enter document name..."
+                      className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs focus:ring-2 focus:ring-primary focus:border-primary transition-colors cursor-text"
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                    />
+                  </div>
+                  <div className="flex-1 w-0">
+                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Assignee</label>
+                    <div className="relative" ref={uploadModalAssigneeDropdownRef}>
+                      <input
+                        ref={uploadModalAssigneeInputRef}
+                        type="text"
+                        className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs focus:ring-2 focus:ring-primary focus:border-primary transition-colors cursor-text"
+                        placeholder="Choose an assignee..."
+                        value={uploadModalAssignee}
+                        onChange={(e) => setUploadModalAssignee(e.target.value)}
+                        onFocus={() => setShowUploadModalAssigneeDropdown(true)}
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                        autoComplete="off"
+                      />
+                      {showUploadModalAssigneeDropdown && (
+                        <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                          {uniqueAssignees.length > 0 ? (
+                            <>
+                              {uniqueAssignees.map((assignee: string) => (
+                                <div
+                                  key={assignee}
+                                  className={`px-4 py-2 text-xs cursor-pointer ${uploadModalAssignee === assignee ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'} select-none`}
+                                  onClick={() => {
+                                    setUploadModalAssignee(assignee);
+                                    setShowUploadModalAssigneeDropdown(false);
+                                  }}
+                                >
+                                  {assignee}
+                                </div>
+                              ))}
+                              <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                              <div
+                                className="px-4 py-2 text-xs cursor-pointer text-primary hover:bg-primary/10 select-none flex items-center gap-2"
+                                onClick={() => {
+                                  // TODO: Add logic to create new assignee
+                                  setShowUploadModalAssigneeDropdown(false);
+                                }}
+                              >
+                                <FaPlus className="text-xs" />
+                                Add new assignee
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="px-4 py-2 text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">No assignees found</div>
+                              <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                              <div
+                                className="px-4 py-2 text-xs cursor-pointer text-primary hover:bg-primary/10 select-none flex items-center gap-2"
+                                onClick={() => {
+                                  // TODO: Add logic to create new assignee
+                                  setShowUploadModalAssigneeDropdown(false);
+                                }}
+                              >
+                                <FaPlus className="text-xs" />
+                                Add new assignee
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Drag and Drop Area */}
+                <div>
+                  <label htmlFor="upload-modal-file-upload" className="block cursor-pointer">
+                    <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 py-8 px-4 text-center transition hover:border-primary">
+                      <HiOutlineUpload className="h-4 w-4 text-gray-400 mb-2" />
+                      <div className="text-xs text-gray-700 dark:text-gray-300 font-medium">Click to upload or drag and drop</div>
+                      <div className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">PDF, DOC, DOCX, or JPG (max. 10MB each)</div>
+                      <input
+                        id="upload-modal-file-upload"
+                        name="upload-modal-file-upload"
+                        type="file"
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg"
+                        className="hidden"
+                        multiple
+                        onChange={handleUploadModalFileChange}
+                      />
+                    </div>
+                  </label>
+                  {uploadModalFiles.length > 0 && (
+                    <ul className="mt-3 text-sm text-gray-600 dark:text-gray-400">
+                      {uploadModalFiles.map((file, idx) => (
+                        <li key={idx} className="truncate">{file.name}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+              <div className="flex gap-1 mt-6">
+                <button
+                  type="button"
+                  onClick={() => { setShowUploadModal(false); setUploadModalFiles([]); }}
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+                >
+                  Upload
+                </button>
+              </div>
             </form>
           </div>
         </div>

@@ -99,8 +99,13 @@ export default function SignaturesPage() {
     },
   ]);
   const [showToolSelectorModal, setShowToolSelectorModal] = useState(false);
-  const [showLast30DaysDropdown, setShowLast30DaysDropdown] = useState(false);
-  const last30DaysDropdownRef = useRef<HTMLDivElement>(null);
+
+  const [selectedRecentlyUpdated, setSelectedRecentlyUpdated] = useState('Last 24 hours');
+  const [openRecentlyUpdatedDropdown, setOpenRecentlyUpdatedDropdown] = useState(false);
+  const recentlyUpdatedDropdownRef = useRef<HTMLDivElement>(null);
+  const recentlyUpdatedButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileRecentlyUpdatedButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileRecentlyUpdatedDropdownRef = useRef<HTMLDivElement>(null);
   const [openContractDropdown, setOpenContractDropdown] = useState(false);
   const contractButtonRef = useRef<HTMLButtonElement>(null);
   const senderButtonRef = useRef<HTMLButtonElement>(null);
@@ -171,6 +176,19 @@ export default function SignaturesPage() {
     'Sent by anyone',
     'Sent by me',
     'Sent to me'
+  ];
+
+  // Available options for recently updated dropdown
+  const availableRecentlyUpdatedOptions = [
+    'Last 24 hours',
+    'Last 7 days',
+    'Last 30 days',
+    'Last month',
+    'This quarter',
+    'Last quarter',
+    'Last 6 months',
+    'Last year',
+    'Last 2 years'
   ];
 
   // Mock data for signatures table
@@ -693,6 +711,33 @@ export default function SignaturesPage() {
     };
   }, [openContractDropdown]);
 
+  // Add click-outside handler for recently updated dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+      const desktopDropdown = recentlyUpdatedDropdownRef.current;
+      const mobileDropdown = mobileRecentlyUpdatedDropdownRef.current;
+      const desktopButton = recentlyUpdatedButtonRef.current;
+      const mobileButton = mobileRecentlyUpdatedButtonRef.current;
+      
+      // Only check if dropdown is open
+      if (openRecentlyUpdatedDropdown) {
+        // Check if clicking inside either desktop or mobile dropdown, or either button
+        const isInsideDropdown = desktopDropdown?.contains(target) || mobileDropdown?.contains(target);
+        const isInsideButton = desktopButton?.contains(target) || mobileButton?.contains(target);
+        
+        // If clicking outside both dropdowns and buttons, close the dropdown
+        if (!isInsideDropdown && !isInsideButton) {
+          setOpenRecentlyUpdatedDropdown(false);
+        }
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openRecentlyUpdatedDropdown]);
+
   // Sorting functions
   const handleIdSort = () => {
     setSortConfig(current => ({
@@ -800,6 +845,18 @@ export default function SignaturesPage() {
 
   // Helper function to generate document hash
   const getDocumentHash = (id: string) => `0x${id}${'0'.repeat(66 - 2 - id.length)}`;
+
+  // Helper function to get status badge styling (consistent with contracts page)
+  const getStatusBadgeStyle = (status: string) => {
+    switch (status) {
+      case 'Pending': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 border border-yellow-800 dark:border-yellow-800';
+      case 'Completed': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border border-green-800 dark:border-green-800';
+      case 'Rejected': return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 border border-red-800 dark:border-red-800';
+      case 'Expired': return 'bg-gray-100 dark:bg-gray-700/30 text-gray-800 dark:text-gray-400 border border-gray-800 dark:border-gray-500';
+      case 'Voided': return 'bg-gray-100 dark:bg-gray-700/30 text-gray-800 dark:text-gray-400 border border-gray-800 dark:border-gray-500';
+      default: return 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400 border border-gray-800 dark:border-gray-800';
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -1179,25 +1236,55 @@ export default function SignaturesPage() {
             </div>
 
             {/* Last 30 Days Filter */}
-            <button 
-              className="flex items-center justify-between w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 font-medium text-xs shadow-sm whitespace-nowrap" 
-              style={{ fontFamily: 'Avenir, sans-serif' }}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setShowLast30DaysDropdown(prev => !prev);
-                if (!showLast30DaysDropdown) {
-                  setShowStatusDropdown(false);
-                  setShowSenderDropdown(false);
-                  setShowAssigneeDropdown(false);
-                  setShowContractDropdown(false);
-                }
-              }}
-              ref={last30DaysDropdownRef as any}
-            >
-              <span className="flex items-center"><TbClockPin className="text-gray-400 text-base mr-2" />Last 30 Days</span>
-              <HiMiniChevronDown className="text-gray-400" size={16} />
-            </button>
+            <div className="relative">
+              <button 
+                ref={mobileRecentlyUpdatedButtonRef}
+                className="flex items-center justify-between w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-700 dark:text-gray-300 font-medium text-xs shadow-sm whitespace-nowrap" 
+                style={{ fontFamily: 'Avenir, sans-serif' }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setOpenRecentlyUpdatedDropdown(prev => !prev);
+                  if (!openRecentlyUpdatedDropdown) {
+                    setShowStatusDropdown(false);
+                    setShowSenderDropdown(false);
+                    setShowAssigneeDropdown(false);
+                    setOpenContractDropdown(false);
+                  }
+                }}
+              >
+                <span className="flex items-center"><TbClockPin className="text-gray-400 text-base mr-2" />{selectedRecentlyUpdated}</span>
+                <HiMiniChevronDown className="text-gray-400" size={16} />
+              </button>
+              {openRecentlyUpdatedDropdown && (
+                <div 
+                  ref={mobileRecentlyUpdatedDropdownRef}
+                  className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" 
+                  style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                >
+                  {availableRecentlyUpdatedOptions.map((option) => (
+                    <button
+                      key={option}
+                      className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedRecentlyUpdated === option ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedRecentlyUpdated(option);
+                      }}
+                    >
+                      <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                        {selectedRecentlyUpdated === option && (
+                          <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                            <FaCheck className="text-white" size={8} />
+                          </div>
+                        )}
+                      </div>
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -1221,7 +1308,7 @@ export default function SignaturesPage() {
             <div className="relative flex-shrink-0">
         <button 
                 ref={statusButtonRef}
-                className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs w-[140px] relative whitespace-nowrap"
+                className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
           style={{ fontFamily: 'Avenir, sans-serif' }}
           onClick={(e) => {
             e.preventDefault();
@@ -1280,7 +1367,7 @@ export default function SignaturesPage() {
             <div className="relative flex-shrink-0 ml-1">
               <button
                 ref={contractButtonRef}
-                className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs w-[140px] relative whitespace-nowrap"
+                className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
                 style={{ fontFamily: 'Avenir, sans-serif' }}
                           onClick={(e) => {
             e.preventDefault();
@@ -1370,7 +1457,7 @@ export default function SignaturesPage() {
             <div className="relative flex-shrink-0 ml-1">
           <button
             ref={senderButtonRef}
-            className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs w-[140px] relative whitespace-nowrap"
+            className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
             style={{ fontFamily: 'Avenir, sans-serif' }}
             onClick={(e) => {
               e.preventDefault();
@@ -1419,7 +1506,7 @@ export default function SignaturesPage() {
             <div className="relative flex-shrink-0 ml-1">
         <button
                 ref={assigneeButtonRef}
-                className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs w-[140px] relative whitespace-nowrap" 
+                className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs min-w-[120px] relative whitespace-nowrap" 
           style={{ fontFamily: 'Avenir, sans-serif' }}
           onClick={(e) => {
             e.preventDefault();
@@ -1504,26 +1591,55 @@ export default function SignaturesPage() {
               )}
             </div>
             {/* Last 30 Days Filter */}
-            <button 
-              className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs w-[160px] relative whitespace-nowrap flex-shrink-0 ml-1" 
-              style={{ fontFamily: 'Avenir, sans-serif' }}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setShowLast30DaysDropdown(prev => !prev);
-                if (!showLast30DaysDropdown) {
-                  setShowStatusDropdown(false);
-                  setShowSenderDropdown(false);
-                  setShowAssigneeDropdown(false);
-                  setShowContractDropdown(false);
-                }
-              }}
-              ref={last30DaysDropdownRef as any}
-            >
-              <TbClockPin className="text-gray-400 w-4 h-4" />
-              <span>Last 30 Days</span>
-              <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
-            </button>
+            <div className="relative flex-shrink-0 ml-1">
+              <button
+                ref={recentlyUpdatedButtonRef}
+                className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs w-[160px] relative whitespace-nowrap"
+                style={{ fontFamily: 'Avenir, sans-serif' }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setOpenRecentlyUpdatedDropdown(prev => !prev);
+                  if (!openRecentlyUpdatedDropdown) {
+                    setShowStatusDropdown(false);
+                    setOpenContractDropdown(false);
+                    setShowAssigneeDropdown(false);
+                  }
+                }}
+              >
+                <TbClockPin className="text-gray-400 w-4 h-4" />
+                <span>{selectedRecentlyUpdated}</span>
+                <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+              </button>
+              {openRecentlyUpdatedDropdown && (
+                <div 
+                  ref={recentlyUpdatedDropdownRef}
+                  className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" 
+                  style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                >
+                  {availableRecentlyUpdatedOptions.map((option) => (
+                    <button
+                      key={option}
+                      className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedRecentlyUpdated === option ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedRecentlyUpdated(option);
+                      }}
+                    >
+                      <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                        {selectedRecentlyUpdated === option && (
+                          <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                            <FaCheck className="text-white" size={8} />
+                          </div>
+                        )}
+                      </div>
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -1673,7 +1789,7 @@ export default function SignaturesPage() {
 
           {/* Signature List Content based on Active Tab */}
           <div className="mt-4">
-            <div style={{ height: 'calc(10 * 3.5rem)', minHeight: '350px' }} className="relative overflow-x-auto overflow-y-auto">
+            <div style={{ height: 'calc(10 * 3.5rem)', minHeight: '350px' }} className="relative overflow-x-auto overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700">
                   <tr>
@@ -1775,11 +1891,7 @@ export default function SignaturesPage() {
                         <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
                           <span className={clsx(
                             "inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full border",
-                            row.status === 'Pending' && "bg-yellow-100 text-yellow-800 border-yellow-500",
-                            row.status === 'Completed' && "bg-green-100 text-green-800 border-green-500",
-                            row.status === 'Rejected' && "bg-red-100 text-red-800 border-red-500",
-                            row.status === 'Expired' && "bg-gray-100 text-gray-800 border-gray-500",
-                            row.status === 'Voided' && "bg-gray-100 text-gray-800 border-gray-500"
+                            getStatusBadgeStyle(row.status)
                           )}>
                             {row.status}
                           </span>
@@ -1799,48 +1911,56 @@ export default function SignaturesPage() {
                         <td className="px-6 py-2.5 whitespace-nowrap text-center">
                           <div className="flex items-center justify-center space-x-1">
                             <button 
-                              className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary" 
-                              title="View"
+                              className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group" 
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 // Add view action here
                               }}
                             >
-                              <HiOutlineEye className="text-sm sm:text-base" />
+                              <HiOutlineEye className="text-sm sm:text-base transition-colors" />
+                              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                View
+                              </span>
                             </button>
                             <button 
-                              className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary" 
-                              title="Send Reminder"
+                              className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group" 
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 // Add send reminder action here
                               }}
                             >
-                              <LuBellRing className="text-sm sm:text-base" />
+                              <LuBellRing className="text-sm sm:text-base transition-colors" />
+                              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                Send Reminder
+                              </span>
                             </button>
                             <button 
-                              className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary" 
-                              title="Download"
+                              className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group" 
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 // Add download action here
                               }}
                             >
-                              <HiOutlineDownload className="text-sm sm:text-base" />
+                              <HiOutlineDownload className="text-sm sm:text-base transition-colors" />
+                              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                Download
+                              </span>
                             </button>
                             <button 
-                              className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500" 
-                              title="Void"
+                              className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group" 
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 // Add void action here
                               }}
                             >
-                              <MdCancelPresentation className="text-sm sm:text-base" />
+                              <MdCancelPresentation className="text-sm sm:text-base transition-colors" />
+                              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                Void
+                              </span>
                             </button>
                           </div>
                         </td>
@@ -2038,12 +2158,10 @@ export default function SignaturesPage() {
                         {/* Row 2: Status */}
                         <div className="col-span-1 sm:col-span-2">
                           <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Status</div>
-                          <span className={`inline-flex items-center justify-center min-w-[130px] h-7 px-4 font-semibold rounded-full text-xs cursor-default select-none ${
-                            selectedDocument?.status === 'Pending' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 border border-yellow-500 dark:border-yellow-800' :
-                            selectedDocument?.status === 'Completed' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border border-green-500 dark:border-green-800' :
-                            selectedDocument?.status === 'Rejected' ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 border border-red-500 dark:border-red-800' :
-                            'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400 border border-gray-500 dark:border-gray-800'
-                          }`}>{selectedDocument?.status}</span>
+                          <span className={clsx(
+                            "inline-flex items-center justify-center min-w-[130px] h-7 px-4 font-semibold rounded-full text-xs cursor-default select-none border",
+                            selectedDocument?.status ? getStatusBadgeStyle(selectedDocument.status) : getStatusBadgeStyle('')
+                          )}>{selectedDocument?.status}</span>
                         </div>
                         {/* Row 3: Due Date, Last Reminder Date, and Date Sent */}
                         <div className="col-span-1 sm:col-span-2">

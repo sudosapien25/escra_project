@@ -8,7 +8,7 @@ import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutline
 import { HiOutlineViewBoards } from 'react-icons/hi';
 import { LuCalendarFold } from 'react-icons/lu';
 import { BiDotsHorizontal, BiCommentAdd } from 'react-icons/bi';
-import { TbWorldDollar, TbEdit, TbClockUp, TbCubeSend } from 'react-icons/tb';
+import { TbWorldDollar, TbEdit, TbClockUp, TbCubeSend, TbClockPin } from 'react-icons/tb';
 import { Logo } from '@/components/common/Logo';
 import { mockContracts } from '@/data/mockContracts';
 import { useEditor } from '@tiptap/react';
@@ -215,7 +215,7 @@ const ContractsPage: React.FC = () => {
   const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
   const [openAssigneeDropdown, setOpenAssigneeDropdown] = useState(false);
   const [openRecentlyUpdatedDropdown, setOpenRecentlyUpdatedDropdown] = useState(false);
-  const [selectedRecentlyUpdated, setSelectedRecentlyUpdated] = useState('Last 30 days');
+  const [selectedRecentlyUpdated, setSelectedRecentlyUpdated] = useState('Last 24 hours');
   const assigneeButtonRef = useRef<HTMLButtonElement>(null);
   const contractButtonRef = useRef<HTMLButtonElement>(null);
   const [showNewContractForm, setShowNewContractForm] = useState(false);
@@ -978,7 +978,7 @@ const ContractsPage: React.FC = () => {
       case 'Signatures': return 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400 border border-purple-800 dark:border-purple-800';
       case 'Funds Disbursed': return 'bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-400 border border-teal-800 dark:border-teal-800';
       case 'Completed': return 'bg-green-100 dark:bg-green-900/30 text-green-500 dark:text-green-400 border border-green-200 dark:border-green-800';
-      case 'Complete': return 'bg-green-100 dark:bg-green-900/30 text-green-500 dark:text-green-400 border border-green-200 dark:border-green-800';
+      case 'Complete': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border border-green-800 dark:border-green-800';
       case 'Verified': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border border-green-800 dark:border-green-800';
       case 'Pending': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 border border-yellow-800 dark:border-yellow-800';
       case 'Rejected': return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 border border-red-800 dark:border-red-800';
@@ -2140,7 +2140,7 @@ const ContractsPage: React.FC = () => {
                         onClick={() => (document.getElementById('dueDate') as HTMLInputElement)?.showPicker()}
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 flex items-center justify-center"
                       >
-                        <LuCalendarFold className="w-4 h-4 text-white" />
+                        <LuCalendarFold className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                       </button>
                     </div>
                     {formErrors.dueDate && (
@@ -2307,7 +2307,7 @@ const ContractsPage: React.FC = () => {
                 <div className="space-y-4">
                   {/* Only Signer Checkbox */}
                   <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-4 h-4 border border-gray-300 rounded flex items-center justify-center cursor-pointer" onClick={() => {
+                    <div className="w-5 h-5 border border-gray-300 rounded flex items-center justify-center cursor-pointer" onClick={() => {
                       const newValue = !isOnlySigner;
                       setIsOnlySigner(newValue);
                       if (newValue) {
@@ -2318,8 +2318,8 @@ const ContractsPage: React.FC = () => {
                       }
                     }}>
                       {isOnlySigner && (
-                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
-                          <FaCheck className="text-white" size={8} />
+                        <div className="w-4 h-4 bg-primary rounded-sm flex items-center justify-center">
+                          <FaCheck className="text-white" size={10} />
                         </div>
                       )}
                     </div>
@@ -3147,7 +3147,7 @@ const ContractsPage: React.FC = () => {
                   }
                 }}
               >
-                <span className="flex items-center"><MdOutlineUpdate className="text-gray-400 text-base mr-2" />{selectedRecentlyUpdated}</span>
+                <span className="flex items-center"><TbClockPin className="text-gray-400 text-base mr-2" />{selectedRecentlyUpdated}</span>
                 <HiMiniChevronDown className="text-gray-400" size={16} />
               </button>
               {openRecentlyUpdatedDropdown && (
@@ -3202,7 +3202,7 @@ const ContractsPage: React.FC = () => {
               <div className="relative flex-shrink-0">
                 <button
                   ref={statusButtonRef}
-                  className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs w-[140px] relative whitespace-nowrap"
+                  className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
                   style={{ fontFamily: 'Avenir, sans-serif' }}
                   onClick={(e) => {
                     e.preventDefault();
@@ -3277,7 +3277,7 @@ const ContractsPage: React.FC = () => {
                 <div className="relative flex-shrink-0">
                   <button
                     ref={contractButtonRef}
-                    className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs w-[140px] relative whitespace-nowrap"
+                    className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
                     style={{ fontFamily: 'Avenir, sans-serif' }}
                     onClick={() => { setOpenContractDropdown(v => !v); setOpenAssigneeDropdown(false); setShowStatusDropdown(false); }}
                   >
@@ -3355,7 +3355,7 @@ const ContractsPage: React.FC = () => {
                 <div className="relative flex-shrink-0 ml-1">
                   <button
                     ref={assigneeButtonRef}
-                    className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs w-[140px] relative whitespace-nowrap"
+                    className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
                     style={{ fontFamily: 'Avenir, sans-serif' }}
                     onClick={() => { setOpenAssigneeDropdown(v => !v); setOpenContractDropdown(false); setShowStatusDropdown(false); }}
                   >
@@ -3454,7 +3454,7 @@ const ContractsPage: React.FC = () => {
                   }
                 }}
               >
-                <MdOutlineUpdate className="text-gray-400 w-4 h-4" />
+                <TbClockPin className="text-gray-400 w-4 h-4" />
                 <span>{selectedRecentlyUpdated}</span>
                 <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
               </button>
@@ -3537,7 +3537,7 @@ const ContractsPage: React.FC = () => {
         </div>
         {/* Table */}
         {activeContentTab === 'contractList' && (
-          <div style={{ height: 'calc(10 * 3.5rem)', minHeight: '350px' }} className="relative overflow-x-auto overflow-y-auto mt-4">
+          <div style={{ height: 'calc(10 * 3.5rem)', minHeight: '350px' }} className="relative overflow-x-auto overflow-y-auto mt-4 pr-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead>
                 <tr>
@@ -3639,7 +3639,7 @@ const ContractsPage: React.FC = () => {
         )}
         {/* Documents tab/table */}
         {activeContentTab === 'documents' && (
-          <div style={{ height: 'calc(10 * 3.5rem)', minHeight: '350px' }} className="relative overflow-x-auto overflow-y-auto mt-4">
+          <div style={{ height: 'calc(10 * 3.5rem)', minHeight: '350px' }} className="relative overflow-x-auto overflow-y-auto mt-4 pr-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
@@ -3862,7 +3862,7 @@ const ContractsPage: React.FC = () => {
           </div>
           {/* Modal Content (scrollable) and Sticky Footer as siblings */}
           <div className="flex flex-col flex-1 min-h-0 cursor-default select-none">
-            <div className="overflow-y-auto p-6 flex-1 bg-gray-50 dark:bg-gray-900 cursor-default select-none">
+            <div className="overflow-y-auto p-6 flex-1 bg-gray-50 dark:bg-gray-900 cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
               {/* Modal Content Grid: 2 columns */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full h-full min-h-0 -mt-2 items-start cursor-default select-none">
                 {/* LEFT COLUMN: Contract Details, Parties Involved, Wire Details */}
@@ -4270,7 +4270,7 @@ const ContractsPage: React.FC = () => {
                         <HiOutlineUpload className="text-base text-primary dark:text-white" /> Upload
                       </button>
                     </div>
-                    <div className="flex flex-col gap-3 overflow-y-auto mt-4 cursor-default select-none" style={{ maxHeight: '352px', minHeight: '80px' }}>
+                    <div className="flex flex-col gap-3 overflow-y-auto mt-4 cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ maxHeight: '352px', minHeight: '80px' }}>
                       {filteredDocuments
                         .filter(doc => doc.contractId === selectedContract.id)
                         .map(doc => (
@@ -4347,7 +4347,7 @@ const ContractsPage: React.FC = () => {
                         <span className="text-base font-bold text-primary dark:text-white">+</span> New Task
                       </button>
                     </div>
-                    <div className="flex flex-col gap-3 overflow-y-auto cursor-default select-none flex-1" style={{ minHeight: '710px' }}>
+                    <div className="flex flex-col gap-3 overflow-y-auto cursor-default select-none flex-1 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ minHeight: '710px' }}>
                       {selectedContract ? (
                         getTasksByContract(selectedContract.id).length > 0 ? (
                           getTasksByContract(selectedContract.id).map(task => (
@@ -4430,7 +4430,7 @@ const ContractsPage: React.FC = () => {
                 <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 cursor-default select-none">
                   <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Comments</h3>
                   {/* Comment History */}
-                  <div className="space-y-4 mb-4 max-h-[300px] overflow-y-auto pr-2 cursor-default select-none">
+                  <div className="space-y-4 mb-4 max-h-[300px] overflow-y-auto pr-2 cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
                     {(selectedContract ? (contractComments[selectedContract.id] || []) : []).map((comment) => (
                       <div key={comment.id} className="flex items-start gap-3 cursor-default select-none">
                         <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${comment.avatarColor} cursor-default select-none`}>
@@ -4667,22 +4667,48 @@ const ContractsPage: React.FC = () => {
                       autoComplete="off"
                     />
                     {showUploadModalAssigneeDropdown && (
-                      <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                      <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ fontFamily: 'Avenir, sans-serif' }}>
                         {allAssignees.length > 0 ? (
-                          allAssignees.map((assignee: string) => (
+                          <>
+                            {allAssignees.map((assignee: string) => (
+                              <div
+                                key={assignee}
+                                className={`px-4 py-2 text-xs cursor-pointer ${uploadModalAssignee === assignee ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'} select-none`}
+                                onClick={() => {
+                                  setUploadModalAssignee(assignee);
+                                  setShowUploadModalAssigneeDropdown(false);
+                                }}
+                              >
+                                {assignee}
+                              </div>
+                            ))}
+                            <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
                             <div
-                              key={assignee}
-                              className={`px-4 py-2 text-xs cursor-pointer ${uploadModalAssignee === assignee ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'} select-none`}
+                              className="px-4 py-2 text-xs cursor-pointer text-primary hover:bg-primary/10 select-none flex items-center gap-2"
                               onClick={() => {
-                                setUploadModalAssignee(assignee);
+                                // TODO: Add logic to create new assignee
                                 setShowUploadModalAssigneeDropdown(false);
                               }}
                             >
-                              {assignee}
+                              <FaPlus className="text-xs" />
+                              Add new assignee
                             </div>
-                          ))
+                          </>
                         ) : (
-                          <div className="px-4 py-2 text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">No assignees found</div>
+                          <>
+                            <div className="px-4 py-2 text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">No assignees found</div>
+                            <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                            <div
+                              className="px-4 py-2 text-xs cursor-pointer text-primary hover:bg-primary/10 select-none flex items-center gap-2"
+                              onClick={() => {
+                                // TODO: Add logic to create new assignee
+                                setShowUploadModalAssigneeDropdown(false);
+                              }}
+                            >
+                              <FaPlus className="text-xs" />
+                              Add new assignee
+                            </div>
+                          </>
                         )}
                       </div>
                     )}
@@ -4799,7 +4825,7 @@ const ContractsPage: React.FC = () => {
           </div>
 
           <div className="flex flex-col flex-1 min-h-0 cursor-default select-none">
-            <div className="overflow-y-auto p-6 flex-1 bg-gray-50 dark:bg-gray-900 cursor-default select-none">
+            <div className="overflow-y-auto p-6 flex-1 bg-gray-50 dark:bg-gray-900 cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
               {/* Document Details and File Information Grid */}
               <div className="grid grid-cols-2 gap-6 mb-6 cursor-default select-none">
                 {/* Document Details Box */}
