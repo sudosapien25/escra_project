@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/common/Card';
 import { FaPlus, FaCopy, FaWallet, FaNetworkWired, FaBook, FaExternalLinkAlt, FaCogs, FaArrowRight, FaSearch, FaCheck } from 'react-icons/fa';
 import { FaTimeline, FaFaucetDrip, FaRegSquareCheck, FaArrowUpRightFromSquare } from 'react-icons/fa6';
-import { HiOutlineExternalLink, HiOutlineDuplicate, HiOutlineViewBoards, HiOutlineDocumentSearch, HiOutlineDocumentText } from 'react-icons/hi';
+import { HiOutlineExternalLink, HiOutlineDuplicate, HiOutlineViewBoards, HiOutlineDocumentSearch, HiOutlineDocumentText, HiOutlineClipboardList } from 'react-icons/hi';
 import { BiBookOpen } from 'react-icons/bi';
 import { HiMiniChevronDown } from 'react-icons/hi2';
 import { FaRegCalendarAlt, FaRegCheckCircle, FaRegFileAlt, FaCodeBranch, FaHashtag, FaCoins } from 'react-icons/fa';
@@ -15,7 +15,7 @@ import { MdOutlineAddToPhotos, MdOutlineUpdate } from 'react-icons/md';
 import { mockContracts } from '@/data/mockContracts';
 import Image from 'next/image';
 import { LuSquareArrowOutUpRight, LuFileTerminal, LuBookText } from 'react-icons/lu';
-import { TbClockPin, TbShieldLock, TbDropletFilled, TbReportSearch } from 'react-icons/tb';
+import { TbClockPin, TbShieldLock, TbDropletFilled, TbReportSearch, TbHistory, TbHistoryOff } from 'react-icons/tb';
 import { CgTerminal } from 'react-icons/cg';
 import { AiOutlineNodeExpand } from 'react-icons/ai';
 import { PiHandCoins } from 'react-icons/pi';
@@ -159,6 +159,7 @@ export default function BlockchainPage() {
   const [actionsCurrentPage, setActionsCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [actionsRowsPerPage, setActionsRowsPerPage] = useState(5);
+  const [showAllActivity, setShowAllActivity] = useState(false);
   
   // Mock transaction data
   const transactionData = [
@@ -388,12 +389,12 @@ export default function BlockchainPage() {
   }, [openActivityContractDropdown]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 cursor-default select-none">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0 mb-3 sm:mb-6">
-        <div className="pb-1">
-          <h1 className="text-[30px] font-bold text-black dark:text-white mb-0">Blockchain</h1>
-          <p className="text-gray-500 text-[16px] mt-0">Review your smart contracts, on-chain activity & explorer integrations</p>
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0 mb-3 sm:mb-6 cursor-default select-none">
+        <div className="pb-1 cursor-default select-none">
+          <h1 className="text-[30px] font-bold text-black dark:text-white mb-0 cursor-default select-none">Blockchain</h1>
+          <p className="text-gray-500 text-[16px] mt-0 cursor-default select-none">Review your smart contracts, on-chain activity & explorer integrations</p>
         </div>
         <button
           className="flex items-center justify-center w-full md:w-auto px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
@@ -408,10 +409,10 @@ export default function BlockchainPage() {
       <hr className="my-3 md:my-6 border-gray-300 cursor-default select-none" />
 
       {/* Toggle Bar - Responsive Design */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 mb-6">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 mb-6 cursor-default select-none">
         {/* Mobile: Stacked layout */}
-        <div className="lg:hidden">
-          <div className="flex flex-col gap-2">
+        <div className="lg:hidden cursor-default select-none">
+          <div className="flex flex-col gap-2 cursor-default select-none">
             {[
               { key: 'smart-contracts', label: 'Smart Contracts' },
               { key: 'on-chain-activity', label: 'On-Chain Activity' },
@@ -440,7 +441,7 @@ export default function BlockchainPage() {
         </div>
 
         {/* Desktop: Horizontal layout */}
-        <div className="hidden lg:flex gap-1">
+        <div className="hidden lg:flex gap-1 cursor-default select-none">
           {[
             { key: 'smart-contracts', label: 'Smart Contracts' },
             { key: 'on-chain-activity', label: 'On-Chain Activity' },
@@ -470,11 +471,11 @@ export default function BlockchainPage() {
       {/* Tab Content */}
       {activeTab === 'smart-contracts' && (
         <>
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 mb-6">
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 mb-6 cursor-default select-none">
             {/* Mobile: Stacked layout */}
-            <div className="lg:hidden space-y-2">
+            <div className="lg:hidden space-y-2 cursor-default select-none">
               {/* Search Bar */}
-              <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 w-full">
+              <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 w-full cursor-default select-none">
                 <FaSearch className="text-gray-400 mr-2" size={18} />
                 <input
                   type="text"
@@ -573,7 +574,7 @@ export default function BlockchainPage() {
                   {openContractDropdown && (
                     <div 
                       ref={contractDropdownContainerRef}
-                      className="absolute top-full left-0 mt-2 min-w-[180px] w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 contract-dropdown" 
+                      className="absolute top-full left-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[300px] max-w-[90vw] contract-dropdown" 
                       style={{ 
                         fontFamily: 'Avenir, sans-serif',
                         maxWidth: 'calc(100vw - 2rem)',
@@ -583,7 +584,7 @@ export default function BlockchainPage() {
                       onClick={(e) => e.stopPropagation()}
                     >
                       {/* Search Bar */}
-                      <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+                      <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700">
                         <div className="relative">
                           <input
                             type="text"
@@ -827,7 +828,7 @@ export default function BlockchainPage() {
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-h-[calc(4*(240px+1rem))] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 max-h-[calc(4*(240px+1rem))] overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 cursor-default select-none">
             {filteredContracts.map((contract, idx) => (
               <Card 
                 key={idx} 
@@ -905,12 +906,12 @@ export default function BlockchainPage() {
         </>
       )}
       {activeTab === 'on-chain-activity' && (
-        <div>
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 mb-6">
+        <div className="cursor-default select-none">
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 mb-6 cursor-default select-none">
             {/* Mobile: Stacked layout */}
-            <div className="lg:hidden space-y-2">
+            <div className="lg:hidden space-y-2 cursor-default select-none">
               {/* Search Bar */}
-              <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 w-full">
+              <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 w-full cursor-default select-none">
                 <FaSearch className="text-gray-400 mr-2" size={18} />
                 <input
                   type="text"
@@ -947,7 +948,7 @@ export default function BlockchainPage() {
                       style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
                     >
                       <button
-                        className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                        className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedActivityTypes.includes('All') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                         onClick={() => {
                           setSelectedActivityTypes(['All']);
                         }}
@@ -964,7 +965,7 @@ export default function BlockchainPage() {
                       {availableActivityTypes.filter(type => type !== 'All').map(type => (
                         <button
                           key={type}
-                          className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                          className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedActivityTypes.includes(type) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                           onClick={() => {
                             setSelectedActivityTypes(prev => {
                               const newTypes = prev.filter(t => t !== 'All');
@@ -1034,7 +1035,7 @@ export default function BlockchainPage() {
                       </div>
 
                       <button
-                        className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center"
+                        className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedActivityContracts.length === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                         onClick={() => {
                           setSelectedActivityContracts([]);
                         }}
@@ -1056,7 +1057,7 @@ export default function BlockchainPage() {
                         .map(contract => (
                           <button
                             key={contract.id}
-                            className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center whitespace-nowrap truncate"
+                            className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center whitespace-nowrap truncate ${selectedActivityContracts.includes(String(contract.id)) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                             onClick={() => {
                               setSelectedActivityContracts(prev => {
                                 if (prev.includes(String(contract.id))) {
@@ -1103,7 +1104,7 @@ export default function BlockchainPage() {
                 <div className="relative flex-shrink-0">
                   <button
                     ref={desktopActivityTypeButtonRef}
-                    className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
+                    className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
                     style={{ fontFamily: 'Avenir, sans-serif' }}
                     onClick={(e) => {
                       e.preventDefault();
@@ -1119,11 +1120,11 @@ export default function BlockchainPage() {
                   {showActivityTypeDropdown && (
                     <div
                       ref={activityTypeDropdownDesktopRef}
-                      className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 activity-type-dropdown"
+                      className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 activity-type-dropdown"
                       style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
                     >
                       <button
-                        className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                        className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedActivityTypes.includes('All') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                         onClick={() => {
                           setSelectedActivityTypes(['All']);
                         }}
@@ -1140,7 +1141,7 @@ export default function BlockchainPage() {
                       {availableActivityTypes.filter(type => type !== 'All').map(type => (
                         <button
                           key={type}
-                          className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 flex items-center"
+                          className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedActivityTypes.includes(type) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                           onClick={() => {
                             setSelectedActivityTypes(prev => {
                               const newTypes = prev.filter(t => t !== 'All');
@@ -1169,7 +1170,7 @@ export default function BlockchainPage() {
                 <div className="relative flex-shrink-0 ml-1">
                   <button
                     ref={desktopActivityContractButtonRef}
-                    className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-700 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
+                    className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs min-w-[120px] relative whitespace-nowrap"
                     style={{ fontFamily: 'Avenir, sans-serif' }}
                     onClick={(e) => {
                       e.preventDefault();
@@ -1187,7 +1188,7 @@ export default function BlockchainPage() {
                   {openActivityContractDropdown && (
                     <div
                       ref={activityContractDropdownDesktopRef}
-                      className="absolute right-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2 min-w-[300px] max-w-[90vw] w-80 activity-contract-dropdown"
+                      className="absolute right-0 mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[300px] max-w-[90vw] w-80 activity-contract-dropdown"
                       style={{
                         fontFamily: 'Avenir, sans-serif',
                         maxWidth: 'calc(100vw - 2rem)',
@@ -1212,7 +1213,7 @@ export default function BlockchainPage() {
                       </div>
 
                       <button
-                        className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center"
+                        className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedActivityContracts.length === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                         onClick={() => {
                           setSelectedActivityContracts([]);
                         }}
@@ -1234,7 +1235,7 @@ export default function BlockchainPage() {
                         .map(contract => (
                           <button
                             key={contract.id}
-                            className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center whitespace-nowrap truncate"
+                            className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center whitespace-nowrap truncate ${selectedActivityContracts.includes(String(contract.id)) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                             onClick={() => {
                               setSelectedActivityContracts(prev => {
                                 if (prev.includes(String(contract.id))) {
@@ -1261,9 +1262,9 @@ export default function BlockchainPage() {
               </div>
             </div>
           </div>
-          <div className="space-y-4 max-h-[calc(4*(240px+1rem))] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+          <div className={`space-y-3 ${showAllActivity ? '' : 'max-h-[calc(4*(240px+1rem))]'} overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500`}>
             {filteredActivityData.map((activity, idx) => (
-              <div key={idx} className="bg-white rounded-xl border border-gray-200 shadow-sm flex p-4 items-start relative cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedActivity(activity)}>
+              <div key={idx} className="bg-gray-100 dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600 shadow-lg flex p-4 items-start relative cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedActivity(activity)}>
                 {/* Timeline Icon */}
                 <div className="flex flex-col items-center mr-4">
                   <div className={`h-10 w-10 rounded-lg ${activity.bgColor} flex items-center justify-center border-2 ${activity.borderColor}`} style={{marginTop: 2}}>
@@ -1272,18 +1273,18 @@ export default function BlockchainPage() {
                 </div>
                 {/* Card Content */}
                 <div className="flex-1">
-                  <div className="mb-2">
+                  <div className="mb-3">
                     <div>
-                      <h3 className="text-sm font-bold text-black mb-0.5" style={{ fontFamily: 'Avenir, sans-serif' }}>{activity.type}</h3>
-                      <p className="text-[12px] text-gray-600 mb-1 italic" style={{ fontFamily: 'Avenir, sans-serif' }}>{activity.description}</p>
+                      <h3 className="text-sm font-bold text-black dark:text-white mb-0.5" style={{ fontFamily: 'Avenir, sans-serif' }}>{activity.type}</h3>
+                      <p className="text-[12px] text-gray-400 mb-1 italic" style={{ fontFamily: 'Avenir, sans-serif' }}>{activity.description}</p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-1">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
                     <div>
-                      <div className="text-[11px] text-gray-500 font-medium mb-0.5" style={{ fontFamily: 'Avenir, sans-serif' }}>Action ID</div>
+                      <div className="text-[11px] text-gray-400 font-medium mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Action ID</div>
                       <div className="flex items-center">
                         <span
-                          className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
+                          className="text-xs font-mono text-black dark:text-white truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
                           style={{ maxWidth: '100px' }}
                           title={activity.txHash}
                         >
@@ -1319,22 +1320,24 @@ export default function BlockchainPage() {
                       </div>
                     </div>
                     <div>
-                      <div className="text-[11px] text-gray-500 font-medium mb-0.5" style={{ fontFamily: 'Avenir, sans-serif' }}>Contract ID</div>
-                      <div className="bg-gray-100 rounded px-2 py-0.5 font-mono text-xs w-fit">{activity.contractId}</div>
+                      <div className="text-[11px] text-gray-400 font-medium mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Contract ID</div>
+                      <div className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary w-fit" style={{ fontFamily: 'Avenir, sans-serif' }}>#{activity.contractId}</div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-1">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
                     <div>
-                      <div className="text-[11px] text-gray-500 font-medium mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Timestamp</div>
-                      <div className="text-xs text-black" style={{ fontFamily: 'Avenir, sans-serif' }}>2024-05-20 14:32:15</div>
+                      <div className="text-[11px] text-gray-400 font-medium mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Timestamp</div>
+                      <div className="text-xs text-black dark:text-white" style={{ fontFamily: 'Avenir, sans-serif' }}>2024-05-20 14:32:15</div>
                     </div>
                     <div>
-                      <div className="text-[11px] text-gray-500 font-medium mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Contract Title</div>
-                      <div className="font-semibold text-gray-900 text-xs" style={{ fontFamily: 'Avenir, sans-serif' }}>{activity.type}</div>
+                      <div className="text-[11px] text-gray-400 font-medium mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Contract Title</div>
+                      <div className="font-semibold text-black dark:text-white text-xs" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                        {contracts.find(contract => contract.id === activity.contractId)?.title || 'Unknown Contract'}
+                      </div>
                     </div>
                   </div>
                   <div className="flex justify-end mt-1">
-                    <a href="#" className="flex items-center px-3 py-1.5 border border-gray-200 rounded-lg bg-white text-gray-700 hover:bg-gray-100 text-[10px] font-medium" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                    <a href="#" className="flex items-center px-3 py-1.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-[10px] font-medium" style={{ fontFamily: 'Avenir, sans-serif' }}>
                       <HiOutlineExternalLink className="mr-1 text-base" />
                       View in Explorer
                     </a>
@@ -1344,14 +1347,24 @@ export default function BlockchainPage() {
             ))}
           </div>
           <div className="flex justify-center mt-6">
-            <button className="px-6 py-2 rounded-lg border border-gray-300 bg-white text-gray-900 font-medium shadow-sm hover:bg-gray-50 text-sm">Load More Activity</button>
+            <button 
+              className="flex items-center gap-2 px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              onClick={() => setShowAllActivity(!showAllActivity)}
+            >
+              {showAllActivity ? (
+                <TbHistoryOff className="w-5 h-5 text-primary dark:text-white" />
+              ) : (
+                <TbHistory className="w-5 h-5 text-primary dark:text-white" />
+              )}
+              {showAllActivity ? 'Less History' : 'More History'}
+            </button>
           </div>
         </div>
       )}
       {activeTab === 'explorers' && (
-        <div>
-          <div className="flex justify-end mt-6 mb-6">
-            <button className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors w-full sm:w-auto" style={{ fontFamily: 'Avenir, sans-serif' }}>
+        <div className="bg-white dark:bg-gray-900 rounded-xl p-6">
+          <div className="flex justify-end mb-6">
+            <button className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold text-xs hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors w-full sm:w-auto" style={{ fontFamily: 'Avenir, sans-serif' }}>
               <LuBookText className="text-base text-primary" />
               Explorer Guides
             </button>
@@ -1359,9 +1372,9 @@ export default function BlockchainPage() {
           {/* Explorer Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
             {/* Allo Explorer (moved to first) */}
-            <Card className="rounded-xl border border-gray-200 p-6 flex flex-col h-full">
+            <Card className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 flex flex-col h-full">
               <div className="flex items-center mb-2">
-                <span className="h-10 w-10 rounded-lg bg-purple-50 flex items-center justify-center border-2 border-purple-200 mr-3">
+                <span className="h-10 w-10 rounded-lg !bg-[#8a66fe] dark:!bg-[#8a66fe] flex items-center justify-center border-2 border-[#caa6fe] dark:border-[#caa6fe] mr-3">
                   <Image
                     src="/assets/Allo.info_idEm-oc6nE_0.png"
                     alt="Allo.info"
@@ -1370,73 +1383,73 @@ export default function BlockchainPage() {
                     className="object-contain"
                   />
                 </span>
-                <span className="text-lg font-semibold text-black">Allo Explorer</span>
+                <span className="text-lg font-semibold text-black dark:text-white">Allo Explorer</span>
               </div>
-              <p className="text-gray-500 text-sm mb-4">Cross-chain interoperability and transaction monitoring</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">Cross-chain interoperability and transaction monitoring</p>
               <div className="flex flex-col gap-2 mb-4">
-                <button className="flex items-center justify-between px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50">
+                <button className="flex items-center justify-between px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700">
                   Monitor Bridges <FaArrowUpRightFromSquare className="ml-2 text-sm" />
                 </button>
-                <button className="flex items-center justify-between px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50">
+                <button className="flex items-center justify-between px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700">
                   Cross-Chain Analytics <FaArrowUpRightFromSquare className="ml-2 text-sm" />
                 </button>
-                <button className="flex items-center justify-between px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50">
+                <button className="flex items-center justify-between px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700">
                   Network Status <FaArrowUpRightFromSquare className="ml-2 text-sm" />
                 </button>
               </div>
               <button className="mt-auto w-full px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 transition-colors text-sm">Connect to Allo Explorer</button>
             </Card>
             {/* Pera Explorer (was AlgoExplorer) */}
-            <Card className="rounded-xl border border-gray-200 p-6 flex flex-col h-full">
+            <Card className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 flex flex-col h-full">
               <div className="flex items-center mb-2">
-                <span className="h-10 w-10 rounded-lg bg-yellow-50 flex items-center justify-center border-2 border-yellow-200 mr-3">
+                <span className="h-10 w-10 rounded-lg !bg-[#ffd700] dark:!bg-[#ffed4e] flex items-center justify-center border-2 border-[#fffde7] dark:border-[#fffde7] mr-3">
                   <Image
-                    src="/assets/newperalogo.png"
+                    src="/assets/peranew.png"
                     alt="Pera"
                     width={24}
                     height={24}
                     className="object-contain"
                   />
                 </span>
-                <span className="text-lg font-semibold text-black">Pera Explorer</span>
+                <span className="text-lg font-semibold text-black dark:text-white">Pera Explorer</span>
               </div>
-              <p className="text-gray-500 text-sm mb-4">Track transactions and contract activity on the Algorand blockchain</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">Track transactions and contract activity on the Algorand blockchain</p>
               <div className="flex flex-col gap-2 mb-4">
-                <button className="flex items-center justify-between px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50">
+                <button className="flex items-center justify-between px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700">
                   View Smart Contracts <FaArrowUpRightFromSquare className="ml-2 text-sm" />
                 </button>
-                <button className="flex items-center justify-between px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50">
+                <button className="flex items-center justify-between px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700">
                   Track Escra Wallet <FaArrowUpRightFromSquare className="ml-2 text-sm" />
                 </button>
-                <button className="flex items-center justify-between px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50">
+                <button className="flex items-center justify-between px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700">
                   Browse Assets <FaArrowUpRightFromSquare className="ml-2 text-sm" />
                 </button>
               </div>
               <button className="mt-auto w-full px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 transition-colors text-sm">Connect to Pera Explorer</button>
             </Card>
             {/* Pera Wallet (unchanged) */}
-            <Card className="rounded-xl border border-gray-200 p-6 flex flex-col h-full">
+            <Card className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 flex flex-col h-full">
               <div className="flex items-center mb-2">
-                <span className="h-10 w-10 rounded-lg bg-yellow-50 flex items-center justify-center border-2 border-yellow-200 mr-3">
+                <span className="h-10 w-10 rounded-lg !bg-[#ffd700] dark:!bg-[#ffed4e] flex items-center justify-center border-2 border-[#fffde7] dark:border-[#fffde7] mr-3">
                   <Image
-                    src="/assets/newperalogo.png"
+                    src="/assets/peranew.png"
                     alt="Pera"
                     width={24}
                     height={24}
                     className="object-contain"
                   />
                 </span>
-                <span className="text-lg font-semibold text-black">Pera Wallet</span>
+                <span className="text-lg font-semibold text-black dark:text-white">Pera Wallet</span>
               </div>
-              <p className="text-gray-500 text-sm mb-4">Mobile and web wallet for Algorand blockchain interactions</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">Mobile and web wallet for Algorand blockchain interactions</p>
               <div className="flex flex-col gap-2 mb-4">
-                <button className="flex items-center justify-between px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50">
+                <button className="flex items-center justify-between px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700">
                   Manage Assets <FaArrowUpRightFromSquare className="ml-2 text-sm" />
                 </button>
-                <button className="flex items-center justify-between px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50">
+                <button className="flex items-center justify-between px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700">
                   View Transaction History <FaArrowUpRightFromSquare className="ml-2 text-sm" />
                 </button>
-                <button className="flex items-center justify-between px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50">
+                <button className="flex items-center justify-between px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700">
                   Connect dApps <FaArrowUpRightFromSquare className="ml-2 text-sm" />
                 </button>
               </div>
@@ -1444,47 +1457,47 @@ export default function BlockchainPage() {
             </Card>
           </div>
           {/* Developer Resources */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-black mb-4">Developer Resources</h3>
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+            <h3 className="text-lg font-semibold text-black dark:text-white mb-4">Developer Resources</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Smart Contract SDK */}
-              <Card className="rounded-xl border border-gray-200 p-5 flex flex-col h-full">
+              <Card className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 flex flex-col h-full">
                 <div className="flex items-center mb-2">
-                  <span className="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center border-2 border-teal-200 mr-3">
-                    <LuFileTerminal className="w-10 h-6 text-black" />
+                  <span className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/20 flex items-center justify-center border-2 border-teal-200 dark:border-teal-700 mr-3">
+                    <LuFileTerminal className="w-10 h-6 text-black dark:text-white" />
                   </span>
-                  <span className="text-base font-semibold text-black">Smart Contract SDK</span>
+                  <span className="text-base font-semibold text-black dark:text-white">Smart Contract SDK</span>
                 </div>
-                <p className="text-gray-500 text-xs mb-4">Developer toolkit for building on Escra's smart contract platform</p>
-                <button className="flex items-center justify-center px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 mt-auto">
+                <p className="text-gray-500 dark:text-gray-400 text-xs mb-4">Developer toolkit for building on Escra's smart contract platform</p>
+                <button className="flex items-center justify-center px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 mt-auto">
                   <BiBookOpen className="mr-2 text-lg" />
                   View Documentation
                 </button>
               </Card>
               {/* Faucet */}
-              <Card className="rounded-xl border border-gray-200 p-6 flex flex-col h-full">
+              <Card className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 flex flex-col h-full">
                 <div className="flex items-center mb-2">
-                  <span className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center border-2 border-blue-200 mr-3">
-                    <FaFaucetDrip className="w-5 h-5 text-black" />
+                  <span className="h-10 w-10 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center border-2 border-blue-200 dark:border-blue-700 mr-3">
+                    <FaFaucetDrip className="w-5 h-5 text-black dark:text-white" />
                   </span>
-                  <span className="text-lg font-semibold text-black">Faucet</span>
+                  <span className="text-lg font-semibold text-black dark:text-white">Faucet</span>
                 </div>
-                <p className="text-gray-500 text-xs mb-4">Get test tokens to interact with Escra's TestNet environment</p>
-                <button className="flex items-center justify-center px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 mt-auto">
+                <p className="text-gray-500 dark:text-gray-400 text-xs mb-4">Get test tokens to interact with Escra's TestNet environment</p>
+                <button className="flex items-center justify-center px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 mt-auto">
                   <PiHandCoins className="mr-2 text-lg" />
                   Request Test Tokens
                 </button>
               </Card>
               {/* Security Audits */}
-              <Card className="rounded-xl border border-gray-200 p-5 flex flex-col h-full">
+              <Card className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 flex flex-col h-full">
                 <div className="flex items-center mb-2">
-                  <span className="h-10 w-10 rounded-lg bg-gray-50 flex items-center justify-center border-2 border-gray-200 mr-3">
-                    <TbShieldLock className="w-6 h-6 text-black" />
+                  <span className="h-10 w-10 rounded-lg bg-gray-50 dark:bg-gray-700 flex items-center justify-center border-2 border-gray-200 dark:border-gray-600 mr-3">
+                    <TbShieldLock className="w-6 h-6 text-black dark:text-white" />
                   </span>
-                  <span className="text-lg font-semibold text-black">Security Audits</span>
+                  <span className="text-lg font-semibold text-black dark:text-white">Security Audits</span>
                 </div>
-                <p className="text-gray-500 text-xs mb-4">View security audit reports for Escra's smart contracts</p>
-                <button className="flex items-center justify-center px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 mt-auto">
+                <p className="text-gray-500 dark:text-gray-400 text-xs mb-4">View security audit reports for Escra's smart contracts</p>
+                <button className="flex items-center justify-center px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 mt-auto">
                   <TbReportSearch className="mr-2 text-lg" />
                   View Audit Reports
                 </button>

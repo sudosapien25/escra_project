@@ -1170,13 +1170,35 @@ export default function SignaturesPage() {
     }
   };
 
+  // Helper function to get distinct colors for signature cards
+  const getSignatureCardBorderColor = (index: number, isDocuSign: boolean = false) => {
+    if (index === 0) {
+      // First card uses brand color
+      return isDocuSign ? '#3b82f6' : '#0d9488'; // blue-500 for DocuSign, teal-600 for Escra
+    }
+    
+    const colors = [
+      '#8b5cf6', // violet-500
+      '#f59e0b', // amber-500
+      '#ef4444', // red-500
+      '#06b6d4', // cyan-500
+      '#84cc16', // lime-500
+      '#f97316', // orange-500
+      '#ec4899', // pink-500
+      '#6366f1', // indigo-500
+      '#10b981', // emerald-500
+      '#3b82f6', // blue-500
+    ];
+    return colors[(index - 1) % colors.length];
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 cursor-default select-none">
       {/* Signatures Title and Button */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 sm:mb-6 gap-4">
-        <div>
-          <h1 className="text-[30px] font-bold text-black dark:text-white mb-1">Signatures</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-[16px] mt-0">Manage electronic signatures for all your contracts</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 sm:mb-6 gap-4 cursor-default select-none">
+        <div className="cursor-default select-none">
+          <h1 className="text-[30px] font-bold text-black dark:text-white mb-1 cursor-default select-none">Signatures</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-[16px] mt-0 cursor-default select-none">Manage electronic signatures for all your contracts</p>
         </div>
         <button
           onClick={handleRequestSignatureClick}
@@ -1191,52 +1213,52 @@ export default function SignaturesPage() {
       <hr className="my-3 sm:my-6 border-gray-300 cursor-default select-none" />
 
       {/* Stat Boxes */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 cursor-default select-none">
         {/* Action Required */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full">
-          <div className="h-10 w-10 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center border-2 border-orange-200 dark:border-orange-800">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
+          <div className="h-10 w-10 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center border-2 border-orange-200 dark:border-orange-800 cursor-default select-none">
             <PiWarningDiamondBold size={20} className="text-orange-500 dark:text-orange-400" />
           </div>
-          <div className="flex flex-col items-start h-full">
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Action Required</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{statBoxesData.actionRequired}</p>
-            <p className="text-xs text-gray-400 dark:text-gray-500">Needs your attention</p>
+          <div className="flex flex-col items-start h-full cursor-default select-none">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Action Required</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{statBoxesData.actionRequired}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">Needs your attention</p>
           </div>
         </div>
 
         {/* Waiting for Others */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full">
-          <div className="h-10 w-10 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center border-2 border-yellow-200 dark:border-yellow-800">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
+          <div className="h-10 w-10 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center border-2 border-yellow-200 dark:border-yellow-800 cursor-default select-none">
             <TbClockEdit size={20} className="text-yellow-500 dark:text-yellow-400" />
           </div>
-          <div className="flex flex-col items-start h-full">
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Waiting on Others</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{signaturesData.filter(sig => sig.status === 'Pending' && sig.signatures.split(' of ')[0] !== '0').length}</p>
-            <p className="text-xs text-gray-400 dark:text-gray-500">Requires action</p>
+          <div className="flex flex-col items-start h-full cursor-default select-none">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Waiting on Others</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{signaturesData.filter(sig => sig.status === 'Pending' && sig.signatures.split(' of ')[0] !== '0').length}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">Requires action</p>
           </div>
         </div>
 
         {/* Expiring Soon */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full">
-          <div className="h-10 w-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center border-2 border-red-200 dark:border-red-800">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
+          <div className="h-10 w-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center border-2 border-red-200 dark:border-red-800 cursor-default select-none">
             <LuCalendarClock size={18} className="text-red-500 dark:text-red-400" />
           </div>
-          <div className="flex flex-col items-start h-full">
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Expiring Soon</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{statBoxesData.expiringSoon}</p>
-            <p className="text-xs text-gray-400 dark:text-gray-500">Within 3 days</p>
+          <div className="flex flex-col items-start h-full cursor-default select-none">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Expiring Soon</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{statBoxesData.expiringSoon}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">Within 3 days</p>
           </div>
         </div>
 
         {/* Completed */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full">
-          <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center border-2 border-green-200 dark:border-green-800">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
+          <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center border-2 border-green-200 dark:border-green-800 cursor-default select-none">
             <FaRegSquareCheck size={18} className="text-green-500 dark:text-green-400" />
           </div>
-          <div className="flex flex-col items-start h-full">
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans" style={{ fontFamily: 'Avenir, sans-serif' }}>Completed</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{statBoxesData.completed}</p>
-            <p className="text-xs text-gray-400 dark:text-gray-500">This month</p>
+          <div className="flex flex-col items-start h-full cursor-default select-none">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Completed</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{statBoxesData.completed}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">This month</p>
           </div>
         </div>
       </div>
@@ -1244,11 +1266,11 @@ export default function SignaturesPage() {
       <hr className="my-3 md:my-6 border-gray-300 cursor-default select-none" />
 
       {/* Search/Filter Bar - Responsive Design */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 mb-6 mt-2">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 mb-6 mt-2 cursor-default select-none">
         {/* Mobile: Stacked layout */}
-        <div className="lg:hidden">
+        <div className="lg:hidden cursor-default select-none">
           {/* Search Bar */}
-          <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 w-full">
+          <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 w-full cursor-default select-none">
             <FaSearch className="text-gray-400 mr-2" size={18} />
             <input
               type="text"
@@ -1260,7 +1282,7 @@ export default function SignaturesPage() {
             />
           </div>
           {/* Filter Buttons - Stacked, full width, visually soothing */}
-          <div className="flex flex-col gap-2 mt-2">
+          <div className="flex flex-col gap-2 mt-2 cursor-default select-none">
             {/* Status Filter */}
             <div className="relative">
               <button 
@@ -1342,8 +1364,13 @@ export default function SignaturesPage() {
               {openContractDropdown && (
                 <div 
                   ref={mobileContractDropdownRef}
-                  className="absolute top-full left-0 mt-2 min-w-[180px] w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 contract-dropdown" 
-                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                  className="absolute top-full left-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[300px] max-w-[90vw] contract-dropdown" 
+                  style={{ 
+                    fontFamily: 'Avenir, sans-serif',
+                    maxWidth: 'calc(100vw - 2rem)',
+                    right: '0',
+                    transform: 'translateX(0)'
+                  }}
                 >
                   {/* Search Bar */}
                   <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
@@ -1601,9 +1628,9 @@ export default function SignaturesPage() {
         </div>
 
         {/* Desktop: Horizontal layout */}
-        <div className="hidden lg:flex items-center gap-1">
+        <div className="hidden lg:flex items-center gap-1 cursor-default select-none">
           {/* Search Bar */}
-          <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex-1 min-w-0">
+          <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex-1 min-w-0 cursor-default select-none">
             <FaSearch className="text-gray-400 mr-2" size={18} />
             <input
               type="text"
@@ -1615,7 +1642,7 @@ export default function SignaturesPage() {
             />
           </div>
           {/* Filter Buttons - fixed width based on max content */}
-          <div className="flex items-center flex-shrink-0">
+          <div className="flex items-center flex-shrink-0 cursor-default select-none">
                     {/* Status Filter */}
             <div className="relative flex-shrink-0">
         <button 
@@ -1957,12 +1984,12 @@ export default function SignaturesPage() {
       </div>
 
       {/* Page content - Tabs and Signature List */}
-      <div className="space-y-4">
+      <div className="space-y-4 cursor-default select-none">
         {/* White Box Container */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 cursor-default select-none">
           {/* Tabs Row with Divider */}
-          <div className="border-b border-gray-200 dark:border-gray-700">
-            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+          <div className="border-b border-gray-200 dark:border-gray-700 cursor-default select-none">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 cursor-default select-none">
             {activeTab === 'inbox' ? (
               <>
                 <button
@@ -3061,7 +3088,7 @@ export default function SignaturesPage() {
                                 />
                               </div>
                             )}
-                            <div className="flex-1 relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 shadow-sm" style={{ borderLeft: '3px solid #e5e7eb' }}>
+                            <div className="flex-1 relative bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 shadow-sm" style={{ borderLeft: `3px solid ${getSignatureCardBorderColor(idx, false)}` }}>
                             {/* Header with role controls and delete button */}
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                               <div className="flex flex-col sm:flex-row gap-1">
@@ -3157,7 +3184,11 @@ export default function SignaturesPage() {
                                 </button>
                                 <button 
                                   className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1" 
-                                  onClick={() => handleDeleteRecipient(idx)} 
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleDeleteRecipient(idx);
+                                  }} 
                                   disabled={recipients.length === 1}
                                 >
                                     <HiOutlineTrash className="w-4 h-4" />
@@ -3696,7 +3727,7 @@ export default function SignaturesPage() {
                                 />
                               </div>
                             )}
-                            <div className="flex-1 relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 shadow-sm" style={{ borderLeft: '3px solid #e5e7eb' }}>
+                            <div className="flex-1 relative bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 shadow-sm" style={{ borderLeft: `3px solid ${getSignatureCardBorderColor(idx, true)}` }}>
                             {/* Header with role controls and delete button */}
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                               <div className="flex flex-col sm:flex-row gap-1">
@@ -3792,7 +3823,11 @@ export default function SignaturesPage() {
                                 </button>
                                 <button 
                                   className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1" 
-                                  onClick={() => handleDeleteDocuSignRecipient(idx)} 
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleDeleteDocuSignRecipient(idx);
+                                  }} 
                                   disabled={docuSignRecipients.length === 1}
                                 >
                                   <HiOutlineTrash className="w-4 h-4" />

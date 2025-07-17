@@ -739,7 +739,12 @@ export default function WorkflowsPage() {
                   <HiMiniChevronDown className="text-gray-400" size={16} />
                 </button>
                 {openContractDropdown && (
-                  <div ref={mobileContractDropdownRef} className="absolute top-full left-0 mt-2 min-w-[180px] w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 contract-dropdown" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                  <div ref={mobileContractDropdownRef} className="absolute top-full left-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[300px] max-w-[90vw] contract-dropdown" style={{ 
+                    fontFamily: 'Avenir, sans-serif',
+                    maxWidth: 'calc(100vw - 2rem)',
+                    right: '0',
+                    transform: 'translateX(0)'
+                  }}>
                     {/* Search Bar */}
                     <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
                       <div className="relative">
@@ -1271,7 +1276,7 @@ export default function WorkflowsPage() {
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
-                                  className={`bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 p-4 shadow-sm transition-shadow relative ${
+                                  className={`bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 p-4 shadow-lg hover:shadow-md transition-shadow relative ${
                                     snapshot.isDragging ? 'shadow-lg' : ''
                                   }`}
                                   onClick={() => {
@@ -1402,7 +1407,7 @@ export default function WorkflowsPage() {
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
-                                  className={`bg-white rounded-lg border border-gray-200 p-4 shadow-sm transition-shadow relative ${snapshot.isDragging ? 'shadow-lg' : ''}`}
+                                  className={`bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 p-4 shadow-lg hover:shadow-md transition-shadow relative ${snapshot.isDragging ? 'shadow-lg' : ''}`}
                                   onClick={() => {
                                     const fullTask = tasks.find(t => t.code === task.code);
                                     setSelectedTask(fullTask || task);

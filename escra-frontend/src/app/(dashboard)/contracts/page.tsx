@@ -1850,22 +1850,22 @@ const ContractsPage: React.FC = () => {
             </p>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 w-full md:w-auto cursor-default select-none">
-            <div className="inline-block rounded-full bg-teal-50 px-2 py-0.5 text-teal-500 font-semibold text-xs border border-teal-100 self-start sm:self-center cursor-default select-none">
+            <div className="inline-block rounded-full bg-primary/10 dark:bg-primary/20 px-2 py-0.5 text-primary dark:text-primary font-semibold text-xs border border-primary/20 dark:border-primary/30 self-start sm:self-center cursor-default select-none">
               Logged in as: Creator
             </div>
-            <div className="inline-flex self-start sm:self-center border border-gray-200 rounded-lg overflow-hidden cursor-default select-none">
+            <div className="inline-flex self-start sm:self-center border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden cursor-default select-none">
               {['admin', 'creator', 'editor', 'viewer'].map((role, idx, arr) => (
                 <button
                   key={role}
                   className={`px-3 py-1.5 text-xs font-medium transition-colors border-0 ${
-                    idx !== 0 ? 'border-l border-gray-200' : ''
+                    idx !== 0 ? 'border-l border-gray-200 dark:border-gray-700' : ''
                   } ${
                     idx === 0 ? 'rounded-l-lg' : ''
                   } ${
                     idx === arr.length - 1 ? 'rounded-r-lg' : ''
                   } ${
                     activeRole === role
-                      ? 'bg-teal-50 text-teal-500' : 'bg-white text-gray-700 hover:bg-gray-50'
+                      ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                   } cursor-pointer`}
                   onClick={() => setActiveRole(role)}
                 >
@@ -1909,7 +1909,7 @@ const ContractsPage: React.FC = () => {
           </div>
 
           {/* Stepper */}
-          <div className="w-full overflow-x-auto">
+          <div className="w-full overflow-x-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
             <div className="flex items-center justify-between mb-6 min-w-[340px] sm:min-w-0">
               <div className="flex items-center space-x-2 w-full flex-nowrap">
                 {[1, 2, 3, 4].map((step, idx) => (
@@ -1939,7 +1939,7 @@ const ContractsPage: React.FC = () => {
           </div>
 
           {/* Form Content */}
-          <div className="space-y-6">
+          <div className="space-y-6 pt-4">
             {modalStep === 1 && (
               <form onSubmit={handleSubmit} noValidate>
                 <div className="grid grid-cols-2 gap-6">
@@ -2983,8 +2983,13 @@ const ContractsPage: React.FC = () => {
                   {openContractDropdown && (
                     <div 
                       ref={mobileContractDropdownRef}
-                      className="absolute top-full left-0 mt-2 min-w-[180px] w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 contract-dropdown" 
-                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                      className="absolute top-full left-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[300px] max-w-[90vw] contract-dropdown" 
+                      style={{ 
+                        fontFamily: 'Avenir, sans-serif',
+                        maxWidth: 'calc(100vw - 2rem)',
+                        right: '0',
+                        transform: 'translateX(0)'
+                      }}
                     >
                       {/* Search Bar */}
                       <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
@@ -4928,7 +4933,7 @@ const ContractsPage: React.FC = () => {
                           autoComplete="off"
                         />
                         {showAssigneeDropdown && (
-                          <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                          <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ fontFamily: 'Avenir, sans-serif' }}>
                             {allAssignees.length > 0 ? (
                               allAssignees.map((assignee: string) => (
                                 <div
