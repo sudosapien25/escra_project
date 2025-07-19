@@ -28,8 +28,10 @@ import { HiMiniChevronUpDown, HiMiniChevronDown } from 'react-icons/hi2';
 import { useTaskStore } from '@/data/taskStore';
 import { X } from 'lucide-react';
 import { useAssigneeStore } from '@/data/assigneeStore';
+import { useToast } from '@/components/ui/use-toast';
+import { Toaster } from '@/components/ui/toaster';
 import { useAuth } from '@/context/AuthContext';
-import { PiMoneyWavyBold, PiBankBold, PiSignatureBold } from 'react-icons/pi';
+import { PiMoneyWavyBold, PiBankBold, PiSignatureBold, PiCaretUpDownBold } from 'react-icons/pi';
 import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
@@ -72,6 +74,37 @@ interface Contract {
   buyer?: string;
   seller?: string;
   agent?: string;
+  // Additional form fields
+  milestone?: string;
+  notes?: string;
+  closingDate?: string;
+  dueDate?: string;
+  propertyAddress?: string;
+  propertyType?: string;
+  escrowNumber?: string;
+  buyerEmail?: string;
+  sellerEmail?: string;
+  agentEmail?: string;
+  earnestMoney?: string;
+  downPayment?: string;
+  loanAmount?: string;
+  interestRate?: string;
+  loanTerm?: string;
+  lenderName?: string;
+  sellerFinancialInstitution?: string;
+  buyerFinancialInstitution?: string;
+  buyerAccountNumber?: string;
+  sellerAccountNumber?: string;
+  buyerFinancialInstitutionRoutingNumber?: string;
+  sellerFinancialInstitutionRoutingNumber?: string;
+  titleCompany?: string;
+  insuranceCompany?: string;
+  inspectionPeriod?: string;
+  contingencies?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  country?: string;
 }
 
 interface Document {
@@ -202,6 +235,7 @@ const sampleDocuments: Document[] = [
 const ContractsPage: React.FC = () => {
   const { user } = useAuth();
   const currentUserName = user?.name || '';
+  const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState('allContracts');
   const [activeContentTab, setActiveContentTab] = useState('contractList');
@@ -245,6 +279,7 @@ const ContractsPage: React.FC = () => {
     loanTerm: '',
     lenderName: '',
     sellerFinancialInstitution: '',
+    buyerFinancialInstitution: '',
     buyerAccountNumber: '',
     sellerAccountNumber: '',
     buyerFinancialInstitutionRoutingNumber: '',
@@ -260,6 +295,102 @@ const ContractsPage: React.FC = () => {
   });
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [contracts, setContracts] = useState<Contract[]>(mockContracts);
+
+  // State for expanded parties rows
+  const [expandedPartiesRows, setExpandedPartiesRows] = useState<Set<string>>(new Set());
+
+  // Helper function to parse parties string into array
+  const parseParties = (partiesString: string): string[] => {
+    return partiesString.split(' & ').map(party => party.trim());
+  };
+
+  // Helper function to toggle expanded state for a row
+  const togglePartiesExpansion = (contractId: string) => {
+    setExpandedPartiesRows(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(contractId)) {
+        newSet.delete(contractId);
+      } else {
+        newSet.add(contractId);
+      }
+      return newSet;
+    });
+  };
+
+  // Generate unique contract ID with Algorand Smart Contract Chain ID format
+  const generateContractId = (): string => {
+    // Generate a unique contract ID following the existing pattern
+    // Most contracts have 4-digit IDs (1000-9999), some have 5-digit IDs (10000+)
+    const random = Math.floor(Math.random() * 9000) + 1000; // 1000-9999
+    return random.toString();
+  };
+
+  // Create parties string from form data
+  const createPartiesString = (): string => {
+    // Use the recipients data from step 2 instead of modalForm fields
+    const parties = recipients
+      .filter(recipient => recipient.name && recipient.name.trim() !== '')
+      .map(recipient => recipient.name.trim());
+    return parties.join(' & ');
+  };
+
+  // Reset form to initial state
+  const resetForm = () => {
+    setModalForm({
+      title: '',
+      type: '',
+      milestone: '',
+      notes: '',
+      buyer: '',
+      seller: '',
+      agent: '',
+      value: '',
+      closingDate: '',
+      dueDate: '',
+      propertyAddress: '',
+      propertyType: '',
+      escrowNumber: '',
+      buyerEmail: '',
+      sellerEmail: '',
+      agentEmail: '',
+      earnestMoney: '',
+      downPayment: '',
+      loanAmount: '',
+      interestRate: '',
+      loanTerm: '',
+      lenderName: '',
+      sellerFinancialInstitution: '',
+      buyerFinancialInstitution: '',
+      buyerAccountNumber: '',
+      sellerAccountNumber: '',
+      buyerFinancialInstitutionRoutingNumber: '',
+      sellerFinancialInstitutionRoutingNumber: '',
+      titleCompany: '',
+      insuranceCompany: '',
+      inspectionPeriod: '',
+      contingencies: '',
+      city: '',
+      state: '',
+      zipCode: '',
+      country: '',
+    });
+    setModalStep(1);
+    setFormErrors({});
+    // Reset recipients to initial state
+    setRecipients([{
+      name: '',
+      email: '',
+      role: 'Needs to Sign',
+      signerRole: '',
+      showRoleDropdown: false,
+      showSignerRoleDropdown: false,
+      roleButtonRef: React.createRef<HTMLButtonElement>(),
+      roleDropdownRef: React.createRef<HTMLDivElement>(),
+      signerRoleButtonRef: React.createRef<HTMLButtonElement>(),
+      signerRoleDropdownRef: React.createRef<HTMLDivElement>(),
+    }]);
+    setIsOnlySigner(false);
+  };
 
   // Routing number masking state
   const [buyerRoutingDisplay, setBuyerRoutingDisplay] = useState('');
@@ -835,28 +966,136 @@ const ContractsPage: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = e.currentTarget;
-    const isValid = form.checkValidity();
     
-    if (!isValid) {
-      const newErrors: Record<string, boolean> = {};
-      Array.from(form.elements).forEach((element) => {
-        if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement) {
-          if (element.required && !element.value) {
-            newErrors[element.name] = true;
+    // Only use browser validation for step 1
+    if (modalStep === 1) {
+      const form = e.currentTarget;
+      const isValid = form.checkValidity();
+      
+      if (!isValid) {
+        const newErrors: Record<string, boolean> = {};
+        Array.from(form.elements).forEach((element) => {
+          if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement) {
+            if (element.required && !element.value) {
+              newErrors[element.name] = true;
+            }
           }
-        }
-      });
-      setFormErrors(newErrors);
-      return;
+        });
+        setFormErrors(newErrors);
+        return;
+      }
     }
 
     if (modalStep === 1) {
+      // For step 1, only validate the essential fields for contract creation
+      const requiredFields = ['title', 'type'];
+      const missingFields = requiredFields.filter(field => !modalForm[field as keyof typeof modalForm]);
+      
+      if (missingFields.length > 0) {
+        const newErrors: Record<string, boolean> = {};
+        missingFields.forEach(field => {
+          newErrors[field] = true;
+        });
+        setFormErrors(newErrors);
+        return;
+      }
+      
       setModalStep(2);
     } else if (modalStep === 2) {
       setModalStep(3);
     } else if (modalStep === 3) {
+      // Step 3: Just progress to step 4 (document upload)
       setModalStep(4);
+    } else if (modalStep === 4) {
+      // Step 4: Create the contract (document upload is optional)
+      // Validate essential fields for contract creation
+      const requiredFields = ['title', 'type'];
+      const missingFields = requiredFields.filter(field => !modalForm[field as keyof typeof modalForm]);
+      
+      if (missingFields.length > 0) {
+        const newErrors: Record<string, boolean> = {};
+        missingFields.forEach(field => {
+          newErrors[field] = true;
+        });
+        setFormErrors(newErrors);
+        return;
+      }
+
+      // Create new contract
+      const newContractId = generateContractId();
+      const partiesString = createPartiesString();
+      
+      // Map recipients to individual party fields based on their signer roles
+      // Map recipients by position: first = buyer, second = seller, third = agent
+      const buyerRecipient = recipients[0];
+      const sellerRecipient = recipients[1];
+      const agentRecipient = recipients[2];
+      
+
+      
+      const newContract: Contract = {
+        id: newContractId,
+        title: modalForm.title,
+        parties: partiesString,
+        status: 'Initiation',
+        updated: 'Just now',
+        value: modalForm.value,
+        documents: uploadedFiles.length, // Count uploaded files
+        type: modalForm.type,
+        buyer: buyerRecipient?.name || '',
+        seller: sellerRecipient?.name || '',
+        agent: agentRecipient?.name || '',
+        // Include all form data
+        milestone: modalForm.milestone,
+        notes: modalForm.notes,
+        closingDate: modalForm.closingDate,
+        dueDate: modalForm.dueDate,
+        propertyAddress: modalForm.propertyAddress,
+        propertyType: modalForm.propertyType,
+        escrowNumber: modalForm.escrowNumber,
+        buyerEmail: buyerRecipient?.email || '',
+        sellerEmail: sellerRecipient?.email || '',
+        agentEmail: agentRecipient?.email || '',
+        earnestMoney: modalForm.earnestMoney,
+        downPayment: modalForm.downPayment,
+        loanAmount: modalForm.loanAmount,
+        interestRate: modalForm.interestRate,
+        loanTerm: modalForm.loanTerm,
+        lenderName: modalForm.lenderName,
+        sellerFinancialInstitution: modalForm.sellerFinancialInstitution,
+        buyerFinancialInstitution: modalForm.buyerFinancialInstitution,
+        buyerAccountNumber: modalForm.buyerAccountNumber,
+        sellerAccountNumber: modalForm.sellerAccountNumber,
+        buyerFinancialInstitutionRoutingNumber: modalForm.buyerFinancialInstitutionRoutingNumber,
+        sellerFinancialInstitutionRoutingNumber: modalForm.sellerFinancialInstitutionRoutingNumber,
+        titleCompany: modalForm.titleCompany,
+        insuranceCompany: modalForm.insuranceCompany,
+        inspectionPeriod: modalForm.inspectionPeriod,
+        contingencies: modalForm.contingencies,
+        city: modalForm.city,
+        state: modalForm.state,
+        zipCode: modalForm.zipCode,
+        country: modalForm.country,
+      };
+
+
+
+      // Add new contract to the contracts array
+      setContracts(prev => [newContract, ...prev]);
+      
+      // Close modal and reset form
+      setShowNewContractForm(false);
+      resetForm();
+      setCountrySearchTerm('');
+      setStateSearchTerm('');
+      setUploadedFiles([]); // Clear uploaded files
+      
+      // Show success feedback
+      toast({
+        title: "Contract Created Successfully",
+        description: `Contract "${newContract.title}" has been created with ID ${newContract.id}`,
+        duration: Infinity, // Make toast persistent - user must close it manually
+      });
     } else {
       setShowNewContractForm(false);
       setModalStep(1);
@@ -891,7 +1130,7 @@ const ContractsPage: React.FC = () => {
   };
 
   // Filter contracts based on search term and selected statuses
-  const filteredContracts = mockContracts.filter(contract => {
+  const filteredContracts = contracts.filter(contract => {
     const search = searchTerm.toLowerCase();
     const matchesSearch = (
       contract.title.toLowerCase().includes(search) ||
@@ -1024,6 +1263,28 @@ const ContractsPage: React.FC = () => {
   const [isEditingAgent, setIsEditingAgent] = useState(false);
   const [editableAgent, setEditableAgent] = useState('');
 
+  // Add state for party emails and roles
+  const [party1Email, setParty1Email] = useState('');
+  const [party2Email, setParty2Email] = useState('');
+  const [party1Role, setParty1Role] = useState('Buyer');
+  const [party2Role, setParty2Role] = useState('Seller');
+  const [showParty1RoleDropdown, setShowParty1RoleDropdown] = useState(false);
+  const [showParty2RoleDropdown, setShowParty2RoleDropdown] = useState(false);
+  const party1RoleDropdownRef = useRef<HTMLDivElement>(null);
+  const party2RoleDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Add state for additional parties
+  const [additionalParties, setAdditionalParties] = useState<Array<{
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    isEditing: boolean;
+    showRoleDropdown: boolean;
+  }>>([]);
+  const additionalPartyRoleDropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const [showAdditionalParties, setShowAdditionalParties] = useState(false);
+
   // Add contract comments state and functions
   const [contractComments, setContractComments] = useState<Record<string, Comment[]>>(() => {
     if (typeof window !== 'undefined') {
@@ -1128,6 +1389,9 @@ const ContractsPage: React.FC = () => {
   // Add state for editing value at the top with other edit states
   const [isEditingValue, setIsEditingValue] = useState(false);
   const [editableValue, setEditableValue] = useState('');
+
+  // Add state for contract details expand functionality
+  const [showContractDetailsExpanded, setShowContractDetailsExpanded] = useState(false);
 
   // Ref for status dropdown
   const statusDropdownRef = useRef<HTMLDivElement>(null);
@@ -1299,12 +1563,41 @@ const ContractsPage: React.FC = () => {
     };
   }, [showContractTypeDropdown, showPropertyTypeDropdown, showMilestoneDropdown]);
 
+  // Add click outside handler for party role dropdowns
   useEffect(() => {
-    if (!documentsBoxRef.current) return;
-    const updateHeight = () => {
-      if (documentsBoxRef.current) {
-        setDocumentsBoxHeight(documentsBoxRef.current.offsetHeight);
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+      
+      // Handle party 1 role dropdown
+      if (showParty1RoleDropdown && party1RoleDropdownRef.current && !party1RoleDropdownRef.current.contains(target)) {
+        setShowParty1RoleDropdown(false);
       }
+      
+      // Handle party 2 role dropdown
+      if (showParty2RoleDropdown && party2RoleDropdownRef.current && !party2RoleDropdownRef.current.contains(target)) {
+        setShowParty2RoleDropdown(false);
+      }
+
+      // Handle additional party role dropdowns
+      additionalParties.forEach(party => {
+        if (party.showRoleDropdown && additionalPartyRoleDropdownRefs.current[party.id] && !additionalPartyRoleDropdownRefs.current[party.id]?.contains(target)) {
+          toggleAdditionalPartyRoleDropdown(party.id);
+        }
+      });
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showParty1RoleDropdown, showParty2RoleDropdown, additionalParties]);
+
+  useEffect(() => {
+          if (!documentsBoxRef.current) return;
+      const updateHeight = () => {
+        if (documentsBoxRef.current) {
+          setDocumentsBoxHeight(documentsBoxRef.current.offsetHeight);
+        }
     };
     updateHeight();
     const resizeObserver = new window.ResizeObserver(updateHeight);
@@ -1353,11 +1646,104 @@ const ContractsPage: React.FC = () => {
       setEditableSeller(selectedContract.seller || selectedContract.parties?.split('&')[1]?.trim() || 'Eastside Properties');
       setEditableAgent(selectedContract.agent || 'N/A');
       setEditableValue(selectedContract.value || '');
+      
+      // Parse additional parties from the parties string
+      const allParties = selectedContract.parties?.split('&').map(p => p.trim()).filter(p => p) || [];
+      if (allParties.length > 2) {
+        const additional = allParties.slice(2).map((party, index) => ({
+          id: `party-${index + 3}`,
+          name: party,
+          email: '',
+          role: 'Standard',
+          isEditing: false,
+          showRoleDropdown: false
+        }));
+        setAdditionalParties(additional);
+      } else {
+        setAdditionalParties([]);
+      }
     }
   }, [selectedContract]);
 
   // Helper function to generate contract hash
-  const getContractHash = (id: string) => `0x${id}${'0'.repeat(66 - 2 - id.length)}`;
+  const getSmartContractChainId = (id: string) => {
+    // Generate 10-digit Algorand-style Smart Contract Chain ID from string ID
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) {
+      const char = id.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    // Ensure 10 digits by padding with zeros if needed
+    const hashStr = Math.abs(hash).toString();
+    return hashStr.padStart(10, '0').slice(0, 10);
+  };
+
+  const getDocumentChainId = (id: string) => {
+    // Generate 9-digit Algorand-style Document Chain ID from string ID
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) {
+      const char = id.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    // Ensure 9 digits by padding with zeros if needed
+    const hashStr = Math.abs(hash).toString();
+    return hashStr.padStart(9, '0').slice(0, 9);
+  };
+
+  // Helper functions for additional parties
+  const handleAdditionalPartyNameChange = (partyId: string, newName: string) => {
+    setAdditionalParties(prev => prev.map(party => 
+      party.id === partyId ? { ...party, name: newName } : party
+    ));
+  };
+
+  const handleAdditionalPartyEmailChange = (partyId: string, newEmail: string) => {
+    setAdditionalParties(prev => prev.map(party => 
+      party.id === partyId ? { ...party, email: newEmail } : party
+    ));
+  };
+
+  const handleAdditionalPartyRoleChange = (partyId: string, newRole: string) => {
+    setAdditionalParties(prev => prev.map(party => 
+      party.id === partyId ? { ...party, role: newRole, showRoleDropdown: false } : party
+    ));
+  };
+
+  const toggleAdditionalPartyEditing = (partyId: string) => {
+    setAdditionalParties(prev => prev.map(party => 
+      party.id === partyId ? { ...party, isEditing: !party.isEditing } : party
+    ));
+  };
+
+  const toggleAdditionalPartyRoleDropdown = (partyId: string) => {
+    setAdditionalParties(prev => prev.map(party => 
+      party.id === partyId ? { ...party, showRoleDropdown: !party.showRoleDropdown } : party
+    ));
+  };
+
+  // Helper function to get distinct colors for recipient cards
+  const getRecipientCardBorderColor = (index: number) => {
+    if (index === 0) {
+      // First card uses brand color (teal)
+      return '#0d9488'; // teal-600
+    }
+    
+    const colors = [
+      '#8b5cf6', // violet-500
+      '#f59e0b', // amber-500
+      '#ef4444', // red-500
+      '#06b6d4', // cyan-500
+      '#84cc16', // lime-500
+      '#f97316', // orange-500
+      '#ec4899', // pink-500
+      '#6366f1', // indigo-500
+      '#10b981', // emerald-500
+      '#3b82f6', // blue-500
+    ];
+    return colors[(index - 1) % colors.length];
+  };
 
   // Add state for tooltip for contract details and table
   const [copiedContractId, setCopiedContractId] = useState<string | null>(null);
@@ -1403,6 +1789,7 @@ const ContractsPage: React.FC = () => {
   const [idSortDirection, setIdSortDirection] = useState<'asc' | 'desc'>('asc');
   const [contractSortDirection, setContractSortDirection] = useState<'asc' | 'desc' | null>(null);
   const [partiesSortDirection, setPartiesSortDirection] = useState<'asc' | 'desc' | null>(null);
+  const [contractTypeSortDirection, setContractTypeSortDirection] = useState<'asc' | 'desc' | null>(null);
   const [statusSortDirection, setStatusSortDirection] = useState<'asc' | 'desc' | null>(null);
   const [createdDateSortDirection, setCreatedDateSortDirection] = useState<'asc' | 'desc' | null>(null);
   const [lastUpdatedSortDirection, setLastUpdatedSortDirection] = useState<'asc' | 'desc' | null>(null);
@@ -1413,6 +1800,7 @@ const ContractsPage: React.FC = () => {
     setIdSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     setContractSortDirection(null);
     setPartiesSortDirection(null);
+    setContractTypeSortDirection(null);
     setStatusSortDirection(null);
     setCreatedDateSortDirection(null);
     setLastUpdatedSortDirection(null);
@@ -1421,6 +1809,7 @@ const ContractsPage: React.FC = () => {
   const handleContractSort = () => {
     setContractSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     setPartiesSortDirection(null);
+    setContractTypeSortDirection(null);
     setStatusSortDirection(null);
     setCreatedDateSortDirection(null);
     setLastUpdatedSortDirection(null);
@@ -1429,6 +1818,16 @@ const ContractsPage: React.FC = () => {
   const handlePartiesSort = () => {
     setPartiesSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     setContractSortDirection(null);
+    setContractTypeSortDirection(null);
+    setStatusSortDirection(null);
+    setCreatedDateSortDirection(null);
+    setLastUpdatedSortDirection(null);
+    setValueSortDirection(null);
+  };
+  const handleContractTypeSort = () => {
+    setContractTypeSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setContractSortDirection(null);
+    setPartiesSortDirection(null);
     setStatusSortDirection(null);
     setCreatedDateSortDirection(null);
     setLastUpdatedSortDirection(null);
@@ -1438,6 +1837,7 @@ const ContractsPage: React.FC = () => {
     setStatusSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     setContractSortDirection(null);
     setPartiesSortDirection(null);
+    setContractTypeSortDirection(null);
     setCreatedDateSortDirection(null);
     setLastUpdatedSortDirection(null);
     setValueSortDirection(null);
@@ -1446,6 +1846,7 @@ const ContractsPage: React.FC = () => {
     setCreatedDateSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     setContractSortDirection(null);
     setPartiesSortDirection(null);
+    setContractTypeSortDirection(null);
     setStatusSortDirection(null);
     setLastUpdatedSortDirection(null);
     setValueSortDirection(null);
@@ -1454,6 +1855,7 @@ const ContractsPage: React.FC = () => {
     setLastUpdatedSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     setContractSortDirection(null);
     setPartiesSortDirection(null);
+    setContractTypeSortDirection(null);
     setStatusSortDirection(null);
     setCreatedDateSortDirection(null);
     setValueSortDirection(null);
@@ -1462,6 +1864,7 @@ const ContractsPage: React.FC = () => {
     setValueSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     setContractSortDirection(null);
     setPartiesSortDirection(null);
+    setContractTypeSortDirection(null);
     setStatusSortDirection(null);
     setCreatedDateSortDirection(null);
     setLastUpdatedSortDirection(null);
@@ -1484,7 +1887,7 @@ const ContractsPage: React.FC = () => {
     return parseFloat(val.replace(/[$,]/g, ''));
   }
 
-  // Sort filteredContracts by id, contract title, parties, status, created date, last updated, or value
+  // Sort filteredContracts by id, contract title, parties, contract type, status, created date, last updated, or value
   const sortedContracts = [...filteredContracts].sort((a, b) => {
     if (valueSortDirection) {
       const aValue = parseValue(a.value);
@@ -1517,6 +1920,14 @@ const ContractsPage: React.FC = () => {
         return aStatus.localeCompare(bStatus);
       } else {
         return bStatus.localeCompare(aStatus);
+      }
+    } else if (contractTypeSortDirection) {
+      const aType = (a.type || '').toLowerCase();
+      const bType = (b.type || '').toLowerCase();
+      if (contractTypeSortDirection === 'asc') {
+        return aType.localeCompare(bType);
+      } else {
+        return bType.localeCompare(aType);
       }
     } else if (partiesSortDirection) {
       const aParties = a.parties.toLowerCase();
@@ -1927,7 +2338,7 @@ const ContractsPage: React.FC = () => {
                         {modalStep === step && <Logo width={18} height={18} className="pointer-events-none" />}
                       </span>
                       {step === 1 && 'Step 1: General'}
-                      {step === 2 && 'Step 2: Recipients'}
+                      {step === 2 && 'Step 2: Parties'}
                       {step === 3 && 'Step 3: Details'}
                       {step === 4 && 'Step 4: Documents'}
                     </button>
@@ -2112,7 +2523,6 @@ const ContractsPage: React.FC = () => {
                       onChange={handleModalChange}
                       className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
                       placeholder="Enter contract value"
-                      required
                     />
                   </div>
                   <div>
@@ -2133,7 +2543,6 @@ const ContractsPage: React.FC = () => {
                         className={`w-full px-4 py-2 pr-10 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs text-black dark:text-white bg-white dark:bg-gray-900 [&::-webkit-calendar-picker-indicator]:hidden ${
                           formErrors.dueDate ? 'border-red-300' : 'border-gray-200 dark:border-gray-600'
                         }`}
-                        required
                       />
                       <button
                         type="button"
@@ -2195,6 +2604,18 @@ const ContractsPage: React.FC = () => {
                             setShowStateDropdown(true);
                           }
                         }}
+                        onInput={(e) => {
+                          // Handle browser autofill by mapping state names to codes
+                          const inputValue = e.currentTarget.value;
+                          if (inputValue && !stateSearchTerm) {
+                            const matchingState = US_STATES.find(s => 
+                              s.label.toLowerCase() === inputValue.toLowerCase()
+                            );
+                            if (matchingState) {
+                              setModalForm(prev => ({ ...prev, state: matchingState.value }));
+                            }
+                          }
+                        }}
                       />
                       <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                       {showStateDropdown && (
@@ -2253,6 +2674,18 @@ const ContractsPage: React.FC = () => {
                           // Show dropdown when focused
                           if (!showCountryDropdown) {
                             setShowCountryDropdown(true);
+                          }
+                        }}
+                        onInput={(e) => {
+                          // Handle browser autofill by mapping country names to codes
+                          const inputValue = e.currentTarget.value;
+                          if (inputValue && !countrySearchTerm) {
+                            const matchingCountry = COUNTRIES.find(c => 
+                              c.label.toLowerCase() === inputValue.toLowerCase()
+                            );
+                            if (matchingCountry) {
+                              setModalForm(prev => ({ ...prev, country: matchingCountry.value }));
+                            }
                           }
                         }}
                       />
@@ -2343,7 +2776,7 @@ const ContractsPage: React.FC = () => {
                   
                   {/* Render all recipient cards */}
                   {recipients.map((recipient, idx) => (
-                      <div key={idx} className="relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 shadow-sm" style={{ borderLeft: '3px solid #e5e7eb' }}>
+                      <div key={idx} className="relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 shadow-sm" style={{ borderLeft: `3px solid ${getRecipientCardBorderColor(idx)}` }}>
                         {/* Header with role controls and delete button */}
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                           <div className="flex flex-col sm:flex-row gap-1">
@@ -2389,7 +2822,7 @@ const ContractsPage: React.FC = () => {
                                 onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showSignerRoleDropdown: !r.showSignerRoleDropdown } : r))}
                                 tabIndex={0}
                               >
-                                <span>{recipient.signerRole || 'Signer Role'}</span>
+                                <span>{recipient.signerRole || 'Role'}</span>
                                 <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px]" />
                               </button>
                               {recipient.showSignerRoleDropdown && (
@@ -2436,7 +2869,7 @@ const ContractsPage: React.FC = () => {
                               <input
                                 type="text"
                                 className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white"
-                                placeholder="Enter recipient's name..."
+                                placeholder="Enter party's name..."
                                 style={{ fontFamily: 'Avenir, sans-serif' }}
                                 value={recipient.name}
                                 onChange={e => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, name: e.target.value } : r))}
@@ -2450,7 +2883,7 @@ const ContractsPage: React.FC = () => {
                             <input
                               type="email"
                               className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white"
-                              placeholder="Enter recipient's email address..."
+                              placeholder="Enter party's email address..."
                               style={{ fontFamily: 'Avenir, sans-serif' }}
                               value={recipient.email}
                               onChange={e => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, email: e.target.value } : r))}
@@ -2466,7 +2899,7 @@ const ContractsPage: React.FC = () => {
                       onClick={handleAddRecipient}
                     >
                       <TiUserAddOutline className="text-base sm:text-lg" />
-                      <span className="mt-[1px]">Add Recipient</span>
+                      <span className="mt-[1px]">Add Party</span>
                     </button>
                   </div>
                 <div className="flex justify-between mt-6">
@@ -2491,7 +2924,6 @@ const ContractsPage: React.FC = () => {
                         formErrors.titleCompany ? 'border-red-300' : 'border-gray-200 dark:border-gray-600'
                       }`}
                       placeholder="Enter title company name"
-                      required
                     />
                     {formErrors.titleCompany && (
                       <p className="mt-1 text-xs text-red-600 font-medium cursor-default select-none">Please fill out this field</p>
@@ -3566,6 +3998,15 @@ const ContractsPage: React.FC = () => {
                   </th>
                   <th
                     className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleContractTypeSort}
+                  >
+                    <div className="flex flex-col">
+                      <span>Contract</span>
+                      <span>Type</span>
+                    </div>
+                  </th>
+                  <th
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
                     onClick={handleStatusSort}
                   >
                     Status
@@ -3604,8 +4045,48 @@ const ContractsPage: React.FC = () => {
                     <td className="px-6 py-2.5 whitespace-nowrap text-sm">
                       <div className="text-xs font-bold text-gray-900 dark:text-white">{contract.title}</div>
                     </td>
-                    <td className="px-6 py-2.5 whitespace-nowrap text-xs">
-                      <div className="text-gray-900 dark:text-white">{contract.parties}</div>
+                    <td className="px-6 py-2.5 text-xs">
+                      {(() => {
+                        const parties = parseParties(contract.parties);
+                        const isExpanded = expandedPartiesRows.has(contract.id);
+                        const hasMoreThanTwo = parties.length > 2;
+                        
+                        return (
+                          <div className="flex flex-col space-y-1">
+                            {/* Show first 2 parties always */}
+                            {parties.slice(0, 2).map((party, index) => (
+                              <div key={index} className="text-gray-900 dark:text-white">{party}</div>
+                            ))}
+                            
+                            {/* Show additional parties if expanded */}
+                            {isExpanded && parties.slice(2).map((party, index) => (
+                              <div key={index + 2} className="text-gray-900 dark:text-white">{party}</div>
+                            ))}
+                            
+                            {/* Show chevron and expand/collapse button if more than 2 parties */}
+                            {hasMoreThanTwo && (
+                              <button
+                                className="flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  togglePartiesExpansion(contract.id);
+                                }}
+                              >
+                                <HiMiniChevronDown 
+                                  size={14} 
+                                  className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                                />
+                                <span className="ml-1 text-xs">
+                                  {isExpanded ? 'Show less' : `+${parties.length - 2} more`}
+                                </span>
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                      <div className="text-gray-900 dark:text-white">{contract.type || 'N/A'}</div>
                     </td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
                       <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full ${getStatusBadgeStyle(contract.status)}`}
@@ -3882,27 +4363,27 @@ const ContractsPage: React.FC = () => {
                         <div className="text-xs text-black dark:text-white select-none cursor-default">{selectedContract.id}</div>
                       </div>
                       <div>
-                        <div className="text-gray-500 text-xs mb-1 cursor-default select-none">Contract Hash</div>
+                        <div className="text-gray-500 text-xs mb-1 cursor-default select-none">Smart Contract Chain ID</div>
                         <div className="flex items-center">
                           <span
                             className="text-xs font-mono text-gray-900 dark:text-white truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-default select-none"
                             style={{ maxWidth: '120px' }}
-                            title={getContractHash(selectedContract.id)}
+                            title={getSmartContractChainId(selectedContract.id)}
                           >
-                            0x{selectedContract.id}...{selectedContract.id.slice(-4)}
+                            {getSmartContractChainId(selectedContract.id)}
                           </span>
                           <div className="relative">
                             <button
                               type="button"
                               className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
                               onClick={() => {
-                                navigator.clipboard.writeText(getContractHash(selectedContract.id));
+                                navigator.clipboard.writeText(getSmartContractChainId(selectedContract.id));
                                 setCopiedContractId(selectedContract.id);
                                 setTimeout(() => setCopiedContractId(null), 1500);
                               }}
                               onMouseEnter={() => setHoveredContractId(selectedContract.id)}
                               onMouseLeave={() => setHoveredContractId(null)}
-                              aria-label="Copy contract hash"
+                              aria-label="Copy smart contract chain ID"
                             >
                               <HiOutlineDuplicate className="w-4 h-4" />
                             </button>
@@ -4022,119 +4503,399 @@ const ContractsPage: React.FC = () => {
                         )}
                       </div>
                     </div>
+                    
+                    {/* Expand/Collapse Button for Additional Contract Details */}
+                    <div className="flex justify-center mt-4">
+                      <button
+                        type="button"
+                        onClick={() => setShowContractDetailsExpanded(!showContractDetailsExpanded)}
+                        className="h-[34px] px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer flex items-center gap-2"
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                      >
+                        <PiCaretUpDownBold 
+                          size={16} 
+                          className={`transition-transform duration-200 text-white ${showContractDetailsExpanded ? 'rotate-180' : ''}`}
+                        />
+                        <span className="text-xs font-medium">
+                          {showContractDetailsExpanded ? 'Hide' : 'Show'} Additional Details
+                        </span>
+                      </button>
+                    </div>
+
+                    {/* Additional Contract Details */}
+                    {showContractDetailsExpanded && (
+                      <div className="space-y-4 mt-4 cursor-default select-none">
+                        {/* Address Fields */}
+                        <div className="grid grid-cols-2 gap-x-12 gap-y-4 cursor-default select-none">
+                          {/* Address */}
+                          <div>
+                            <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Address</div>
+                            <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">{selectedContract.propertyAddress || 'Not specified'}</div>
+                          </div>
+                          {/* Property Type */}
+                          <div>
+                            <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Property Type</div>
+                            <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">{selectedContract.propertyType || 'Not specified'}</div>
+                          </div>
+                          
+                          {/* City */}
+                          <div>
+                            <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">City</div>
+                            <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">{selectedContract.city || 'Not specified'}</div>
+                          </div>
+                          {/* State */}
+                          <div>
+                            <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">State</div>
+                            <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">{selectedContract.state ? US_STATES.find(s => s.value === selectedContract.state)?.label || selectedContract.state : 'Not specified'}</div>
+                          </div>
+                          
+                          {/* Zip Code */}
+                          <div>
+                            <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Zip Code</div>
+                            <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">{selectedContract.zipCode || 'Not specified'}</div>
+                          </div>
+                          {/* Country */}
+                          <div>
+                            <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Country</div>
+                            <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">{selectedContract.country ? COUNTRIES.find(c => c.value === selectedContract.country)?.label || selectedContract.country : 'Not specified'}</div>
+                          </div>
+                        </div>
+                        
+                        {/* Divider */}
+                        <div className="border-t border-gray-200"></div>
+                        
+                        {/* Contract Details Fields */}
+                        <div className="grid grid-cols-2 gap-x-12 gap-y-4 cursor-default select-none">
+                          {/* Escrow Number */}
+                          <div>
+                            <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Escrow Number</div>
+                            <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">{selectedContract.escrowNumber || 'Not specified'}</div>
+                          </div>
+                          <div></div>
+                          
+                          {/* Loan Amount */}
+                          <div>
+                            <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Loan Amount</div>
+                            <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">{selectedContract.loanAmount || 'Not specified'}</div>
+                          </div>
+                          {/* Loan Term */}
+                          <div>
+                            <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Loan Term (Years)</div>
+                            <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">{selectedContract.loanTerm || 'Not specified'}</div>
+                          </div>
+                          
+                          {/* Interest Rate */}
+                          <div>
+                            <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Interest Rate (%)</div>
+                            <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">{selectedContract.interestRate || 'Not specified'}</div>
+                          </div>
+                          {/* Down Payment */}
+                          <div>
+                            <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Down Payment</div>
+                            <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">{selectedContract.downPayment || 'Not specified'}</div>
+                          </div>
+                          
+                          {/* Earnest Money */}
+                          <div>
+                            <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Earnest Money</div>
+                            <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">{selectedContract.earnestMoney || 'Not specified'}</div>
+                          </div>
+                          {/* Inspection Period */}
+                          <div>
+                            <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Inspection Period (Days)</div>
+                            <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">{selectedContract.inspectionPeriod || 'Not specified'}</div>
+                          </div>
+                          
+                          {/* Title Company */}
+                          <div>
+                            <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Title Company</div>
+                            <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">{selectedContract.titleCompany || 'Not specified'}</div>
+                          </div>
+                          {/* Insurance Company */}
+                          <div>
+                            <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Insurance Company</div>
+                            <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">{selectedContract.insuranceCompany || 'Not specified'}</div>
+                          </div>
+                          
+                          {/* Contingencies */}
+                          <div className="col-span-2">
+                            <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Contingencies</div>
+                            <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default min-h-[60px]">
+                              {selectedContract.contingencies || 'Not specified'}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   {/* Parties Involved Box */}
                   <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 w-full cursor-default select-none">
                     <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Parties Involved</h3>
                     <div className="grid grid-cols-1 gap-y-4 cursor-default select-none">
-                      {/* Buyer */}
-                      <div>
-                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Buyer / Client</div>
-                        {isEditingBuyer ? (
-                          <input
-                            type="text"
-                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                            value={editableBuyer}
-                            autoFocus
-                            onChange={e => setEditableBuyer(e.target.value)}
-                            onBlur={() => {
-                              if (selectedContract) {
-                                selectedContract.buyer = editableBuyer;
-                              }
-                              setIsEditingBuyer(false);
-                            }}
-                            onKeyDown={e => {
-                              if (e.key === 'Enter') {
-                                if (selectedContract) {
-                                  selectedContract.buyer = editableBuyer;
-                                }
-                                setIsEditingBuyer(false);
-                              }
-                            }}
-                          />
-                        ) : (
-                          <div
-                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600 transition-colors cursor-pointer"
-                            onClick={() => setIsEditingBuyer(true)}
-                            tabIndex={0}
-                            onKeyDown={e => { if (e.key === 'Enter') setIsEditingBuyer(true); }}
-                          >
-                            {editableBuyer || selectedContract?.buyer || selectedContract?.parties?.split('&')[0]?.trim() || 'Robert Chen'}
+                      {/* Party 1 */}
+                      <div className="space-y-3">
+                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Party 1 (Buyer)</div>
+                        {/* Name and Role on same line */}
+                        <div className="grid grid-cols-2 gap-3">
+                          {/* Name */}
+                          <div>
+                            {isEditingBuyer ? (
+                              <input
+                                type="text"
+                                className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                                value={editableBuyer}
+                                autoFocus
+                                onChange={e => setEditableBuyer(e.target.value)}
+                                onBlur={() => {
+                                  if (selectedContract) {
+                                    selectedContract.buyer = editableBuyer;
+                                  }
+                                  setIsEditingBuyer(false);
+                                }}
+                                onKeyDown={e => {
+                                  if (e.key === 'Enter') {
+                                    if (selectedContract) {
+                                      selectedContract.buyer = editableBuyer;
+                                    }
+                                    setIsEditingBuyer(false);
+                                  }
+                                }}
+                              />
+                            ) : (
+                              <div
+                                className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600 transition-colors cursor-pointer"
+                                onClick={() => setIsEditingBuyer(true)}
+                                tabIndex={0}
+                                onKeyDown={e => { if (e.key === 'Enter') setIsEditingBuyer(true); }}
+                              >
+                                {editableBuyer || selectedContract?.buyer || selectedContract?.parties?.split('&')[0]?.trim() || 'Robert Chen'}
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                      {/* Seller */}
-                      <div>
-                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Seller / Provider</div>
-                        {isEditingSeller ? (
-                          <input
-                            type="text"
-                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                            value={editableSeller}
-                            autoFocus
-                            onChange={e => setEditableSeller(e.target.value)}
-                            onBlur={() => {
-                              if (selectedContract) {
-                                selectedContract.seller = editableSeller;
-                              }
-                              setIsEditingSeller(false);
-                            }}
-                            onKeyDown={e => {
-                              if (e.key === 'Enter') {
-                                if (selectedContract) {
-                                  selectedContract.seller = editableSeller;
-                                }
-                                setIsEditingSeller(false);
-                              }
-                            }}
-                          />
-                        ) : (
-                          <div
-                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600 transition-colors cursor-pointer"
-                            onClick={() => setIsEditingSeller(true)}
-                            tabIndex={0}
-                            onKeyDown={e => { if (e.key === 'Enter') setIsEditingSeller(true); }}
-                          >
-                            {editableSeller || selectedContract?.seller || selectedContract?.parties?.split('&')[1]?.trim() || 'Eastside Properties'}
+                          {/* Role Dropdown */}
+                          <div className="relative">
+                            <button
+                              type="button"
+                              className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600 transition-colors cursor-pointer flex items-center justify-between"
+                              onClick={() => setShowParty1RoleDropdown(!showParty1RoleDropdown)}
+                              style={{ fontFamily: 'Avenir, sans-serif' }}
+                            >
+                              <span>{party1Role}</span>
+                              <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px]" />
+                            </button>
+                            {showParty1RoleDropdown && (
+                              <div
+                                ref={party1RoleDropdownRef}
+                                className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[160px]"
+                                style={{ fontFamily: 'Avenir, sans-serif' }}
+                              >
+                                {['Standard', 'Buyer', 'Seller', 'Buyer Agent', 'Seller Agent', 'Closing Agent', 'Inspector', 'Appraiser'].map((role) => (
+                                  <button
+                                    key={role}
+                                    className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${party1Role === role ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                                    style={{ background: 'none', border: 'none', boxShadow: 'none' }}
+                                    onClick={() => {
+                                      setParty1Role(role);
+                                      setShowParty1RoleDropdown(false);
+                                    }}
+                                  >
+                                    {role}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                        )}
+                        </div>
+                        {/* Email */}
+                        <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">
+                          {selectedContract.buyerEmail || 'Not specified'}
+                        </div>
                       </div>
-                      {/* Agent */}
-                      <div>
-                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Agent / Escrow Officer</div>
-                        {isEditingAgent ? (
-                          <input
-                            type="text"
-                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                            value={editableAgent}
-                            autoFocus
-                            onChange={e => setEditableAgent(e.target.value)}
-                            onBlur={() => {
-                              if (selectedContract) {
-                                selectedContract.agent = editableAgent;
-                              }
-                              setIsEditingAgent(false);
-                            }}
-                            onKeyDown={e => {
-                              if (e.key === 'Enter') {
-                                if (selectedContract) {
-                                  selectedContract.agent = editableAgent;
-                                }
-                                setIsEditingAgent(false);
-                              }
-                            }}
-                          />
-                        ) : (
-                          <div
-                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600 transition-colors cursor-pointer"
-                            onClick={() => setIsEditingAgent(true)}
-                            tabIndex={0}
-                            onKeyDown={e => { if (e.key === 'Enter') setIsEditingAgent(true); }}
-                          >
-                            {editableAgent || selectedContract?.agent || 'N/A'}
+                      
+                      {/* Divider */}
+                      <div className="border-t border-gray-200"></div>
+                      
+                      {/* Party 2 */}
+                      <div className="space-y-3">
+                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Party 2 (Seller)</div>
+                        {/* Name and Role on same line */}
+                        <div className="grid grid-cols-2 gap-3">
+                          {/* Name */}
+                          <div>
+                            {isEditingSeller ? (
+                              <input
+                                type="text"
+                                className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                                value={editableSeller}
+                                autoFocus
+                                onChange={e => setEditableSeller(e.target.value)}
+                                onBlur={() => {
+                                  if (selectedContract) {
+                                    selectedContract.seller = editableSeller;
+                                  }
+                                  setIsEditingSeller(false);
+                                }}
+                                onKeyDown={e => {
+                                  if (e.key === 'Enter') {
+                                    if (selectedContract) {
+                                      selectedContract.seller = editableSeller;
+                                    }
+                                    setIsEditingSeller(false);
+                                  }
+                                }}
+                              />
+                            ) : (
+                              <div
+                                className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600 transition-colors cursor-pointer"
+                                onClick={() => setIsEditingSeller(true)}
+                                tabIndex={0}
+                                onKeyDown={e => { if (e.key === 'Enter') setIsEditingSeller(true); }}
+                              >
+                                {editableSeller || selectedContract?.seller || selectedContract?.parties?.split('&')[1]?.trim() || 'Eastside Properties'}
+                              </div>
+                            )}
                           </div>
-                        )}
+                          {/* Role Dropdown */}
+                          <div className="relative">
+                            <button
+                              type="button"
+                              className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600 transition-colors cursor-pointer flex items-center justify-between"
+                              onClick={() => setShowParty2RoleDropdown(!showParty2RoleDropdown)}
+                              style={{ fontFamily: 'Avenir, sans-serif' }}
+                            >
+                              <span>{party2Role}</span>
+                              <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px]" />
+                            </button>
+                            {showParty2RoleDropdown && (
+                              <div
+                                ref={party2RoleDropdownRef}
+                                className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[160px]"
+                                style={{ fontFamily: 'Avenir, sans-serif' }}
+                              >
+                                {['Standard', 'Buyer', 'Seller', 'Buyer Agent', 'Seller Agent', 'Closing Agent', 'Inspector', 'Appraiser'].map((role) => (
+                                  <button
+                                    key={role}
+                                    className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${party2Role === role ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                                    style={{ background: 'none', border: 'none', boxShadow: 'none' }}
+                                    onClick={() => {
+                                      setParty2Role(role);
+                                      setShowParty2RoleDropdown(false);
+                                    }}
+                                  >
+                                    {role}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        {/* Email */}
+                        <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">
+                          {selectedContract.sellerEmail || 'Not specified'}
+                        </div>
                       </div>
+                      
+                      {/* Expand/Collapse Button for Additional Parties */}
+                      {additionalParties.length > 0 && (
+                        <div className="flex justify-center mt-4">
+                          <button
+                            type="button"
+                            onClick={() => setShowAdditionalParties(!showAdditionalParties)}
+                            className="h-[34px] px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer flex items-center gap-2"
+                            style={{ fontFamily: 'Avenir, sans-serif' }}
+                          >
+                            <PiCaretUpDownBold 
+                              size={16} 
+                              className={`transition-transform duration-200 text-white ${showAdditionalParties ? 'rotate-180' : ''}`}
+                            />
+                            <span className="text-xs font-medium">
+                              {showAdditionalParties ? 'Hide' : 'Show'} Additional Parties ({additionalParties.length})
+                            </span>
+                          </button>
+                        </div>
+                      )}
+                      {/* Additional Parties */}
+                      {showAdditionalParties && additionalParties.map((party, index) => (
+                        <div key={party.id}>
+                          <div className="space-y-3">
+                            <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Party {index + 3}</div>
+                            {/* Name and Role on same line */}
+                            <div className="grid grid-cols-2 gap-3">
+                              {/* Name */}
+                              <div>
+                                {party.isEditing ? (
+                                  <input
+                                    type="text"
+                                    className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                                    value={party.name}
+                                    autoFocus
+                                    onChange={e => handleAdditionalPartyNameChange(party.id, e.target.value)}
+                                    onBlur={() => toggleAdditionalPartyEditing(party.id)}
+                                    onKeyDown={e => {
+                                      if (e.key === 'Enter') {
+                                        toggleAdditionalPartyEditing(party.id);
+                                      }
+                                    }}
+                                  />
+                                ) : (
+                                  <div
+                                    className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600 transition-colors cursor-pointer"
+                                    onClick={() => toggleAdditionalPartyEditing(party.id)}
+                                    tabIndex={0}
+                                    onKeyDown={e => { if (e.key === 'Enter') toggleAdditionalPartyEditing(party.id); }}
+                                  >
+                                    {party.name}
+                                  </div>
+                                )}
+                              </div>
+                              {/* Role Dropdown */}
+                              <div className="relative">
+                                <button
+                                  type="button"
+                                  className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600 transition-colors cursor-pointer flex items-center justify-between"
+                                  onClick={() => toggleAdditionalPartyRoleDropdown(party.id)}
+                                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                                >
+                                  <span>{party.role}</span>
+                                  <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px]" />
+                                </button>
+                                {party.showRoleDropdown && (
+                                  <div
+                                    ref={(el) => { additionalPartyRoleDropdownRefs.current[party.id] = el; }}
+                                    className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[160px]"
+                                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                                  >
+                                    {['Standard', 'Buyer', 'Seller', 'Buyer Agent', 'Seller Agent', 'Closing Agent', 'Inspector', 'Appraiser'].map((role) => (
+                                      <button
+                                        key={role}
+                                        className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${party.role === role ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                                        style={{ background: 'none', border: 'none', boxShadow: 'none' }}
+                                        onClick={() => handleAdditionalPartyRoleChange(party.id, role)}
+                                      >
+                                        {role}
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            {/* Email */}
+                            <input
+                              type="email"
+                              className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                              placeholder="Enter party's email address..."
+                              value={party.email}
+                              onChange={e => handleAdditionalPartyEmailChange(party.id, e.target.value)}
+                            />
+                          </div>
+                          
+                          {/* Divider - only show if not the last party */}
+                          {index < additionalParties.length - 1 && (
+                            <div className="border-t border-gray-200"></div>
+                          )}
+                        </div>
+                      ))}
+
                     </div>
                   </div>
                   {/* Wire Details Box */}
@@ -4146,70 +4907,22 @@ const ContractsPage: React.FC = () => {
                         {/* Buyer Financial Institution */}
                         <div>
                           <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Buyer Financial Institution</div>
-                          <input
-                            type="text"
-                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white dark:bg-gray-900 text-black dark:text-white"
-                            placeholder="Enter buyer financial institution"
-                          />
+                          <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">
+                            {selectedContract.buyerFinancialInstitution || 'Not specified'}
+                          </div>
                         </div>
                         {/* Buyer Routing Number */}
                         <div>
                           <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Buyer Routing Number</div>
-                          <div className="relative bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-colors cursor-default select-none">
-                            <input
-                              type="text"
-                              className="w-full px-4 py-2 bg-transparent text-xs text-gray-900 dark:text-white border-none focus:outline-none"
-                              style={{ fontFamily: contractRoutingDisplay ? 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace' : 'Avenir, sans-serif' }}
-                              placeholder="Enter buyer routing number"
-                              maxLength={9}
-                              pattern="[0-9]*"
-                              inputMode="numeric"
-                              value={contractRoutingDisplay}
-                              onKeyPress={(e) => {
-                                if (!/[0-9]/.test(e.key)) {
-                                  e.preventDefault();
-                                }
-                              }}
-                              onChange={(e) => {
-                                handleRoutingNumberInput(
-                                  e,
-                                  contractRoutingValue,
-                                  setContractRoutingDisplay,
-                                  setContractRoutingValue,
-                                  contractRoutingTimeoutRef
-                                );
-                              }}
-                            />
+                          <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">
+                            {selectedContract.buyerFinancialInstitutionRoutingNumber || 'Not specified'}
                           </div>
                         </div>
                         {/* Buyer Account Number */}
                         <div>
                           <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Buyer Account Number</div>
-                          <div className="relative bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-colors cursor-default select-none">
-                            <input
-                              type="text"
-                              className="w-full px-4 py-2 bg-transparent text-xs text-gray-900 dark:text-white border-none focus:outline-none"
-                              style={{ fontFamily: contractAccountDisplay ? 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace' : 'Avenir, sans-serif' }}
-                              placeholder="Enter buyer account number"
-                              maxLength={12}
-                              pattern="[0-9]*"
-                              inputMode="numeric"
-                              value={contractAccountDisplay}
-                              onKeyPress={(e) => {
-                                if (!/[0-9]/.test(e.key)) {
-                                  e.preventDefault();
-                                }
-                              }}
-                              onChange={(e) => {
-                                handleAccountNumberInput(
-                                  e,
-                                  contractAccountValue,
-                                  setContractAccountDisplay,
-                                  setContractAccountValue,
-                                  contractAccountTimeoutRef
-                                );
-                              }}
-                            />
+                          <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">
+                            {selectedContract.buyerAccountNumber || 'Not specified'}
                           </div>
                         </div>
                       </div>
@@ -4222,40 +4935,22 @@ const ContractsPage: React.FC = () => {
                         {/* Seller Financial Institution */}
                         <div>
                           <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Seller Financial Institution</div>
-                          <input
-                            type="text"
-                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white dark:bg-gray-900 text-black dark:text-white"
-                            placeholder="Enter seller financial institution"
-                          />
+                          <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">
+                            {selectedContract.sellerFinancialInstitution || 'Not specified'}
+                          </div>
                         </div>
                         {/* Seller Routing Number */}
                         <div>
                           <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Seller Routing Number</div>
-                          <div className="relative bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-colors cursor-default select-none">
-                            <input
-                              type="text"
-                              className="w-full px-4 py-2 bg-transparent text-xs text-gray-900 dark:text-white border-none focus:outline-none"
-                              style={{ fontFamily: 'Avenir, sans-serif' }}
-                              placeholder="Enter seller routing number"
-                              maxLength={9}
-                              pattern="[0-9]*"
-                              inputMode="numeric"
-                            />
+                          <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">
+                            {selectedContract.sellerFinancialInstitutionRoutingNumber || 'Not specified'}
                           </div>
                         </div>
                         {/* Seller Account Number */}
                         <div>
                           <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Seller Account Number</div>
-                          <div className="relative bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-colors cursor-default select-none">
-                            <input
-                              type="text"
-                              className="w-full px-4 py-2 bg-transparent text-xs text-gray-900 dark:text-white border-none focus:outline-none"
-                              style={{ fontFamily: 'Avenir, sans-serif' }}
-                              placeholder="Enter seller account number"
-                              maxLength={12}
-                              pattern="[0-9]*"
-                              inputMode="numeric"
-                            />
+                          <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">
+                            {selectedContract.sellerAccountNumber || 'Not specified'}
                           </div>
                         </div>
                       </div>
@@ -4489,7 +5184,7 @@ const ContractsPage: React.FC = () => {
                               <button onClick={() => commentEditor.chain().focus().toggleBold().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('bold') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'} cursor-pointer`} title="Bold"><b>B</b></button>
                               <button onClick={() => commentEditor.chain().focus().toggleItalic().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('italic') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'} cursor-pointer`} title="Italic"><i>I</i></button>
                               <button onClick={() => commentEditor.chain().focus().toggleUnderline().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('underline') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'} cursor-pointer`} title="Underline"><u>U</u></button>
-                              <button onClick={() => commentEditor.chain().focus().toggleStrike().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('strike') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'} cursor-pointer`} title="Strikethrough"><s>S</s></button>
+                                                              <button onClick={() => commentEditor.chain().focus().toggleStrike().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('strike') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'} cursor-pointer`} title="Strikethrough"> S</button>
                               <button onClick={() => commentEditor.chain().focus().toggleBulletList().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('bulletList') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'} cursor-pointer`} title="Bullet List">• List</button>
                               <button onClick={() => commentEditor.chain().focus().toggleOrderedList().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('orderedList') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'} cursor-pointer`} title="Numbered List">1. List</button>
                               <button onClick={handlePostContractComment} className="ml-auto -mr-4 text-xs px-2 py-1 rounded transition-colors flex items-center group relative cursor-pointer" title="Send">
@@ -4877,27 +5572,27 @@ const ContractsPage: React.FC = () => {
                       <div className="text-xs text-black dark:text-white mb-4 pt-2 cursor-default select-none">{selectedDocument.contractTitle}</div>
                     </div>
                     <div>
-                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Document Hash</div>
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Document Chain ID</div>
                       <div className="flex items-center cursor-default select-none">
                         <span
                           className="text-xs font-mono text-gray-900 dark:text-white truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-default select-none"
                           style={{ maxWidth: '120px' }}
-                          title={getContractHash(selectedDocument.id)}
+                                                      title={getDocumentChainId(selectedDocument.id)}
                         >
-                          0x{selectedDocument.id}...{selectedDocument.id.slice(-4)}
+                          {getDocumentChainId(selectedDocument.id)}
                         </span>
                         <div className="relative">
                           <button 
                             type="button"
                             className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
                             onClick={() => {
-                              navigator.clipboard.writeText(getContractHash(selectedDocument.id));
+                                                                navigator.clipboard.writeText(getDocumentChainId(selectedDocument.id));
                               setCopiedContractId(selectedDocument.id);
                               setTimeout(() => setCopiedContractId(null), 1500);
                             }}
                             onMouseEnter={() => setHoveredContractId(selectedDocument.id)}
                             onMouseLeave={() => setHoveredContractId(null)}
-                            aria-label="Copy document hash"
+                            aria-label="Copy document chain ID"
                           >
                             <HiOutlineDuplicate className="w-4 h-4" />
                           </button>
@@ -4994,6 +5689,7 @@ const ContractsPage: React.FC = () => {
         </div>
       </div>
     )}
+    <Toaster />
     </>
   );
 }

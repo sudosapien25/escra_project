@@ -1156,7 +1156,31 @@ export default function SignaturesPage() {
   }));
 
   // Helper function to generate document hash
-  const getDocumentHash = (id: string) => `0x${id}${'0'.repeat(66 - 2 - id.length)}`;
+  const getSmartContractChainId = (id: string) => {
+    // Generate 10-digit Algorand-style Smart Contract Chain ID from string ID
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) {
+      const char = id.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    // Ensure 10 digits by padding with zeros if needed
+    const hashStr = Math.abs(hash).toString();
+    return hashStr.padStart(10, '0').slice(0, 10);
+  };
+
+  const getDocumentChainId = (id: string) => {
+    // Generate 9-digit Algorand-style Document Chain ID from string ID
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) {
+      const char = id.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    // Ensure 9 digits by padding with zeros if needed
+    const hashStr = Math.abs(hash).toString();
+    return hashStr.padStart(9, '0').slice(0, 9);
+  };
 
   // Helper function to get status badge styling (consistent with contracts page)
   const getStatusBadgeStyle = (status: string) => {
@@ -2357,14 +2381,14 @@ export default function SignaturesPage() {
                           <div className="text-xs text-black dark:text-white select-none cursor-default">{selectedDocument?.id}</div>
                         </div>
                         <div>
-                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Document Hash</div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Document Chain ID</div>
                           <div className="flex items-center">
                             <span
                               className="text-xs font-mono text-gray-900 dark:text-white truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-default select-none"
                               style={{ maxWidth: '120px' }}
-                              title={selectedDocument ? getDocumentHash(selectedDocument.id) : ''}
+                              title={selectedDocument ? getDocumentChainId(selectedDocument.id) : ''}
                             >
-                              {selectedDocument ? `0x${selectedDocument.id}...${selectedDocument.id.slice(-4)}` : ''}
+                              {selectedDocument ? getDocumentChainId(selectedDocument.id) : ''}
                             </span>
                             <div className="relative">
                               <button 
@@ -2372,14 +2396,14 @@ export default function SignaturesPage() {
                                 className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
                                 onClick={() => {
                                   if (selectedDocument) {
-                                    navigator.clipboard.writeText(getDocumentHash(selectedDocument.id));
+                                    navigator.clipboard.writeText(getDocumentChainId(selectedDocument.id));
                                     setCopiedDocumentId(selectedDocument.id);
                                     setTimeout(() => setCopiedDocumentId(null), 1500);
                                   }
                                 }}
                                 onMouseEnter={() => selectedDocument && setHoveredDocumentId(selectedDocument.id)}
                                 onMouseLeave={() => setHoveredDocumentId(null)}
-                                aria-label="Copy document hash"
+                                aria-label="Copy document chain ID"
                               >
                                 <HiOutlineDuplicate className="w-4 h-4" />
                               </button>
@@ -2406,14 +2430,14 @@ export default function SignaturesPage() {
                           <div className="text-xs text-black dark:text-white select-none cursor-default">{selectedDocument?.document}</div>
                         </div>
                         <div>
-                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Contract Hash</div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Smart Contract Chain ID</div>
                           <div className="flex items-center">
                             <span
                               className="text-xs font-mono text-gray-900 dark:text-white truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-default select-none"
                               style={{ maxWidth: '120px' }}
-                              title={selectedDocument ? getDocumentHash(selectedDocument.contractId) : ''}
+                              title={selectedDocument ? getSmartContractChainId(selectedDocument.contractId) : ''}
                             >
-                              {selectedDocument ? `0x${selectedDocument.contractId}...${selectedDocument.contractId.slice(-4)}` : ''}
+                              {selectedDocument ? getSmartContractChainId(selectedDocument.contractId) : ''}
                             </span>
                             <div className="relative">
                               <button 
@@ -2421,14 +2445,14 @@ export default function SignaturesPage() {
                                 className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
                                 onClick={() => {
                                   if (selectedDocument) {
-                                    navigator.clipboard.writeText(getDocumentHash(selectedDocument.contractId));
+                                    navigator.clipboard.writeText(getSmartContractChainId(selectedDocument.contractId));
                                     setCopiedDocumentId(selectedDocument.contractId);
                                     setTimeout(() => setCopiedDocumentId(null), 1500);
                                   }
                                 }}
                                 onMouseEnter={() => selectedDocument && setHoveredDocumentId(selectedDocument.contractId)}
                                 onMouseLeave={() => setHoveredDocumentId(null)}
-                                aria-label="Copy contract hash"
+                                aria-label="Copy smart contract chain ID"
                               >
                                 <HiOutlineDuplicate className="w-4 h-4" />
                               </button>
@@ -2710,7 +2734,7 @@ export default function SignaturesPage() {
             </div>
 
             <div className="flex flex-col flex-1 min-h-0">
-              <div className="overflow-y-auto p-6 flex-1 bg-gray-50 dark:bg-gray-900">
+              <div className="overflow-y-auto p-6 flex-1 bg-gray-50 dark:bg-gray-900 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
                 <form onSubmit={(e) => { e.preventDefault(); setShowRequestSignatureModal(false); setUploadedFiles([]); setSelectedDocuments([]); }}>
                   <div className="space-y-6">
                     {/* Two Column Layout for Documents */}
@@ -2779,7 +2803,7 @@ export default function SignaturesPage() {
                                   onClick={(e) => e.stopPropagation()}
                                 />
                               </div>
-                              <div className="max-h-[300px] overflow-y-auto">
+                              <div className="max-h-[300px] overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
                                 {filteredDocuments.map((doc) => (
                                   <button
                                     key={doc.id}
@@ -3338,7 +3362,7 @@ export default function SignaturesPage() {
               </div>
 
               <div className="flex flex-col flex-1 min-h-0">
-                <div className="overflow-y-auto p-6 flex-1 bg-gray-50 dark:bg-gray-900">
+                <div className="overflow-y-auto p-6 flex-1 bg-gray-50 dark:bg-gray-900 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
                 <form onSubmit={(e) => { e.preventDefault(); setShowDocuSignModal(false); setDocuSignUploadedFiles([]); setDocuSignSelectedDocuments([]); }}>
                   <div className="space-y-6">
                     {/* Two Column Layout for Documents */}
@@ -3407,7 +3431,7 @@ export default function SignaturesPage() {
                                     onClick={(e) => e.stopPropagation()}
                                   />
                                 </div>
-                                <div className="max-h-[300px] overflow-y-auto">
+                                <div className="max-h-[300px] overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
                                   {sampleDocuments
                                     .filter(doc => {
                                       const search = docuSignDocumentSearch.toLowerCase();

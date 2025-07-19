@@ -92,7 +92,7 @@ export const mockContracts = [
   { 
     id: '6453', 
     title: 'Retail Space Lease',
-    parties: 'Retail Corp & Property Group',
+    parties: 'Retail Corp & Property Group & Marketing Solutions Inc',
     status: 'In Review',
     updated: '2 days ago',
     value: '$25,000/month',

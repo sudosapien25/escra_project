@@ -24,7 +24,18 @@ const BLOCK_HASH = "0x7ad9e3b8f2c1a4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6
 const PROPOSER_HASH = "0xabc1234def5678fedcba9876543210abcdef1234567890fedcba0987654321ab";
 
 // Helper function to generate contract hash
-const getContractHash = (id: string) => `0x${id}${'0'.repeat(66 - 2 - id.length)}`;
+const getSmartContractChainId = (id: string) => {
+  // Generate 10-digit Algorand-style Smart Contract Chain ID from string ID
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    const char = id.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  // Ensure 10 digits by padding with zeros if needed
+  const hashStr = Math.abs(hash).toString();
+  return hashStr.padStart(10, '0').slice(0, 10);
+};
 
 // Helper function for status badge styling (from contract details modal)
 const getStatusBadgeStyle = (status: string) => {
@@ -66,7 +77,7 @@ const activityData = [
     type: 'Milestone Completed',
     icon: <FaRegSquareCheck size={18} color="#22c55e" />,
     description: 'Document Review milestone completed for Contract #8423',
-    txHash: '0x7ad9e3b...',
+    txHash: 'A7C4E2F9B8D3A6C5E8F1B4D7A9C2E5F8B1D4A7C0E3F6B9D2A5C8',
     block: '#15283674',
     contractId: '8423',
     timestamp: '20,',
@@ -78,7 +89,7 @@ const activityData = [
     type: 'Document Signed',
     icon: <HiOutlineDocumentText size={18} color="#3b82f6" />,
     description: 'Purchase Agreement signed by John Smith for Contract #9145',
-    txHash: '0x4fc8d2a...',
+    txHash: 'B5D1F3A8C9E2B7F4A6C8E1D5F9B3A7C0E4F7B0D3C6F9B2E5A8D1',
     block: '#15283545',
     contractId: '9145',
     timestamp: '20,',
@@ -90,7 +101,7 @@ const activityData = [
     type: 'Smart Contract Deployed',
     icon: <FaCodeBranch size={18} color="#8b5cf6" />,
     description: 'Oracle Integration contract deployed to TestNet',
-    txHash: '0x9be31c5...',
+    txHash: 'C6E2G4B9D0F3A7C1E5F8B2D6A9C3E7F0B4D8A1C5E9B3D7A0C4E8',
     block: '#15283213',
     contractId: '7804',
     timestamp: '20,',
@@ -102,7 +113,7 @@ const activityData = [
     type: 'Document Hash Registered',
     icon: <FaHashtag size={18} color="#06b6d4" />,
     description: 'Lease Agreement hash registered for Contract #7234',
-    txHash: '0x2ea9f1b...',
+    txHash: 'D7F3H5C0E1G4B8D2F6A9C4E8B2D7A1C5E9B3D8A2C6F0B4E9A3D7',
     block: '#15282789',
     contractId: '7234',
     timestamp: '19,',
@@ -114,7 +125,7 @@ const activityData = [
     type: 'Escrow Payment Released',
     icon: <GrMoney size={18} color="#f97316" />,
     description: 'Final payment released for Contract #6891',
-    txHash: '0x8d4f2e3...',
+    txHash: 'E8G4I6D1F2H5C9E3G7B0D5F9C3E8B2D7A1C6F0B4E9A3D8B2C7F1',
     block: '#15281952',
     contractId: '6891',
     timestamp: '19,',
@@ -856,12 +867,13 @@ export default function BlockchainPage() {
                   />
                 </div>
                 <div className="flex items-center">
+                  <span className="text-xs text-gray-400 mr-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Chain ID:</span>
                   <span
                     className="text-xs font-mono text-black dark:text-white truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
                     style={{ maxWidth: '100px' }}
-                    title={getContractHash(contract.id)}
+                    title={getSmartContractChainId(contract.id)}
                   >
-                    0x{contract.id}...{contract.id.slice(-4)}
+                    {getSmartContractChainId(contract.id)}
                   </span>
                   <div className="relative flex-shrink-0">
                     <button
@@ -869,13 +881,13 @@ export default function BlockchainPage() {
                       className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigator.clipboard.writeText(getContractHash(contract.id));
+                        navigator.clipboard.writeText(getSmartContractChainId(contract.id));
                         setCopiedContractId(contract.id);
                         setTimeout(() => setCopiedContractId(null), 1500);
                       }}
                       onMouseEnter={() => setHoveredContractId(contract.id)}
                       onMouseLeave={() => setHoveredContractId(null)}
-                      aria-label="Copy contract hash"
+                      aria-label="Copy smart contract chain ID"
                     >
                       <HiOutlineDuplicate className="w-4 h-4" />
                     </button>
@@ -896,7 +908,7 @@ export default function BlockchainPage() {
                   <span className="mr-4 flex items-center truncate"><MdOutlineUpdate className="mr-1 text-gray-400 flex-shrink-0 text-base" />Last Updated: {contract.deployed}</span>
                   <span className="flex items-center truncate"><FaTimeline className="mr-1 text-gray-400 flex-shrink-0 text-base" />{contract.transactions} Transactions</span>
                 </div>
-                <div className="flex justify-between items-center pt-2 border-t border-gray-100 mt-2">
+                <div className="flex justify-between items-center pt-4 border-t border-gray-100 mt-4">
                   <button className="text-gray-700 hover:text-teal-600 flex items-center text-[10px] font-medium" style={{ fontFamily: 'Avenir, sans-serif' }}><span className="mr-1">&gt;_</span>Functions</button>
                   <a href="#" className="text-teal-600 hover:underline flex items-center text-[10px] font-medium" style={{ fontFamily: 'Avenir, sans-serif' }}>View Details <LuSquareArrowOutUpRight className="ml-1 text-sm" /></a>
                 </div>
@@ -1284,11 +1296,11 @@ export default function BlockchainPage() {
                       <div className="text-[11px] text-gray-400 font-medium mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Action ID</div>
                       <div className="flex items-center">
                         <span
-                          className="text-xs font-mono text-black dark:text-white truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
+                          className="text-xs font-mono text-black dark:text-white truncate cursor-default"
                           style={{ maxWidth: '100px' }}
-                          title={activity.txHash}
+                          title="Click copy button for full ID"
                         >
-                          {activity.txHash}
+                          {`${activity.txHash.substring(0, 12)}...${activity.txHash.slice(-8)}`}
                         </span>
                         <div className="relative flex-shrink-0">
                           <button
@@ -1667,27 +1679,27 @@ export default function BlockchainPage() {
                           <div className="text-xs text-black">{selectedSmartContract.title}</div>
                         </div>
                         <div>
-                          <div className="text-gray-500 text-xs mb-1">Contract Hash</div>
+                          <div className="text-gray-500 text-xs mb-1">Smart Contract Chain ID</div>
                           <div className="flex items-center">
                             <span
                               className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
                               style={{ maxWidth: '120px' }}
-                              title={getContractHash(selectedSmartContract.id)}
+                              title={getSmartContractChainId(selectedSmartContract.id)}
                             >
-                              {`${getContractHash(selectedSmartContract.id).substring(0, 9)}...${getContractHash(selectedSmartContract.id).slice(-4)}`}
+                              {getSmartContractChainId(selectedSmartContract.id)}
                             </span>
                             <div className="relative">
                               <button
                                 type="button"
                                 className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
                                 onClick={() => {
-                                  navigator.clipboard.writeText(getContractHash(selectedSmartContract.id));
+                                  navigator.clipboard.writeText(getSmartContractChainId(selectedSmartContract.id));
                                   setCopiedContractId(selectedSmartContract.id);
                                   setTimeout(() => setCopiedContractId(null), 1500);
                                 }}
                                 onMouseEnter={() => setHoveredContractId(selectedSmartContract.id)}
                                 onMouseLeave={() => setHoveredContractId(null)}
-                                aria-label="Copy contract hash"
+                                aria-label="Copy smart contract chain ID"
                               >
                                 <HiOutlineDuplicate className="w-4 h-4" />
                               </button>
@@ -1715,12 +1727,12 @@ export default function BlockchainPage() {
                             <span
                               className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
                               style={{ maxWidth: '120px' }}
-                              title={getContractHash(selectedSmartContract.id)}
+                              title={getSmartContractChainId(selectedSmartContract.id)}
                             >
-                              {`${getContractHash(selectedSmartContract.id).substring(0, 9)}...${getContractHash(selectedSmartContract.id).slice(-4)}`}
+                              {getSmartContractChainId(selectedSmartContract.id)}
                             </span>
                             <button className="ml-2 text-gray-400 hover:text-gray-600" onClick={() => {
-                                  navigator.clipboard.writeText(getContractHash(selectedSmartContract.id));
+                                  navigator.clipboard.writeText(getSmartContractChainId(selectedSmartContract.id));
                                   setCopiedContractId('on-chain-id');
                                   setTimeout(() => setCopiedContractId(null), 1500);
                                 }}>
@@ -2221,36 +2233,36 @@ export default function BlockchainPage() {
                           <div className="text-xs text-black">{selectedActivity.type}</div>
                         </div>
                         <div>
-                          <div className="text-gray-500 text-xs mb-1">Contract Hash</div>
+                          <div className="text-gray-500 text-xs mb-1">Smart Contract Chain ID</div>
                           <div className="flex items-center">
                             <span
                               className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
                               style={{ maxWidth: '120px' }}
-                              title={selectedActivity.txHash}
+                              title={getSmartContractChainId(selectedActivity.contractId)}
                             >
-                              {`${selectedActivity.txHash.substring(0, 9)}...${selectedActivity.txHash.slice(-4)}`}
+                              {getSmartContractChainId(selectedActivity.contractId)}
                             </span>
                             <div className="relative">
                               <button
                                 type="button"
                                 className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
                                 onClick={() => {
-                                  navigator.clipboard.writeText(selectedActivity.txHash);
-                                  setCopiedContractId(selectedActivity.txHash);
+                                  navigator.clipboard.writeText(getSmartContractChainId(selectedActivity.contractId));
+                                  setCopiedContractId(selectedActivity.contractId);
                                   setTimeout(() => setCopiedContractId(null), 1500);
                                 }}
-                                onMouseEnter={() => setHoveredContractId(selectedActivity.txHash)}
+                                onMouseEnter={() => setHoveredContractId(selectedActivity.contractId)}
                                 onMouseLeave={() => setHoveredContractId(null)}
-                                aria-label="Copy contract hash"
+                                aria-label="Copy smart contract chain ID"
                               >
                                 <HiOutlineDuplicate className="w-4 h-4" />
                               </button>
-                              {copiedContractId === selectedActivity.txHash && (
+                              {copiedContractId === selectedActivity.contractId && (
                                 <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded">
                                   Copied!
                                 </div>
                               )}
-                              {hoveredContractId === selectedActivity.txHash && copiedContractId !== selectedActivity.txHash && (
+                              {hoveredContractId === selectedActivity.contractId && copiedContractId !== selectedActivity.contractId && (
                                 <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded">
                                   Copy
                                 </div>
