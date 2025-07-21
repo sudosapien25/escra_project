@@ -2817,7 +2817,12 @@ export default function SignaturesPage() {
                                             <FaCheck className="text-white" size={8} />
                                         )}
                                       </div>
-                                        <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{doc.name}</span>
+                                        <span 
+                                          className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate max-w-[200px]"
+                                          title={doc.name}
+                                        >
+                                          {doc.name}
+                                        </span>
                                     </div>
                                       <div className="ml-6 text-gray-500 dark:text-gray-400 text-[10px]">{doc.contractName} ({doc.contractId})</div>
                                   </button>
@@ -2890,8 +2895,13 @@ export default function SignaturesPage() {
                                 <div key={docId} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600">
                                   <div className="flex items-center gap-3">
                                     <HiOutlineDocumentText className="w-5 h-5 text-primary" />
-                                    <div>
-                                      <div className="font-semibold text-xs text-black dark:text-white">{doc.name}</div>
+                                    <div className="flex-1 min-w-0">
+                                      <div 
+                                        className="font-semibold text-xs text-black dark:text-white truncate max-w-[140px]"
+                                        title={doc.name}
+                                      >
+                                        {doc.name}
+                                      </div>
                                       <div className="text-xs text-gray-500">{doc.dateUploaded} &bull; {doc.type} &bull; {doc.size}</div>
                                     </div>
                                   </div>
@@ -2975,16 +2985,16 @@ export default function SignaturesPage() {
                                       ) : (
                                         <div className="flex items-center gap-2 group">
                                           <div 
-                                            className="font-semibold text-xs text-black dark:text-white cursor-pointer hover:text-primary transition-colors flex-1 min-w-0 truncate"
+                                            className="font-semibold text-xs text-black dark:text-white cursor-pointer hover:text-primary transition-colors flex-1 min-w-0 truncate max-w-[140px]"
                                             onClick={() => handleStartEditFileName(file, idx)}
-                                            title="Click to edit name"
+                                            title={`${displayName} - Click to edit name`}
                                           >
                                             {displayName}
                                           </div>
                                           <button
                                             type="button"
                                             onClick={() => handleStartEditFileName(file, idx)}
-                                            className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-primary transition-all p-1"
+                                            className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-primary transition-all p-1 flex-shrink-0"
                                           >
                                             <LuPen className="w-3 h-3" />
                                           </button>
@@ -3456,7 +3466,12 @@ export default function SignaturesPage() {
                                               <FaCheck className="text-white" size={8} />
                                             )}
                                           </div>
-                                          <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{doc.name}</span>
+                                          <span 
+                                            className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate max-w-[200px]"
+                                            title={doc.name}
+                                          >
+                                            {doc.name}
+                                          </span>
                                         </div>
                                         <div className="ml-6 text-gray-500 dark:text-gray-400 text-[10px]">{doc.contractName} ({doc.contractId})</div>
                                       </button>
@@ -3529,8 +3544,13 @@ export default function SignaturesPage() {
                                 <div key={docId} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600">
                                   <div className="flex items-center gap-3">
                                     <HiOutlineDocumentText className="w-5 h-5 text-primary" />
-                                    <div>
-                                      <div className="font-semibold text-xs text-black dark:text-white">{doc.name}</div>
+                                    <div className="flex-1 min-w-0">
+                                      <div 
+                                        className="font-semibold text-xs text-black dark:text-white truncate max-w-[140px]"
+                                        title={doc.name}
+                                      >
+                                        {doc.name}
+                                      </div>
                                       <div className="text-xs text-gray-500">{doc.dateUploaded} &bull; {doc.type} &bull; {doc.size}</div>
                                     </div>
                                   </div>
@@ -3614,16 +3634,16 @@ export default function SignaturesPage() {
                                       ) : (
                                         <div className="flex items-center gap-2 group">
                                           <div 
-                                            className="font-semibold text-xs text-black dark:text-white cursor-pointer hover:text-blue-500 transition-colors flex-1 min-w-0 truncate"
+                                            className="font-semibold text-xs text-black dark:text-white cursor-pointer hover:text-blue-500 transition-colors flex-1 min-w-0 truncate max-w-[140px]"
                                             onClick={() => handleStartEditFileName(file, idx, true)}
-                                            title="Click to edit name"
+                                            title={`${displayName} - Click to edit name`}
                                           >
                                             {displayName}
                                           </div>
                                           <button
                                             type="button"
                                             onClick={() => handleStartEditFileName(file, idx, true)}
-                                            className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-blue-500 transition-all p-1"
+                                            className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-blue-500 transition-all p-1 flex-shrink-0"
                                           >
                                             <LuPen className="w-3 h-3" />
                                           </button>

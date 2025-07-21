@@ -8,6 +8,7 @@ interface StoredDocument {
   content: string; // base64 encoded file content
   uploadedDate: string;
   contractId?: string;
+  contractName?: string;
 }
 
 interface DocumentStore {
@@ -18,13 +19,13 @@ interface DocumentStore {
   
   // New document storage with full file content
   documents: Record<string, StoredDocument>;
-  addDocument: (file: File, contractId?: string) => Promise<string>; // Returns document ID
+  addDocument: (file: File, contractId?: string, contractName?: string) => Promise<string>; // Returns document ID
   getDocument: (documentId: string) => StoredDocument | undefined;
   getDocumentsByContract: (contractId: string) => StoredDocument[];
   updateDocumentName: (documentId: string, newName: string) => void;
   removeDocument: (documentId: string) => void;
   getAllDocuments: () => StoredDocument[];
-  updateDocumentContract: (documentId: string, contractId: string) => void;
+  updateDocumentContract: (documentId: string, contractId: string, contractName?: string) => void;
 }
 
 // Initial document names (legacy support)
@@ -115,7 +116,7 @@ export const useDocumentStore = create<DocumentStore>((set, get) => {
     // New document storage
     documents: migratedDocuments,
 
-    addDocument: async (file: File, contractId?: string): Promise<string> => {
+    addDocument: async (file: File, contractId?: string, contractName?: string): Promise<string> => {
       try {
         const content = await fileToBase64(file);
         const documentId = generateDocumentId();
@@ -127,7 +128,8 @@ export const useDocumentStore = create<DocumentStore>((set, get) => {
           size: file.size,
           content,
           uploadedDate: new Date().toISOString(),
-          contractId
+          contractId,
+          contractName
         };
 
         const newDocuments = { ...get().documents, [documentId]: storedDocument };
@@ -177,10 +179,10 @@ export const useDocumentStore = create<DocumentStore>((set, get) => {
 
     getAllDocuments: () => Object.values(get().documents),
 
-    updateDocumentContract: (documentId: string, contractId: string) => {
+    updateDocumentContract: (documentId: string, contractId: string, contractName?: string) => {
       const documents = get().documents;
       if (documents[documentId]) {
-        const updatedDocument = { ...documents[documentId], contractId };
+        const updatedDocument = { ...documents[documentId], contractId, contractName };
         const newDocuments = { ...documents, [documentId]: updatedDocument };
         set({ documents: newDocuments });
 

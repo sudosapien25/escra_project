@@ -4,9 +4,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaSearch, FaClock, FaSort, FaPlus, FaDollarSign, FaTimes, FaChevronDown, FaChevronUp, FaRegClock, FaCheck } from 'react-icons/fa';
 import { FaArrowUpRightFromSquare } from 'react-icons/fa6';
-import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutlineEye, HiOutlineEyeOff, HiOutlineClipboardList, HiOutlineExclamation, HiChevronDown, HiOutlineDocumentSearch, HiOutlineDocumentAdd, HiOutlineUpload, HiOutlineTrash } from 'react-icons/hi';
+import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutlineEye, HiOutlineEyeOff, HiOutlineClipboardList, HiOutlineExclamation, HiChevronDown, HiOutlineDocumentSearch, HiOutlineDocumentAdd, HiOutlineUpload, HiOutlineTrash, HiOutlineX } from 'react-icons/hi';
 import { HiOutlineViewBoards } from 'react-icons/hi';
-import { LuCalendarFold } from 'react-icons/lu';
+import { LuCalendarFold, LuPen } from 'react-icons/lu';
 import { BiDotsHorizontal, BiCommentAdd } from 'react-icons/bi';
 import { TbWorldDollar, TbEdit, TbClockUp, TbCubeSend, TbClockPin } from 'react-icons/tb';
 import { Logo } from '@/components/common/Logo';
@@ -39,7 +39,6 @@ import { SlSocialDropbox } from 'react-icons/sl';
 import { FaCheckCircle } from 'react-icons/fa';
 import { RiUserSearchLine } from 'react-icons/ri';
 import { GrMoney } from 'react-icons/gr';
-import { LuPen } from 'react-icons/lu';
 import { TiUserAddOutline } from 'react-icons/ti';
 
 // Add date formatting utilities
@@ -403,6 +402,7 @@ const ContractsPage: React.FC = () => {
     // Clear uploaded files and document IDs
     setUploadedFiles([]);
     setUploadedDocumentIds([]);
+    setStep4Documents([]);
     setDocumentName('');
     setDocumentNameError(false);
   };
@@ -1159,17 +1159,42 @@ const ContractsPage: React.FC = () => {
         if (!response.ok) {
           console.error('Failed to save contract to file');
         } else {
-          // Associate uploaded documents with the new contract
-          if (uploadedDocumentIds.length > 0) {
+          // Create documents with proper IDs and associate them with the new contract
+          const finalDocumentIds: string[] = [];
+          
+          // Process step4Documents (documents added during contract creation)
+          if (step4Documents.length > 0) {
             try {
-              // Update each document to include the contract ID
-              for (const documentId of uploadedDocumentIds) {
-                updateDocumentContract(documentId, newContractId);
+              for (const docInfo of step4Documents) {
+                // Create document with proper ID and contract association
+                const documentId = await addDocument(docInfo.file, newContractId, newContract.title);
+                
+                // Update the document name and assignee
+                const { updateDocumentName } = useDocumentStore.getState();
+                updateDocumentName(documentId, docInfo.name);
+                
+                finalDocumentIds.push(documentId);
               }
             } catch (error) {
-              console.error('Error associating documents with contract:', error);
+              console.error('Error creating documents for contract:', error);
             }
           }
+          
+          // Process any previously uploaded files (from handleFileChange)
+          if (uploadedFiles.length > 0) {
+            try {
+              for (const file of uploadedFiles) {
+                // Create document with proper ID and contract association
+                const documentId = await addDocument(file, newContractId, newContract.title);
+                finalDocumentIds.push(documentId);
+              }
+            } catch (error) {
+              console.error('Error creating documents from uploaded files:', error);
+            }
+          }
+          
+          // Update the contract with the final document IDs
+          newContract.documentIds = finalDocumentIds;
         }
       } catch (error) {
         console.error('Error saving contract:', error);
@@ -1185,6 +1210,7 @@ const ContractsPage: React.FC = () => {
       setStateSearchTerm('');
       setUploadedFiles([]); // Clear uploaded files
       setUploadedDocumentIds([]); // Clear uploaded document IDs
+      setStep4Documents([]); // Clear step 4 documents
       setDocumentName(''); // Clear document name
       setDocumentNameError(false); // Clear document name error
       
@@ -1245,19 +1271,7 @@ const ContractsPage: React.FC = () => {
     }
     
     try {
-      // Store files with custom document name and get their document IDs
-      const documentIds: string[] = [];
-      for (const file of validFiles) {
-        // Create a new File object with the custom name but keep the original extension
-        const fileExtension = file.name.split('.').pop() || '';
-        const customFileName = `${documentName.trim()}.${fileExtension}`;
-        const customFile = new File([file], customFileName, { type: file.type });
-        
-        const documentId = await addDocument(customFile);
-        documentIds.push(documentId);
-      }
-      
-      // Update the file list with custom names for display
+      // Store files with custom document name for later processing
       const renamedFiles = validFiles.map(file => {
         const fileExtension = file.name.split('.').pop() || '';
         const customFileName = `${documentName.trim()}.${fileExtension}`;
@@ -1265,7 +1279,6 @@ const ContractsPage: React.FC = () => {
       });
       
       setUploadedFiles(renamedFiles);
-      setUploadedDocumentIds(documentIds);
       
       if (validFiles.length > 0) {
         toast({
@@ -1576,6 +1589,10 @@ const ContractsPage: React.FC = () => {
   // Add state for contract details expand functionality
   const [showContractDetailsExpanded, setShowContractDetailsExpanded] = useState(false);
 
+  // Add state for document name editing in contract details modal
+  const [editingDocumentName, setEditingDocumentName] = useState<string | null>(null);
+  const [customDocumentNames, setCustomDocumentNames] = useState<{[key: string]: string}>({});
+
   // Ref for status dropdown
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const statusButtonRef = useRef<HTMLButtonElement>(null);
@@ -1625,6 +1642,32 @@ const ContractsPage: React.FC = () => {
 
   // Add state at the top of the component:
   const [selectedUploadSource, setSelectedUploadSource] = useState<string | null>(null);
+
+  // Add state for document upload modal
+  const [showDocumentUploadModal, setShowDocumentUploadModal] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [documentUploadName, setDocumentUploadName] = useState('');
+  const [documentUploadAssignee, setDocumentUploadAssignee] = useState('');
+  const [showDocumentUploadAssigneeDropdown, setShowDocumentUploadAssigneeDropdown] = useState(false);
+  
+  // New Contract Document Upload Modal state
+  const [showNewContractDocumentModal, setShowNewContractDocumentModal] = useState(false);
+  const [newContractDocumentName, setNewContractDocumentName] = useState('');
+  const [newContractDocumentAssignee, setNewContractDocumentAssignee] = useState('');
+  const [showNewContractAssigneeDropdown, setShowNewContractAssigneeDropdown] = useState(false);
+  const newContractAssigneeDropdownRef = useRef<HTMLDivElement>(null);
+  
+  // File Source dropdown state for new contract document modal
+  const [showNewContractFileSourceDropdown, setShowNewContractFileSourceDropdown] = useState(false);
+  const [selectedNewContractFileSource, setSelectedNewContractFileSource] = useState('');
+  const newContractFileSourceDropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Selected files state for step 4 documents
+  const [step4SelectedFiles, setStep4SelectedFiles] = useState<File[]>([]);
+  
+  // Document data for step 4 (with custom names)
+  const [step4Documents, setStep4Documents] = useState<Array<{file: File, name: string, assignee: string}>>([]);
+  const newContractDesktopFileInputRef = useRef<HTMLInputElement>(null);
 
   // Function to handle dropdown clicks
   const handleDropdownClick = (
@@ -1937,6 +1980,86 @@ const ContractsPage: React.FC = () => {
     }
   };
 
+  // Function to delete a stored document
+  const deleteDocument = (documentId: string, documentName: string) => {
+    try {
+      // Check if this is a stored document (ID >= 8000 or old format with 'doc_' prefix)
+      const docIdNum = parseInt(documentId);
+      if (docIdNum >= 8000 || documentId.startsWith('doc_')) {
+        // Remove from document store
+        removeDocument(documentId);
+        
+        toast({
+          title: "Document Deleted",
+          description: `${documentName} has been permanently deleted.`,
+        });
+      } else {
+        // Handle sample document deletion (placeholder)
+        toast({
+          title: "Cannot Delete Sample Document",
+          description: "Sample documents cannot be deleted. Only uploaded documents can be removed.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      toast({
+        title: "Delete Error",
+        description: "Failed to delete document. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteContract = async (contractId: string, contractTitle: string) => {
+    try {
+      // First, delete all documents associated with this contract
+      const { getAllDocuments, removeDocument } = useDocumentStore.getState();
+      const allDocuments = getAllDocuments();
+      const contractDocuments = allDocuments.filter(doc => doc.contractId === contractId);
+      
+      // Remove all documents associated with this contract
+      contractDocuments.forEach(doc => {
+        removeDocument(doc.id);
+      });
+
+      // Delete the contract from the backend
+      const response = await fetch('/api/contracts', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ contractId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete contract from backend');
+      }
+
+      // Remove the contract from the contracts array
+      setContracts(prev => prev.filter(contract => contract.id !== contractId));
+
+      // If the deleted contract was selected, clear the selection
+      if (selectedContract && selectedContract.id === contractId) {
+        setSelectedContract(null);
+      }
+
+      // Show success message
+      toast({
+        title: "Contract Deleted",
+        description: `"${contractTitle}" has been permanently deleted along with all associated documents.`,
+      });
+
+    } catch (error) {
+      console.error('Error deleting contract:', error);
+      toast({
+        title: "Delete Error",
+        description: "Failed to delete contract. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Function to update contract field and persist to backend
   const updateContractField = async (contractId: string, field: string, value: string) => {
     try {
@@ -2064,6 +2187,134 @@ const ContractsPage: React.FC = () => {
     setUploadModalFiles(validFiles);
   };
 
+  // Handler for document upload modal file selection
+  const handleDocumentUploadFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    
+    const file = e.target.files[0];
+    
+    // Validate file type and size
+    const validTypes = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "image/jpeg"];
+    const isValidType = validTypes.includes(file.type);
+    const isValidSize = file.size <= 10 * 1024 * 1024; // 10MB
+    
+    if (!isValidType || !isValidSize) {
+      toast({
+        title: "File Type/Size Error",
+        description: "Only PDF, DOC, DOCX, JPG files under 10MB are allowed.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Set the selected file and show the modal
+    setSelectedFile(file);
+    setDocumentUploadName(file.name.split('.')[0]); // Set default name without extension
+    setShowDocumentUploadModal(true);
+  };
+
+  // Handler for saving document from upload modal
+  const handleSaveDocumentUpload = async () => {
+    if (!selectedFile || !documentUploadName.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please provide a document name.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Create a new File object with the custom name but keep the original extension
+      const fileExtension = selectedFile.name.split('.').pop() || '';
+      const customFileName = `${documentUploadName.trim()}.${fileExtension}`;
+      const customFile = new File([selectedFile], customFileName, { type: selectedFile.type });
+      
+      // Add file to uploaded files for later processing
+      setUploadedFiles(prev => [...prev, customFile]);
+      
+      // Show success message
+      toast({
+        title: "Document Uploaded",
+        description: `"${customFileName}" has been successfully uploaded.`,
+      });
+      
+      // Close modal and reset state
+      setShowDocumentUploadModal(false);
+      setSelectedFile(null);
+      setDocumentUploadName('');
+      setDocumentUploadAssignee('');
+      
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      toast({
+        title: "Upload Error",
+        description: "Failed to upload document. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handler for closing document upload modal
+  const handleCloseDocumentUploadModal = () => {
+    setShowDocumentUploadModal(false);
+    setSelectedFile(null);
+    setDocumentUploadName('');
+    setDocumentUploadAssignee('');
+  };
+
+  // Handler for new contract document upload modal
+  const handleNewContractDocumentModalSave = async () => {
+    if (newContractDocumentName.trim() && newContractDocumentAssignee.trim() && step4SelectedFiles.length > 0) {
+      try {
+        // Store document information temporarily without creating document ID yet
+        const newDocument = {
+          file: step4SelectedFiles[0], // Use the first selected file
+          name: newContractDocumentName.trim(),
+          assignee: newContractDocumentAssignee.trim()
+        };
+        setStep4Documents(prev => [...prev, newDocument]);
+        
+        // Remove the file from step4SelectedFiles
+        setStep4SelectedFiles(prev => prev.slice(1));
+        
+        // Close modal and reset state
+        setShowNewContractDocumentModal(false);
+        setNewContractDocumentName('');
+        setNewContractDocumentAssignee('');
+        setSelectedNewContractFileSource('');
+        setShowNewContractFileSourceDropdown(false);
+        
+        toast({
+          title: "Document Added",
+          description: `"${newContractDocumentName}" has been added to the contract.`,
+        });
+      } catch (error) {
+        console.error('Error adding document:', error);
+        toast({
+          title: "Error",
+          description: "Failed to add document. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } else {
+      toast({
+        title: "Validation Error",
+        description: "Please provide document name, assignee, and select a file.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleNewContractDocumentModalCancel = () => {
+    setShowNewContractDocumentModal(false);
+    setNewContractDocumentName('');
+    setNewContractDocumentAssignee('');
+    setSelectedNewContractFileSource('');
+    setShowNewContractFileSourceDropdown(false);
+    setStep4SelectedFiles([]);
+  };
+
   // Calculate total contract value
   const calculateTotalValue = () => {
     return mockContracts.reduce((total, contract) => {
@@ -2076,6 +2327,33 @@ const ContractsPage: React.FC = () => {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     });
+  };
+
+  // Document name editing functions for contract details modal
+  const getDocumentDisplayName = (doc: Document): string => {
+    return customDocumentNames[doc.id] || doc.name;
+  };
+
+  const handleStartEditDocumentName = (doc: Document) => {
+    setEditingDocumentName(doc.id);
+  };
+
+  const handleSaveDocumentName = (doc: Document, newName: string) => {
+    if (newName.trim()) {
+      setCustomDocumentNames(prev => ({ ...prev, [doc.id]: newName.trim() }));
+      
+      // Update the document in the document store if it's a stored document
+      const docIdNum = parseInt(doc.id);
+      if (docIdNum >= 8000 || doc.id.startsWith('doc_')) {
+        const { updateDocumentName } = useDocumentStore.getState();
+        updateDocumentName(doc.id, newName.trim());
+      }
+    }
+    setEditingDocumentName(null);
+  };
+
+  const handleCancelEditDocumentName = () => {
+    setEditingDocumentName(null);
   };
 
   // Add commentEditor setup
@@ -2642,6 +2920,34 @@ const ContractsPage: React.FC = () => {
       }
     };
   }, []);
+
+  // Click outside handler for new contract document assignee dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (showNewContractAssigneeDropdown && !newContractAssigneeDropdownRef.current?.contains(event.target as Node)) {
+        setShowNewContractAssigneeDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showNewContractAssigneeDropdown]);
+
+  // Click outside handler for new contract file source dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (showNewContractFileSourceDropdown && !newContractFileSourceDropdownRef.current?.contains(event.target as Node)) {
+        setShowNewContractFileSourceDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showNewContractFileSourceDropdown]);
 
   return (
     <>
@@ -3677,80 +3983,41 @@ const ContractsPage: React.FC = () => {
 
             {modalStep === 4 && (
               <form onSubmit={handleSubmit} noValidate>
-                <div className="space-y-6">
-                  {/* Document Details Section */}
-                  <div className="flex gap-4 cursor-default select-none">
-                    <div className="flex-1 w-0 cursor-default select-none">
-                      <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Document Name</label>
-                      <input
-                        type="text"
-                        placeholder="Enter document name..."
-                        value={documentName}
-                        onChange={(e) => {
-                          setDocumentName(e.target.value);
-                          if (documentNameError && e.target.value.trim()) {
-                            setDocumentNameError(false);
-                          }
-                        }}
-                        className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs focus:ring-2 focus:ring-primary focus:border-primary transition-colors cursor-text"
-                        style={{ fontFamily: 'Avenir, sans-serif' }}
-                      />
-                    </div>
-                    <div className="flex-1 w-0 cursor-default select-none">
-                      <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Assignee</label>
-                      <div className="relative" ref={uploadModalAssigneeDropdownRef}>
-                        <input
-                          ref={uploadModalAssigneeInputRef}
-                          type="text"
-                          className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs focus:ring-2 focus:ring-primary focus:border-primary transition-colors cursor-text"
-                          placeholder="Choose an assignee..."
-                          value={uploadModalAssignee}
-                          onChange={(e) => setUploadModalAssignee(e.target.value)}
-                          onClick={() => setShowUploadModalAssigneeDropdown(true)}
-                          style={{ fontFamily: 'Avenir, sans-serif' }}
-                        />
-                        {showUploadModalAssigneeDropdown && (
-                          <div className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 max-h-40 overflow-y-auto cursor-default select-none">
-                            <div className="py-2">
-                              {allAssignees.map((assignee) => (
-                                <button
-                                  key={assignee}
-                                  type="button"
-                                  className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer select-none text-xs"
-                                  onClick={() => {
-                                    setUploadModalAssignee(assignee);
-                                    setShowUploadModalAssigneeDropdown(false);
-                                  }}
-                                  style={{ fontFamily: 'Avenir, sans-serif' }}
-                                >
-                                  {assignee}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  
+                <div className="space-y-4">
                   <div>
+                    {/* Uploaded Documents Display - Above the upload box */}
+                    {step4Documents.length > 0 && (
+                      <div className="mb-4">
+                        <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-3 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Uploaded Documents</h4>
+                        <div className="flex flex-col gap-2 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
+                          {step4Documents.map((doc, idx) => (
+                            <div key={idx} className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-600 cursor-default select-none">
+                              <div className="flex-1 min-w-0">
+                                <div className="font-semibold text-xs text-black dark:text-white cursor-default select-none truncate max-w-[200px]">
+                                  {doc.name}
+                                </div>
+                                <div className="text-xs text-gray-500 cursor-default select-none">
+                                  {new Date().toLocaleDateString()} &bull; {doc.file.name.split('.').pop()?.toUpperCase() || 'Unknown'} &bull; {(doc.file.size / 1024 / 1024).toFixed(2)} MB
+                                </div>
+                              </div>
+                              <button 
+                                className="text-red-500 hover:text-red-700 transition-colors cursor-pointer"
+                                onClick={() => setStep4Documents(prev => prev.filter((_, i) => i !== idx))}
+                              >
+                                <HiOutlineTrash className="h-4 w-4" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 cursor-default select-none">Upload Documents (Optional)</label>
                     <div className="relative">
                       <div 
                         className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 py-8 px-4 text-center transition hover:border-primary cursor-pointer"
                         onClick={() => {
-                          if (!documentName.trim()) {
-                            setDocumentNameError(true);
-                            return;
-                          }
-                          setDocumentNameError(false);
-                          setSelectedUploadSource('Desktop');
-                          // Directly trigger file picker - skip dropdown entirely
-                          const fileInput = document.getElementById('file-upload') as HTMLInputElement;
-                          if (fileInput) {
-                            fileInput.value = '';
-                            fileInput.click();
-                          }
+                          setShowNewContractDocumentModal(true);
                         }}
                       >
                         <HiOutlineUpload className="text-2xl text-gray-400 mb-2" />
@@ -3779,87 +4046,19 @@ const ContractsPage: React.FC = () => {
                         multiple
                         onChange={handleFileChange}
                       />
+
+                      {/* Hidden file input for document upload modal */}
+                      <input
+                        id="document-upload-file"
+                        name="document-upload-file"
+                        type="file"
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg"
+                        className="hidden"
+                        onChange={handleDocumentUploadFileChange}
+                      />
                       
-                      {/* Upload source dropdown */}
-                      {showUploadDropdown && (
-                        <div className="absolute z-50 mt-2 w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 cursor-default select-none">
-                          <div className="py-2">
-                            {!documentName.trim() ? (
-                              <button 
-                                type="button" 
-                                className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer select-none flex items-center gap-2" 
-                                onClick={() => { 
-                                  setDocumentNameError(true);
-                                  setShowUploadDropdown(false);
-                                }}
-                              >
-                                <TbDeviceDesktopPlus className="text-base text-primary" />
-                                <span className="text-xs cursor-default select-none">Desktop</span>
-                              </button>
-                            ) : (
-                              <label 
-                                htmlFor="desktop-file-upload"
-                                className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer select-none flex items-center gap-2" 
-                                onClick={() => { 
-                                  setDocumentNameError(false);
-                                  setSelectedUploadSource('Desktop'); 
-                                  setShowUploadDropdown(false);
-                                }}
-                              >
-                                <TbDeviceDesktopPlus className="text-base text-primary" />
-                                <span className="text-xs cursor-default select-none">Desktop</span>
-                              </label>
-                            )}
-                            <button 
-                              type="button" 
-                              className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" 
-                              onClick={() => { 
-                                setSelectedUploadSource('Box'); 
-                                setShowUploadDropdown(false); 
-                              }}
-                            >
-                              <SiBox className="text-base text-primary" />
-                              <span className="text-xs cursor-default select-none">Box</span>
-                            </button>
-                            <button 
-                              type="button" 
-                              className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" 
-                              onClick={() => { 
-                                setSelectedUploadSource('Dropbox'); 
-                                setShowUploadDropdown(false); 
-                              }}
-                            >
-                              <SlSocialDropbox className="text-base text-primary" />
-                              <span className="text-xs cursor-default select-none">Dropbox</span>
-                            </button>
-                            <button 
-                              type="button" 
-                              className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" 
-                              onClick={() => { 
-                                setSelectedUploadSource('Google Drive'); 
-                                setShowUploadDropdown(false); 
-                              }}
-                            >
-                              <TbBrandGoogleDrive className="text-base text-primary" />
-                              <span className="text-xs cursor-default select-none">Google Drive</span>
-                            </button>
-                            <button 
-                              type="button" 
-                              className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" 
-                              onClick={() => { 
-                                setSelectedUploadSource('OneDrive'); 
-                                setShowUploadDropdown(false); 
-                              }}
-                            >
-                              <TbBrandOnedrive className="text-base text-primary" />
-                              <span className="text-xs cursor-default select-none">OneDrive</span>
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                      {documentNameError && (
-                        <p className="mt-1 text-xs text-red-600 font-medium cursor-default select-none">Document name is required</p>
-                      )}
+
+
                     </div>
                     {uploadedFiles.length > 0 && (
                       <ul className="mt-3 text-sm text-gray-600 dark:text-gray-400 cursor-default select-none">
@@ -3868,6 +4067,7 @@ const ContractsPage: React.FC = () => {
                         ))}
                       </ul>
                     )}
+
                   </div>
                   <div className="flex justify-between">
                     <button type="button" onClick={() => setModalStep(3)} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm cursor-default select-none">Previous</button>
@@ -4566,7 +4766,7 @@ const ContractsPage: React.FC = () => {
         <div className="border-b border-gray-200 dark:border-gray-700">
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0 w-full">
             {/* Contracts/Documents Tabs */}
-            <div className="flex space-x-4 overflow-x-auto w-full md:w-auto">
+                          <div className="flex space-x-4 overflow-x-auto w-full md:w-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
               {CONTENT_TABS.map((tab) => (
                 <button
                   key={tab.key}
@@ -4583,7 +4783,7 @@ const ContractsPage: React.FC = () => {
             </div>
             {/* Created by Me/Assigned to Me Tabs (styled like main tabs) */}
             <div className="flex flex-col items-end w-full md:w-auto">
-              <div className="flex space-x-8 overflow-x-auto w-full md:w-auto">
+              <div className="flex space-x-8 overflow-x-auto w-full md:w-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
                 {TABS.filter(tab => tab.key !== 'allContracts').map(tab => (
                   <button
                     key={tab.key}
@@ -4629,13 +4829,10 @@ const ContractsPage: React.FC = () => {
                     Parties
                   </th>
                   <th
-                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap"
                     onClick={handleContractTypeSort}
                   >
-                    <div className="flex flex-col">
-                      <span>Contract</span>
-                      <span>Type</span>
-                    </div>
+                    Contract Type
                   </th>
                   <th
                     className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
@@ -4717,7 +4914,7 @@ const ContractsPage: React.FC = () => {
                         );
                       })()}
                     </td>
-                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                    <td className="px-6 py-2.5 whitespace-nowrap text-left text-xs">
                       <div className="text-gray-900 dark:text-white">{contract.type || 'N/A'}</div>
                     </td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
@@ -4741,10 +4938,16 @@ const ContractsPage: React.FC = () => {
                             Upload
                           </span>
                         </button>
-                        <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group" onClick={e => { e.stopPropagation(); /* Add your delete logic or confirmation modal here */ }}>
-                          <HiOutlineTrash className="h-4 w-4 transition-colors" />
+                        <button 
+                          className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group" 
+                          onClick={e => { 
+                            e.stopPropagation(); 
+                            deleteContract(contract.id, contract.title);
+                          }}
+                        >
+                          <HiOutlineX className="h-4 w-4 transition-colors" />
                           <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                            Delete
+                            Void
                           </span>
                         </button>
                       </div>
@@ -4885,7 +5088,13 @@ const ContractsPage: React.FC = () => {
                             Download
                           </span>
                         </button>
-                        <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group">
+                        <button 
+                          className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteDocument(doc.id, doc.name);
+                          }}
+                        >
                           <HiOutlineTrash className="h-4 w-4 transition-colors" />
                           <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                             Delete
@@ -4930,7 +5139,7 @@ const ContractsPage: React.FC = () => {
               </button>
             </div>
             {/* Centered Status Bar */}
-            <div className="w-full overflow-x-auto cursor-default select-none">
+            <div className="w-full overflow-x-auto cursor-default select-none [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
               <div className="flex flex-col items-center w-full max-w-full cursor-default select-none">
                 {/* Progress Bar */}
                 <div className="relative w-full max-w-[1100px] h-2 mb-6 bg-gray-200 rounded-full cursor-default select-none">
@@ -5699,8 +5908,60 @@ const ContractsPage: React.FC = () => {
                         <div key={doc.id} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600 cursor-default select-none">
                           <div className="flex items-center gap-3 cursor-default select-none">
                             <HiOutlineDocumentText className="w-5 h-5 text-primary" />
-                            <div>
-                              <div className="font-semibold text-xs text-black dark:text-white hover:underline cursor-default select-none">{doc.name}</div>
+                            <div className="flex-1 min-w-0">
+                              {editingDocumentName === doc.id ? (
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="text"
+                                    value={getDocumentDisplayName(doc)}
+                                    onChange={(e) => {
+                                      setCustomDocumentNames(prev => ({ ...prev, [doc.id]: e.target.value }));
+                                    }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        handleSaveDocumentName(doc, getDocumentDisplayName(doc));
+                                      } else if (e.key === 'Escape') {
+                                        handleCancelEditDocumentName();
+                                      }
+                                    }}
+                                    onBlur={() => handleSaveDocumentName(doc, getDocumentDisplayName(doc))}
+                                    className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded bg-white dark:bg-gray-800 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                                    autoFocus
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSaveDocumentName(doc, getDocumentDisplayName(doc))}
+                                    className="text-green-800 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 p-1"
+                                  >
+                                    <FaCheck className="w-3 h-3" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleCancelEditDocumentName()}
+                                    className="text-red-500 dark:text-red-500 hover:text-red-600 dark:hover:text-red-400 p-1"
+                                  >
+                                    <FaTimes className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              ) : (
+                                                                 <div className="flex items-center gap-2 group">
+                                   <div 
+                                     className="font-semibold text-xs text-black dark:text-white cursor-pointer hover:text-primary transition-colors flex-1 min-w-0 truncate max-w-[140px]"
+                                     onClick={() => handleStartEditDocumentName(doc)}
+                                     title={`${getDocumentDisplayName(doc)} - Click to edit name`}
+                                   >
+                                     {getDocumentDisplayName(doc)}
+                                   </div>
+                                   <button
+                                     type="button"
+                                     onClick={() => handleStartEditDocumentName(doc)}
+                                     className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-primary transition-all p-1 flex-shrink-0"
+                                   >
+                                     <LuPen className="w-3 h-3" />
+                                   </button>
+                                 </div>
+                              )}
                               <div className="text-xs text-gray-500 cursor-default select-none">{doc.dateUploaded} &bull; {doc.type} &bull; {doc.size}</div>
                             </div>
                           </div>
@@ -5734,7 +5995,13 @@ const ContractsPage: React.FC = () => {
                                 Download
                               </span>
                             </button>
-                            <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group cursor-pointer">
+                            <button 
+                              className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteDocument(doc.id, doc.name);
+                              }}
+                            >
                               <HiOutlineTrash className="h-4 w-4 transition-colors" />
                               <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                 Delete
@@ -6428,6 +6695,331 @@ const ContractsPage: React.FC = () => {
         </div>
       </div>
     )}
+
+    {/* Document Upload Modal */}
+    {showDocumentUploadModal && selectedFile && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 cursor-default select-none">
+        <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[500px] mx-4 my-8 flex flex-col overflow-hidden cursor-default select-none">
+          {/* Header */}
+          <div className="sticky top-0 z-40 bg-gray-50 dark:bg-gray-900 px-6 py-4 cursor-default select-none">
+            <div className="flex items-center justify-between cursor-default select-none">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white cursor-default select-none">Upload Document</h2>
+              <button
+                className="text-gray-400 hover:text-gray-600 p-2 rounded-full cursor-pointer"
+                onClick={handleCloseDocumentUploadModal}
+                aria-label="Close"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Modal Content */}
+          <div className="overflow-y-auto p-6 flex-1 bg-gray-50 dark:bg-gray-900 cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
+            <div className="space-y-6 cursor-default select-none">
+              {/* File Info */}
+              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-default select-none">
+                <div className="flex items-center gap-3 cursor-default select-none">
+                  <HiOutlineDocumentText className="w-8 h-8 text-primary" />
+                  <div className="flex-1 min-w-0 cursor-default select-none">
+                    <div className="font-semibold text-sm text-gray-900 dark:text-white truncate cursor-default select-none">{selectedFile.name}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 cursor-default select-none">
+                      {(selectedFile.size / 1024 / 1024).toFixed(2)} MB • {selectedFile.type}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Document Name Field */}
+              <div className="cursor-default select-none">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 cursor-default select-none">Document Name</label>
+                <input
+                  type="text"
+                  value={documentUploadName}
+                  onChange={(e) => setDocumentUploadName(e.target.value)}
+                  className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                  placeholder="Enter document name"
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                />
+              </div>
+
+              {/* Assignee Field */}
+              <div className="cursor-default select-none">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 cursor-default select-none">Assignee</label>
+                <div className="relative cursor-default select-none">
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer"
+                    placeholder="Select assignee"
+                    value={documentUploadAssignee}
+                    onChange={(e) => setDocumentUploadAssignee(e.target.value)}
+                    onFocus={() => setShowDocumentUploadAssigneeDropdown(true)}
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                    autoComplete="off"
+                  />
+                  <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  
+                  {showDocumentUploadAssigneeDropdown && (
+                    <div className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 max-h-40 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
+                      <div className="py-2">
+                        {allAssignees.map((assignee) => (
+                          <button
+                            key={assignee}
+                            type="button"
+                            className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer select-none text-sm"
+                            onClick={() => {
+                              setDocumentUploadAssignee(assignee);
+                              setShowDocumentUploadAssigneeDropdown(false);
+                            }}
+                            style={{ fontFamily: 'Avenir, sans-serif' }}
+                          >
+                            {assignee}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="sticky bottom-0 z-40 bg-gray-50 dark:bg-gray-900 px-6 py-4 border-t border-gray-200 dark:border-gray-700 cursor-default select-none">
+            <div className="flex justify-end gap-3 cursor-default select-none">
+              <button
+                type="button"
+                onClick={handleCloseDocumentUploadModal}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                style={{ fontFamily: 'Avenir, sans-serif' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveDocumentUpload}
+                className="px-4 py-2 text-sm font-medium text-white bg-primary border border-primary rounded-lg hover:bg-primary/90 transition-colors cursor-pointer"
+                style={{ fontFamily: 'Avenir, sans-serif' }}
+              >
+                Save Document
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* New Contract Document Upload Modal */}
+    {showNewContractDocumentModal && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 upload-modal cursor-default select-none">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 cursor-default select-none">
+          <div className="flex justify-between items-center mb-4 cursor-default select-none">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>New Contract Document Upload</h2>
+            <button
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
+              onClick={handleNewContractDocumentModalCancel}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          
+          <form
+            className="p-0 cursor-default select-none"
+            onSubmit={e => {
+              e.preventDefault();
+              handleNewContractDocumentModalSave();
+            }}
+          >
+            <div className="flex flex-col gap-4 mb-4 cursor-default select-none">
+              <div className="flex gap-4 cursor-default select-none">
+                <div className="flex-1 w-0 cursor-default select-none">
+                  <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">File Source</div>
+                  <div className="relative" ref={newContractFileSourceDropdownRef}>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowNewContractFileSourceDropdown(!showNewContractFileSourceDropdown);
+                      }}
+                      className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs focus:ring-0 focus:ring-primary focus:border-primary transition-colors flex items-center justify-end relative cursor-pointer"
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                    >
+                      {selectedNewContractFileSource ? (
+                        <span className="flex items-center gap-2 absolute left-4 cursor-default select-none">
+                          {selectedNewContractFileSource === 'Desktop' && <TbDeviceDesktopPlus className="text-base text-primary" />}
+                          {selectedNewContractFileSource === 'Box' && <SiBox className="text-base text-primary" />}
+                          {selectedNewContractFileSource === 'Dropbox' && <SlSocialDropbox className="text-base text-primary" />}
+                          {selectedNewContractFileSource === 'Google Drive' && <TbBrandGoogleDrive className="text-base text-primary" />}
+                          {selectedNewContractFileSource === 'OneDrive' && <TbBrandOnedrive className="text-base text-primary" />}
+                          <span className="text-xs text-gray-900 dark:text-white cursor-default select-none">{selectedNewContractFileSource}</span>
+                        </span>
+                      ) : (
+                        <span className="absolute left-4 text-xs text-gray-400 cursor-default select-none">Choose a source...</span>
+                      )}
+                      <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    </button>
+                    {showNewContractFileSourceDropdown && (
+                      <div className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 cursor-default select-none">
+                        <div className="py-2">
+                          <label htmlFor="new-contract-desktop-file-upload" className="block px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+                            <div className="flex items-center gap-2">
+                              <TbDeviceDesktopPlus className="text-base text-primary" />
+                              <span className="text-xs cursor-default select-none">Desktop</span>
+                            </div>
+                          </label>
+                          <input
+                            id="new-contract-desktop-file-upload"
+                            name="new-contract-desktop-file-upload"
+                            type="file"
+                            accept=".pdf,.doc,.docx,.jpg,.jpeg"
+                            className="hidden"
+                            multiple
+                            onChange={(e) => {
+                              setSelectedNewContractFileSource('Desktop');
+                              setShowNewContractFileSourceDropdown(false);
+                              if (e.target.files) {
+                                const newFiles = Array.from(e.target.files);
+                                setStep4SelectedFiles(prev => [...prev, ...newFiles]);
+                                // Pre-populate document name with first file name (without extension)
+                                if (newFiles.length > 0) {
+                                  const fileName = newFiles[0].name;
+                                  const nameWithoutExtension = fileName.replace(/\.[^/.]+$/, "");
+                                  setNewContractDocumentName(nameWithoutExtension);
+                                }
+                              }
+                              handleFileChange(e);
+                            }}
+                          />
+                          <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setSelectedNewContractFileSource('Box'); setShowNewContractFileSourceDropdown(false); }}>
+                            <SiBox className="text-base text-primary" />
+                            <span className="text-xs cursor-default select-none">Box</span>
+                          </button>
+                          <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setSelectedNewContractFileSource('Dropbox'); setShowNewContractFileSourceDropdown(false); }}>
+                            <SlSocialDropbox className="text-base text-primary" />
+                            <span className="text-xs cursor-default select-none">Dropbox</span>
+                          </button>
+                          <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setSelectedNewContractFileSource('Google Drive'); setShowNewContractFileSourceDropdown(false); }}>
+                            <TbBrandGoogleDrive className="text-base text-primary" />
+                            <span className="text-xs cursor-default select-none">Google Drive</span>
+                          </button>
+                          <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setSelectedNewContractFileSource('OneDrive'); setShowNewContractFileSourceDropdown(false); }}>
+                            <TbBrandOnedrive className="text-base text-primary" />
+                            <span className="text-xs cursor-default select-none">OneDrive</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex-1 w-0 cursor-default select-none" />
+              </div>
+              <div className="flex gap-4 cursor-default select-none">
+                <div className="flex-1 w-0 cursor-default select-none">
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Document Name <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    placeholder="Enter document name..."
+                    className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs transition-colors cursor-text focus:ring-2 focus:ring-primary focus:border-primary"
+                    value={newContractDocumentName}
+                    onChange={(e) => setNewContractDocumentName(e.target.value)}
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                  />
+                </div>
+              </div>
+              <div className="flex gap-4 cursor-default select-none">
+                <div className="flex-1 w-0 cursor-default select-none">
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Assignee <span className="text-red-500">*</span></label>
+                  <div className="relative" ref={newContractAssigneeDropdownRef}>
+                    <input
+                      type="text"
+                      className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs transition-colors cursor-text focus:ring-2 focus:ring-primary focus:border-primary pr-10"
+                      placeholder="Choose an assignee..."
+                      value={newContractDocumentAssignee}
+                      onChange={(e) => setNewContractDocumentAssignee(e.target.value)}
+                      onFocus={() => setShowNewContractAssigneeDropdown(true)}
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                      autoComplete="off"
+                    />
+                    <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    
+                    {showNewContractAssigneeDropdown && (
+                      <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                        {allAssignees.length > 0 ? (
+                          <>
+                            {allAssignees.map((assignee: string) => (
+                              <div
+                                key={assignee}
+                                className={`px-4 py-2 text-xs cursor-pointer ${newContractDocumentAssignee === assignee ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'} select-none`}
+                                onClick={() => {
+                                  setNewContractDocumentAssignee(assignee);
+                                  setShowNewContractAssigneeDropdown(false);
+                                }}
+                              >
+                                {assignee}
+                              </div>
+                            ))}
+                            <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                            <div
+                              className="px-4 py-2 text-xs cursor-pointer text-primary hover:bg-primary/10 select-none flex items-center gap-2"
+                              onClick={() => {
+                                // TODO: Add logic to create new assignee
+                                setShowNewContractAssigneeDropdown(false);
+                              }}
+                            >
+                              <FaPlus className="text-xs" />
+                              Add new assignee
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="px-4 py-2 text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">No assignees found</div>
+                            <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                            <div
+                              className="px-4 py-2 text-xs cursor-pointer text-primary hover:bg-primary/10 select-none flex items-center gap-2"
+                              onClick={() => {
+                                // TODO: Add logic to create new assignee
+                                setShowNewContractAssigneeDropdown(false);
+                              }}
+                            >
+                              <FaPlus className="text-xs" />
+                              Add new assignee
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-1 mt-6">
+              <button 
+                type="button"
+                onClick={handleNewContractDocumentModalCancel}
+                className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
+                style={{ fontFamily: 'Avenir, sans-serif' }}
+              >
+                Close
+              </button>
+              <button 
+                type="submit" 
+                disabled={!newContractDocumentName.trim() || !newContractDocumentAssignee.trim()}
+                className="px-4 py-2 text-white rounded-lg transition-colors text-sm font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed bg-primary hover:bg-primary-dark"
+                style={{ fontFamily: 'Avenir, sans-serif' }}
+              >
+                Save
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    )}
+
     <Toaster />
     </>
   );
