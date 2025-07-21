@@ -31,6 +31,7 @@ import { useAssigneeStore } from '@/data/assigneeStore';
 import { useToast } from '@/components/ui/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { useAuth } from '@/context/AuthContext';
+import { useDocumentStore } from '@/data/documentNameStore';
 import { PiMoneyWavyBold, PiBankBold, PiSignatureBold, PiCaretUpDownBold } from 'react-icons/pi';
 import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
@@ -105,6 +106,10 @@ interface Contract {
   state?: string;
   zipCode?: string;
   country?: string;
+  additionalParties?: { name: string; email: string; role: string }[];
+  party1Role?: string;
+  party2Role?: string;
+  documentIds?: string[]; // IDs of stored documents
 }
 
 interface Document {
@@ -115,7 +120,7 @@ interface Document {
   date: string;
   uploadedBy?: string;
   dateUploaded?: string;
-  contractTitle?: string;
+  contractName?: string;
   contractId?: string;
   assignee?: string;
 }
@@ -130,7 +135,7 @@ const sampleDocuments: Document[] = [
     date: '2024-03-15',
     uploadedBy: 'John Smith',
     dateUploaded: '2024-03-15',
-    contractTitle: 'New Property Acquisition',
+    contractName: 'New Property Acquisition',
     contractId: '9548',
     assignee: 'John Smith'
   },
@@ -142,7 +147,7 @@ const sampleDocuments: Document[] = [
     date: '2024-03-14',
     uploadedBy: 'Sarah Johnson',
     dateUploaded: '2024-03-14',
-    contractTitle: 'Land Development Contract',
+    contractName: 'Land Development Contract',
     contractId: '9550',
     assignee: 'Sarah Johnson'
   },
@@ -154,7 +159,7 @@ const sampleDocuments: Document[] = [
     date: '2024-03-13',
     uploadedBy: 'Michael Brown',
     dateUploaded: '2024-03-13',
-    contractTitle: 'Construction Escrow',
+    contractName: 'Construction Escrow',
     contractId: '9145',
     assignee: 'Michael Brown'
   },
@@ -166,7 +171,7 @@ const sampleDocuments: Document[] = [
     date: '2024-03-12',
     uploadedBy: 'Emily Davis',
     dateUploaded: '2024-03-12',
-    contractTitle: 'Property Sale Contract',
+    contractName: 'Property Sale Contract',
     contractId: '8423',
     assignee: 'Robert Chen'
   },
@@ -178,7 +183,7 @@ const sampleDocuments: Document[] = [
     date: '2024-03-11',
     uploadedBy: 'Robert Wilson',
     dateUploaded: '2024-03-11',
-    contractTitle: 'Investment Property Escrow',
+    contractName: 'Investment Property Escrow',
     contractId: '7804',
     assignee: 'Sarah Miller'
   },
@@ -190,7 +195,7 @@ const sampleDocuments: Document[] = [
     date: '2024-03-10',
     uploadedBy: 'Lisa Anderson',
     dateUploaded: '2024-03-10',
-    contractTitle: 'Residential Sale Agreement',
+    contractName: 'Residential Sale Agreement',
     contractId: '7234',
     assignee: 'David Miller'
   },
@@ -202,7 +207,7 @@ const sampleDocuments: Document[] = [
     date: '2024-03-09',
     uploadedBy: 'David Taylor',
     dateUploaded: '2024-03-09',
-    contractTitle: 'Office Building Purchase',
+    contractName: 'Office Building Purchase',
     contractId: '6891',
     assignee: 'Emily Davis'
   },
@@ -214,7 +219,7 @@ const sampleDocuments: Document[] = [
     date: '2024-03-08',
     uploadedBy: 'Jennifer Martinez',
     dateUploaded: '2024-03-08',
-    contractTitle: 'Retail Space Lease',
+    contractName: 'Retail Space Lease',
     contractId: '6453',
     assignee: 'Alex Johnson'
   },
@@ -226,7 +231,7 @@ const sampleDocuments: Document[] = [
     date: '2024-03-07',
     uploadedBy: 'James Thompson',
     dateUploaded: '2024-03-07',
-    contractTitle: 'Luxury Villa Purchase',
+    contractName: 'Luxury Villa Purchase',
     contractId: '10003',
     assignee: 'Samantha Fox'
   }
@@ -236,6 +241,7 @@ const ContractsPage: React.FC = () => {
   const { user } = useAuth();
   const currentUserName = user?.name || '';
   const { toast } = useToast();
+  const { addDocument, getDocumentsByContract, removeDocument, updateDocumentContract } = useDocumentStore();
 
   const [activeTab, setActiveTab] = useState('allContracts');
   const [activeContentTab, setActiveContentTab] = useState('contractList');
@@ -294,6 +300,9 @@ const ContractsPage: React.FC = () => {
     country: '',
   });
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [uploadedDocumentIds, setUploadedDocumentIds] = useState<string[]>([]);
+  const [documentName, setDocumentName] = useState('');
+  const [documentNameError, setDocumentNameError] = useState(false);
   const [contracts, setContracts] = useState<Contract[]>(mockContracts);
 
   // State for expanded parties rows
@@ -376,20 +385,26 @@ const ContractsPage: React.FC = () => {
     });
     setModalStep(1);
     setFormErrors({});
+    setRecipientErrors({});
     // Reset recipients to initial state
     setRecipients([{
       name: '',
       email: '',
-      role: 'Needs to Sign',
       signerRole: '',
-      showRoleDropdown: false,
+      contractRole: '',
       showSignerRoleDropdown: false,
-      roleButtonRef: React.createRef<HTMLButtonElement>(),
-      roleDropdownRef: React.createRef<HTMLDivElement>(),
+      showContractRoleDropdown: false,
       signerRoleButtonRef: React.createRef<HTMLButtonElement>(),
       signerRoleDropdownRef: React.createRef<HTMLDivElement>(),
+      contractRoleButtonRef: React.createRef<HTMLButtonElement>(),
+      contractRoleDropdownRef: React.createRef<HTMLDivElement>(),
     }]);
     setIsOnlySigner(false);
+    // Clear uploaded files and document IDs
+    setUploadedFiles([]);
+    setUploadedDocumentIds([]);
+    setDocumentName('');
+    setDocumentNameError(false);
   };
 
   // Routing number masking state
@@ -407,6 +422,12 @@ const ContractsPage: React.FC = () => {
   // Account number visibility state
   const [buyerAccountVisible, setBuyerAccountVisible] = useState(false);
   const [sellerAccountVisible, setSellerAccountVisible] = useState(false);
+  
+  // Contract details modal visibility states for wire details
+  const [contractDetailsBuyerRoutingVisible, setContractDetailsBuyerRoutingVisible] = useState(false);
+  const [contractDetailsSellerRoutingVisible, setContractDetailsSellerRoutingVisible] = useState(false);
+  const [contractDetailsBuyerAccountVisible, setContractDetailsBuyerAccountVisible] = useState(false);
+  const [contractDetailsSellerAccountVisible, setContractDetailsSellerAccountVisible] = useState(false);
   
   // Refs to track timeouts for masking
   const buyerRoutingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -572,14 +593,14 @@ const ContractsPage: React.FC = () => {
   type Recipient = {
     name: string;
     email: string;
-    role: string;
     signerRole: string;
-    showRoleDropdown: boolean;
+    contractRole: string;
     showSignerRoleDropdown: boolean;
-    roleButtonRef: React.RefObject<HTMLButtonElement>;
-    roleDropdownRef: React.RefObject<HTMLDivElement>;
+    showContractRoleDropdown: boolean;
     signerRoleButtonRef: React.RefObject<HTMLButtonElement>;
     signerRoleDropdownRef: React.RefObject<HTMLDivElement>;
+    contractRoleButtonRef: React.RefObject<HTMLButtonElement>;
+    contractRoleDropdownRef: React.RefObject<HTMLDivElement>;
   };
 
   const [isOnlySigner, setIsOnlySigner] = useState(false);
@@ -587,34 +608,36 @@ const ContractsPage: React.FC = () => {
     {
       name: '',
       email: '',
-      role: 'Needs to Sign',
       signerRole: '',
-      showRoleDropdown: false,
+      contractRole: '',
       showSignerRoleDropdown: false,
-      roleButtonRef: React.createRef<HTMLButtonElement>(),
-      roleDropdownRef: React.createRef<HTMLDivElement>(),
+      showContractRoleDropdown: false,
       signerRoleButtonRef: React.createRef<HTMLButtonElement>(),
       signerRoleDropdownRef: React.createRef<HTMLDivElement>(),
+      contractRoleButtonRef: React.createRef<HTMLButtonElement>(),
+      contractRoleDropdownRef: React.createRef<HTMLDivElement>(),
     },
   ]);
 
   // Handler to add a new recipient card
   const handleAddRecipient = () => {
-    setRecipients(prev => [
-      ...prev,
-      {
-        name: '',
-        email: '',
-        role: 'Needs to Sign',
-        signerRole: '',
-        showRoleDropdown: false,
-        showSignerRoleDropdown: false,
-        roleButtonRef: React.createRef<HTMLButtonElement>(),
-        roleDropdownRef: React.createRef<HTMLDivElement>(),
-        signerRoleButtonRef: React.createRef<HTMLButtonElement>(),
-        signerRoleDropdownRef: React.createRef<HTMLDivElement>(),
-      },
-    ]);
+    setRecipients(prev => {
+      return [
+        ...prev,
+        {
+          name: '',
+          email: '',
+          signerRole: '',
+          contractRole: '',
+          showSignerRoleDropdown: false,
+          showContractRoleDropdown: false,
+          signerRoleButtonRef: React.createRef<HTMLButtonElement>(),
+          signerRoleDropdownRef: React.createRef<HTMLDivElement>(),
+          contractRoleButtonRef: React.createRef<HTMLButtonElement>(),
+          contractRoleDropdownRef: React.createRef<HTMLDivElement>(),
+        },
+      ];
+    });
   };
 
   // Handler to delete a recipient card
@@ -906,6 +929,8 @@ const ContractsPage: React.FC = () => {
   };
 
   const [formErrors, setFormErrors] = useState<Record<string, boolean>>({});
+  const [recipientErrors, setRecipientErrors] = useState<Record<string, boolean>>({});
+  const [onlySignerError, setOnlySignerError] = useState(false);
 
   const handleModalChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -964,7 +989,7 @@ const ContractsPage: React.FC = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     // Only use browser validation for step 1
@@ -1002,6 +1027,39 @@ const ContractsPage: React.FC = () => {
       
       setModalStep(2);
     } else if (modalStep === 2) {
+      // Step 2: Validate recipients (parties) with visual error feedback
+      const newRecipientErrors: Record<string, boolean> = {};
+      let hasErrors = false;
+
+      recipients.forEach((recipient, index) => {
+        if (!recipient.name || recipient.name.trim() === '') {
+          newRecipientErrors[`name-${index}`] = true;
+          hasErrors = true;
+        }
+        if (!recipient.email || recipient.email.trim() === '') {
+          newRecipientErrors[`email-${index}`] = true;
+          hasErrors = true;
+        } else if (!validateEmail(recipient.email)) {
+          newRecipientErrors[`email-${index}`] = true;
+          hasErrors = true;
+        }
+        if (!recipient.signerRole || recipient.signerRole.trim() === '') {
+          newRecipientErrors[`signerRole-${index}`] = true;
+          hasErrors = true;
+        }
+        if (!recipient.contractRole || recipient.contractRole.trim() === '') {
+          newRecipientErrors[`contractRole-${index}`] = true;
+          hasErrors = true;
+        }
+      });
+
+      if (hasErrors) {
+        setRecipientErrors(newRecipientErrors);
+        return;
+      }
+
+      // Clear errors and proceed
+      setRecipientErrors({});
       setModalStep(3);
     } else if (modalStep === 3) {
       // Step 3: Just progress to step 4 (document upload)
@@ -1025,12 +1083,20 @@ const ContractsPage: React.FC = () => {
       const newContractId = generateContractId();
       const partiesString = createPartiesString();
       
-      // Map recipients to individual party fields based on their signer roles
-      // Map recipients by position: first = buyer, second = seller, third = agent
+      // Map recipients by position: first = buyer, second = seller
       const buyerRecipient = recipients[0];
       const sellerRecipient = recipients[1];
-      const agentRecipient = recipients[2];
       
+      // Store party roles for the contract details modal
+      const party1ContractRole = buyerRecipient?.contractRole || 'Buyer';
+      const party2ContractRole = sellerRecipient?.contractRole || 'Seller';
+      
+      // Capture additional parties (Party 3 and beyond) with their emails
+      const additionalPartiesData = recipients.slice(2).map(r => ({
+        name: r.name,
+        email: r.email,
+        role: r.contractRole || 'Standard',
+      }));
 
       
       const newContract: Contract = {
@@ -1044,7 +1110,6 @@ const ContractsPage: React.FC = () => {
         type: modalForm.type,
         buyer: buyerRecipient?.name || '',
         seller: sellerRecipient?.name || '',
-        agent: agentRecipient?.name || '',
         // Include all form data
         milestone: modalForm.milestone,
         notes: modalForm.notes,
@@ -1055,7 +1120,6 @@ const ContractsPage: React.FC = () => {
         escrowNumber: modalForm.escrowNumber,
         buyerEmail: buyerRecipient?.email || '',
         sellerEmail: sellerRecipient?.email || '',
-        agentEmail: agentRecipient?.email || '',
         earnestMoney: modalForm.earnestMoney,
         downPayment: modalForm.downPayment,
         loanAmount: modalForm.loanAmount,
@@ -1076,9 +1140,40 @@ const ContractsPage: React.FC = () => {
         state: modalForm.state,
         zipCode: modalForm.zipCode,
         country: modalForm.country,
+        additionalParties: additionalPartiesData,
+        party1Role: party1ContractRole,
+        party2Role: party2ContractRole,
+        documentIds: uploadedDocumentIds, // Store document IDs
       };
 
+      // Save the new contract to the mockContracts.ts file
+      try {
+        const response = await fetch('/api/contracts', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newContract),
+        });
 
+        if (!response.ok) {
+          console.error('Failed to save contract to file');
+        } else {
+          // Associate uploaded documents with the new contract
+          if (uploadedDocumentIds.length > 0) {
+            try {
+              // Update each document to include the contract ID
+              for (const documentId of uploadedDocumentIds) {
+                updateDocumentContract(documentId, newContractId);
+              }
+            } catch (error) {
+              console.error('Error associating documents with contract:', error);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error saving contract:', error);
+      }
 
       // Add new contract to the contracts array
       setContracts(prev => [newContract, ...prev]);
@@ -1089,12 +1184,18 @@ const ContractsPage: React.FC = () => {
       setCountrySearchTerm('');
       setStateSearchTerm('');
       setUploadedFiles([]); // Clear uploaded files
+      setUploadedDocumentIds([]); // Clear uploaded document IDs
+      setDocumentName(''); // Clear document name
+      setDocumentNameError(false); // Clear document name error
       
       // Show success feedback
       toast({
-        title: "Contract Created Successfully",
-        description: `Contract "${newContract.title}" has been created with ID ${newContract.id}`,
+        title: "Contract created successfully",
+        description: `"${newContract.title}" has been created with ID ${newContract.id}`,
         duration: Infinity, // Make toast persistent - user must close it manually
+        onClick: () => {
+          setSelectedContract(newContract);
+        },
       });
     } else {
       setShowNewContractForm(false);
@@ -1119,14 +1220,67 @@ const ContractsPage: React.FC = () => {
     setSearchTerm(event.target.value);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
+    
+    // Validate document name is provided
+    if (!documentName.trim()) {
+      setDocumentNameError(true);
+      return;
+    }
+    setDocumentNameError(false);
+    
     const files = Array.from(e.target.files);
     // Only allow PDF, DOC, DOCX, JPG and max 10MB each
     const validFiles = files.filter(file =>
       ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "image/jpeg"].includes(file.type) && file.size <= 10 * 1024 * 1024
     );
-    setUploadedFiles(validFiles);
+    
+    if (validFiles.length !== files.length) {
+      toast({
+        title: "File Type/Size Warning",
+        description: "Some files were skipped. Only PDF, DOC, DOCX, JPG files under 10MB are allowed.",
+        variant: "destructive",
+      });
+    }
+    
+    try {
+      // Store files with custom document name and get their document IDs
+      const documentIds: string[] = [];
+      for (const file of validFiles) {
+        // Create a new File object with the custom name but keep the original extension
+        const fileExtension = file.name.split('.').pop() || '';
+        const customFileName = `${documentName.trim()}.${fileExtension}`;
+        const customFile = new File([file], customFileName, { type: file.type });
+        
+        const documentId = await addDocument(customFile);
+        documentIds.push(documentId);
+      }
+      
+      // Update the file list with custom names for display
+      const renamedFiles = validFiles.map(file => {
+        const fileExtension = file.name.split('.').pop() || '';
+        const customFileName = `${documentName.trim()}.${fileExtension}`;
+        return new File([file], customFileName, { type: file.type });
+      });
+      
+      setUploadedFiles(renamedFiles);
+      setUploadedDocumentIds(documentIds);
+      
+      if (validFiles.length > 0) {
+        toast({
+          title: "Files Uploaded",
+          description: `${validFiles.length} file(s) have been successfully uploaded as "${documentName.trim()}".`,
+        });
+      }
+    } catch (error) {
+      console.error('Error storing files:', error);
+      toast({
+        title: "Upload Error",
+        description: "Failed to store some files. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Filter contracts based on search term and selected statuses
@@ -1161,14 +1315,43 @@ const ContractsPage: React.FC = () => {
     }
   });
 
+  // Convert stored documents to Document interface format
+  const convertStoredToDocument = (storedDoc: any, contractTitle?: string): Document => {
+    return {
+      id: storedDoc.id,
+      name: storedDoc.name,
+      type: storedDoc.type.includes('pdf') ? 'PDF' : 
+            storedDoc.type.includes('doc') ? 'DOC' : 
+            storedDoc.type.includes('image') ? 'JPG' : 'PDF',
+      size: `${(storedDoc.size / (1024 * 1024)).toFixed(1)} MB`,
+      date: new Date(storedDoc.uploadedDate).toISOString().split('T')[0],
+      uploadedBy: currentUserName,
+      dateUploaded: new Date(storedDoc.uploadedDate).toISOString().split('T')[0],
+      contractName: contractTitle || 'Unknown Contract',
+      contractId: storedDoc.contractId || '',
+      assignee: currentUserName,
+    };
+  };
+
+  // Get stored documents and convert them to Document interface
+  const { getAllDocuments } = useDocumentStore.getState();
+  const storedDocuments = getAllDocuments();
+  const convertedStoredDocuments = storedDocuments.map(storedDoc => {
+    const contractTitle = contracts.find(c => c.id === storedDoc.contractId)?.title || 'Unknown Contract';
+    return convertStoredToDocument(storedDoc, contractTitle);
+  });
+
+  // Combine sample documents with stored documents
+  const allDocuments = [...sampleDocuments, ...convertedStoredDocuments];
+
   // Filter documents based on search term
-  const filteredDocuments = sampleDocuments.filter(doc => {
+  const filteredDocuments = allDocuments.filter(doc => {
     const matchesSearch = searchTerm === '' || 
       doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doc.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doc.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doc.uploadedBy?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.contractTitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              doc.contractName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doc.contractId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doc.assignee?.toLowerCase().includes(searchTerm.toLowerCase());
 
@@ -1615,13 +1798,8 @@ const ContractsPage: React.FC = () => {
       const target = event.target as HTMLElement;
       const dropdown = uploadDropdownRef.current;
       
-      // If clicking inside the dropdown list, don't close
-      if (dropdown?.querySelector('.dropdown-list')?.contains(target)) {
-        return;
-      }
-      
-      // If clicking the select button, don't handle here (let the button's onClick handle it)
-      if (dropdown?.querySelector('button')?.contains(target)) {
+      // If clicking inside the dropdown (including any buttons), don't close
+      if (dropdown?.contains(target)) {
         return;
       }
       
@@ -1630,7 +1808,10 @@ const ContractsPage: React.FC = () => {
     }
 
     if (showUploadDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
+      // Use 'mousedown' with a small delay to allow button clicks to process first
+      setTimeout(() => {
+        document.addEventListener('mousedown', handleClickOutside);
+      }, 10);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
@@ -1647,23 +1828,147 @@ const ContractsPage: React.FC = () => {
       setEditableAgent(selectedContract.agent || 'N/A');
       setEditableValue(selectedContract.value || '');
       
-      // Parse additional parties from the parties string
-      const allParties = selectedContract.parties?.split('&').map(p => p.trim()).filter(p => p) || [];
-      if (allParties.length > 2) {
-        const additional = allParties.slice(2).map((party, index) => ({
+      // Set party roles from contract data
+      setParty1Role(selectedContract.party1Role || 'Buyer');
+      setParty2Role(selectedContract.party2Role || 'Seller');
+      
+      // Use stored additional parties data from contract if available
+      if (selectedContract.additionalParties && selectedContract.additionalParties.length > 0) {
+        const additional = selectedContract.additionalParties.map((party, index) => ({
           id: `party-${index + 3}`,
-          name: party,
-          email: '',
-          role: 'Standard',
+          name: party.name,
+          email: party.email,
+          role: party.role,
           isEditing: false,
           showRoleDropdown: false
         }));
         setAdditionalParties(additional);
       } else {
-        setAdditionalParties([]);
+        // Fallback: parse from parties string for existing contracts without additionalParties data
+        const allParties = selectedContract.parties?.split('&').map(p => p.trim()).filter(p => p) || [];
+        if (allParties.length > 2) {
+          const additional = allParties.slice(2).map((party, index) => ({
+            id: `party-${index + 3}`,
+            name: party,
+            email: '',
+            role: 'Standard',
+            isEditing: false,
+            showRoleDropdown: false
+          }));
+          setAdditionalParties(additional);
+        } else {
+          setAdditionalParties([]);
+        }
       }
     }
   }, [selectedContract]);
+
+  // Load enhanced contracts (updates + additional) on component mount
+  useEffect(() => {
+    const loadEnhancedContracts = async () => {
+      try {
+        const response = await fetch('/api/contracts');
+        if (response.ok) {
+          const data = await response.json();
+          // Only update if we got valid data that's different from initial mockContracts
+          if (data.contracts && data.contracts.length > 0) {
+            setContracts(data.contracts);
+          }
+        } else {
+          console.error('Failed to load enhanced contracts');
+          // Keep the initial mockContracts that are already loaded
+        }
+      } catch (error) {
+        console.error('Error loading enhanced contracts:', error);
+        // Keep the initial mockContracts that are already loaded
+      }
+    };
+
+    // Small delay to let the initial render complete, then enhance with API data
+    const timeoutId = setTimeout(loadEnhancedContracts, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, []);
+
+  // Function to download a stored document
+  const downloadDocument = (documentId: string) => {
+    const { getDocument } = useDocumentStore.getState();
+    const storedDoc = getDocument(documentId);
+    
+    if (!storedDoc) {
+      toast({
+        title: "Error",
+        description: "Document not found.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Convert base64 back to file and trigger download
+      const byteCharacters = atob(storedDoc.content);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: storedDoc.type });
+      
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = storedDoc.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Download Started",
+        description: `Downloading ${storedDoc.name}`,
+      });
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      toast({
+        title: "Download Error",
+        description: "Failed to download document.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Function to update contract field and persist to backend
+  const updateContractField = async (contractId: string, field: string, value: string) => {
+    try {
+      const response = await fetch('/api/contracts', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ contractId, field, value }),
+      });
+
+      if (response.ok) {
+        // Update the contract in local state
+        setContracts(prev => 
+          prev.map(contract => 
+            contract.id === contractId 
+              ? { ...contract, [field]: value }
+              : contract
+          )
+        );
+        
+        // Update the selected contract if it's the one being edited
+        if (selectedContract && selectedContract.id === contractId) {
+          setSelectedContract({ ...selectedContract, [field]: value });
+        }
+      } else {
+        console.error('Failed to update contract');
+      }
+    } catch (error) {
+      console.error('Error updating contract:', error);
+    }
+  };
 
   // Helper function to generate contract hash
   const getSmartContractChainId = (id: string) => {
@@ -1887,7 +2192,7 @@ const ContractsPage: React.FC = () => {
     return parseFloat(val.replace(/[$,]/g, ''));
   }
 
-  // Sort filteredContracts by id, contract title, parties, contract type, status, created date, last updated, or value
+      // Sort filteredContracts by id, contract name, parties, contract type, status, created date, last updated, or value
   const sortedContracts = [...filteredContracts].sort((a, b) => {
     if (valueSortDirection) {
       const aValue = parseValue(a.value);
@@ -2077,8 +2382,8 @@ const ContractsPage: React.FC = () => {
       const bId = Number(b.contractId?.replace(/[^0-9]/g, '') || '0');
       return docContractIdSortDirection === 'asc' ? aId - bId : bId - aId;
     } else if (docContractSortDirection) {
-      const aTitle = (a.contractTitle || '').toLowerCase();
-      const bTitle = (b.contractTitle || '').toLowerCase();
+              const aTitle = (a.contractName || '').toLowerCase();
+        const bTitle = (b.contractName || '').toLowerCase();
       return docContractSortDirection === 'asc' 
         ? aTitle.localeCompare(bTitle)
         : bTitle.localeCompare(aTitle);
@@ -2224,16 +2529,6 @@ const ContractsPage: React.FC = () => {
       recipients.forEach((recipient, idx) => {
         const target = event.target as Node;
         if (
-          recipient.roleButtonRef.current?.contains(target) ||
-          recipient.roleDropdownRef.current?.contains(target)
-        ) {
-          // Click inside button or dropdown: do nothing
-          return;
-        }
-        if (recipient.showRoleDropdown) {
-          setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showRoleDropdown: false } : r));
-        }
-        if (
           recipient.signerRoleButtonRef.current?.contains(target) ||
           recipient.signerRoleDropdownRef.current?.contains(target)
         ) {
@@ -2243,11 +2538,110 @@ const ContractsPage: React.FC = () => {
         if (recipient.showSignerRoleDropdown) {
           setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showSignerRoleDropdown: false } : r));
         }
+        if (
+          recipient.contractRoleButtonRef.current?.contains(target) ||
+          recipient.contractRoleDropdownRef.current?.contains(target)
+        ) {
+          // Click inside contract role button or dropdown: do nothing
+          return;
+        }
+        if (recipient.showContractRoleDropdown) {
+          setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showContractRoleDropdown: false } : r));
+        }
       });
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [recipients]);
+
+  // Add style element for dark mode autofill fix
+  React.useEffect(() => {
+    const styleId = 'dark-mode-autofill-fix';
+    
+    // Remove existing style if it exists
+    const existingStyle = document.getElementById(styleId);
+    if (existingStyle) {
+      existingStyle.remove();
+    }
+    
+    // Create new style element
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = `
+      .dark input:-webkit-autofill,
+      .dark input:-webkit-autofill:hover,
+      .dark input:-webkit-autofill:focus,
+      .dark input:-webkit-autofill:active,
+      .dark textarea:-webkit-autofill,
+      .dark textarea:-webkit-autofill:hover,
+      .dark textarea:-webkit-autofill:focus,
+      .dark textarea:-webkit-autofill:active {
+        -webkit-box-shadow: 
+          0 0 0 1000px rgb(17 24 39) inset !important,
+          0 0 0 2000px rgb(17 24 39) inset !important;
+        box-shadow: 
+          0 0 0 1000px rgb(17 24 39) inset !important,
+          0 0 0 2000px rgb(17 24 39) inset !important;
+        -webkit-text-fill-color: rgb(255 255 255) !important;
+        color: rgb(255 255 255) !important;
+        background-color: rgb(17 24 39) !important;
+        background-image: none !important;
+        background: rgb(17 24 39) !important;
+        border-color: rgb(75 85 99) !important;
+        font-family: 'Avenir', sans-serif !important;
+        font-size: 0.75rem !important;
+        font-weight: normal !important;
+        transition: all 0s !important;
+        -webkit-transition: all 0s !important;
+        -moz-transition: all 0s !important;
+        -webkit-animation: none !important;
+        animation: none !important;
+        -webkit-animation-delay: 99999s !important;
+        animation-delay: 99999s !important;
+      }
+      
+      .dark input:-webkit-autofill::selection {
+        background-color: rgb(59 130 246) !important;
+        color: rgb(255 255 255) !important;
+      }
+      
+             .dark input:focus:-webkit-autofill,
+       .dark input:not(:focus):-webkit-autofill {
+         -webkit-box-shadow: 0 0 0 1000px rgb(17 24 39) inset !important;
+         box-shadow: 0 0 0 1000px rgb(17 24 39) inset !important;
+         background-color: rgb(17 24 39) !important;
+         border-color: rgb(75 85 99) !important;
+       }
+       
+       .dark input:-webkit-autofill-strong-password,
+       .dark input:-webkit-autofill-strong-password:hover,
+       .dark input:-webkit-autofill-strong-password:focus,
+       .dark input:-webkit-autofill-and-obscured,
+       .dark input:-webkit-autofill-and-obscured:hover,
+       .dark input:-webkit-autofill-and-obscured:focus {
+         -webkit-box-shadow: 0 0 0 1000px rgb(17 24 39) inset !important;
+         box-shadow: 0 0 0 1000px rgb(17 24 39) inset !important;
+         -webkit-text-fill-color: rgb(255 255 255) !important;
+         color: rgb(255 255 255) !important;
+         background-color: rgb(17 24 39) !important;
+         background-image: none !important;
+         border-color: rgb(75 85 99) !important;
+         transition: none !important;
+         -webkit-transition: none !important;
+         animation: none !important;
+         -webkit-animation: none !important;
+       }
+    `;
+    
+    document.head.appendChild(style);
+    
+    return () => {
+      const styleToRemove = document.getElementById(styleId);
+      if (styleToRemove) {
+        styleToRemove.remove();
+      }
+    };
+  }, []);
 
   return (
     <>
@@ -2310,7 +2704,7 @@ const ContractsPage: React.FC = () => {
               </div>
             </div>
               <button
-              onClick={() => { setShowNewContractForm(false); setModalStep(1); setCountrySearchTerm(''); setStateSearchTerm(''); }} 
+              onClick={() => { setShowNewContractForm(false); setModalStep(1); setCountrySearchTerm(''); setStateSearchTerm(''); setRecipientErrors({}); resetForm(); }} 
               className="text-gray-400 hover:text-gray-600 p-2 rounded-full"
               >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2355,7 +2749,7 @@ const ContractsPage: React.FC = () => {
               <form onSubmit={handleSubmit} noValidate>
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="title" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Contract Title</label>
+                    <label htmlFor="title" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Contract Name</label>
                     <input
                       type="text"
                       id="title"
@@ -2365,11 +2759,11 @@ const ContractsPage: React.FC = () => {
                       className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white dark:border-gray-600 ${
                         formErrors.title ? 'border-red-300' : 'border-gray-200 dark:border-gray-600'
                       }`}
-                      placeholder="Enter contract title"
+                      placeholder="Enter contract name"
                       required
                     />
                     {formErrors.title && (
-                      <p className="mt-1 text-xs text-red-600 font-medium cursor-default select-none">Please fill out this field</p>
+                      <p className="mt-1 text-xs text-red-600 font-medium cursor-default select-none">Contract name is required</p>
                     )}
                   </div>
                   <div>
@@ -2389,9 +2783,7 @@ const ContractsPage: React.FC = () => {
                     <div className="relative w-full" ref={contractTypeDropdownRef}>
                       <input
                         type="text"
-                        className={`w-full px-3 py-2 border-2 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white dark:bg-gray-900 ${
-                          formErrors.type ? 'border-red-300' : 'border-gray-200 dark:border-gray-600'
-                        } caret-transparent`}
+                        className="w-full px-3 py-2 border-2 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-600 caret-transparent"
                         placeholder="Select contract type"
                         value={CONTRACT_TYPES.find(t => t === modalForm.type) || ''}
                         readOnly
@@ -2428,7 +2820,7 @@ const ContractsPage: React.FC = () => {
                       )}
                     </div>
                     {formErrors.type && (
-                      <p className="mt-1 text-xs text-red-600 font-medium cursor-default select-none">Please select a contract type</p>
+                      <p className="mt-1 text-xs text-red-600 font-medium cursor-default select-none">Select a contract type</p>
                     )}
                   </div>
                   <div>
@@ -2742,12 +3134,29 @@ const ContractsPage: React.FC = () => {
                   <div className="flex items-center space-x-3 mb-4">
                     <div className="w-5 h-5 border border-gray-300 rounded flex items-center justify-center cursor-pointer" onClick={() => {
                       const newValue = !isOnlySigner;
-                      setIsOnlySigner(newValue);
+                      
                       if (newValue) {
-                        // Automatically advance to next step when checked
-                        setTimeout(() => {
-                          setModalStep(3);
-                        }, 300); // Small delay for visual feedback
+                        // Check if first recipient is complete before checking and advancing
+                        const firstRecipient = recipients[0];
+                        const isComplete = 
+                          firstRecipient.name && firstRecipient.name.trim() !== '' &&
+                          firstRecipient.email && firstRecipient.email.trim() !== '' &&
+                          validateEmail(firstRecipient.email) &&
+                          firstRecipient.signerRole && firstRecipient.signerRole.trim() !== '' &&
+                          firstRecipient.contractRole && firstRecipient.contractRole.trim() !== '';
+
+                        if (isComplete) {
+                          // All conditions met - check box and clear error
+                          setIsOnlySigner(true);
+                          setOnlySignerError(false);
+                        } else {
+                          // Conditions not met - show error, don't check box
+                          setOnlySignerError(true);
+                        }
+                      } else {
+                        // Unchecking - allow it and clear error
+                        setIsOnlySigner(false);
+                        setOnlySignerError(false);
                       }
                     }}>
                       {isOnlySigner && (
@@ -2761,18 +3170,40 @@ const ContractsPage: React.FC = () => {
                       style={{ fontFamily: 'Avenir, sans-serif' }}
                       onClick={() => {
                         const newValue = !isOnlySigner;
-                        setIsOnlySigner(newValue);
+                        
                         if (newValue) {
-                          // Automatically advance to next step when checked
-                          setTimeout(() => {
-                            setModalStep(3);
-                          }, 300); // Small delay for visual feedback
+                          // Check if first recipient is complete before checking and advancing
+                          const firstRecipient = recipients[0];
+                          const isComplete = 
+                            firstRecipient.name && firstRecipient.name.trim() !== '' &&
+                            firstRecipient.email && firstRecipient.email.trim() !== '' &&
+                            validateEmail(firstRecipient.email) &&
+                            firstRecipient.signerRole && firstRecipient.signerRole.trim() !== '' &&
+                            firstRecipient.contractRole && firstRecipient.contractRole.trim() !== '';
+
+                          if (isComplete) {
+                            // All conditions met - check box and clear error
+                            setIsOnlySigner(true);
+                            setOnlySignerError(false);
+                          } else {
+                            // Conditions not met - show error, don't check box
+                            setOnlySignerError(true);
+                          }
+                        } else {
+                          // Unchecking - allow it and clear error
+                          setIsOnlySigner(false);
+                          setOnlySignerError(false);
                         }
                       }}
                     >
                       I am the only signer
                     </label>
                   </div>
+                  {onlySignerError && (
+                    <p className="text-red-600 text-xs mt-1 mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                      Add your details below to proceed
+                    </p>
+                  )}
                   
                   {/* Render all recipient cards */}
                   {recipients.map((recipient, idx) => (
@@ -2780,49 +3211,17 @@ const ContractsPage: React.FC = () => {
                         {/* Header with role controls and delete button */}
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                           <div className="flex flex-col sm:flex-row gap-1">
-                            {/* Role selection button */}
-                            <div className="relative">
-                              <button
-                                ref={recipient.roleButtonRef}
-                                type="button"
-                                className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-700 dark:text-white border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-primary rounded-md hover:bg-gray-200 dark:hover:bg-primary-dark transition-colors"
-                                onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showRoleDropdown: !r.showRoleDropdown } : r))}
-                                tabIndex={0}
-                              >
-                                <LuPen className="w-3 h-3 text-primary dark:text-white" />
-                                <span>{recipient.role}</span>
-                                <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px]" />
-                              </button>
-                              {recipient.showRoleDropdown && (
-                                <div
-                                  ref={recipient.roleDropdownRef}
-                                  className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[160px]"
-                                  style={{ fontFamily: 'Avenir, sans-serif' }}
-                                >
-                                  {['Needs to Sign', 'In Person Signer', 'Receives a Copy', 'Needs to View'].map((role) => (
-                                    <button
-                                      key={role}
-                                      className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${recipient.role === role ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
-                                      style={{ background: 'none', border: 'none', boxShadow: 'none' }}
-                                      onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, role, showRoleDropdown: false } : r))}
-                                    >
-                                      {role}
-                                    </button>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                            
-                            {/* Signer Role button */}
+                            {/* Signer Role selection button */}
                             <div className="relative">
                               <button
                                 ref={recipient.signerRoleButtonRef}
                                 type="button"
-                                className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-700 dark:text-white border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-primary rounded-md hover:bg-gray-200 dark:hover:bg-primary-dark transition-colors whitespace-nowrap"
+                                className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-700 dark:text-white border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-primary rounded-md hover:bg-gray-200 dark:hover:bg-primary-dark transition-colors"
                                 onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showSignerRoleDropdown: !r.showSignerRoleDropdown } : r))}
                                 tabIndex={0}
                               >
-                                <span>{recipient.signerRole || 'Role'}</span>
+                                <LuPen className="w-3 h-3 text-primary dark:text-white" />
+                                <span>{recipient.signerRole || 'Signer Role'}</span>
                                 <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px]" />
                               </button>
                               {recipient.showSignerRoleDropdown && (
@@ -2831,17 +3230,67 @@ const ContractsPage: React.FC = () => {
                                   className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[160px]"
                                   style={{ fontFamily: 'Avenir, sans-serif' }}
                                 >
-                                  {['Standard', 'Buyer', 'Seller', 'Buyer Agent', 'Seller Agent', 'Closing Agent', 'Inspector', 'Appraiser'].map((signerRole) => (
+                                  {['Needs to Sign', 'In Person Signer', 'Receives a Copy', 'Needs to View'].map((role) => (
                                     <button
-                                      key={signerRole}
-                                      className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${recipient.signerRole === signerRole ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                                      key={role}
+                                      className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${recipient.signerRole === role ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                                       style={{ background: 'none', border: 'none', boxShadow: 'none' }}
-                                      onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, signerRole, showSignerRoleDropdown: false } : r))}
+                                      onClick={() => {
+                                        setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, signerRole: role, showSignerRoleDropdown: false } : r));
+                                        setRecipientErrors(prev => ({ ...prev, [`signerRole-${idx}`]: false }));
+                                        if (idx === 0) setOnlySignerError(false); // Clear checkbox error when first party selects signer role
+                                      }}
                                     >
-                                      {signerRole}
+                                      {role}
                                     </button>
                                   ))}
                                 </div>
+                              )}
+                              {recipientErrors[`signerRole-${idx}`] && (
+                                <p className="text-red-600 text-xs mt-1.5" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                  Select signer role
+                                </p>
+                              )}
+                            </div>
+                            
+                            {/* Contract Role button */}
+                            <div className="relative">
+                              <button
+                                ref={recipient.contractRoleButtonRef}
+                                type="button"
+                                className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-700 dark:text-white border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-primary rounded-md hover:bg-gray-200 dark:hover:bg-primary-dark transition-colors whitespace-nowrap"
+                                onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showContractRoleDropdown: !r.showContractRoleDropdown } : r))}
+                                tabIndex={0}
+                              >
+                                <span>{recipient.contractRole || 'Contract Role'}</span>
+                                <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px]" />
+                              </button>
+                              {recipient.showContractRoleDropdown && (
+                                <div
+                                  ref={recipient.contractRoleDropdownRef}
+                                  className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[160px]"
+                                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                                >
+                                  {['Standard', 'Buyer', 'Seller', 'Buyer Agent', 'Seller Agent', 'Closing Agent', 'Inspector', 'Appraiser'].map((contractRole) => (
+                                    <button
+                                      key={contractRole}
+                                      className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${recipient.contractRole === contractRole ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                                      style={{ background: 'none', border: 'none', boxShadow: 'none' }}
+                                      onClick={() => {
+                                        setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, contractRole, showContractRoleDropdown: false } : r));
+                                        setRecipientErrors(prev => ({ ...prev, [`contractRole-${idx}`]: false }));
+                                        if (idx === 0) setOnlySignerError(false); // Clear checkbox error when first party selects contract role
+                                      }}
+                                                                          >
+                                        {contractRole}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                              {recipientErrors[`contractRole-${idx}`] && (
+                                <p className="text-red-600 text-xs mt-1.5" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                  Select contract role
+                                </p>
                               )}
                             </div>
                           </div>
@@ -2872,9 +3321,18 @@ const ContractsPage: React.FC = () => {
                                 placeholder="Enter party's name..."
                                 style={{ fontFamily: 'Avenir, sans-serif' }}
                                 value={recipient.name}
-                                onChange={e => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, name: e.target.value } : r))}
+                                onChange={e => {
+                                  setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, name: e.target.value } : r));
+                                  setRecipientErrors(prev => ({ ...prev, [`name-${idx}`]: false }));
+                                  if (idx === 0) setOnlySignerError(false); // Clear checkbox error when first party fills name
+                                }}
                               />
                             </div>
+                            {recipientErrors[`name-${idx}`] && (
+                              <p className="text-red-600 text-xs mt-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                Name is required
+                              </p>
+                            )}
                           </div>
                           <div>
                             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
@@ -2886,8 +3344,17 @@ const ContractsPage: React.FC = () => {
                               placeholder="Enter party's email address..."
                               style={{ fontFamily: 'Avenir, sans-serif' }}
                               value={recipient.email}
-                              onChange={e => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, email: e.target.value } : r))}
+                              onChange={e => {
+                                setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, email: e.target.value } : r));
+                                setRecipientErrors(prev => ({ ...prev, [`email-${idx}`]: false }));
+                                if (idx === 0) setOnlySignerError(false); // Clear checkbox error when first party fills email
+                              }}
                             />
+                            {recipientErrors[`email-${idx}`] && (
+                              <p className="text-red-600 text-xs mt-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                {!recipient.email || recipient.email.trim() === '' ? 'Email is required' : 'Please enter a valid email address'}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -2942,12 +3409,12 @@ const ContractsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="lenderName" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Buyer Financial Institution</label>
+                    <label htmlFor="buyerFinancialInstitution" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Buyer Financial Institution</label>
                     <input
                       type="text"
-                      id="lenderName"
-                      name="lenderName"
-                      value={modalForm.lenderName}
+                      id="buyerFinancialInstitution"
+                      name="buyerFinancialInstitution"
+                      value={modalForm.buyerFinancialInstitution}
                       onChange={handleModalChange}
                       className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
                       placeholder="Enter buyer financial institution"
@@ -3211,24 +3678,189 @@ const ContractsPage: React.FC = () => {
             {modalStep === 4 && (
               <form onSubmit={handleSubmit} noValidate>
                 <div className="space-y-6">
+                  {/* Document Details Section */}
+                  <div className="flex gap-4 cursor-default select-none">
+                    <div className="flex-1 w-0 cursor-default select-none">
+                      <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Document Name</label>
+                      <input
+                        type="text"
+                        placeholder="Enter document name..."
+                        value={documentName}
+                        onChange={(e) => {
+                          setDocumentName(e.target.value);
+                          if (documentNameError && e.target.value.trim()) {
+                            setDocumentNameError(false);
+                          }
+                        }}
+                        className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs focus:ring-2 focus:ring-primary focus:border-primary transition-colors cursor-text"
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                      />
+                    </div>
+                    <div className="flex-1 w-0 cursor-default select-none">
+                      <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Assignee</label>
+                      <div className="relative" ref={uploadModalAssigneeDropdownRef}>
+                        <input
+                          ref={uploadModalAssigneeInputRef}
+                          type="text"
+                          className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs focus:ring-2 focus:ring-primary focus:border-primary transition-colors cursor-text"
+                          placeholder="Choose an assignee..."
+                          value={uploadModalAssignee}
+                          onChange={(e) => setUploadModalAssignee(e.target.value)}
+                          onClick={() => setShowUploadModalAssigneeDropdown(true)}
+                          style={{ fontFamily: 'Avenir, sans-serif' }}
+                        />
+                        {showUploadModalAssigneeDropdown && (
+                          <div className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 max-h-40 overflow-y-auto cursor-default select-none">
+                            <div className="py-2">
+                              {allAssignees.map((assignee) => (
+                                <button
+                                  key={assignee}
+                                  type="button"
+                                  className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer select-none text-xs"
+                                  onClick={() => {
+                                    setUploadModalAssignee(assignee);
+                                    setShowUploadModalAssigneeDropdown(false);
+                                  }}
+                                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                                >
+                                  {assignee}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 cursor-default select-none">Upload Documents (Optional)</label>
-                    <label htmlFor="file-upload" className="block cursor-pointer">
-                      <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 py-8 px-4 text-center transition hover:border-primary">
+                    <div className="relative">
+                      <div 
+                        className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 py-8 px-4 text-center transition hover:border-primary cursor-pointer"
+                        onClick={() => {
+                          if (!documentName.trim()) {
+                            setDocumentNameError(true);
+                            return;
+                          }
+                          setDocumentNameError(false);
+                          setSelectedUploadSource('Desktop');
+                          // Directly trigger file picker - skip dropdown entirely
+                          const fileInput = document.getElementById('file-upload') as HTMLInputElement;
+                          if (fileInput) {
+                            fileInput.value = '';
+                            fileInput.click();
+                          }
+                        }}
+                      >
                         <HiOutlineUpload className="text-2xl text-gray-400 mb-2" />
                         <div className="text-gray-700 dark:text-gray-300 font-medium cursor-default select-none">Click to upload or drag and drop</div>
                         <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 cursor-default select-none">PDF, DOC, DOCX, or JPG (max. 10MB each)</div>
-                        <input
-                          id="file-upload"
-                          name="file-upload"
-                          type="file"
-                          accept=".pdf,.doc,.docx,.jpg,.jpeg"
-                          className="hidden"
-                          multiple
-                          onChange={handleFileChange}
-                        />
                       </div>
-                    </label>
+                      
+                      {/* Hidden file input for desktop uploads */}
+                      <input
+                        id="file-upload"
+                        name="file-upload"
+                        type="file"
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg"
+                        className="hidden"
+                        multiple
+                        onChange={handleFileChange}
+                      />
+                      
+                      {/* Separate file input for Desktop option in dropdown */}
+                      <input
+                        id="desktop-file-upload"
+                        name="desktop-file-upload"
+                        type="file"
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg"
+                        className="hidden"
+                        multiple
+                        onChange={handleFileChange}
+                      />
+                      
+                      {/* Upload source dropdown */}
+                      {showUploadDropdown && (
+                        <div className="absolute z-50 mt-2 w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 cursor-default select-none">
+                          <div className="py-2">
+                            {!documentName.trim() ? (
+                              <button 
+                                type="button" 
+                                className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer select-none flex items-center gap-2" 
+                                onClick={() => { 
+                                  setDocumentNameError(true);
+                                  setShowUploadDropdown(false);
+                                }}
+                              >
+                                <TbDeviceDesktopPlus className="text-base text-primary" />
+                                <span className="text-xs cursor-default select-none">Desktop</span>
+                              </button>
+                            ) : (
+                              <label 
+                                htmlFor="desktop-file-upload"
+                                className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer select-none flex items-center gap-2" 
+                                onClick={() => { 
+                                  setDocumentNameError(false);
+                                  setSelectedUploadSource('Desktop'); 
+                                  setShowUploadDropdown(false);
+                                }}
+                              >
+                                <TbDeviceDesktopPlus className="text-base text-primary" />
+                                <span className="text-xs cursor-default select-none">Desktop</span>
+                              </label>
+                            )}
+                            <button 
+                              type="button" 
+                              className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" 
+                              onClick={() => { 
+                                setSelectedUploadSource('Box'); 
+                                setShowUploadDropdown(false); 
+                              }}
+                            >
+                              <SiBox className="text-base text-primary" />
+                              <span className="text-xs cursor-default select-none">Box</span>
+                            </button>
+                            <button 
+                              type="button" 
+                              className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" 
+                              onClick={() => { 
+                                setSelectedUploadSource('Dropbox'); 
+                                setShowUploadDropdown(false); 
+                              }}
+                            >
+                              <SlSocialDropbox className="text-base text-primary" />
+                              <span className="text-xs cursor-default select-none">Dropbox</span>
+                            </button>
+                            <button 
+                              type="button" 
+                              className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" 
+                              onClick={() => { 
+                                setSelectedUploadSource('Google Drive'); 
+                                setShowUploadDropdown(false); 
+                              }}
+                            >
+                              <TbBrandGoogleDrive className="text-base text-primary" />
+                              <span className="text-xs cursor-default select-none">Google Drive</span>
+                            </button>
+                            <button 
+                              type="button" 
+                              className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" 
+                              onClick={() => { 
+                                setSelectedUploadSource('OneDrive'); 
+                                setShowUploadDropdown(false); 
+                              }}
+                            >
+                              <TbBrandOnedrive className="text-base text-primary" />
+                              <span className="text-xs cursor-default select-none">OneDrive</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      {documentNameError && (
+                        <p className="mt-1 text-xs text-red-600 font-medium cursor-default select-none">Document name is required</p>
+                      )}
+                    </div>
                     {uploadedFiles.length > 0 && (
                       <ul className="mt-3 text-sm text-gray-600 dark:text-gray-400 cursor-default select-none">
                         {uploadedFiles.map((file, idx) => (
@@ -4201,7 +4833,7 @@ const ContractsPage: React.FC = () => {
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
                       <a href={`#${doc.contractId}`} className="text-primary underline font-semibold cursor-pointer">{doc.contractId}</a>
                     </td>
-                    <td className="px-6 py-2.5 whitespace-nowrap text-xs font-bold text-gray-900 dark:text-white">{doc.contractTitle}</td>
+                                          <td className="px-6 py-2.5 whitespace-nowrap text-xs font-bold text-gray-900 dark:text-white">{doc.contractName}</td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs font-medium">
                       <div className="flex items-center justify-center space-x-1">
                         <button 
@@ -4230,7 +4862,24 @@ const ContractsPage: React.FC = () => {
                             Edit
                           </span>
                         </button>
-                        <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
+                        <button 
+                          className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Check if this is a stored document 
+                            // (ID >= 8000 or old format with 'doc_' prefix indicates stored document)
+                            const docIdNum = parseInt(doc.id);
+                            if (docIdNum >= 8000 || doc.id.startsWith('doc_')) {
+                              downloadDocument(doc.id);
+                            } else {
+                              // Handle sample document download (placeholder)
+                              toast({
+                                title: "Download",
+                                description: `Downloading ${doc.name}`,
+                              });
+                            }
+                          }}
+                        >
                           <HiOutlineDownload className="h-4 w-4 transition-colors" />
                           <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                             Download
@@ -4400,9 +5049,9 @@ const ContractsPage: React.FC = () => {
                           </div>
                         </div>
                       </div>
-                      {/* Row 2: Contract Title and Type */}
+                      {/* Row 2: Contract Name and Type */}
                       <div>
-                        <div className="text-gray-500 text-xs mb-1 cursor-default select-none">Contract Title</div>
+                        <div className="text-gray-500 text-xs mb-1 cursor-default select-none">Contract Name</div>
                         {isEditingTitle ? (
                           <input
                             type="text"
@@ -4411,15 +5060,15 @@ const ContractsPage: React.FC = () => {
                             autoFocus
                             onChange={e => setEditableTitle(e.target.value)}
                             onBlur={() => {
-                              if (selectedContract) {
-                                selectedContract.title = editableTitle;
+                              if (selectedContract && editableTitle !== selectedContract.title) {
+                                updateContractField(selectedContract.id, 'title', editableTitle);
                               }
                               setIsEditingTitle(false);
                             }}
                             onKeyDown={e => {
                               if (e.key === 'Enter') {
-                                if (selectedContract) {
-                                  selectedContract.title = editableTitle;
+                                if (selectedContract && editableTitle !== selectedContract.title) {
+                                  updateContractField(selectedContract.id, 'title', editableTitle);
                                 }
                                 setIsEditingTitle(false);
                               }
@@ -4498,7 +5147,7 @@ const ContractsPage: React.FC = () => {
                             tabIndex={0}
                             onKeyDown={e => { if (e.key === 'Enter') setIsEditingValue(true); }}
                           >
-                            {editableValue || selectedContract?.value || ''}
+                            {editableValue || selectedContract?.value || 'Click to edit value'}
                           </div>
                         )}
                       </div>
@@ -4631,9 +5280,9 @@ const ContractsPage: React.FC = () => {
                   {/* Parties Involved Box */}
                   <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 w-full cursor-default select-none">
                     <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Parties Involved</h3>
-                    <div className="grid grid-cols-1 gap-y-4 cursor-default select-none">
+                    <div className="space-y-4 cursor-default select-none">
                       {/* Party 1 */}
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Party 1 (Buyer)</div>
                         {/* Name and Role on same line */}
                         <div className="grid grid-cols-2 gap-3">
@@ -4716,7 +5365,7 @@ const ContractsPage: React.FC = () => {
                       <div className="border-t border-gray-200"></div>
                       
                       {/* Party 2 */}
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Party 2 (Seller)</div>
                         {/* Name and Role on same line */}
                         <div className="grid grid-cols-2 gap-3">
@@ -4814,11 +5463,19 @@ const ContractsPage: React.FC = () => {
                           </button>
                         </div>
                       )}
-                      {/* Additional Parties */}
-                      {showAdditionalParties && additionalParties.map((party, index) => (
-                        <div key={party.id}>
-                          <div className="space-y-3">
-                            <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Party {index + 3}</div>
+                                            {/* Additional Parties */}
+                      {showAdditionalParties && (
+                        <>
+                          {additionalParties.map((party, index) => (
+                            <div key={party.id}>
+                              {/* Divider between additional parties */}
+                              {index > 0 && (
+                                <div className="border-t border-gray-200 my-4"></div>
+                              )}
+                              
+                              {/* Party */}
+                              <div className="space-y-4">
+                                <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Party {index + 3}</div>
                             {/* Name and Role on same line */}
                             <div className="grid grid-cols-2 gap-3">
                               {/* Name */}
@@ -4880,21 +5537,14 @@ const ContractsPage: React.FC = () => {
                               </div>
                             </div>
                             {/* Email */}
-                            <input
-                              type="email"
-                              className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                              placeholder="Enter party's email address..."
-                              value={party.email}
-                              onChange={e => handleAdditionalPartyEmailChange(party.id, e.target.value)}
-                            />
+                            <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">
+                              {party.email || 'Not specified'}
+                              </div>
+                            </div>
                           </div>
-                          
-                          {/* Divider - only show if not the last party */}
-                          {index < additionalParties.length - 1 && (
-                            <div className="border-t border-gray-200"></div>
-                          )}
-                        </div>
-                      ))}
+                        ))}
+                        </>
+                      )}
 
                     </div>
                   </div>
@@ -4913,16 +5563,52 @@ const ContractsPage: React.FC = () => {
                         </div>
                         {/* Buyer Routing Number */}
                         <div>
-                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Buyer Routing Number</div>
-                          <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">
-                            {selectedContract.buyerFinancialInstitutionRoutingNumber || 'Not specified'}
+                          <div className="flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">
+                            Buyer Routing Number
+                            <button
+                              type="button"
+                              onClick={() => setContractDetailsBuyerRoutingVisible(!contractDetailsBuyerRoutingVisible)}
+                              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
+                            >
+                              {contractDetailsBuyerRoutingVisible ? (
+                                <HiOutlineEyeOff className="h-3.5 w-3.5" />
+                              ) : (
+                                <HiOutlineEye className="h-3.5 w-3.5" />
+                              )}
+                            </button>
+                          </div>
+                          <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default" style={{ fontFamily: contractDetailsBuyerRoutingVisible ? 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace' : 'Avenir, sans-serif' }}>
+                            {contractDetailsBuyerRoutingVisible 
+                              ? (selectedContract.buyerFinancialInstitutionRoutingNumber || 'Not specified')
+                              : (selectedContract.buyerFinancialInstitutionRoutingNumber 
+                                  ? selectedContract.buyerFinancialInstitutionRoutingNumber.replace(/./g, '*') 
+                                  : 'Not specified')
+                            }
                           </div>
                         </div>
                         {/* Buyer Account Number */}
                         <div>
-                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Buyer Account Number</div>
-                          <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">
-                            {selectedContract.buyerAccountNumber || 'Not specified'}
+                          <div className="flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">
+                            Buyer Account Number
+                            <button
+                              type="button"
+                              onClick={() => setContractDetailsBuyerAccountVisible(!contractDetailsBuyerAccountVisible)}
+                              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
+                            >
+                              {contractDetailsBuyerAccountVisible ? (
+                                <HiOutlineEyeOff className="h-3.5 w-3.5" />
+                              ) : (
+                                <HiOutlineEye className="h-3.5 w-3.5" />
+                              )}
+                            </button>
+                          </div>
+                          <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default" style={{ fontFamily: contractDetailsBuyerAccountVisible ? 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace' : 'Avenir, sans-serif' }}>
+                            {contractDetailsBuyerAccountVisible 
+                              ? (selectedContract.buyerAccountNumber || 'Not specified')
+                              : (selectedContract.buyerAccountNumber 
+                                  ? selectedContract.buyerAccountNumber.replace(/./g, '*') 
+                                  : 'Not specified')
+                            }
                           </div>
                         </div>
                       </div>
@@ -4941,16 +5627,52 @@ const ContractsPage: React.FC = () => {
                         </div>
                         {/* Seller Routing Number */}
                         <div>
-                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Seller Routing Number</div>
-                          <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">
-                            {selectedContract.sellerFinancialInstitutionRoutingNumber || 'Not specified'}
+                          <div className="flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">
+                            Seller Routing Number
+                            <button
+                              type="button"
+                              onClick={() => setContractDetailsSellerRoutingVisible(!contractDetailsSellerRoutingVisible)}
+                              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
+                            >
+                              {contractDetailsSellerRoutingVisible ? (
+                                <HiOutlineEyeOff className="h-3.5 w-3.5" />
+                              ) : (
+                                <HiOutlineEye className="h-3.5 w-3.5" />
+                              )}
+                            </button>
+                          </div>
+                          <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default" style={{ fontFamily: contractDetailsSellerRoutingVisible ? 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace' : 'Avenir, sans-serif' }}>
+                            {contractDetailsSellerRoutingVisible 
+                              ? (selectedContract.sellerFinancialInstitutionRoutingNumber || 'Not specified')
+                              : (selectedContract.sellerFinancialInstitutionRoutingNumber 
+                                  ? selectedContract.sellerFinancialInstitutionRoutingNumber.replace(/./g, '*') 
+                                  : 'Not specified')
+                            }
                           </div>
                         </div>
                         {/* Seller Account Number */}
                         <div>
-                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Seller Account Number</div>
-                          <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">
-                            {selectedContract.sellerAccountNumber || 'Not specified'}
+                          <div className="flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">
+                            Seller Account Number
+                            <button
+                              type="button"
+                              onClick={() => setContractDetailsSellerAccountVisible(!contractDetailsSellerAccountVisible)}
+                              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
+                            >
+                              {contractDetailsSellerAccountVisible ? (
+                                <HiOutlineEyeOff className="h-3.5 w-3.5" />
+                              ) : (
+                                <HiOutlineEye className="h-3.5 w-3.5" />
+                              )}
+                            </button>
+                          </div>
+                          <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default" style={{ fontFamily: contractDetailsSellerAccountVisible ? 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace' : 'Avenir, sans-serif' }}>
+                            {contractDetailsSellerAccountVisible 
+                              ? (selectedContract.sellerAccountNumber || 'Not specified')
+                              : (selectedContract.sellerAccountNumber 
+                                  ? selectedContract.sellerAccountNumber.replace(/./g, '*') 
+                                  : 'Not specified')
+                            }
                           </div>
                         </div>
                       </div>
@@ -4989,7 +5711,24 @@ const ContractsPage: React.FC = () => {
                                 View
                               </span>
                             </button>
-                            <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer">
+                            <button 
+                              className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Check if this is a stored document 
+                                // (ID >= 8000 or old format with 'doc_' prefix indicates stored document)
+                                const docIdNum = parseInt(doc.id);
+                                if (docIdNum >= 8000 || doc.id.startsWith('doc_')) {
+                                  downloadDocument(doc.id);
+                                } else {
+                                  // Handle sample document download (placeholder)
+                                  toast({
+                                    title: "Download",
+                                    description: `Downloading ${doc.name}`,
+                                  });
+                                }
+                              }}
+                            >
                               <HiOutlineDownload className="h-4 w-4 transition-colors" />
                               <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                 Download
@@ -5569,7 +6308,7 @@ const ContractsPage: React.FC = () => {
                     </div>
                     <div>
                       <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Contract Name</div>
-                      <div className="text-xs text-black dark:text-white mb-4 pt-2 cursor-default select-none">{selectedDocument.contractTitle}</div>
+                      <div className="text-xs text-black dark:text-white mb-4 pt-2 cursor-default select-none">{selectedDocument.contractName}</div>
                     </div>
                     <div>
                       <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Document Chain ID</div>

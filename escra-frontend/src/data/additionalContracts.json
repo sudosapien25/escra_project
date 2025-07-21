@@ -1,0 +1,140 @@
+[
+  {
+    "id": "1412",
+    "title": "Ben's House",
+    "parties": "nicholas aquino & benjamin aiello & Romanet Perez & Molly Aiello & Monkey foot & children corn",
+    "status": "Initiation",
+    "updated": "Just now",
+    "value": "350000",
+    "documents": 0,
+    "type": "Commercial – Cash or Financed",
+    "buyer": "nicholas aquino",
+    "seller": "benjamin aiello",
+    "milestone": "Simple (4 milestones)",
+    "notes": "",
+    "closingDate": "",
+    "dueDate": "2025-07-23",
+    "propertyAddress": "1701 N Lois Avenue",
+    "propertyType": "Commercial",
+    "escrowNumber": "123456",
+    "buyerEmail": "nicholas@escra.io",
+    "sellerEmail": "benjamin.aiello@gmail.com",
+    "earnestMoney": "20000",
+    "downPayment": "50000",
+    "loanAmount": "300000",
+    "interestRate": "5",
+    "loanTerm": "30",
+    "lenderName": "",
+    "sellerFinancialInstitution": "Chase",
+    "buyerFinancialInstitution": "BoA",
+    "buyerAccountNumber": "111111111111",
+    "sellerAccountNumber": "222222222222",
+    "buyerFinancialInstitutionRoutingNumber": "111111111",
+    "sellerFinancialInstitutionRoutingNumber": "222222222",
+    "titleCompany": "ABC Title",
+    "insuranceCompany": "XYZ Insurance",
+    "inspectionPeriod": "15",
+    "contingencies": "do it now",
+    "city": "Tampa",
+    "state": "FL",
+    "zipCode": "33607",
+    "country": "US",
+    "additionalParties": [
+      {
+        "name": "Romanet Perez",
+        "email": "perez.romanet@gmail.com",
+        "role": "Buyer Agent"
+      },
+      {
+        "name": "Molly Aiello",
+        "email": "molly@gmail.com",
+        "role": "Seller Agent"
+      },
+      {
+        "name": "Monkey foot ",
+        "email": "monkeyfoot@gmail.com",
+        "role": "Inspector"
+      },
+      {
+        "name": "children corn",
+        "email": "corny@hotmail.co.uk",
+        "role": "Appraiser"
+      }
+    ],
+    "party1Role": "Buyer",
+    "party2Role": "Seller"
+  },
+  {
+    "id": "5936",
+    "title": "Nick's Land",
+    "parties": "Nicholas Aquino & Benjamin Aiello & Romanet Perez & Molly Aiello & Terry McQueen & Mandy McDougle & David Dandy",
+    "status": "Initiation",
+    "updated": "Just now",
+    "value": "2,500,000",
+    "documents": 1,
+    "type": "Residential – Cash",
+    "buyer": "Nicholas Aquino",
+    "seller": "Benjamin Aiello",
+    "milestone": "Simple (4 milestones)",
+    "notes": "",
+    "closingDate": "",
+    "dueDate": "2025-07-31",
+    "propertyAddress": "1701 N Lois Avenue",
+    "propertyType": "Land",
+    "escrowNumber": "123456",
+    "buyerEmail": "nicholas@escra.io",
+    "sellerEmail": "benjamin@escra.io",
+    "earnestMoney": "20000",
+    "downPayment": "50000",
+    "loanAmount": "300000",
+    "interestRate": "5",
+    "loanTerm": "30",
+    "lenderName": "",
+    "sellerFinancialInstitution": "Chase",
+    "buyerFinancialInstitution": "BoA",
+    "buyerAccountNumber": "111111111111",
+    "sellerAccountNumber": "222222222222",
+    "buyerFinancialInstitutionRoutingNumber": "111111111",
+    "sellerFinancialInstitutionRoutingNumber": "222222222",
+    "titleCompany": "ABC Title",
+    "insuranceCompany": "XYZ Insurance",
+    "inspectionPeriod": "15",
+    "contingencies": "Too many",
+    "city": "Tampa",
+    "state": "FL",
+    "zipCode": "33607",
+    "country": "US",
+    "additionalParties": [
+      {
+        "name": "Romanet Perez",
+        "email": "perez.romanet@gmail.com",
+        "role": "Seller Agent"
+      },
+      {
+        "name": "Molly Aiello",
+        "email": "molly.aiello@gmail.com",
+        "role": "Buyer Agent"
+      },
+      {
+        "name": "Terry McQueen",
+        "email": "terry@elitetitle.com",
+        "role": "Closing Agent"
+      },
+      {
+        "name": "Mandy McDougle",
+        "email": "mandy@inspectorsrus.com",
+        "role": "Inspector"
+      },
+      {
+        "name": "David Dandy",
+        "email": "david@appraisers.net",
+        "role": "Appraiser"
+      }
+    ],
+    "party1Role": "Seller",
+    "party2Role": "Buyer",
+    "documentIds": [
+      "doc_1753119684312_zmoneydf9"
+    ]
+  }
+]

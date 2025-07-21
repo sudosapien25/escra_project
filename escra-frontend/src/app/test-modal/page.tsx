@@ -396,7 +396,7 @@ export default function TestModalPage() {
                       <div className="text-xs text-black">#9548</div>
                     </div>
                     <div>
-                      <div className="text-gray-500 text-xs mb-1">Contract Title</div>
+                      <div className="text-gray-500 text-xs mb-1">Contract Name</div>
                       <div className="text-xs text-black">New Property Acquisition</div>
                     </div>
                     <div>

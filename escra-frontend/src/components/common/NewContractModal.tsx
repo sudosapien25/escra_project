@@ -190,7 +190,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
         {modalStep === 1 && (
           <form className="px-4 py-4 sm:px-8 sm:pt-2 sm:pb-6" onSubmit={handleSubmit} noValidate>
             <div className="mb-4">
-              <label htmlFor="title" className="block text-xs font-medium text-gray-500 mb-1">Contract Title</label>
+                              <label htmlFor="title" className="block text-xs font-medium text-gray-500 mb-1">Contract Name</label>
               <input
                 type="text"
                 id="title"
@@ -200,7 +200,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                 className={`w-full px-3 py-2 border-2 rounded-lg text-xs font-medium text-black focus:ring-2 focus:ring-primary focus:border-primary transition-colors ${
                   formErrors.title ? 'border-red-300' : 'border-gray-200'
                 }`}
-                placeholder="Enter contract title"
+                                  placeholder="Enter contract name"
               />
               {formErrors.title && (
                 <p className="mt-1 text-xs text-red-600">{formErrors.title}</p>

@@ -772,7 +772,7 @@ export default function SignaturesPage() {
       date: '2024-03-15',
       uploadedBy: 'John Smith',
       dateUploaded: '2024-03-15',
-      contractTitle: 'New Property Acquisition',
+      contractName: 'New Property Acquisition',
       contractId: '9548',
       assignee: 'John Smith'
     },
@@ -784,7 +784,7 @@ export default function SignaturesPage() {
       date: '2024-03-14',
       uploadedBy: 'Sarah Johnson',
       dateUploaded: '2024-03-14',
-      contractTitle: 'Land Development Contract',
+      contractName: 'Land Development Contract',
       contractId: '9550',
       assignee: 'Sarah Johnson'
     },
@@ -796,7 +796,7 @@ export default function SignaturesPage() {
       date: '2024-03-13',
       uploadedBy: 'Michael Brown',
       dateUploaded: '2024-03-13',
-      contractTitle: 'Construction Escrow',
+      contractName: 'Construction Escrow',
       contractId: '9145',
       assignee: 'Michael Brown'
     },
@@ -808,7 +808,7 @@ export default function SignaturesPage() {
       date: '2024-03-12',
       uploadedBy: 'Emily Davis',
       dateUploaded: '2024-03-12',
-      contractTitle: 'Property Sale Contract',
+      contractName: 'Property Sale Contract',
       contractId: '8423',
       assignee: 'Robert Chen'
     },
@@ -820,7 +820,7 @@ export default function SignaturesPage() {
       date: '2024-03-11',
       uploadedBy: 'Robert Wilson',
       dateUploaded: '2024-03-11',
-      contractTitle: 'Investment Property Escrow',
+      contractName: 'Investment Property Escrow',
       contractId: '7804',
       assignee: 'Sarah Miller'
     },
@@ -832,7 +832,7 @@ export default function SignaturesPage() {
       date: '2024-03-10',
       uploadedBy: 'Lisa Anderson',
       dateUploaded: '2024-03-10',
-      contractTitle: 'Residential Sale Agreement',
+      contractName: 'Residential Sale Agreement',
       contractId: '7234',
       assignee: 'David Miller'
     },
@@ -844,7 +844,7 @@ export default function SignaturesPage() {
       date: '2024-03-09',
       uploadedBy: 'David Taylor',
       dateUploaded: '2024-03-09',
-      contractTitle: 'Office Building Purchase',
+      contractName: 'Office Building Purchase',
       contractId: '6891',
       assignee: 'Emily Davis'
     },
@@ -856,7 +856,7 @@ export default function SignaturesPage() {
       date: '2024-03-08',
       uploadedBy: 'Jennifer Martinez',
       dateUploaded: '2024-03-08',
-      contractTitle: 'Retail Space Lease',
+      contractName: 'Retail Space Lease',
       contractId: '6453',
       assignee: 'Alex Johnson'
     },
@@ -868,7 +868,7 @@ export default function SignaturesPage() {
       date: '2024-03-07',
       uploadedBy: 'James Thompson',
       dateUploaded: '2024-03-07',
-      contractTitle: 'Luxury Villa Purchase',
+      contractName: 'Luxury Villa Purchase',
       contractId: '10003',
       assignee: 'Samantha Fox'
     }
@@ -881,7 +881,7 @@ export default function SignaturesPage() {
       doc.name.toLowerCase().includes(search) ||
       doc.id.toLowerCase().includes(search) ||
       doc.type.toLowerCase().includes(search) ||
-      doc.contractTitle?.toLowerCase().includes(search) ||
+      doc.contractName?.toLowerCase().includes(search) ||
       doc.contractId?.toLowerCase().includes(search)
     );
   });
@@ -2786,7 +2786,7 @@ export default function SignaturesPage() {
                           <button
                             type="button"
                             onClick={handleDocumentButtonClick}
-                              className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-xs sm:text-sm font-semibold"
+                              className="flex items-center gap-2 px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-xs font-semibold border border-transparent"
                           >
                             Select
                             <HiMiniChevronDown size={17} className="text-white -mt-[1px]" />
@@ -2819,7 +2819,7 @@ export default function SignaturesPage() {
                                       </div>
                                         <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{doc.name}</span>
                                     </div>
-                                      <div className="ml-6 text-gray-500 dark:text-gray-400 text-[10px]">{doc.contractTitle} ({doc.contractId})</div>
+                                      <div className="ml-6 text-gray-500 dark:text-gray-400 text-[10px]">{doc.contractName} ({doc.contractId})</div>
                                   </button>
                                 ))}
                               </div>
@@ -2830,10 +2830,10 @@ export default function SignaturesPage() {
                           <button
                             type="button"
                             onClick={() => setShowUploadDropdown(!showUploadDropdown)}
-                              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs sm:text-sm hover:bg-gray-200 transition-colors"
+                              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors"
                             style={{ fontFamily: 'Avenir, sans-serif' }}
                           >
-                            <HiOutlineUpload className="text-sm sm:text-base text-primary" /> Upload
+                            <HiOutlineUpload className="text-base text-primary" /> Upload
                           </button>
                           {showUploadDropdown && (
                               <div className="absolute z-50 mt-1 w-[200px] bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700">
@@ -3414,7 +3414,7 @@ export default function SignaturesPage() {
                             <button
                               type="button"
                               onClick={handleDocuSignDocumentButtonClick}
-                              className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-xs sm:text-sm font-semibold"
+                              className="flex items-center gap-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-xs font-semibold border border-transparent"
                             >
                               Select
                               <HiMiniChevronDown size={17} className="text-white -mt-[1px]" />
@@ -3439,7 +3439,7 @@ export default function SignaturesPage() {
                                         doc.name.toLowerCase().includes(search) ||
                                         doc.id.toLowerCase().includes(search) ||
                                         doc.type.toLowerCase().includes(search) ||
-                                        doc.contractTitle?.toLowerCase().includes(search) ||
+                                        doc.contractName?.toLowerCase().includes(search) ||
                                         doc.contractId?.toLowerCase().includes(search)
                                       );
                                     })
@@ -3458,7 +3458,7 @@ export default function SignaturesPage() {
                                           </div>
                                           <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{doc.name}</span>
                                         </div>
-                                        <div className="ml-6 text-gray-500 dark:text-gray-400 text-[10px]">{doc.contractTitle} ({doc.contractId})</div>
+                                        <div className="ml-6 text-gray-500 dark:text-gray-400 text-[10px]">{doc.contractName} ({doc.contractId})</div>
                                       </button>
                                     ))}
                                 </div>
@@ -3469,10 +3469,10 @@ export default function SignaturesPage() {
                             <button
                               type="button"
                               onClick={() => setShowDocuSignUploadDropdown(!showDocuSignUploadDropdown)}
-                              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs sm:text-sm hover:bg-gray-200 transition-colors"
+                              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors"
                               style={{ fontFamily: 'Avenir, sans-serif' }}
                             >
-                              <HiOutlineUpload className="text-sm sm:text-base text-blue-500" /> Upload
+                              <HiOutlineUpload className="text-base text-blue-500" /> Upload
                             </button>
                             {showDocuSignUploadDropdown && (
                               <div className="absolute z-50 mt-1 w-[200px] bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700">

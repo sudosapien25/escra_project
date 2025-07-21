@@ -89,7 +89,7 @@ export default function WorkflowsPage() {
   const [openColumnMenu, setOpenColumnMenu] = React.useState<string | null>(null);
   const columnMenuRef = useRef<HTMLDivElement>(null);
   const [editedTaskTitle, setEditedTaskTitle] = React.useState('');
-  const [editedContractTitle, setEditedContractTitle] = React.useState('');
+  const [editedContractName, setEditedContractName] = React.useState('');
   const [editedDueDate, setEditedDueDate] = React.useState('');
   const [editedAssignee, setEditedAssignee] = React.useState('');
   const [contractSearch, setContractSearch] = useState('');
@@ -309,7 +309,7 @@ export default function WorkflowsPage() {
 
   React.useEffect(() => {
     setEditedTaskTitle(selectedTask?.title || '');
-    setEditedContractTitle(mockContracts.find(c => c.id === selectedTask?.contractId)?.title || '');
+          setEditedContractName(mockContracts.find(c => c.id === selectedTask?.contractId)?.title || '');
     setEditedDueDate(formatDateToInput(selectedTask?.due || ''));
     setEditedAssignee(selectedTask?.assignee || '');
   }, [selectedTask]);
@@ -1551,7 +1551,7 @@ export default function WorkflowsPage() {
                         </div>
                       </div>
                     </div>
-                    {/* Row 1: Task Title | Contract Title */}
+                                              {/* Row 1: Task Title | Contract Name */}
                     <div className="grid grid-cols-2 gap-6 mb-4 cursor-default select-none">
                       <div>
                         <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Task Title</div>

@@ -1342,7 +1342,7 @@ export default function BlockchainPage() {
                       <div className="text-xs text-black dark:text-white" style={{ fontFamily: 'Avenir, sans-serif' }}>2024-05-20 14:32:15</div>
                     </div>
                     <div>
-                      <div className="text-[11px] text-gray-400 font-medium mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Contract Title</div>
+                      <div className="text-[11px] text-gray-400 font-medium mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Contract Name</div>
                       <div className="font-semibold text-black dark:text-white text-xs" style={{ fontFamily: 'Avenir, sans-serif' }}>
                         {contracts.find(contract => contract.id === activity.contractId)?.title || 'Unknown Contract'}
                       </div>
