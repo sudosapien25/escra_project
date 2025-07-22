@@ -52,6 +52,53 @@ function formatDatePretty(dateStr: string): string {
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
+// Add currency formatting utility
+function formatCurrency(value: string | number): string {
+  if (!value) return '$0';
+  
+  // Convert to number if it's a string
+  let numValue: number;
+  if (typeof value === 'string') {
+    // Remove any existing currency formatting
+    const cleanValue = value.replace(/[$,]/g, '');
+    numValue = parseFloat(cleanValue) || 0;
+  } else {
+    numValue = value;
+  }
+  
+  // Format as currency with dollar sign and commas
+  return numValue.toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  });
+}
+
+// Add function to parse and format currency input
+function parseAndFormatCurrency(input: string): string {
+  // Remove all non-numeric characters except decimal point
+  const cleanInput = input.replace(/[^\d.]/g, '');
+  
+  // Ensure only one decimal point
+  const parts = cleanInput.split('.');
+  if (parts.length > 2) {
+    return parts[0] + '.' + parts.slice(1).join('');
+  }
+  
+  // Convert to number and format
+  const numValue = parseFloat(cleanInput) || 0;
+  return formatCurrency(numValue);
+}
+
+// Add function to format date in YYYY-MM-DD format
+function formatDateYYYYMMDD(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 // Add Comment interface
 interface Comment {
   id: string;
@@ -1105,7 +1152,7 @@ const ContractsPage: React.FC = () => {
         parties: partiesString,
         status: 'Initiation',
         updated: 'Just now',
-        value: modalForm.value,
+        value: formatCurrency(modalForm.value), // Format value as currency
         documents: uploadedFiles.length, // Count uploaded files
         type: modalForm.type,
         buyer: buyerRecipient?.name || '',
@@ -1120,9 +1167,9 @@ const ContractsPage: React.FC = () => {
         escrowNumber: modalForm.escrowNumber,
         buyerEmail: buyerRecipient?.email || '',
         sellerEmail: sellerRecipient?.email || '',
-        earnestMoney: modalForm.earnestMoney,
-        downPayment: modalForm.downPayment,
-        loanAmount: modalForm.loanAmount,
+        earnestMoney: formatCurrency(modalForm.earnestMoney),
+        downPayment: formatCurrency(modalForm.downPayment),
+        loanAmount: formatCurrency(modalForm.loanAmount),
         interestRate: modalForm.interestRate,
         loanTerm: modalForm.loanTerm,
         lenderName: modalForm.lenderName,
@@ -1678,6 +1725,12 @@ const ContractsPage: React.FC = () => {
   // Document data for step 4 (with custom names)
   const [step4Documents, setStep4Documents] = useState<Array<{file: File, name: string, assignee: string}>>([]);
   const newContractDesktopFileInputRef = useRef<HTMLInputElement>(null);
+  
+  // State for step 4 document name editing
+  const [editingStep4DocumentName, setEditingStep4DocumentName] = useState<number | null>(null);
+  
+  // State for editing existing step 4 documents
+  const [editingStep4Document, setEditingStep4Document] = useState<number | null>(null);
 
   // Function to handle dropdown clicks
   const handleDropdownClick = (
@@ -2275,18 +2328,46 @@ const ContractsPage: React.FC = () => {
 
   // Handler for new contract document upload modal
   const handleNewContractDocumentModalSave = async () => {
-    if (newContractDocumentName.trim() && newContractDocumentAssignee.trim() && step4SelectedFiles.length > 0) {
+    if (newContractDocumentName.trim() && newContractDocumentAssignee.trim()) {
       try {
-        // Store document information temporarily without creating document ID yet
-        const newDocument = {
-          file: step4SelectedFiles[0], // Use the first selected file
-          name: newContractDocumentName.trim(),
-          assignee: newContractDocumentAssignee.trim()
-        };
-        setStep4Documents(prev => [...prev, newDocument]);
-        
-        // Remove the file from step4SelectedFiles
-        setStep4SelectedFiles(prev => prev.slice(1));
+        if (editingStep4Document !== null) {
+          // Editing existing document
+          setStep4Documents(prev => prev.map((doc, i) => 
+            i === editingStep4Document ? {
+              ...doc,
+              name: newContractDocumentName.trim(),
+              assignee: newContractDocumentAssignee.trim()
+            } : doc
+          ));
+          
+          toast({
+            title: "Document Updated",
+            description: `"${newContractDocumentName}" has been updated.`,
+          });
+        } else if (step4SelectedFiles.length > 0) {
+          // Adding new document
+          const newDocument = {
+            file: step4SelectedFiles[0], // Use the first selected file
+            name: newContractDocumentName.trim(),
+            assignee: newContractDocumentAssignee.trim()
+          };
+          setStep4Documents(prev => [...prev, newDocument]);
+          
+          // Remove the file from step4SelectedFiles
+          setStep4SelectedFiles(prev => prev.slice(1));
+          
+          toast({
+            title: "Document Added",
+            description: `"${newContractDocumentName}" has been added to the contract.`,
+          });
+        } else {
+          toast({
+            title: "Validation Error",
+            description: "Please select a file for new documents.",
+            variant: "destructive",
+          });
+          return;
+        }
         
         // Close modal and reset state
         setShowNewContractDocumentModal(false);
@@ -2294,23 +2375,20 @@ const ContractsPage: React.FC = () => {
         setNewContractDocumentAssignee('');
         setSelectedNewContractFileSource('');
         setShowNewContractFileSourceDropdown(false);
+        setEditingStep4Document(null);
         
-        toast({
-          title: "Document Added",
-          description: `"${newContractDocumentName}" has been added to the contract.`,
-        });
       } catch (error) {
-        console.error('Error adding document:', error);
+        console.error('Error saving document:', error);
         toast({
           title: "Error",
-          description: "Failed to add document. Please try again.",
+          description: "Failed to save document. Please try again.",
           variant: "destructive",
         });
       }
     } else {
       toast({
         title: "Validation Error",
-        description: "Please provide document name, assignee, and select a file.",
+        description: "Please provide document name and assignee.",
         variant: "destructive",
       });
     }
@@ -2323,11 +2401,12 @@ const ContractsPage: React.FC = () => {
     setSelectedNewContractFileSource('');
     setShowNewContractFileSourceDropdown(false);
     setStep4SelectedFiles([]);
+    setEditingStep4Document(null);
   };
 
   // Calculate total contract value
   const calculateTotalValue = () => {
-    return mockContracts.reduce((total, contract) => {
+    return contracts.reduce((total, contract) => {
       // Remove '$' and ',' from value string and convert to number
       const value = parseFloat(contract.value?.replace(/[$,]/g, '') || '0');
       return total + value;
@@ -2364,6 +2443,33 @@ const ContractsPage: React.FC = () => {
 
   const handleCancelEditDocumentName = () => {
     setEditingDocumentName(null);
+  };
+
+  // Step 4 document name editing functions
+  const handleStartEditStep4DocumentName = (index: number) => {
+    setEditingStep4DocumentName(index);
+  };
+
+  const handleSaveStep4DocumentName = (index: number, newName: string) => {
+    if (newName.trim()) {
+      setStep4Documents(prev => prev.map((doc, i) => 
+        i === index ? { ...doc, name: newName.trim() } : doc
+      ));
+    }
+    setEditingStep4DocumentName(null);
+  };
+
+  const handleCancelEditStep4DocumentName = () => {
+    setEditingStep4DocumentName(null);
+  };
+
+  // Function to handle editing existing step 4 document
+  const handleEditStep4Document = (index: number) => {
+    const doc = step4Documents[index];
+    setNewContractDocumentName(doc.name);
+    setNewContractDocumentAssignee(doc.assignee);
+    setEditingStep4Document(index);
+    setShowNewContractDocumentModal(true);
   };
 
   // Add commentEditor setup
@@ -3228,7 +3334,10 @@ const ContractsPage: React.FC = () => {
                       id="value"
                       name="value"
                       value={modalForm.value}
-                      onChange={handleModalChange}
+                      onChange={(e) => {
+                        const formattedValue = parseAndFormatCurrency(e.target.value);
+                        setModalForm(prev => ({ ...prev, value: formattedValue }));
+                      }}
                       className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
                       placeholder="Enter contract value"
                     />
@@ -3902,15 +4011,18 @@ const ContractsPage: React.FC = () => {
                   </div>
                   <div>
                     <label htmlFor="loanAmount" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Loan Amount</label>
-                    <input
-                      type="text"
-                      id="loanAmount"
-                      name="loanAmount"
-                      value={modalForm.loanAmount}
-                      onChange={handleModalChange}
-                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
-                      placeholder="Enter loan amount"
-                    />
+                                          <input
+                        type="text"
+                        id="loanAmount"
+                        name="loanAmount"
+                        value={modalForm.loanAmount}
+                        onChange={(e) => {
+                          const formattedValue = parseAndFormatCurrency(e.target.value);
+                          setModalForm(prev => ({ ...prev, loanAmount: formattedValue }));
+                        }}
+                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
+                        placeholder="Enter loan amount"
+                      />
                   </div>
                   <div>
                     <label htmlFor="loanTerm" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Loan Term (Years)</label>
@@ -3943,7 +4055,10 @@ const ContractsPage: React.FC = () => {
                       id="downPayment"
                       name="downPayment"
                       value={modalForm.downPayment}
-                      onChange={handleModalChange}
+                      onChange={(e) => {
+                        const formattedValue = parseAndFormatCurrency(e.target.value);
+                        setModalForm(prev => ({ ...prev, downPayment: formattedValue }));
+                      }}
                       className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
                       placeholder="Enter down payment amount"
                     />
@@ -3955,7 +4070,10 @@ const ContractsPage: React.FC = () => {
                       id="earnestMoney"
                       name="earnestMoney"
                       value={modalForm.earnestMoney}
-                      onChange={handleModalChange}
+                      onChange={(e) => {
+                        const formattedValue = parseAndFormatCurrency(e.target.value);
+                        setModalForm(prev => ({ ...prev, earnestMoney: formattedValue }));
+                      }}
                       className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
                       placeholder="Enter earnest money amount"
                     />
@@ -4001,18 +4119,25 @@ const ContractsPage: React.FC = () => {
                         <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-3 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Uploaded Documents</h4>
                         <div className="flex flex-col gap-2 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
                           {step4Documents.map((doc, idx) => (
-                            <div key={idx} className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-600 cursor-default select-none">
-                              <div className="flex-1 min-w-0">
-                                <div className="font-semibold text-xs text-black dark:text-white cursor-default select-none truncate max-w-[200px]">
+                            <div 
+                              key={idx} 
+                              className="flex items-center justify-between rounded-lg px-4 py-3 border border-transparent hover:bg-gray-100 dark:hover:bg-gray-700 hover:border-gray-200 dark:hover:border-gray-600 cursor-pointer transition-colors"
+                              onClick={() => handleEditStep4Document(idx)}
+                            >
+                              <div className="flex-1 min-w-0 pl-3">
+                                <div className="font-semibold text-xs text-black dark:text-white flex-1 min-w-0 truncate">
                                   {doc.name}
                                 </div>
                                 <div className="text-xs text-gray-500 cursor-default select-none">
-                                  {new Date().toLocaleDateString()} &bull; {doc.file.name.split('.').pop()?.toUpperCase() || 'Unknown'} &bull; {(doc.file.size / 1024 / 1024).toFixed(2)} MB
+                                  {formatDateYYYYMMDD(new Date())} &bull; {doc.file.name.split('.').pop()?.toUpperCase() || 'Unknown'} &bull; {(doc.file.size / 1024 / 1024).toFixed(2)} MB &bull; {doc.assignee}
                                 </div>
                               </div>
                               <button 
-                                className="text-red-500 hover:text-red-700 transition-colors cursor-pointer"
-                                onClick={() => setStep4Documents(prev => prev.filter((_, i) => i !== idx))}
+                                className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1 pr-3"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setStep4Documents(prev => prev.filter((_, i) => i !== idx));
+                                }}
                               >
                                 <HiOutlineTrash className="h-4 w-4" />
                               </button>
@@ -4933,7 +5058,7 @@ const ContractsPage: React.FC = () => {
                     </td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs text-gray-500 dark:text-gray-400">2024-05-01</td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs text-gray-500 dark:text-gray-400">{contract.updated}</td>
-                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs text-primary">{contract.value}</td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs text-primary">{formatCurrency(contract.value || '0')}</td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs font-medium">
                       <div className="flex items-center justify-center space-x-1">
                         <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
@@ -5343,17 +5468,47 @@ const ContractsPage: React.FC = () => {
                             className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                             value={editableValue}
                             autoFocus
-                            onChange={e => setEditableValue(e.target.value)}
+                            onChange={e => setEditableValue(parseAndFormatCurrency(e.target.value))}
                             onBlur={() => {
-                              if (selectedContract) {
-                                selectedContract.value = editableValue;
+                              if (selectedContract && editableValue.trim() !== '') {
+                                const formattedValue = formatCurrency(editableValue);
+                                
+                                // Update the contract in the contracts array
+                                setContracts(prev => 
+                                  prev.map(contract => 
+                                    contract.id === selectedContract.id 
+                                      ? { ...contract, value: formattedValue }
+                                      : contract
+                                  )
+                                );
+                                
+                                // Update the selected contract
+                                setSelectedContract({ ...selectedContract, value: formattedValue });
+                                
+                                // Persist the change to the backend
+                                updateContractField(selectedContract.id, 'value', formattedValue);
                               }
                               setIsEditingValue(false);
                             }}
                             onKeyDown={e => {
                               if (e.key === 'Enter') {
-                                if (selectedContract) {
-                                  selectedContract.value = editableValue;
+                                if (selectedContract && editableValue.trim() !== '') {
+                                  const formattedValue = formatCurrency(editableValue);
+                                  
+                                  // Update the contract in the contracts array
+                                  setContracts(prev => 
+                                    prev.map(contract => 
+                                      contract.id === selectedContract.id 
+                                        ? { ...contract, value: formattedValue }
+                                        : contract
+                                    )
+                                  );
+                                  
+                                  // Update the selected contract
+                                  setSelectedContract({ ...selectedContract, value: formattedValue });
+                                  
+                                  // Persist the change to the backend
+                                  updateContractField(selectedContract.id, 'value', formattedValue);
                                 }
                                 setIsEditingValue(false);
                               }
@@ -5366,7 +5521,7 @@ const ContractsPage: React.FC = () => {
                             tabIndex={0}
                             onKeyDown={e => { if (e.key === 'Enter') setIsEditingValue(true); }}
                           >
-                            {editableValue || selectedContract?.value || 'Click to edit value'}
+                            {formatCurrency(editableValue || selectedContract?.value || '0')}
                           </div>
                         )}
                       </div>
@@ -5444,7 +5599,7 @@ const ContractsPage: React.FC = () => {
                           {/* Loan Amount */}
                           <div>
                             <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Loan Amount</div>
-                            <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">{selectedContract.loanAmount || 'Not specified'}</div>
+                            <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">{formatCurrency(selectedContract.loanAmount || '0')}</div>
                           </div>
                           {/* Loan Term */}
                           <div>
@@ -5460,13 +5615,13 @@ const ContractsPage: React.FC = () => {
                           {/* Down Payment */}
                           <div>
                             <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Down Payment</div>
-                            <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">{selectedContract.downPayment || 'Not specified'}</div>
+                            <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">{formatCurrency(selectedContract.downPayment || '0')}</div>
                           </div>
                           
                           {/* Earnest Money */}
                           <div>
                             <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Earnest Money</div>
-                            <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">{selectedContract.earnestMoney || 'Not specified'}</div>
+                            <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs text-black dark:text-white bg-white dark:bg-gray-900 select-none cursor-default">{formatCurrency(selectedContract.earnestMoney || '0')}</div>
                           </div>
                           {/* Inspection Period */}
                           <div>
@@ -5955,24 +6110,24 @@ const ContractsPage: React.FC = () => {
                                   </button>
                                 </div>
                               ) : (
-                                                                 <div className="flex items-center gap-2 group">
-                                   <div 
-                                     className="font-semibold text-xs text-black dark:text-white cursor-pointer hover:text-primary transition-colors flex-1 min-w-0 truncate max-w-[140px]"
-                                     onClick={() => handleStartEditDocumentName(doc)}
-                                     title={`${getDocumentDisplayName(doc)} - Click to edit name`}
-                                   >
-                                     {getDocumentDisplayName(doc)}
-                                   </div>
-                                   <button
-                                     type="button"
-                                     onClick={() => handleStartEditDocumentName(doc)}
-                                     className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-primary transition-all p-1 flex-shrink-0"
-                                   >
-                                     <LuPen className="w-3 h-3" />
-                                   </button>
-                                 </div>
+                                <div className="flex items-center gap-1 group">
+                                  <div 
+                                    className="font-semibold text-xs text-black dark:text-white cursor-pointer hover:text-primary transition-colors flex-shrink-0"
+                                    onClick={() => handleStartEditDocumentName(doc)}
+                                    title={`${getDocumentDisplayName(doc)} - Click to edit name`}
+                                  >
+                                    {getDocumentDisplayName(doc)}
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleStartEditDocumentName(doc)}
+                                    className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-primary transition-all p-1 flex-shrink-0"
+                                  >
+                                    <LuPen className="w-3 h-3" />
+                                  </button>
+                                </div>
                               )}
-                              <div className="text-xs text-gray-500 cursor-default select-none">{doc.dateUploaded} &bull; {doc.type} &bull; {doc.size}</div>
+                              <div className="text-xs text-gray-500 cursor-default select-none">{doc.dateUploaded} &bull; {doc.type} &bull; {doc.size} &bull; {doc.assignee}</div>
                             </div>
                           </div>
                           <div className="flex items-center justify-center space-x-1 cursor-default select-none">
@@ -6826,7 +6981,9 @@ const ContractsPage: React.FC = () => {
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 upload-modal cursor-default select-none">
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 cursor-default select-none">
           <div className="flex justify-between items-center mb-4 cursor-default select-none">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>New Contract Document Upload</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
+              {editingStep4Document !== null ? 'Edit Document' : 'New Contract Document Upload'}
+            </h2>
             <button
               className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
               onClick={handleNewContractDocumentModalCancel}
