@@ -19,7 +19,7 @@ interface DocumentStore {
   
   // New document storage with full file content
   documents: Record<string, StoredDocument>;
-  addDocument: (file: File, contractId?: string, contractName?: string) => Promise<string>; // Returns document ID
+  addDocument: (file: File, contractId?: string, contractName?: string, uploadedBy?: string) => Promise<string>; // Returns document ID
   getDocument: (documentId: string) => StoredDocument | undefined;
   getDocumentsByContract: (contractId: string) => StoredDocument[];
   updateDocumentName: (documentId: string, newName: string) => void;
@@ -116,7 +116,7 @@ export const useDocumentStore = create<DocumentStore>((set, get) => {
     // New document storage
     documents: migratedDocuments,
 
-    addDocument: async (file: File, contractId?: string, contractName?: string): Promise<string> => {
+    addDocument: async (file: File, contractId?: string, contractName?: string, uploadedBy?: string): Promise<string> => {
       try {
         const content = await fileToBase64(file);
         const documentId = generateDocumentId();

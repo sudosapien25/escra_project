@@ -1,11 +1,11 @@
 [
   {
-    "id": "9924",
-    "title": "Palmetto Home",
-    "parties": "Nicholas Aquino & Benjamin Aiello & Romanet Perez",
+    "id": "6997",
+    "title": "Tampa Condo",
+    "parties": "Nicholas Aquino & Benjamin Aiello & Matt Drudge & Charlize Theron & Hallie Berry",
     "status": "Initiation",
     "updated": "Just now",
-    "value": "350000",
+    "value": "",
     "documents": 0,
     "type": "Residential – Financed",
     "buyer": "Nicholas Aquino",
@@ -13,7 +13,7 @@
     "milestone": "Standard (6 milestones)",
     "notes": "",
     "closingDate": "",
-    "dueDate": "2025-07-22",
+    "dueDate": "2025-08-08",
     "propertyAddress": "1701 N Lois Avenue",
     "propertyType": "Single Family",
     "escrowNumber": "123456",
@@ -23,7 +23,7 @@
     "downPayment": "50000",
     "loanAmount": "300000",
     "interestRate": "5",
-    "loanTerm": "",
+    "loanTerm": "30",
     "lenderName": "",
     "sellerFinancialInstitution": "Chase",
     "buyerFinancialInstitution": "BoA",
@@ -33,16 +33,26 @@
     "sellerFinancialInstitutionRoutingNumber": "222222222",
     "titleCompany": "ABC Title",
     "insuranceCompany": "XYZ Insurance",
-    "inspectionPeriod": "15",
-    "contingencies": "Too many",
+    "inspectionPeriod": "30",
+    "contingencies": "Too do now.",
     "city": "Tampa",
     "state": "FL",
     "zipCode": "33607",
     "country": "US",
     "additionalParties": [
       {
-        "name": "Romanet Perez",
-        "email": "perez.romanet@gmail.com",
+        "name": "Matt Drudge",
+        "email": "matt.drudge@gmail.com",
+        "role": "Buyer Agent"
+      },
+      {
+        "name": "Charlize Theron",
+        "email": "charlize.theron@gmail.com",
+        "role": "Seller Agent"
+      },
+      {
+        "name": "Hallie Berry",
+        "email": "hallie@gmail.com",
         "role": "Closing Agent"
       }
     ],

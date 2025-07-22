@@ -1167,11 +1167,15 @@ const ContractsPage: React.FC = () => {
             try {
               for (const docInfo of step4Documents) {
                 // Create document with proper ID and contract association
-                const documentId = await addDocument(docInfo.file, newContractId, newContract.title);
+                const documentId = await addDocument(docInfo.file, newContractId, newContract.title, currentUserName);
                 
                 // Update the document name and assignee
                 const { updateDocumentName } = useDocumentStore.getState();
                 updateDocumentName(documentId, docInfo.name);
+
+               // Set the assignee in the assignee store
+               const { setAssignee } = useAssigneeStore.getState();
+               setAssignee(documentId, docInfo.assignee);
                 
                 finalDocumentIds.push(documentId);
               }
@@ -1185,7 +1189,11 @@ const ContractsPage: React.FC = () => {
             try {
               for (const file of uploadedFiles) {
                 // Create document with proper ID and contract association
-                const documentId = await addDocument(file, newContractId, newContract.title);
+                const documentId = await addDocument(file, newContractId, newContract.title, currentUserName);
+              
+                // Set the assignee in the assignee store (using current user as default)
+                const { setAssignee } = useAssigneeStore.getState();
+                setAssignee(documentId, currentUserName);
                 finalDocumentIds.push(documentId);
               }
             } catch (error) {
@@ -1330,19 +1338,20 @@ const ContractsPage: React.FC = () => {
 
   // Convert stored documents to Document interface format
   const convertStoredToDocument = (storedDoc: any, contractTitle?: string): Document => {
+    const { getAssignee } = useAssigneeStore.getState();
     return {
       id: storedDoc.id,
       name: storedDoc.name,
-      type: storedDoc.type.includes('pdf') ? 'PDF' : 
-            storedDoc.type.includes('doc') ? 'DOC' : 
-            storedDoc.type.includes('image') ? 'JPG' : 'PDF',
-      size: `${(storedDoc.size / (1024 * 1024)).toFixed(1)} MB`,
-      date: new Date(storedDoc.uploadedDate).toISOString().split('T')[0],
-      uploadedBy: currentUserName,
-      dateUploaded: new Date(storedDoc.uploadedDate).toISOString().split('T')[0],
+      type: storedDoc.type && storedDoc.type.includes('pdf') ? 'PDF' : 
+            storedDoc.type && storedDoc.type.includes('doc') ? 'DOC' : 
+            storedDoc.type && storedDoc.type.includes('image') ? 'JPG' : 'PDF',
+      size: storedDoc.size ? `${(storedDoc.size / (1024 * 1024)).toFixed(1)} MB` : '',
+      date: storedDoc.uploadedDate ? new Date(storedDoc.uploadedDate).toISOString().split('T')[0] : '',
+      uploadedBy: storedDoc.uploadedBy || currentUserName,
+      dateUploaded: storedDoc.uploadedDate ? new Date(storedDoc.uploadedDate).toISOString().split('T')[0] : '',
       contractName: contractTitle || 'Unknown Contract',
       contractId: storedDoc.contractId || '',
-      assignee: currentUserName,
+      assignee: getAssignee(storedDoc.id) || '',
     };
   };
 
@@ -1350,7 +1359,8 @@ const ContractsPage: React.FC = () => {
   const { getAllDocuments } = useDocumentStore.getState();
   const storedDocuments = getAllDocuments();
   const convertedStoredDocuments = storedDocuments.map(storedDoc => {
-    const contractTitle = contracts.find(c => c.id === storedDoc.contractId)?.title || 'Unknown Contract';
+    // Use the stored contractName if available, otherwise try to find it in contracts
+    const contractTitle = storedDoc.contractName || contracts.find(c => c.id === storedDoc.contractId)?.title || 'Unknown Contract';
     return convertStoredToDocument(storedDoc, contractTitle);
   });
 

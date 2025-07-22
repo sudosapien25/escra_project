@@ -25,6 +25,8 @@ import { FaDochub } from 'react-icons/fa6';
 import { SiAdobe } from 'react-icons/si';
 import { mockContracts } from '@/data/mockContracts';
 import { useAssigneeStore } from '@/data/assigneeStore';
+import { useDocumentStore } from '@/data/documentNameStore';
+import { useAuth } from '@/context/AuthContext';
 
 interface SignatureDocument {
   id: string;
@@ -39,9 +41,27 @@ interface SignatureDocument {
   dueDate: string;
 }
 
+interface Document {
+  id: string;
+  name: string;
+  type: string;
+  size: string;
+  date: string;
+  uploadedBy?: string;
+  dateUploaded?: string;
+  contractName?: string;
+  contractId?: string;
+  assignee?: string;
+}
+
 type SortableKey = keyof SignatureDocument;
 
 export default function SignaturesPage() {
+  const { user } = useAuth();
+  const currentUserName = user?.name || '';
+  const { getAllDocuments } = useDocumentStore();
+  const { getAssignee } = useAssigneeStore();
+  
   const [activeTab, setActiveTab] = useState('all');
   const [inboxTab, setInboxTab] = useState('all');
   const [cancelledTab, setCancelledTab] = useState('all');
@@ -118,41 +138,41 @@ export default function SignaturesPage() {
   type Recipient = {
     name: string;
     email: string;
-    role: string;
     signerRole: string;
-    showRoleDropdown: boolean;
+    contractRole: string;
     showSignerRoleDropdown: boolean;
-    roleButtonRef: RefObject<HTMLButtonElement>;
-    roleDropdownRef: RefObject<HTMLDivElement>;
+    showContractRoleDropdown: boolean;
     signerRoleButtonRef: RefObject<HTMLButtonElement>;
     signerRoleDropdownRef: RefObject<HTMLDivElement>;
+    contractRoleButtonRef: RefObject<HTMLButtonElement>;
+    contractRoleDropdownRef: RefObject<HTMLDivElement>;
   };
   const [recipients, setRecipients] = useState<Recipient[]>([
     {
       name: '',
       email: '',
-      role: 'Needs to Sign',
-      signerRole: '',
-      showRoleDropdown: false,
+      signerRole: 'Signer Role',
+      contractRole: '',
       showSignerRoleDropdown: false,
-      roleButtonRef: createRef<HTMLButtonElement>(),
-      roleDropdownRef: createRef<HTMLDivElement>(),
+      showContractRoleDropdown: false,
       signerRoleButtonRef: createRef<HTMLButtonElement>(),
       signerRoleDropdownRef: createRef<HTMLDivElement>(),
+      contractRoleButtonRef: createRef<HTMLButtonElement>(),
+      contractRoleDropdownRef: createRef<HTMLDivElement>(),
     },
   ]);
   const [docuSignRecipients, setDocuSignRecipients] = useState<Recipient[]>([
     {
       name: '',
       email: '',
-      role: 'Needs to Sign',
-      signerRole: '',
-      showRoleDropdown: false,
+      signerRole: 'Signer Role',
+      contractRole: '',
       showSignerRoleDropdown: false,
-      roleButtonRef: createRef<HTMLButtonElement>(),
-      roleDropdownRef: createRef<HTMLDivElement>(),
+      showContractRoleDropdown: false,
       signerRoleButtonRef: createRef<HTMLButtonElement>(),
       signerRoleDropdownRef: createRef<HTMLDivElement>(),
+      contractRoleButtonRef: createRef<HTMLButtonElement>(),
+      contractRoleDropdownRef: createRef<HTMLDivElement>(),
     },
   ]);
   const [showToolSelectorModal, setShowToolSelectorModal] = useState(false);
@@ -191,14 +211,14 @@ export default function SignaturesPage() {
       {
         name: '',
         email: '',
-        role: 'Needs to Sign',
-        signerRole: '',
-        showRoleDropdown: false,
+        signerRole: 'Signer Role',
+        contractRole: '',
         showSignerRoleDropdown: false,
-        roleButtonRef: createRef<HTMLButtonElement>(),
-        roleDropdownRef: createRef<HTMLDivElement>(),
+        showContractRoleDropdown: false,
         signerRoleButtonRef: createRef<HTMLButtonElement>(),
         signerRoleDropdownRef: createRef<HTMLDivElement>(),
+        contractRoleButtonRef: createRef<HTMLButtonElement>(),
+        contractRoleDropdownRef: createRef<HTMLDivElement>(),
       },
     ]);
   };
@@ -210,14 +230,14 @@ export default function SignaturesPage() {
       {
         name: '',
         email: '',
-        role: 'Needs to Sign',
-        signerRole: '',
-        showRoleDropdown: false,
+        signerRole: 'Signer Role',
+        contractRole: '',
         showSignerRoleDropdown: false,
-        roleButtonRef: createRef<HTMLButtonElement>(),
-        roleDropdownRef: createRef<HTMLDivElement>(),
+        showContractRoleDropdown: false,
         signerRoleButtonRef: createRef<HTMLButtonElement>(),
         signerRoleDropdownRef: createRef<HTMLDivElement>(),
+        contractRoleButtonRef: createRef<HTMLButtonElement>(),
+        contractRoleDropdownRef: createRef<HTMLDivElement>(),
       },
     ]);
   };
@@ -408,9 +428,6 @@ export default function SignaturesPage() {
       dueDate: '2024-03-22'
     }
   ];
-
-  // Placeholder for current user's name
-  const currentUserName = 'John Smith'; // TODO: Replace with actual user context
 
   // Function to check if a row should be shown based on selected statuses
   const shouldShowRow = (status: string) => {
@@ -763,7 +780,34 @@ export default function SignaturesPage() {
   }, [showModalAssigneeDropdown]);
 
   // Sample documents data (same as contracts page)
-  const sampleDocuments = [
+  // Convert stored documents to Document interface format (same as contracts page)
+  const convertStoredToDocument = (storedDoc: any, contractTitle?: string): Document => {
+    return {
+      id: storedDoc.id,
+      name: storedDoc.name,
+      type: storedDoc.type && storedDoc.type.includes('pdf') ? 'PDF' : 
+            storedDoc.type && storedDoc.type.includes('doc') ? 'DOC' : 
+            storedDoc.type && storedDoc.type.includes('image') ? 'JPG' : 'PDF',
+      size: storedDoc.size ? `${(storedDoc.size / (1024 * 1024)).toFixed(1)} MB` : '',
+      date: storedDoc.uploadedDate ? new Date(storedDoc.uploadedDate).toISOString().split('T')[0] : '',
+      uploadedBy: storedDoc.uploadedBy || currentUserName,
+      dateUploaded: storedDoc.uploadedDate ? new Date(storedDoc.uploadedDate).toISOString().split('T')[0] : '',
+      contractName: contractTitle || 'Unknown Contract',
+      contractId: storedDoc.contractId || '',
+      assignee: getAssignee(storedDoc.id) || '',
+    };
+  };
+
+  // Get stored documents and convert them to Document interface (same source as contracts page)
+  const storedDocuments = getAllDocuments();
+  const convertedStoredDocuments = storedDocuments.map(storedDoc => {
+    // Use the stored contractName if available, otherwise try to find it in mockContracts
+    const contractTitle = storedDoc.contractName || mockContracts.find(c => c.id === storedDoc.contractId)?.title || 'Unknown Contract';
+    return convertStoredToDocument(storedDoc, contractTitle);
+  });
+
+  // Sample documents for backward compatibility
+  const sampleDocuments: Document[] = [
     {
       id: '1234',
       name: 'Wire Authorization',
@@ -874,8 +918,11 @@ export default function SignaturesPage() {
     }
   ];
 
-  // Filter documents based on search term
-  const filteredDocuments = sampleDocuments.filter(doc => {
+  // Combine sample documents with stored documents (same as contracts page)
+  const allDocuments = [...sampleDocuments, ...convertedStoredDocuments];
+
+  // Filter documents based on search term (now using real-time documents)
+  const filteredDocuments = allDocuments.filter(doc => {
     const search = documentSearch.toLowerCase();
     return (
       doc.name.toLowerCase().includes(search) ||
@@ -899,25 +946,13 @@ export default function SignaturesPage() {
   const handleDocumentItemClick = (e: React.MouseEvent, docId: string) => {
     e.preventDefault();
     e.stopPropagation();
-    setSelectedDocuments(prev => {
-      if (prev.includes(docId)) {
-        return prev.filter(id => id !== docId);
-      } else {
-        return [...prev, docId];
-      }
-    });
+    handleDocumentSelection(docId, false);
   };
 
   const handleDocuSignDocumentItemClick = (e: React.MouseEvent, docId: string) => {
     e.preventDefault();
     e.stopPropagation();
-    setDocuSignSelectedDocuments(prev => {
-      if (prev.includes(docId)) {
-        return prev.filter(id => id !== docId);
-      } else {
-        return [...prev, docId];
-      }
-    });
+    handleDocumentSelection(docId, true);
   };
 
   // Click-off behavior for recipient role dropdown
@@ -944,19 +979,19 @@ export default function SignaturesPage() {
       recipients.forEach((recipient, idx) => {
         const target = event.target as Node;
         if (
-          recipient.roleButtonRef.current?.contains(target) ||
-          recipient.roleDropdownRef.current?.contains(target) ||
           recipient.signerRoleButtonRef.current?.contains(target) ||
-          recipient.signerRoleDropdownRef.current?.contains(target)
+          recipient.signerRoleDropdownRef.current?.contains(target) ||
+          recipient.contractRoleButtonRef.current?.contains(target) ||
+          recipient.contractRoleDropdownRef.current?.contains(target)
         ) {
           // Click inside button or dropdown: do nothing
           return;
         }
-        if (recipient.showRoleDropdown) {
-          setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showRoleDropdown: false } : r));
-        }
         if (recipient.showSignerRoleDropdown) {
           setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showSignerRoleDropdown: false } : r));
+        }
+        if (recipient.showContractRoleDropdown) {
+          setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showContractRoleDropdown: false } : r));
         }
       });
     }
@@ -970,19 +1005,19 @@ export default function SignaturesPage() {
       docuSignRecipients.forEach((recipient, idx) => {
         const target = event.target as Node;
         if (
-          recipient.roleButtonRef.current?.contains(target) ||
-          recipient.roleDropdownRef.current?.contains(target) ||
           recipient.signerRoleButtonRef.current?.contains(target) ||
-          recipient.signerRoleDropdownRef.current?.contains(target)
+          recipient.signerRoleDropdownRef.current?.contains(target) ||
+          recipient.contractRoleButtonRef.current?.contains(target) ||
+          recipient.contractRoleDropdownRef.current?.contains(target)
         ) {
           // Click inside button or dropdown: do nothing
           return;
         }
-        if (recipient.showRoleDropdown) {
-          setDocuSignRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showRoleDropdown: false } : r));
-        }
         if (recipient.showSignerRoleDropdown) {
           setDocuSignRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showSignerRoleDropdown: false } : r));
+        }
+        if (recipient.showContractRoleDropdown) {
+          setDocuSignRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showContractRoleDropdown: false } : r));
         }
       });
     }
@@ -1214,6 +1249,192 @@ export default function SignaturesPage() {
       '#3b82f6', // blue-500
     ];
     return colors[(index - 1) % colors.length];
+  };
+
+  // Function to populate recipient cards when documents are selected
+  const populateRecipientCardsFromDocument = (documentId: string, isDocuSign: boolean = false) => {
+    console.log('populateRecipientCardsFromDocument called with:', { documentId, isDocuSign });
+    
+    // Find the document
+    const document = allDocuments.find(doc => doc.id === documentId);
+    console.log('Found document:', document);
+    
+    if (!document || !document.contractId) {
+      console.log('No document or contractId found');
+      return;
+    }
+
+    // Try to find the contract from the API first (full contract data with party info)
+    const fetchContractData = async () => {
+      try {
+        const response = await fetch('/api/contracts');
+        if (response.ok) {
+          const data = await response.json();
+          const fullContract = data.contracts?.find((c: any) => c.id === document.contractId);
+          
+          if (fullContract) {
+            console.log('Found full contract data:', fullContract);
+            createRecipientsFromFullContract(fullContract, isDocuSign);
+            return;
+          }
+        }
+      } catch (error) {
+        console.log('Error fetching contract data:', error);
+      }
+      
+      // Fallback to mockContracts if API fails
+      const contract = mockContracts.find(c => c.id === document.contractId);
+      console.log('Fallback to mockContracts:', contract);
+      
+      if (contract) {
+        createRecipientsFromBasicContract(contract, isDocuSign);
+      }
+    };
+
+    fetchContractData();
+  };
+
+  // Function to create recipients from full contract data (with emails and roles)
+  const createRecipientsFromFullContract = (contract: any, isDocuSign: boolean) => {
+    const recipients: Recipient[] = [];
+    
+    // Add first party (buyer) - typically needs to sign
+    if (contract.buyer) {
+      recipients.push({
+        name: contract.buyer,
+        email: contract.buyerEmail || '',
+        signerRole: 'Needs to Sign', // Default for buyer
+        contractRole: contract.party1Role || 'Buyer',
+        showSignerRoleDropdown: false,
+        showContractRoleDropdown: false,
+        signerRoleButtonRef: createRef<HTMLButtonElement>(),
+        signerRoleDropdownRef: createRef<HTMLDivElement>(),
+        contractRoleButtonRef: createRef<HTMLButtonElement>(),
+        contractRoleDropdownRef: createRef<HTMLDivElement>(),
+      });
+    }
+    
+    // Add second party (seller) - typically needs to sign
+    if (contract.seller) {
+      recipients.push({
+        name: contract.seller,
+        email: contract.sellerEmail || '',
+        signerRole: 'Needs to Sign', // Default for seller
+        contractRole: contract.party2Role || 'Seller',
+        showSignerRoleDropdown: false,
+        showContractRoleDropdown: false,
+        signerRoleButtonRef: createRef<HTMLButtonElement>(),
+        signerRoleDropdownRef: createRef<HTMLDivElement>(),
+        contractRoleButtonRef: createRef<HTMLButtonElement>(),
+        contractRoleDropdownRef: createRef<HTMLDivElement>(),
+      });
+    }
+    
+    // Add additional parties with appropriate signer roles based on their contract roles
+    if (contract.additionalParties && contract.additionalParties.length > 0) {
+      contract.additionalParties.forEach((party: any) => {
+        // Determine signer role based on contract role
+        let signerRole = 'Needs to Sign'; // Default
+        if (party.role === 'Buyer Agent' || party.role === 'Seller Agent') {
+          signerRole = 'Receives a Copy'; // Agents typically receive copies
+        } else if (party.role === 'Closing Agent') {
+          signerRole = 'Needs to Sign'; // Closing agents need to sign
+        } else if (party.role === 'Inspector' || party.role === 'Appraiser') {
+          signerRole = 'Receives a Copy'; // Inspectors/appraisers typically receive copies
+        }
+        
+        recipients.push({
+          name: party.name,
+          email: party.email || '',
+          signerRole: signerRole,
+          contractRole: party.role || 'Standard',
+          showSignerRoleDropdown: false,
+          showContractRoleDropdown: false,
+          signerRoleButtonRef: createRef<HTMLButtonElement>(),
+          signerRoleDropdownRef: createRef<HTMLDivElement>(),
+          contractRoleButtonRef: createRef<HTMLButtonElement>(),
+          contractRoleDropdownRef: createRef<HTMLDivElement>(),
+        });
+      });
+    }
+    
+    console.log('Created recipients from full contract:', recipients);
+    
+    // Update the appropriate recipient state
+    if (isDocuSign) {
+      setDocuSignRecipients(recipients);
+    } else {
+      setRecipients(recipients);
+    }
+  };
+
+  // Function to create recipients from basic contract data (fallback)
+  const createRecipientsFromBasicContract = (contract: any, isDocuSign: boolean) => {
+    const parties = contract.parties ? contract.parties.split(' & ').map((p: string) => p.trim()) : [];
+    
+    const recipients: Recipient[] = parties.map((party: string, index: number) => ({
+      name: party,
+      email: '', // Will be empty since basic contracts don't have email data
+      signerRole: 'Needs to Sign',
+      contractRole: index === 0 ? 'Buyer' : index === 1 ? 'Seller' : 'Standard',
+      showSignerRoleDropdown: false,
+      showContractRoleDropdown: false,
+      signerRoleButtonRef: createRef<HTMLButtonElement>(),
+      signerRoleDropdownRef: createRef<HTMLDivElement>(),
+      contractRoleButtonRef: createRef<HTMLButtonElement>(),
+      contractRoleDropdownRef: createRef<HTMLDivElement>(),
+    }));
+    
+    console.log('Created recipients from basic contract:', recipients);
+    
+    // Update the appropriate recipient state
+    if (isDocuSign) {
+      setDocuSignRecipients(recipients);
+    } else {
+      setRecipients(recipients);
+    }
+  };
+
+  // Function to handle document selection and populate recipients
+  const handleDocumentSelection = (docId: string, isDocuSign: boolean = false) => {
+    console.log('handleDocumentSelection called with:', { docId, isDocuSign });
+    
+    // Add/remove document from selection
+    if (isDocuSign) {
+      setDocuSignSelectedDocuments(prev => {
+        console.log('DocuSign previous selection:', prev);
+        const newSelection = prev.includes(docId) 
+          ? prev.filter(id => id !== docId)
+          : [...prev, docId];
+        
+        console.log('DocuSign new selection:', newSelection);
+        
+        // If this is the first document being selected, populate recipients
+        if (newSelection.length === 1 && !prev.includes(docId)) {
+          console.log('Populating DocuSign recipients for first document');
+          populateRecipientCardsFromDocument(docId, true);
+        }
+        
+        return newSelection;
+      });
+    } else {
+      setSelectedDocuments(prev => {
+        console.log('Escra previous selection:', prev);
+        const newSelection = prev.includes(docId) 
+          ? prev.filter(id => id !== docId)
+          : [...prev, docId];
+        
+        console.log('Escra new selection:', newSelection);
+        
+        // If this is the first document being selected, populate recipients
+        if (newSelection.length === 1 && !prev.includes(docId)) {
+          console.log('Populating Escra recipients for first document');
+          populateRecipientCardsFromDocument(docId, false);
+        }
+        
+        return newSelection;
+      });
+    }
   };
 
   return (
@@ -2890,7 +3111,7 @@ export default function SignaturesPage() {
                           <div className="space-y-3">
                             {/* Selected Documents */}
                           {selectedDocuments.map(docId => {
-                            const doc = sampleDocuments.find(d => d.id === docId);
+                            const doc = allDocuments.find(d => d.id === docId);
                             return doc ? (
                                 <div key={docId} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600">
                                   <div className="flex items-center gap-3">
@@ -2920,7 +3141,22 @@ export default function SignaturesPage() {
                                     </button>
                                     <button
                                       type="button"
-                                      onClick={() => setSelectedDocuments(prev => prev.filter(id => id !== docId))}
+                                      onClick={() => {
+                                        setSelectedDocuments(prev => prev.filter(id => id !== docId));
+                                        // Clear all recipient cards and reset first card when documents are removed
+                                        setRecipients([{
+                                          name: '',
+                                          email: '',
+                                          signerRole: 'Signer Role',
+                                          contractRole: 'Contract Role',
+                                          showSignerRoleDropdown: false,
+                                          showContractRoleDropdown: false,
+                                          signerRoleButtonRef: createRef<HTMLButtonElement>(),
+                                          signerRoleDropdownRef: createRef<HTMLDivElement>(),
+                                          contractRoleButtonRef: createRef<HTMLButtonElement>(),
+                                          contractRoleDropdownRef: createRef<HTMLDivElement>(),
+                                        }]);
+                                      }}
                                       className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group"
                                     >
                                       <HiOutlineTrash className="h-4 w-4 transition-colors" />
@@ -3129,45 +3365,13 @@ export default function SignaturesPage() {
                                 {/* Role selection button */}
                                 <div className="relative">
                                   <button
-                                    ref={recipient.roleButtonRef}
-                                    type="button"
-                                    className="flex items-center gap-1 px-3 py-1.5 text-xs text-white border border-gray-200 dark:border-transparent bg-primary rounded-md hover:bg-primary-dark transition-colors"
-                                    onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showRoleDropdown: !r.showRoleDropdown } : r))}
-                                    tabIndex={0}
-                                  >
-                                    <LuPen className="w-3 h-3 text-white" />
-                                    <span>{recipient.role}</span>
-                                    <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px] text-white" />
-                                  </button>
-                                  {recipient.showRoleDropdown && (
-                                    <div
-                                      ref={recipient.roleDropdownRef}
-                                      className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[160px]"
-                                      style={{ fontFamily: 'Avenir, sans-serif' }}
-                                    >
-                                      {['Needs to Sign', 'In Person Signer', 'Receives a Copy', 'Needs to View'].map((role) => (
-                                        <button
-                                          key={role}
-                                          className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${recipient.role === role ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
-                                          style={{ background: 'none', border: 'none', boxShadow: 'none' }}
-                                          onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, role, showRoleDropdown: false } : r))}
-                                        >
-                                          {role}
-                                        </button>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                                
-                                {/* Signer Role button */}
-                                <div className="relative">
-                                  <button
                                     ref={recipient.signerRoleButtonRef}
                                     type="button"
-                                    className="flex items-center gap-1 px-3 py-1.5 text-xs text-white border border-gray-200 dark:border-transparent bg-primary rounded-md hover:bg-primary-dark transition-colors whitespace-nowrap"
+                                    className="flex items-center gap-1 px-3 py-1.5 text-xs text-white border border-gray-200 dark:border-transparent bg-primary rounded-md hover:bg-primary-dark transition-colors"
                                     onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showSignerRoleDropdown: !r.showSignerRoleDropdown } : r))}
                                     tabIndex={0}
                                   >
+                                    <LuPen className="w-3 h-3 text-white" />
                                     <span>{recipient.signerRole || 'Signer Role'}</span>
                                     <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px] text-white" />
                                   </button>
@@ -3177,14 +3381,46 @@ export default function SignaturesPage() {
                                       className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[160px]"
                                       style={{ fontFamily: 'Avenir, sans-serif' }}
                                     >
-                                      {['Standard', 'Buyer', 'Seller', 'Buyer Agent', 'Seller Agent', 'Closing Agent', 'Inspector', 'Appraiser'].map((signerRole) => (
+                                      {['Needs to Sign', 'In Person Signer', 'Receives a Copy', 'Needs to View'].map((role) => (
                                         <button
-                                          key={signerRole}
-                                          className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${recipient.signerRole === signerRole ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                                          key={role}
+                                          className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${recipient.signerRole === role ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                                           style={{ background: 'none', border: 'none', boxShadow: 'none' }}
-                                          onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, signerRole, showSignerRoleDropdown: false } : r))}
+                                          onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, signerRole: role, showSignerRoleDropdown: false } : r))}
                                         >
-                                          {signerRole}
+                                          {role}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                {/* Contract Role button */}
+                                <div className="relative">
+                                  <button
+                                    ref={recipient.contractRoleButtonRef}
+                                    type="button"
+                                    className="flex items-center gap-1 px-3 py-1.5 text-xs text-white border border-gray-200 dark:border-transparent bg-primary rounded-md hover:bg-primary-dark transition-colors whitespace-nowrap"
+                                    onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showContractRoleDropdown: !r.showContractRoleDropdown } : r))}
+                                    tabIndex={0}
+                                  >
+                                    <span>{recipient.contractRole || 'Contract Role'}</span>
+                                    <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px] text-white" />
+                                  </button>
+                                  {recipient.showContractRoleDropdown && (
+                                    <div
+                                      ref={recipient.contractRoleDropdownRef}
+                                      className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[160px]"
+                                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                                    >
+                                      {['Standard', 'Buyer', 'Seller', 'Buyer Agent', 'Seller Agent', 'Closing Agent', 'Inspector', 'Appraiser'].map((role) => (
+                                        <button
+                                          key={role}
+                                          className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${recipient.contractRole === role ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                                          style={{ background: 'none', border: 'none', boxShadow: 'none' }}
+                                          onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, contractRole: role, showContractRoleDropdown: false } : r))}
+                                        >
+                                          {role}
                                         </button>
                                       ))}
                                     </div>
@@ -3442,7 +3678,7 @@ export default function SignaturesPage() {
                                   />
                                 </div>
                                 <div className="max-h-[300px] overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
-                                  {sampleDocuments
+                                  {allDocuments
                                     .filter(doc => {
                                       const search = docuSignDocumentSearch.toLowerCase();
                                       return (
@@ -3539,7 +3775,7 @@ export default function SignaturesPage() {
                           <div className="space-y-3">
                             {/* Selected Documents */}
                             {docuSignSelectedDocuments.map(docId => {
-                              const doc = sampleDocuments.find(d => d.id === docId);
+                              const doc = allDocuments.find(d => d.id === docId);
                               return doc ? (
                                 <div key={docId} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600">
                                   <div className="flex items-center gap-3">
@@ -3569,7 +3805,22 @@ export default function SignaturesPage() {
                                     </button>
                                     <button
                                       type="button"
-                                      onClick={() => setDocuSignSelectedDocuments(prev => prev.filter(id => id !== docId))}
+                                      onClick={() => {
+                                        setDocuSignSelectedDocuments(prev => prev.filter(id => id !== docId));
+                                        // Clear all recipient cards and reset first card when documents are removed
+                                        setDocuSignRecipients([{
+                                          name: '',
+                                          email: '',
+                                          signerRole: 'Signer Role',
+                                          contractRole: 'Contract Role',
+                                          showSignerRoleDropdown: false,
+                                          showContractRoleDropdown: false,
+                                          signerRoleButtonRef: createRef<HTMLButtonElement>(),
+                                          signerRoleDropdownRef: createRef<HTMLDivElement>(),
+                                          contractRoleButtonRef: createRef<HTMLButtonElement>(),
+                                          contractRoleDropdownRef: createRef<HTMLDivElement>(),
+                                        }]);
+                                      }}
                                       className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group"
                                     >
                                       <HiOutlineTrash className="h-4 w-4 transition-colors" />
@@ -3778,45 +4029,13 @@ export default function SignaturesPage() {
                                 {/* Role selection button */}
                                 <div className="relative">
                                   <button
-                                    ref={recipient.roleButtonRef}
-                                    type="button"
-                                    className="flex items-center gap-1 px-3 py-1.5 text-xs text-white border border-gray-200 dark:border-transparent bg-blue-500 rounded-md hover:bg-blue-600 transition-colors"
-                                    onClick={() => setDocuSignRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showRoleDropdown: !r.showRoleDropdown } : r))}
-                                    tabIndex={0}
-                                  >
-                                    <LuPen className="w-3 h-3 text-white" />
-                                    <span>{recipient.role}</span>
-                                    <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px] text-white" />
-                                  </button>
-                                  {recipient.showRoleDropdown && (
-                                    <div
-                                      ref={recipient.roleDropdownRef}
-                                      className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[160px]"
-                                      style={{ fontFamily: 'Avenir, sans-serif' }}
-                                    >
-                                      {['Needs to Sign', 'In Person Signer', 'Receives a Copy', 'Needs to View'].map((role) => (
-                                        <button
-                                          key={role}
-                                          className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${recipient.role === role ? 'text-blue-500' : 'text-gray-700 dark:text-gray-300'}`}
-                                          style={{ background: 'none', border: 'none', boxShadow: 'none' }}
-                                          onClick={() => setDocuSignRecipients(prev => prev.map((r, i) => i === idx ? { ...r, role, showRoleDropdown: false } : r))}
-                                        >
-                                          {role}
-                                        </button>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                                
-                                {/* Signer Role button */}
-                                <div className="relative">
-                                  <button
                                     ref={recipient.signerRoleButtonRef}
                                     type="button"
-                                    className="flex items-center gap-1 px-3 py-1.5 text-xs text-white border border-gray-200 dark:border-transparent bg-blue-500 rounded-md hover:bg-blue-600 transition-colors whitespace-nowrap"
+                                    className="flex items-center gap-1 px-3 py-1.5 text-xs text-white border border-gray-200 dark:border-transparent bg-blue-500 rounded-md hover:bg-blue-600 transition-colors"
                                     onClick={() => setDocuSignRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showSignerRoleDropdown: !r.showSignerRoleDropdown } : r))}
                                     tabIndex={0}
                                   >
+                                    <LuPen className="w-3 h-3 text-white" />
                                     <span>{recipient.signerRole || 'Signer Role'}</span>
                                     <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px] text-white" />
                                   </button>
@@ -3826,14 +4045,46 @@ export default function SignaturesPage() {
                                       className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[160px]"
                                       style={{ fontFamily: 'Avenir, sans-serif' }}
                                     >
-                                      {['Standard', 'Buyer', 'Seller', 'Buyer Agent', 'Seller Agent', 'Closing Agent', 'Inspector', 'Appraiser'].map((signerRole) => (
+                                      {['Needs to Sign', 'In Person Signer', 'Receives a Copy', 'Needs to View'].map((role) => (
                                         <button
-                                          key={signerRole}
-                                          className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${recipient.signerRole === signerRole ? 'text-blue-500' : 'text-gray-700 dark:text-gray-300'}`}
+                                          key={role}
+                                          className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${recipient.signerRole === role ? 'text-blue-500' : 'text-gray-700 dark:text-gray-300'}`}
                                           style={{ background: 'none', border: 'none', boxShadow: 'none' }}
-                                          onClick={() => setDocuSignRecipients(prev => prev.map((r, i) => i === idx ? { ...r, signerRole, showSignerRoleDropdown: false } : r))}
+                                          onClick={() => setDocuSignRecipients(prev => prev.map((r, i) => i === idx ? { ...r, signerRole: role, showSignerRoleDropdown: false } : r))}
                                         >
-                                          {signerRole}
+                                          {role}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                {/* Contract Role button */}
+                                <div className="relative">
+                                  <button
+                                    ref={recipient.contractRoleButtonRef}
+                                    type="button"
+                                    className="flex items-center gap-1 px-3 py-1.5 text-xs text-white border border-gray-200 dark:border-transparent bg-blue-500 rounded-md hover:bg-blue-600 transition-colors whitespace-nowrap"
+                                    onClick={() => setDocuSignRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showContractRoleDropdown: !r.showContractRoleDropdown } : r))}
+                                    tabIndex={0}
+                                  >
+                                    <span>{recipient.contractRole || 'Contract Role'}</span>
+                                    <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px] text-white" />
+                                  </button>
+                                  {recipient.showContractRoleDropdown && (
+                                    <div
+                                      ref={recipient.contractRoleDropdownRef}
+                                      className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[160px]"
+                                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                                    >
+                                      {['Standard', 'Buyer', 'Seller', 'Buyer Agent', 'Seller Agent', 'Closing Agent', 'Inspector', 'Appraiser'].map((role) => (
+                                        <button
+                                          key={role}
+                                          className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${recipient.contractRole === role ? 'text-blue-500' : 'text-gray-700 dark:text-gray-300'}`}
+                                          style={{ background: 'none', border: 'none', boxShadow: 'none' }}
+                                          onClick={() => setDocuSignRecipients(prev => prev.map((r, i) => i === idx ? { ...r, contractRole: role, showContractRoleDropdown: false } : r))}
+                                        >
+                                          {role}
                                         </button>
                                       ))}
                                     </div>
