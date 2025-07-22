@@ -5,7 +5,7 @@
     "parties": "Nicholas Aquino & Benjamin Aiello & Matt Drudge & Charlize Theron & Hallie Berry",
     "status": "Initiation",
     "updated": "Just now",
-    "value": "",
+    "value": "350000",
     "documents": 0,
     "type": "Residential – Financed",
     "buyer": "Nicholas Aquino",
@@ -53,6 +53,67 @@
       {
         "name": "Hallie Berry",
         "email": "hallie@gmail.com",
+        "role": "Closing Agent"
+      }
+    ],
+    "party1Role": "Buyer",
+    "party2Role": "Seller",
+    "documentIds": []
+  },
+  {
+    "id": "7353",
+    "title": "Dunedin Home",
+    "parties": "Nicholas Aquino & Benjamin Aiello & Romanet Perez & Molly Aiello & Mandy Mangosteen",
+    "status": "Initiation",
+    "updated": "Just now",
+    "value": "$350,000",
+    "documents": 0,
+    "type": "Residential – Financed",
+    "buyer": "Nicholas Aquino",
+    "seller": "Benjamin Aiello",
+    "milestone": "Standard (6 milestones)",
+    "notes": "",
+    "closingDate": "",
+    "dueDate": "2025-07-24",
+    "propertyAddress": "1701 N Lois Avenue",
+    "propertyType": "Multi Family",
+    "escrowNumber": "123456",
+    "buyerEmail": "nicholas@escra.io",
+    "sellerEmail": "benjamin@escra.io",
+    "earnestMoney": "$20,000",
+    "downPayment": "$50,000",
+    "loanAmount": "$1,200,000",
+    "interestRate": "5",
+    "loanTerm": "30",
+    "lenderName": "",
+    "sellerFinancialInstitution": "Chase",
+    "buyerFinancialInstitution": "BoA",
+    "buyerAccountNumber": "111111111111",
+    "sellerAccountNumber": "222222222222",
+    "buyerFinancialInstitutionRoutingNumber": "111111111",
+    "sellerFinancialInstitutionRoutingNumber": "222222222",
+    "titleCompany": "Busted Title",
+    "insuranceCompany": "XYZ Insurance",
+    "inspectionPeriod": "30",
+    "contingencies": "Do it",
+    "city": "Dunedin",
+    "state": "FL",
+    "zipCode": "33607",
+    "country": "US",
+    "additionalParties": [
+      {
+        "name": "Romanet Perez",
+        "email": "perez.romanet@gmail.com",
+        "role": "Buyer Agent"
+      },
+      {
+        "name": "Molly Aiello",
+        "email": "molly.aiello@gmail.com",
+        "role": "Seller Agent"
+      },
+      {
+        "name": "Mandy Mangosteen",
+        "email": "mandy@bustedtitle.com",
         "role": "Closing Agent"
       }
     ],

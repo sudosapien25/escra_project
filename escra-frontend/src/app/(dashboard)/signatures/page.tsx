@@ -27,19 +27,10 @@ import { mockContracts } from '@/data/mockContracts';
 import { useAssigneeStore } from '@/data/assigneeStore';
 import { useDocumentStore } from '@/data/documentNameStore';
 import { useAuth } from '@/context/AuthContext';
-
-interface SignatureDocument {
-  id: string;
-  document: string;
-  parties: string[];
-  status: string;
-  signatures: string;
-  contractId: string;
-  contract: string;
-  assignee: string;
-  dateSent: string;
-  dueDate: string;
-}
+import { useToast } from '@/components/ui/use-toast';
+import { Toaster } from '@/components/ui/toaster';
+import { Logo } from '@/components/common/Logo';
+import { SignatureDocument, mockSignatures } from '@/data/mockSignatures';
 
 interface Document {
   id: string;
@@ -61,11 +52,19 @@ export default function SignaturesPage() {
   const currentUserName = user?.name || '';
   const { getAllDocuments } = useDocumentStore();
   const { getAssignee } = useAssigneeStore();
+  const { toast } = useToast();
   
   const [activeTab, setActiveTab] = useState('all');
   const [inboxTab, setInboxTab] = useState('all');
   const [cancelledTab, setCancelledTab] = useState('all');
   const [pendingTab, setPendingTab] = useState('all');
+  const [signatureFilterTab, setSignatureFilterTab] = useState('Inbox');
+  const signatureFilterTabs = ['Inbox', 'Outbox', 'Drafts', 'Completed', 'Canceled'];
+  const [signatureAssignee, setSignatureAssignee] = useState('');
+  const [showSignatureAssigneeDropdown, setShowSignatureAssigneeDropdown] = useState(false);
+  const signatureAssigneeDropdownRef = useRef<HTMLDivElement>(null);
+  const [recipientErrors, setRecipientErrors] = useState<Record<string, boolean>>({});
+  const [documentError, setDocumentError] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [selectedStatuses, setSelectedStatuses] = useState(['All']);
@@ -109,6 +108,7 @@ export default function SignaturesPage() {
   const [docuSignSelectedDocuments, setDocuSignSelectedDocuments] = useState<string[]>([]);
   const [copiedDocumentId, setCopiedDocumentId] = useState<string | null>(null);
   const [hoveredDocumentId, setHoveredDocumentId] = useState<string | null>(null);
+  const [expandedRecipientsRows, setExpandedRecipientsRows] = useState<Set<string>>(new Set());
   const [sortConfig, setSortConfig] = useState<{
     key: SortableKey;
     direction: 'ascending' | 'descending';
@@ -305,129 +305,48 @@ export default function SignaturesPage() {
     'Last 2 years'
   ];
 
-  // Mock data for signatures table
-  const signaturesData = [
-    {
-      id: '1234',
-      document: 'Purchase Agreement',
-      parties: ['Robert Chen', 'Eastside Properties'],
-      status: 'Pending',
-      signatures: '1 of 2',
-      contractId: '9548',
-      contract: 'New Property Acquisition',
-      assignee: 'John Smith',
-      dateSent: '2024-03-15',
-      dueDate: '2024-03-30'
-    },
-    {
-      id: '2345',
-      document: 'Closing Disclosure',
-      parties: ['Sarah Johnson', 'Westside Holdings'],
-      status: 'Pending',
-      signatures: '0 of 2',
-      contractId: '9550',
-      contract: 'Land Development Contract',
-      assignee: 'Sarah Johnson',
-      dateSent: '2024-03-14',
-      dueDate: '2024-03-29'
-    },
-    {
-      id: '3456',
-      document: 'Inspection Report',
-      parties: ['BuildRight', 'Horizon Developers'],
-      status: 'Rejected',
-      signatures: '0 of 2',
-      contractId: '9145',
-      contract: 'Construction Escrow',
-      assignee: 'Michael Brown',
-      dateSent: '2024-03-13',
-      dueDate: '2024-03-28'
-    },
-    {
-      id: '4567',
-      document: 'Lease Agreement',
-      parties: ['Pacific Properties'],
-      status: 'Expired',
-      signatures: '0 of 1',
-      contractId: '8784',
-      contract: 'Commercial Lease Amendment',
-      assignee: 'Emma Johnson',
-      dateSent: '2024-03-12',
-      dueDate: '2024-03-27'
-    },
-    {
-      id: '5678',
-      document: 'Title Insurance',
-      parties: ['John Smith', 'Emma Johnson'],
-      status: 'Voided',
-      signatures: '0 of 2',
-      contractId: '8423',
-      contract: 'Property Sale Contract',
-      assignee: 'Robert Chen',
-      dateSent: '2024-03-11',
-      dueDate: '2024-03-26'
-    },
-    {
-      id: '6789',
-      document: 'Appraisal',
-      parties: ['Robert Wilson', 'Investment Group'],
-      status: 'Pending',
-      signatures: '0 of 2',
-      contractId: '7804',
-      contract: 'Investment Property Escrow',
-      assignee: 'Sarah Miller',
-      dateSent: '2024-03-10',
-      dueDate: '2024-03-25'
-    },
-    {
-      id: '7890',
-      document: 'Appraisal Report',
-      parties: ['David Miller', 'Sarah Thompson'],
-      status: 'Pending',
-      signatures: '1 of 2',
-      contractId: '7234',
-      contract: 'Residential Sale Agreement',
-      assignee: 'David Miller',
-      dateSent: '2024-03-09',
-      dueDate: '2024-03-24'
-    },
-    {
-      id: '8901',
-      document: 'Closing Disclosure',
-      parties: ['David Taylor'],
-      status: 'Completed',
-      signatures: '1 of 1',
-      contractId: '6891',
-      contract: 'Office Building Purchase',
-      assignee: 'Emily Davis',
-      dateSent: '2024-03-09',
-      dueDate: '2024-03-24'
-    },
-    {
-      id: '9012',
-      document: 'Loan Estimate',
-      parties: ['Urban Outfitters Co.'],
-      status: 'Completed',
-      signatures: '1 of 1',
-      contractId: '6453',
-      contract: 'Retail Space Lease',
-      assignee: 'Alex Johnson',
-      dateSent: '2024-03-07',
-      dueDate: '2024-03-22'
-    },
-    {
-      id: '0123',
-      document: 'Property Survey',
-      parties: ['James Thompson'],
-      status: 'Completed',
-      signatures: '1 of 1',
-      contractId: '10003',
-      contract: 'Luxury Villa Purchase',
-      assignee: 'Samantha Fox',
-      dateSent: '2024-03-07',
-      dueDate: '2024-03-22'
-    }
-  ];
+  // State for signatures data
+  const [signaturesData, setSignaturesData] = useState<SignatureDocument[]>(mockSignatures);
+  
+  // State for form fields
+  const [dueDate, setDueDate] = useState('');
+  const [subject, setSubject] = useState('');
+  const [message, setMessage] = useState('');
+  const [docuSignSubject, setDocuSignSubject] = useState('');
+  const [docuSignMessage, setDocuSignMessage] = useState('');
+  
+  // PDF Viewer state
+  const [showPdfViewer, setShowPdfViewer] = useState(false);
+  const [selectedPdf, setSelectedPdf] = useState<{ name: string; url: string; id?: string } | null>(null);
+  
+  // Load signatures data on component mount
+  useEffect(() => {
+    const loadEnhancedSignatures = async () => {
+      try {
+        const response = await fetch('/api/signatures');
+        if (response.ok) {
+          const data = await response.json();
+          // Only update if we got valid data that's different from initial mockSignatures
+          if (data.signatures && data.signatures.length > 0) {
+            setSignaturesData(data.signatures);
+          }
+        } else {
+          console.error('Failed to load enhanced signatures');
+          // Keep the initial mockSignatures that are already loaded
+        }
+      } catch (error) {
+        console.error('Error loading enhanced signatures:', error);
+        // Keep the initial mockSignatures that are already loaded
+      }
+    };
+
+    // Small delay to let the initial render complete, then enhance with API data
+    const timeoutId = setTimeout(loadEnhancedSignatures, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, []);
+  
+
 
   // Function to check if a row should be shown based on selected statuses
   const shouldShowRow = (status: string) => {
@@ -580,6 +499,63 @@ export default function SignaturesPage() {
     };
   }, [showAssigneeDropdown]);
 
+  // Handle click outside for signature assignee dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (showSignatureAssigneeDropdown && !signatureAssigneeDropdownRef.current?.contains(event.target as Node)) {
+        setShowSignatureAssigneeDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSignatureAssigneeDropdown]);
+
+  // Function to validate recipients and documents
+  const validateRecipients = () => {
+    const newRecipientErrors: Record<string, boolean> = {};
+    let hasErrors = false;
+
+    // Check if at least one document is selected or uploaded
+    if (selectedDocuments.length === 0 && uploadedFiles.length === 0) {
+      setDocumentError(true);
+      hasErrors = true;
+    } else {
+      setDocumentError(false);
+    }
+
+    recipients.forEach((recipient, index) => {
+      if (!recipient.name || recipient.name.trim() === '') {
+        newRecipientErrors[`name-${index}`] = true;
+        hasErrors = true;
+      }
+      if (!recipient.email || recipient.email.trim() === '') {
+        newRecipientErrors[`email-${index}`] = true;
+        hasErrors = true;
+      }
+      if (!recipient.signerRole || recipient.signerRole === 'Signer Role') {
+        newRecipientErrors[`signerRole-${index}`] = true;
+        hasErrors = true;
+      }
+      if (!recipient.contractRole || recipient.contractRole.trim() === '') {
+        newRecipientErrors[`contractRole-${index}`] = true;
+        hasErrors = true;
+      }
+    });
+
+    if (hasErrors) {
+      setRecipientErrors(newRecipientErrors);
+      return false;
+    }
+
+    // Clear errors and return true
+    setRecipientErrors({});
+    setDocumentError(false);
+    return true;
+  };
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (documentDropdownRef.current && !documentDropdownRef.current.contains(event.target as Node)) {
@@ -724,12 +700,18 @@ export default function SignaturesPage() {
         setCustomDocuSignFileNames(prev => ({ ...prev, [fileKey]: currentUploadingFileName }));
         setDocuSignUploadedFileContracts(prev => ({ ...prev, [fileKey]: currentUploadingContract }));
         setDocuSignUploadedFileAssignees(prev => ({ ...prev, [fileKey]: currentUploadingAssignee }));
+        
+        // Clear document error when files are uploaded
+        setDocumentError(false);
       } else {
         // Add to regular uploaded files
         setUploadedFiles(prev => [...prev, currentUploadingFile]);
         setCustomFileNames(prev => ({ ...prev, [fileKey]: currentUploadingFileName }));
         setUploadedFileContracts(prev => ({ ...prev, [fileKey]: currentUploadingContract }));
         setUploadedFileAssignees(prev => ({ ...prev, [fileKey]: currentUploadingAssignee }));
+        
+        // Clear document error when files are uploaded
+        setDocumentError(false);
       }
     }
     
@@ -1167,15 +1149,41 @@ export default function SignaturesPage() {
           : bValue.localeCompare(aValue);
       }
 
-      const aValue = a[sortConfig.key].toLowerCase();
-      const bValue = b[sortConfig.key].toLowerCase();
+      const aValue = a[sortConfig.key];
+      const bValue = b[sortConfig.key];
       
-      if (aValue < bValue) {
-        return sortConfig.direction === 'ascending' ? -1 : 1;
+      // Handle arrays (like parties)
+      if (Array.isArray(aValue) && Array.isArray(bValue)) {
+        const aStr = aValue.join(', ').toLowerCase();
+        const bStr = bValue.join(', ').toLowerCase();
+        if (aStr < bStr) {
+          return sortConfig.direction === 'ascending' ? -1 : 1;
+        }
+        if (aStr > bStr) {
+          return sortConfig.direction === 'ascending' ? 1 : -1;
+        }
+        return 0;
       }
-      if (aValue > bValue) {
-        return sortConfig.direction === 'ascending' ? 1 : -1;
+      
+      // Handle strings
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        const aStr = aValue.toLowerCase();
+        const bStr = bValue.toLowerCase();
+        if (aStr < bStr) {
+          return sortConfig.direction === 'ascending' ? -1 : 1;
+        }
+        if (aStr > bStr) {
+          return sortConfig.direction === 'ascending' ? 1 : -1;
+        }
+        return 0;
       }
+      
+      // Handle undefined/null values
+      if (!aValue && !bValue) return 0;
+      if (!aValue) return sortConfig.direction === 'ascending' ? -1 : 1;
+      if (!bValue) return sortConfig.direction === 'ascending' ? 1 : -1;
+      
+      // Default fallback
       return 0;
     });
   };
@@ -1426,6 +1434,11 @@ export default function SignaturesPage() {
         
         console.log('Escra new selection:', newSelection);
         
+        // Clear document error if documents are selected or uploaded
+        if (newSelection.length > 0 || uploadedFiles.length > 0) {
+          setDocumentError(false);
+        }
+        
         // If this is the first document being selected, populate recipients
         if (newSelection.length === 1 && !prev.includes(docId)) {
           console.log('Populating Escra recipients for first document');
@@ -1433,6 +1446,406 @@ export default function SignaturesPage() {
         }
         
         return newSelection;
+      });
+    }
+  };
+
+  // Function to download a stored document
+  const downloadDocument = (documentId: string) => {
+    const { getDocument } = useDocumentStore.getState();
+    const storedDoc = getDocument(documentId);
+    
+    if (!storedDoc) {
+      toast({
+        title: "Error",
+        description: "Document not found.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Convert base64 back to file and trigger download
+      const byteCharacters = atob(storedDoc.content);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: storedDoc.type });
+      
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = storedDoc.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Download Started",
+        description: `Downloading ${storedDoc.name}`,
+      });
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      toast({
+        title: "Download Error",
+        description: "Failed to download document.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Function to download an uploaded file
+  const downloadUploadedFile = (file: File) => {
+    try {
+      const url = URL.createObjectURL(file);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = file.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Download Started",
+        description: `Downloading ${file.name}`,
+      });
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      toast({
+        title: "Download Error",
+        description: "Failed to download file.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Helper function to generate unique signature ID
+  // Helper function to toggle expanded state for recipients in a row
+  const toggleRecipientsExpansion = (signatureId: string) => {
+    setExpandedRecipientsRows(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(signatureId)) {
+        newSet.delete(signatureId);
+      } else {
+        newSet.add(signatureId);
+      }
+      return newSet;
+    });
+  };
+
+  // Function to reset all modal data
+  const resetModalData = () => {
+    // Reset form fields
+    setDueDate('');
+    setSubject('');
+    setMessage('');
+    setDocuSignSubject('');
+    setDocuSignMessage('');
+    setSignatureAssignee('');
+    
+    // Reset file uploads
+    setUploadedFiles([]);
+    setDocuSignUploadedFiles([]);
+    setCustomFileNames({});
+    setCustomDocuSignFileNames({});
+    setEditingFileName(null);
+    setEditingDocuSignFileName(null);
+    
+    // Reset document selections
+    setSelectedDocuments([]);
+    setDocuSignSelectedDocuments([]);
+    setDocumentSearch('');
+    setDocuSignDocumentSearch('');
+    
+    // Reset recipients
+    setRecipients([{
+      name: '',
+      email: '',
+      signerRole: 'Signer Role',
+      contractRole: '',
+      showSignerRoleDropdown: false,
+      showContractRoleDropdown: false,
+      signerRoleButtonRef: createRef<HTMLButtonElement>(),
+      signerRoleDropdownRef: createRef<HTMLDivElement>(),
+      contractRoleButtonRef: createRef<HTMLButtonElement>(),
+      contractRoleDropdownRef: createRef<HTMLDivElement>(),
+    }]);
+    setDocuSignRecipients([{
+      name: '',
+      email: '',
+      signerRole: 'Signer Role',
+      contractRole: '',
+      showSignerRoleDropdown: false,
+      showContractRoleDropdown: false,
+      signerRoleButtonRef: createRef<HTMLButtonElement>(),
+      signerRoleDropdownRef: createRef<HTMLDivElement>(),
+      contractRoleButtonRef: createRef<HTMLButtonElement>(),
+      contractRoleDropdownRef: createRef<HTMLDivElement>(),
+    }]);
+    
+    // Reset validation errors
+    setRecipientErrors({});
+    setDocumentError(false);
+    
+    // Reset dropdown states
+    setShowSignatureAssigneeDropdown(false);
+    setShowDocumentDropdown(false);
+    setShowDocuSignDocumentDropdown(false);
+    setShowUploadDropdown(false);
+    setShowDocuSignUploadDropdown(false);
+    setShowRecipientRoleDropdown(false);
+    setShowContractDropdown(false);
+    
+    // Reset drag states
+    setIsDraggingOver(false);
+    setIsDocuSignDraggingOver(false);
+  };
+
+  const generateSignatureId = (): string => {
+    return Math.random().toString(36).substr(2, 9).toUpperCase();
+  };
+
+  // Helper function to get document name from selected documents or uploaded files
+  const getDocumentName = (): string => {
+    if (selectedDocuments.length > 0) {
+      const selectedDoc = allDocuments.find(doc => doc.id === selectedDocuments[0]);
+      return selectedDoc?.name || 'Unknown Document';
+    }
+    if (uploadedFiles.length > 0) {
+      return uploadedFiles[0].name;
+    }
+    return 'New Document';
+  };
+
+  // Helper function to get contract info from selected document
+  const getContractInfo = () => {
+    if (selectedDocuments.length > 0) {
+      const selectedDoc = allDocuments.find(doc => doc.id === selectedDocuments[0]);
+      return {
+        contractId: selectedDoc?.contractId || '',
+        contract: selectedDoc?.contractName || 'Unknown Contract'
+      };
+    }
+    return {
+      contractId: '',
+      contract: 'New Contract'
+    };
+  };
+
+  // Helper function to extract parties from recipients
+  const extractPartiesFromRecipients = (): string[] => {
+    return recipients
+      .filter(recipient => recipient.name && recipient.name.trim() !== '')
+      .map(recipient => recipient.name);
+  };
+
+  // Helper function to calculate signatures required
+  const calculateSignaturesRequired = (): string => {
+    const signerRecipients = recipients.filter(recipient => 
+      recipient.signerRole && recipient.signerRole !== 'Signer Role'
+    );
+    return `0 of ${signerRecipients.length}`;
+  };
+
+  // Function to create and save new signature request
+    const createSignatureRequest = async () => {
+    console.log('createSignatureRequest called');
+    console.log('Current state:', { dueDate, subject, message, signatureAssignee, recipients, selectedDocuments, uploadedFiles });
+
+    const { contractId, contract } = getContractInfo();
+
+    // Create clean recipients data without React refs
+    const cleanRecipients = recipients.map(recipient => ({
+      name: recipient.name,
+      email: recipient.email,
+      signerRole: recipient.signerRole,
+      contractRole: recipient.contractRole
+    }));
+
+    const newSignatureRequest: SignatureDocument = {
+      id: generateSignatureId(),
+      document: getDocumentName(),
+      parties: extractPartiesFromRecipients(),
+      status: 'Awaiting Signature',
+      signatures: calculateSignaturesRequired(),
+      contractId: contractId,
+      contract: contract,
+      assignee: signatureAssignee || currentUserName,
+      dateSent: new Date().toISOString().split('T')[0],
+      dueDate: dueDate,
+      message: message,
+      subject: subject,
+      documentId: selectedDocuments[0] || '',
+      recipients: cleanRecipients
+    };
+
+    console.log('New signature request:', newSignatureRequest);
+
+    try {
+      console.log('Sending API request to /api/signatures');
+      // Save to API
+      const response = await fetch('/api/signatures', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newSignatureRequest),
+      });
+
+      console.log('API response status:', response.status);
+      const responseData = await response.json();
+      console.log('API response data:', responseData);
+
+      if (response.ok) {
+        // Add to state
+        setSignaturesData(prev => [newSignatureRequest, ...prev]);
+
+        // Show success feedback
+        toast({
+          title: "Signature request created successfully",
+          description: `"${newSignatureRequest.document}" has been sent for signature`,
+          duration: 5000,
+        });
+      } else {
+        throw new Error('Failed to save signature request');
+      }
+    } catch (error) {
+      console.error('Error creating signature request:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create signature request. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Function to create DocuSign signature request
+  const createDocuSignSignatureRequest = async () => {
+    console.log('createDocuSignSignatureRequest called');
+    console.log('Current state:', { dueDate, docuSignSubject, docuSignMessage, signatureAssignee, docuSignRecipients, docuSignSelectedDocuments, docuSignUploadedFiles });
+
+    const { contractId, contract } = getContractInfo();
+
+    // Create clean recipients data without React refs
+    const cleanRecipients = docuSignRecipients.map(recipient => ({
+      name: recipient.name,
+      email: recipient.email,
+      signerRole: recipient.signerRole,
+      contractRole: recipient.contractRole
+    }));
+
+    const newSignatureRequest: SignatureDocument = {
+      id: generateSignatureId(),
+      document: getDocumentName(),
+      parties: docuSignRecipients.filter(r => r.name && r.name.trim() !== '').map(r => r.name),
+      status: 'Awaiting Signature',
+      signatures: `${docuSignRecipients.filter(r => r.name && r.name.trim() !== '').length} of ${docuSignRecipients.filter(r => r.name && r.name.trim() !== '').length}`,
+      contractId: contractId,
+      contract: contract,
+      assignee: signatureAssignee || currentUserName,
+      dateSent: new Date().toISOString().split('T')[0],
+      dueDate: dueDate,
+      message: docuSignMessage,
+      subject: docuSignSubject,
+      documentId: docuSignSelectedDocuments[0] || '',
+      recipients: cleanRecipients
+    };
+
+    console.log('New DocuSign signature request:', newSignatureRequest);
+
+    try {
+      console.log('Sending API request to /api/signatures');
+      // Save to API
+      const response = await fetch('/api/signatures', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newSignatureRequest),
+      });
+
+      console.log('API response status:', response.status);
+      const responseData = await response.json();
+      console.log('API response data:', responseData);
+
+      if (response.ok) {
+        // Add to state
+        setSignaturesData(prev => [newSignatureRequest, ...prev]);
+
+        // Show success feedback
+        toast({
+          title: "DocuSign signature request created successfully",
+          description: `"${newSignatureRequest.document}" has been sent to DocuSign for signature`,
+          duration: 5000,
+        });
+      } else {
+        throw new Error('Failed to save DocuSign signature request');
+      }
+    } catch (error) {
+      console.error('Error creating DocuSign signature request:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create DocuSign signature request. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Function to delete signature request
+  // Function to open PDF viewer
+  const openPdfViewer = (documentName: string, signatureId: string) => {
+    // Find the signature document to get the actual document ID
+    const signatureDoc = signaturesData.find(sig => sig.id === signatureId);
+    const actualDocumentId = signatureDoc?.documentId || signatureId;
+    
+    setSelectedPdf({ 
+      name: documentName, 
+      url: `/documents/${documentName}`, 
+      id: actualDocumentId 
+    });
+    setShowPdfViewer(true);
+  };
+
+  const deleteSignature = async (signatureId: string, documentName: string) => {
+    try {
+      // Delete the signature from the backend
+      const response = await fetch('/api/signatures', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ signatureId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete signature from backend');
+      }
+
+      // Remove the signature from the signatures array
+      setSignaturesData(prev => prev.filter(signature => signature.id !== signatureId));
+
+      // If the deleted signature was selected, clear the selection
+      if (selectedDocument && selectedDocument.id === signatureId) {
+        setSelectedDocument(null);
+      }
+
+      // Show success message with detailed information
+      const deletedSignature = signaturesData.find(s => s.id === signatureId);
+      toast({
+        title: "Signature Request Deleted",
+        description: `"${documentName}" (Document ID: ${deletedSignature?.documentId || 'N/A'}, Contract: ${deletedSignature?.contract || 'N/A'}, Contract ID: ${deletedSignature?.contractId || 'N/A'}) has been permanently deleted.`,
+      });
+
+    } catch (error) {
+      console.error('Error deleting signature:', error);
+      toast({
+        title: "Delete Error",
+        description: "Failed to delete signature. Please try again.",
+        variant: "destructive",
       });
     }
   };
@@ -1456,6 +1869,26 @@ export default function SignaturesPage() {
       </div>
 
       <hr className="my-3 sm:my-6 border-gray-300 cursor-default select-none" />
+
+      {/* Signature Filter Tabs */}
+      <div className="flex gap-1">
+        {signatureFilterTabs.map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setSignatureFilterTab(tab)}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all duration-300 font-sans flex items-center justify-center ${
+              signatureFilterTab === tab 
+                ? 'bg-white dark:bg-gray-800 text-teal-500 dark:text-teal-400 min-w-[90px] border-2 border-gray-200 dark:border-gray-700' 
+                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 w-fit border border-gray-200 dark:border-gray-700'
+            }`}
+          >
+            <span className={`inline-block transition-all duration-300 ${signatureFilterTab === tab ? 'opacity-100 mr-1.5' : 'opacity-0 w-0 mr-0'}`} style={{width: signatureFilterTab === tab ? 16 : 0}}>
+              {signatureFilterTab === tab && <Logo width={16} height={16} className="pointer-events-none" />}
+            </span>
+            {tab}
+          </button>
+        ))}
+      </div>
 
       {/* Stat Boxes */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 cursor-default select-none">
@@ -2445,6 +2878,7 @@ export default function SignaturesPage() {
                         key={row.id}
                         className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" 
                         onClick={() => {
+                          console.log('Row data being passed to modal:', row);
                           setSelectedDocument({
                             id: row.id,
                             document: row.document,
@@ -2455,22 +2889,59 @@ export default function SignaturesPage() {
                             contract: row.contract,
                             assignee: row.assignee,
                             dateSent: row.dateSent,
-                            dueDate: row.dueDate
+                            dueDate: row.dueDate,
+                            documentId: row.documentId,
+                            message: row.message,
+                            subject: row.subject,
+                            recipients: row.recipients
                           });
                         }}
                       >
                         <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
-                          <span className="text-primary underline font-semibold cursor-pointer">{row.id}</span>
+                          <span className="text-primary underline font-semibold cursor-pointer">{row.documentId || row.id}</span>
                         </td>
                         <td className="px-6 py-2.5 whitespace-nowrap text-sm">
                           <div className="text-xs font-bold text-gray-900 dark:text-white">{row.document}</div>
                         </td>
                         <td className="px-6 py-2.5 text-xs">
-                          <div className="flex flex-col space-y-1">
-                            {row.parties.map((party, index) => (
-                              <div key={index} className="text-gray-900 dark:text-white">{party}</div>
-                            ))}
-                          </div>
+                          {(() => {
+                            const parties = row.parties;
+                            const isExpanded = expandedRecipientsRows.has(row.id);
+                            const hasMoreThanTwo = parties.length > 2;
+                            
+                            return (
+                              <div className="flex flex-col space-y-1">
+                                {/* Show first 2 parties always */}
+                                {parties.slice(0, 2).map((party, index) => (
+                                  <div key={index} className="text-gray-900 dark:text-white">{party}</div>
+                                ))}
+                                
+                                {/* Show additional parties if expanded */}
+                                {isExpanded && parties.slice(2).map((party, index) => (
+                                  <div key={index + 2} className="text-gray-900 dark:text-white">{party}</div>
+                                ))}
+                                
+                                {/* Show chevron and expand/collapse button if more than 2 parties */}
+                                {hasMoreThanTwo && (
+                                  <button
+                                    className="flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      toggleRecipientsExpansion(row.id);
+                                    }}
+                                  >
+                                    <HiMiniChevronDown 
+                                      size={14} 
+                                      className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                                    />
+                                    <span className="ml-1 text-xs">
+                                      {isExpanded ? 'Show less' : `+${parties.length - 2} more`}
+                                    </span>
+                                  </button>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </td>
                         <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
                           <span className={clsx(
@@ -2499,7 +2970,7 @@ export default function SignaturesPage() {
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                // Add view action here
+                                openPdfViewer(row.document, row.id);
                               }}
                             >
                               <HiOutlineEye className="text-sm sm:text-base transition-colors" />
@@ -2538,7 +3009,7 @@ export default function SignaturesPage() {
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                // Add void action here
+                                deleteSignature(row.id, row.document);
                               }}
                             >
                               <MdCancelPresentation className="text-sm sm:text-base transition-colors" />
@@ -2569,7 +3040,7 @@ export default function SignaturesPage() {
                 <div className="flex-1 min-w-0 cursor-default select-none">
                   <div className="flex items-center gap-2 sm:gap-4 mb-4 cursor-default select-none">
                     <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary cursor-default select-none">
-                      # {selectedDocument.id}
+                      # {selectedDocument?.documentId || selectedDocument?.id}
                     </span>
                   </div>
                 </div>
@@ -2599,7 +3070,7 @@ export default function SignaturesPage() {
                         {/* Row 1: Document ID, Document Hash, and Contract ID */}
                         <div>
                           <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Document ID</div>
-                          <div className="text-xs text-black dark:text-white select-none cursor-default">{selectedDocument?.id}</div>
+                          <div className="text-xs text-black dark:text-white select-none cursor-default">{selectedDocument?.documentId || selectedDocument?.id}</div>
                         </div>
                         <div>
                           <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Document Chain ID</div>
@@ -2607,9 +3078,9 @@ export default function SignaturesPage() {
                             <span
                               className="text-xs font-mono text-gray-900 dark:text-white truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-default select-none"
                               style={{ maxWidth: '120px' }}
-                              title={selectedDocument ? getDocumentChainId(selectedDocument.id) : ''}
+                                                                            title={selectedDocument && selectedDocument.documentId ? getDocumentChainId(selectedDocument.documentId) : ''}
                             >
-                              {selectedDocument ? getDocumentChainId(selectedDocument.id) : ''}
+                              {selectedDocument && selectedDocument.documentId ? getDocumentChainId(selectedDocument.documentId) : ''}
                             </span>
                             <div className="relative">
                               <button 
@@ -2617,23 +3088,23 @@ export default function SignaturesPage() {
                                 className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
                                 onClick={() => {
                                   if (selectedDocument) {
-                                    navigator.clipboard.writeText(getDocumentChainId(selectedDocument.id));
-                                    setCopiedDocumentId(selectedDocument.id);
+                                    navigator.clipboard.writeText(getDocumentChainId(selectedDocument.documentId || ''));
+                                    setCopiedDocumentId(selectedDocument.documentId || '');
                                     setTimeout(() => setCopiedDocumentId(null), 1500);
                                   }
                                 }}
-                                onMouseEnter={() => selectedDocument && setHoveredDocumentId(selectedDocument.id)}
+                                onMouseEnter={() => selectedDocument && setHoveredDocumentId(selectedDocument.documentId || '')}
                                 onMouseLeave={() => setHoveredDocumentId(null)}
                                 aria-label="Copy document chain ID"
                               >
                                 <HiOutlineDuplicate className="w-4 h-4" />
                               </button>
-                              {copiedDocumentId === selectedDocument?.id && (
+                              {copiedDocumentId === selectedDocument?.documentId && (
                                 <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none">
                                   Copied!
                                 </div>
                               )}
-                              {hoveredDocumentId === selectedDocument?.id && copiedDocumentId !== selectedDocument?.id && (
+                              {hoveredDocumentId === selectedDocument?.documentId && copiedDocumentId !== selectedDocument?.documentId && (
                                 <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none">
                                   Copy
                                 </div>
@@ -2694,11 +3165,18 @@ export default function SignaturesPage() {
                           <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Contract Name</div>
                           <div className="text-xs text-black dark:text-white select-none cursor-default">{selectedDocument?.contract}</div>
                         </div>
+                        {/* Subject Field */}
+                        <div className="col-span-1 sm:col-span-2 lg:col-span-3">
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Subject</div>
+                          <div className="w-full px-4 py-2 text-xs font-medium text-black dark:text-white border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900">
+                            {selectedDocument?.subject || 'No subject provided'}
+                          </div>
+                        </div>
                         {/* Message Field */}
                         <div className="col-span-1 sm:col-span-2 lg:col-span-3">
                           <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Message</div>
                           <div className="w-full min-h-24 px-4 py-2 text-xs font-medium text-black dark:text-white border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900">
-                            Please review and sign the attached document at your earliest convenience. This document requires your signature to proceed with the transaction.
+                            {selectedDocument?.message || 'Please review and sign the attached document at your earliest convenience. This document requires your signature to proceed with the transaction.'}
                           </div>
                         </div>
                       </div>
@@ -2781,79 +3259,60 @@ export default function SignaturesPage() {
                     <div className="w-full cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
                       {/* Mobile: Card-based layout */}
                       <div className="lg:hidden space-y-3">
-                        {selectedDocument?.parties.map((party, idx) => {
-                          const email = party.toLowerCase().replace(/[^a-z0-9]/g, '.') + '@example.com';
-                          return (
-                            <div key={party} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600 cursor-default select-none">
-                              <div className="flex items-center gap-3 mb-3">
-                                <div className="text-center font-semibold text-sm bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center">
-                                  {idx + 1}
-                                </div>
-                                <div className="h-5 w-5 rounded-lg bg-primary flex items-center justify-center border-2 border-primary">
-                                  <FaCheck className="text-white" size={10} />
-                                </div>
-                                <div className="font-bold text-sm text-gray-900 dark:text-white">{party}</div>
+                        {selectedDocument?.recipients?.map((recipient, idx) => (
+                          <div key={recipient.name} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600 cursor-default select-none">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="text-center font-semibold text-sm bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center">
+                                {idx + 1}
                               </div>
-                              <div className="grid grid-cols-2 gap-4 text-xs text-gray-600 dark:text-gray-400">
+                                                              <div className="h-5 w-5 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900">
+                                </div>
+                              <div className="font-bold text-sm text-gray-900 dark:text-white">{recipient.name}</div>
+                            </div>
+                                                          <div className="grid grid-cols-2 gap-4 text-xs text-gray-600 dark:text-gray-400">
                                 <div>
                                   <span className="text-gray-500 dark:text-gray-400">Email:</span>
-                                  <div className="text-gray-700 dark:text-gray-300">{email}</div>
+                                  <div className="text-gray-700 dark:text-gray-300">{recipient.email}</div>
                                 </div>
                                 <div>
                                   <span className="text-gray-500 dark:text-gray-400">Status:</span>
-                                  <div className="font-semibold text-primary">Signed</div>
+                                  <div className="font-semibold text-primary">Awaiting Signature</div>
                                 </div>
                                 <div>
                                   <span className="text-gray-500 dark:text-gray-400">Date/Time:</span>
-                                  <div className="text-gray-700 dark:text-gray-300">12/31/2024 | 12:00:00 pm</div>
-                                </div>
-                                <div>
-                                  <span className="text-gray-500 dark:text-gray-400">Location:</span>
-                                  <div>
-                                    <a href="#" className="text-primary underline hover:text-primary-dark">Signed in location</a>
-                                  </div>
+                                  <div className="text-gray-700 dark:text-gray-300">--</div>
                                 </div>
                               </div>
-                            </div>
-                          );
-                        })}
+                          </div>
+                        ))}
                       </div>
                       
                       {/* Desktop: Original table layout */}
                       <div className="hidden lg:block">
-                        <div className="grid grid-cols-[40px_40px_1.5fr_2fr_1fr_1.5fr_1.5fr] gap-2 px-2 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                        <div className="grid grid-cols-[40px_40px_1.5fr_2fr_1fr_1.5fr] gap-2 px-2 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
                           <div className="text-center">#</div>
                           <div></div>
                           <div className="text-left">Name</div>
                           <div className="text-left">Email</div>
                           <div className="text-left">Status</div>
                           <div className="text-left">Date/Time</div>
-                          <div className="text-left">Location</div>
                         </div>
                         {/* Recipients Data */}
-                        {selectedDocument?.parties.map((party, idx) => {
-                          // Generate a placeholder email from the party name
-                          const email = party.toLowerCase().replace(/[^a-z0-9]/g, '.') + '@example.com';
-                          return (
-                            <div key={party} className="grid grid-cols-[40px_40px_1.5fr_2fr_1fr_1.5fr_1.5fr] gap-2 items-center px-2 py-4 border-b border-gray-100 dark:border-gray-700 text-xs text-gray-800 dark:text-gray-200 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                              <div className="text-center font-semibold">{idx + 1}</div>
-                              <div className="flex justify-center items-center">
-                                <div className="h-5 w-5 rounded-lg bg-primary flex items-center justify-center border-2 border-primary">
-                                  <FaCheck className="text-white" size={10} />
+                        {selectedDocument?.recipients?.map((recipient, idx) => (
+                          <div key={recipient.name} className="grid grid-cols-[40px_40px_1.5fr_2fr_1fr_1.5fr] gap-2 items-center px-2 py-4 border-b border-gray-100 dark:border-gray-700 text-xs text-gray-800 dark:text-gray-200 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                            <div className="text-center font-semibold">{idx + 1}</div>
+                                                          <div className="flex justify-center items-center">
+                                <div className="h-5 w-5 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900">
                                 </div>
                               </div>
-                              <div className="font-bold">{party}</div>
-                              <div className="text-gray-500 dark:text-gray-400">{email}</div>
-                              <div className="font-semibold text-primary flex items-center gap-1">
-                                <span>Signed</span>
-                              </div>
-                              <div className="text-gray-700 dark:text-gray-300">12/31/2024 | 12:00:00 pm</div>
-                              <div>
-                                <a href="#" className="text-primary underline hover:text-primary-dark">Signed in location</a>
-                              </div>
+                            <div className="font-bold">{recipient.name}</div>
+                            <div className="text-gray-500 dark:text-gray-400">{recipient.email}</div>
+                            <div className="font-semibold text-primary flex items-center justify-start">
+                              <span>Awaiting Signature</span>
                             </div>
-                          );
-                        })}
+                            <div className="text-gray-700 dark:text-gray-300">--</div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -2944,7 +3403,10 @@ export default function SignaturesPage() {
                   <h2 className="text-lg font-bold text-gray-900 dark:text-white" style={{ fontFamily: 'Avenir, sans-serif' }}>Request Signature</h2>
                 <button
                     className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-full ml-4 mt-1"
-                    onClick={() => { setShowRequestSignatureModal(false); setUploadedFiles([]); setSelectedDocuments([]); }}
+                    onClick={() => { 
+                      setShowRequestSignatureModal(false); 
+                      resetModalData();
+                    }}
                   aria-label="Close"
                 >
                   <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2956,7 +3418,21 @@ export default function SignaturesPage() {
 
             <div className="flex flex-col flex-1 min-h-0">
               <div className="overflow-y-auto p-6 flex-1 bg-gray-50 dark:bg-gray-900 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
-                <form onSubmit={(e) => { e.preventDefault(); setShowRequestSignatureModal(false); setUploadedFiles([]); setSelectedDocuments([]); }}>
+                <form onSubmit={async (e) => { 
+                  e.preventDefault(); 
+                  
+                  // Validate recipients before proceeding
+                  if (!validateRecipients()) {
+                    return;
+                  }
+                  
+                  // Create and save signature request
+                  await createSignatureRequest();
+                  
+                  // Reset form
+                  setShowRequestSignatureModal(false); 
+                  resetModalData();
+                }}>
                   <div className="space-y-6">
                     {/* Two Column Layout for Documents */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -3100,6 +3576,13 @@ export default function SignaturesPage() {
                           )}
                         </div>
                       </div>
+                      {documentError && (
+                        <div className="flex justify-center mt-2">
+                          <p className="text-xs text-red-600 font-medium cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                            Select an existing or upload a new document
+                          </p>
+                        </div>
+                      )}
                       </div>
 
                       {/* Right Column: Documents Box */}
@@ -3127,13 +3610,31 @@ export default function SignaturesPage() {
                                     </div>
                                   </div>
                                   <div className="flex items-center justify-center space-x-1">
-                                    <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
+                                    <button type="button" className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
                                       <HiOutlineEye className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                         View
                                       </span>
                                     </button>
-                                    <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
+                                    <button 
+                                      type="button"
+                                      className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        // Check if this is a stored document 
+                                        // (ID >= 8000 or old format with 'doc_' prefix indicates stored document)
+                                        const docIdNum = parseInt(doc.id);
+                                        if (docIdNum >= 8000 || doc.id.startsWith('doc_')) {
+                                          downloadDocument(doc.id);
+                                        } else {
+                                          // Handle sample document download (placeholder)
+                                          toast({
+                                            title: "Download",
+                                            description: `Downloading ${doc.name}`,
+                                          });
+                                        }
+                                      }}
+                                    >
                                       <HiOutlineDownload className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                         Download
@@ -3250,13 +3751,20 @@ export default function SignaturesPage() {
                                     </div>
                                   </div>
                                   <div className="flex items-center justify-center space-x-1">
-                                    <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
+                                    <button type="button" className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
                                       <HiOutlineEye className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                         View
                                       </span>
                                     </button>
-                                    <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
+                                    <button 
+                                      type="button"
+                                      className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        downloadUploadedFile(file);
+                                      }}
+                                    >
                                       <HiOutlineDownload className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                         Download
@@ -3386,12 +3894,20 @@ export default function SignaturesPage() {
                                           key={role}
                                           className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${recipient.signerRole === role ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                                           style={{ background: 'none', border: 'none', boxShadow: 'none' }}
-                                          onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, signerRole: role, showSignerRoleDropdown: false } : r))}
+                                          onClick={() => {
+                                            setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, signerRole: role, showSignerRoleDropdown: false } : r));
+                                            setRecipientErrors(prev => ({ ...prev, [`signerRole-${idx}`]: false }));
+                                          }}
                                         >
                                           {role}
                                         </button>
                                       ))}
                                     </div>
+                                  )}
+                                  {recipientErrors[`signerRole-${idx}`] && (
+                                    <p className="text-red-600 text-xs mt-1.5" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                      Select signer role
+                                    </p>
                                   )}
                                 </div>
                                 
@@ -3418,12 +3934,20 @@ export default function SignaturesPage() {
                                           key={role}
                                           className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${recipient.contractRole === role ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                                           style={{ background: 'none', border: 'none', boxShadow: 'none' }}
-                                          onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, contractRole: role, showContractRoleDropdown: false } : r))}
+                                          onClick={() => {
+                                            setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, contractRole: role, showContractRoleDropdown: false } : r));
+                                            setRecipientErrors(prev => ({ ...prev, [`contractRole-${idx}`]: false }));
+                                          }}
                                         >
                                           {role}
                                         </button>
                                       ))}
                                     </div>
+                                  )}
+                                  {recipientErrors[`contractRole-${idx}`] && (
+                                    <p className="text-red-600 text-xs mt-1.5" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                      Select contract role
+                                    </p>
                                   )}
                                 </div>
                                 
@@ -3473,7 +3997,7 @@ export default function SignaturesPage() {
                                   Name <span className="text-primary">*</span>
                                 </label>
                                 <div className="relative">
-                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10">
                                     <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
                                   </span>
                                   <input
@@ -3482,9 +4006,17 @@ export default function SignaturesPage() {
                                     placeholder="Enter recipient's name..."
                                     style={{ fontFamily: 'Avenir, sans-serif' }}
                                     value={recipient.name}
-                                    onChange={e => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, name: e.target.value } : r))}
+                                    onChange={e => {
+                                      setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, name: e.target.value } : r));
+                                      setRecipientErrors(prev => ({ ...prev, [`name-${idx}`]: false }));
+                                    }}
                                   />
                                 </div>
+                                {recipientErrors[`name-${idx}`] && (
+                                  <p className="text-red-600 text-xs mt-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                    Name is required
+                                  </p>
+                                )}
                               </div>
                               <div>
                                 <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
@@ -3496,8 +4028,16 @@ export default function SignaturesPage() {
                                   placeholder="Enter recipient's email address..."
                                   style={{ fontFamily: 'Avenir, sans-serif' }}
                                   value={recipient.email}
-                                  onChange={e => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, email: e.target.value } : r))}
+                                  onChange={e => {
+                                    setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, email: e.target.value } : r));
+                                    setRecipientErrors(prev => ({ ...prev, [`email-${idx}`]: false }));
+                                  }}
                                 />
+                                {recipientErrors[`email-${idx}`] && (
+                                  <p className="text-red-600 text-xs mt-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                    Email is required
+                                  </p>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -3515,22 +4055,120 @@ export default function SignaturesPage() {
                       </div>
                     </div>
 
-                    {/* Due Date Field */}
-                    <div>
-                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Due Date</div>
-                      <div className="relative flex items-center" style={{ width: '140px', minWidth: '140px' }}>
-                        <input
-                          type="date"
-                          className="w-full px-4 py-2 pr-10 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs text-black dark:text-white bg-white dark:bg-gray-900 [&::-webkit-calendar-picker-indicator]:hidden"
-                          style={{ fontFamily: 'Avenir, sans-serif' }}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => (document.querySelector('input[type="date"]') as HTMLInputElement)?.showPicker()}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 flex items-center justify-center"
-                        >
-                          <LuCalendarFold className="w-4 h-4 text-gray-400" />
-                        </button>
+                    {/* Signature Details Box */}
+                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>Signature Details</h3>
+                      
+                      <div className="space-y-4">
+                        {/* Assignee and Due Date Row */}
+                        <div className="flex gap-4">
+                          {/* Assignee Field */}
+                          <div>
+                            <div className="text-gray-500 dark:text-gray-400 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Assignee <span className="text-red-500">*</span></div>
+                            <div className="relative" style={{ width: '200px', minWidth: '200px' }} ref={signatureAssigneeDropdownRef}>
+                              <input
+                                type="text"
+                                className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs transition-colors cursor-text focus:ring-2 focus:ring-primary focus:border-primary pr-10"
+                                placeholder="Choose an assignee..."
+                                value={signatureAssignee}
+                                onChange={(e) => {
+                                  const newValue = e.target.value;
+                                  if (newValue.length < signatureAssignee.length) {
+                                    // If the new value is shorter (backspace was pressed), clear the entire field
+                                    setSignatureAssignee('');
+                                  } else {
+                                    setSignatureAssignee(newValue);
+                                  }
+                                }}
+                                onClick={() => {
+                                  if (showSignatureAssigneeDropdown) {
+                                    setShowSignatureAssigneeDropdown(false);
+                                  } else {
+                                    setShowSignatureAssigneeDropdown(true);
+                                  }
+                                }}
+                                style={{ fontFamily: 'Avenir, sans-serif' }}
+                                autoComplete="off"
+                              />
+                              <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                              
+                              {showSignatureAssigneeDropdown && (
+                                <div className="absolute left-0 top-full mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none w-full [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                  {allAssignees.length > 0 ? (
+                                    <>
+                                      {allAssignees.map((assignee: string) => (
+                                        <div
+                                          key={assignee}
+                                          className={`px-4 py-2 text-xs cursor-pointer ${signatureAssignee === assignee ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'} select-none`}
+                                          onClick={() => {
+                                            setSignatureAssignee(assignee);
+                                            setShowSignatureAssigneeDropdown(false);
+                                          }}
+                                        >
+                                          {assignee}
+                                        </div>
+                                      ))}
+                                      <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                                      <div
+                                        className="px-4 py-2 text-xs cursor-pointer text-primary hover:bg-primary/10 select-none flex items-center gap-2"
+                                        onClick={() => {
+                                          // TODO: Add logic to create new assignee
+                                          setShowSignatureAssigneeDropdown(false);
+                                        }}
+                                      >
+                                        <FaPlus className="text-xs" />
+                                        Add new assignee
+                                      </div>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <div className="px-4 py-2 text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">No assignees found</div>
+                                      <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                                      <div
+                                        className="px-4 py-2 text-xs cursor-pointer text-primary hover:bg-primary/10 select-none flex items-center gap-2"
+                                        onClick={() => {
+                                          // TODO: Add logic to create new assignee
+                                          setShowSignatureAssigneeDropdown(false);
+                                        }}
+                                      >
+                                        <FaPlus className="text-xs" />
+                                        Add new assignee
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Due Date Field */}
+                          <div>
+                            <div className="text-gray-500 dark:text-gray-400 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Due Date <span className="text-red-500">*</span></div>
+                            <div className="relative flex items-center" style={{ width: '200px', minWidth: '200px' }}>
+                              <input
+                                type="date"
+                                className="w-full px-4 py-2 pr-10 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs text-black dark:text-white bg-white dark:bg-gray-900 [&::-webkit-calendar-picker-indicator]:hidden"
+                                style={{ fontFamily: 'Avenir, sans-serif' }}
+                                value={dueDate}
+                                onChange={(e) => setDueDate(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Backspace') {
+                                    e.preventDefault();
+                                    e.currentTarget.value = '';
+                                    setDueDate('');
+                                  }
+                                }}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => (document.querySelector('input[type="date"]') as HTMLInputElement)?.showPicker()}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 flex items-center justify-center"
+                              >
+                                <LuCalendarFold className="w-4 h-4 text-gray-400" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
@@ -3544,6 +4182,8 @@ export default function SignaturesPage() {
                           type="text"
                           className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-xs font-medium bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                           placeholder="Enter subject..."
+                          value={subject}
+                          onChange={(e) => setSubject(e.target.value)}
                           style={{ fontFamily: 'Avenir, sans-serif' }}
                         />
                       </div>
@@ -3553,6 +4193,8 @@ export default function SignaturesPage() {
                         className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-xs font-medium bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                         rows={4}
                         placeholder="Enter your message..."
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       />
                     </div>
@@ -3560,7 +4202,32 @@ export default function SignaturesPage() {
                     <div className="flex justify-end gap-1">
                       <button
                         type="button"
-                        onClick={() => { setShowRequestSignatureModal(false); setUploadedFiles([]); setSelectedDocuments([]); }}
+                        onClick={() => { 
+                          setShowRequestSignatureModal(false); 
+                          setUploadedFiles([]); 
+                          setSelectedDocuments([]); 
+                          setRecipients([{
+                            name: '',
+                            email: '',
+                            signerRole: 'Signer Role',
+                            contractRole: '',
+                            showSignerRoleDropdown: false,
+                            showContractRoleDropdown: false,
+                            signerRoleButtonRef: createRef<HTMLButtonElement>(),
+                            signerRoleDropdownRef: createRef<HTMLDivElement>(),
+                            contractRoleButtonRef: createRef<HTMLButtonElement>(),
+                            contractRoleDropdownRef: createRef<HTMLDivElement>(),
+                          }]);
+                          setIsOnlySigner(false);
+                          setSetSigningOrder(false);
+                          setEditingFileName(null);
+                          setShowDocumentDropdown(false);
+                          setDocumentSearch('');
+                          setIsDraggingOver(false);
+                          setDueDate('');
+                          setSubject('');
+                          setMessage('');
+                        }}
                         className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       >
@@ -3571,7 +4238,7 @@ export default function SignaturesPage() {
                         className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       >
-                        Request Signature
+                        Send for Signature
                       </button>
                     </div>
                   </div>
@@ -3597,8 +4264,11 @@ export default function SignaturesPage() {
                 </div>
                                   <button
                     className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-full ml-4 mt-1"
-                    onClick={() => { setShowDocuSignModal(false); setDocuSignUploadedFiles([]); setDocuSignSelectedDocuments([]); }}
-                    aria-label="Close"
+                    onClick={() => { 
+                      setShowDocuSignModal(false); 
+                      resetModalData();
+                    }}
+                  aria-label="Close"
                   >
                     <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -3609,7 +4279,21 @@ export default function SignaturesPage() {
 
               <div className="flex flex-col flex-1 min-h-0">
                 <div className="overflow-y-auto p-6 flex-1 bg-gray-50 dark:bg-gray-900 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
-                <form onSubmit={(e) => { e.preventDefault(); setShowDocuSignModal(false); setDocuSignUploadedFiles([]); setDocuSignSelectedDocuments([]); }}>
+                <form onSubmit={async (e) => { 
+                  e.preventDefault(); 
+                  
+                  // Validate recipients before proceeding
+                  if (!validateRecipients()) {
+                    return;
+                  }
+                  
+                  // Create and save DocuSign signature request
+                  await createDocuSignSignatureRequest();
+                  
+                  // Reset form
+                  setShowDocuSignModal(false); 
+                  resetModalData();
+                }}>
                   <div className="space-y-6">
                     {/* Two Column Layout for Documents */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -3791,13 +4475,31 @@ export default function SignaturesPage() {
                                     </div>
                                   </div>
                                   <div className="flex items-center justify-center space-x-1">
-                                    <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
+                                    <button type="button" className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
                                       <HiOutlineEye className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                         View
                                       </span>
                                     </button>
-                                    <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
+                                    <button 
+                                      type="button"
+                                      className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        // Check if this is a stored document 
+                                        // (ID >= 8000 or old format with 'doc_' prefix indicates stored document)
+                                        const docIdNum = parseInt(doc.id);
+                                        if (docIdNum >= 8000 || doc.id.startsWith('doc_')) {
+                                          downloadDocument(doc.id);
+                                        } else {
+                                          // Handle sample document download (placeholder)
+                                          toast({
+                                            title: "Download",
+                                            description: `Downloading ${doc.name}`,
+                                          });
+                                        }
+                                      }}
+                                    >
                                       <HiOutlineDownload className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                         Download
@@ -3914,13 +4616,20 @@ export default function SignaturesPage() {
                                     </div>
                                   </div>
                                   <div className="flex items-center justify-center space-x-1">
-                                    <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
+                                    <button type="button" className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
                                       <HiOutlineEye className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                         View
                                       </span>
                                     </button>
-                                    <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
+                                    <button 
+                                      type="button"
+                                      className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        downloadUploadedFile(file);
+                                      }}
+                                    >
                                       <HiOutlineDownload className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                         Download
@@ -4208,6 +4917,8 @@ export default function SignaturesPage() {
                           type="text"
                           className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-xs font-medium bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                           placeholder="Enter subject..."
+                          value={docuSignSubject}
+                          onChange={(e) => setDocuSignSubject(e.target.value)}
                           style={{ fontFamily: 'Avenir, sans-serif' }}
                         />
                       </div>
@@ -4217,6 +4928,8 @@ export default function SignaturesPage() {
                         className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-xs font-medium bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                         rows={4}
                         placeholder="Enter your message..."
+                        value={docuSignMessage}
+                        onChange={(e) => setDocuSignMessage(e.target.value)}
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       />
                     </div>
@@ -4224,7 +4937,10 @@ export default function SignaturesPage() {
                     <div className="flex justify-end gap-1">
                       <button
                         type="button"
-                        onClick={() => { setShowDocuSignModal(false); setDocuSignUploadedFiles([]); setDocuSignSelectedDocuments([]); }}
+                        onClick={() => { 
+                          setShowDocuSignModal(false); 
+                          resetModalData();
+                        }}
                         className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       >
@@ -4442,6 +5158,38 @@ export default function SignaturesPage() {
           </div>
         </div>
       )}
+
+      {/* PDF Viewer Modal */}
+      {showPdfViewer && selectedPdf && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 cursor-default select-none">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col cursor-default select-none">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700 cursor-default select-none">
+              <div className="flex justify-between items-center cursor-default select-none">
+                <div className="flex flex-col gap-2 items-start cursor-default select-none">
+                  <span className="inline-block max-w-max text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20 cursor-default select-none">
+                    # {selectedPdf.id}
+                  </span>
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white mt-0.5 cursor-default select-none">{selectedPdf.name}</h2>
+                </div>
+                <button
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
+                  onClick={() => setShowPdfViewer(false)}
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 p-6 overflow-auto flex items-center justify-center bg-gray-50 dark:bg-gray-900 cursor-default select-none">
+              {/* Blank area for PDF viewer */}
+              <span className="text-gray-400 dark:text-gray-500 text-lg cursor-default select-none">PDF Viewer will be implemented here</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Toaster />
     </div>
   );
 } 
