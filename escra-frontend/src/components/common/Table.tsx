@@ -85,7 +85,7 @@ export interface TableProps<T> {
   onExport?: (data: T[]) => void;
 }
 
-export function Table<T extends Record<string, unknown>>({
+export function Table<T>({
   data,
   columns,
   keyExtractor,
@@ -155,7 +155,7 @@ export function Table<T extends Record<string, unknown>>({
     // Apply search
     if (searchTerm) {
       result = result.filter(item =>
-        Object.values(item).some(value =>
+        Object.values(item as Record<string, unknown>).some(value =>
           String(value).toLowerCase().includes(searchTerm.toLowerCase())
         )
       );

@@ -33,7 +33,7 @@ export const useAssigneeStore = create<AssigneeStore>((set, get) => {
   const initialMap = { ...initialAssignees, ...parsedMap };
   
   // Get all unique assignees, including initial ones
-  const allAssignees = Array.from(new Set([...initialUniqueAssignees, ...Object.values(parsedMap)])).sort();
+  const allAssignees = Array.from(new Set([...initialUniqueAssignees, ...Object.values(parsedMap as Record<string, string>)])).sort();
 
   return {
     assigneeMap: initialMap,

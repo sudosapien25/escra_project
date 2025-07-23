@@ -209,7 +209,7 @@ export default function TestTablePage() {
           <h2 className="text-xl font-semibold mb-4">Basic Table</h2>
           <div className="bg-white border border-gray-200 rounded-xl p-6">
             <div style={{ maxHeight: 'calc(100vh - 400px)', overflowY: 'scroll' }} className="relative overflow-x-auto">
-              <Table
+              <Table<User>
                 data={mockUsers}
                 columns={columns}
                 keyExtractor={(user) => user.id}
@@ -223,7 +223,7 @@ export default function TestTablePage() {
           <h2 className="text-xl font-semibold mb-4">Table with Toolbar</h2>
           <div className="bg-white border border-gray-200 rounded-xl p-6">
             <div style={{ maxHeight: 'calc(100vh - 400px)', overflowY: 'scroll' }} className="relative overflow-x-auto">
-              <Table
+              <Table<User>
                 data={mockUsers}
                 columns={columns}
                 keyExtractor={(user) => user.id}
@@ -258,7 +258,7 @@ export default function TestTablePage() {
               </p>
             </div>
             <div style={{ maxHeight: 'calc(100vh - 400px)', overflowY: 'scroll' }} className="relative overflow-x-auto">
-              <Table
+              <Table<User>
                 data={mockUsers}
                 columns={columns}
                 keyExtractor={(user) => user.id}
@@ -275,7 +275,7 @@ export default function TestTablePage() {
           <h2 className="text-xl font-semibold mb-4">Table with Pagination</h2>
           <div className="bg-white border border-gray-200 rounded-xl p-6">
             <div style={{ maxHeight: 'calc(100vh - 400px)', overflowY: 'scroll' }} className="relative overflow-x-auto">
-              <Table
+              <Table<User>
                 data={mockUsers}
                 columns={columns}
                 keyExtractor={(user) => user.id}
@@ -301,7 +301,7 @@ export default function TestTablePage() {
                 Toggle Loading
               </button>
               <div style={{ maxHeight: 'calc(100vh - 400px)', overflowY: 'scroll' }} className="relative overflow-x-auto">
-                <Table
+                <Table<User>
                   data={mockUsers}
                   columns={columns}
                   keyExtractor={(user) => user.id}
@@ -317,7 +317,7 @@ export default function TestTablePage() {
           <h2 className="text-xl font-semibold mb-4">Empty State</h2>
           <div className="bg-white border border-gray-200 rounded-xl p-6">
             <div style={{ maxHeight: 'calc(100vh - 400px)', overflowY: 'scroll' }} className="relative overflow-x-auto">
-              <Table
+              <Table<User>
                 data={[]}
                 columns={columns}
                 emptyMessage="No users found"
@@ -332,7 +332,7 @@ export default function TestTablePage() {
           <div className="bg-white border border-gray-200 rounded-xl p-6">
             <div className="w-full overflow-x-auto">
               <div className="min-w-[1000px]">
-                <Table
+                <Table<User>
                   data={mockUsers}
                   columns={customWidthColumns}
                   keyExtractor={(user) => user.id}
