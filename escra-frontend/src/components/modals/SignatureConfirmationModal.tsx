@@ -94,7 +94,7 @@ export const SignatureConfirmationModal: React.FC<SignatureConfirmationModalProp
               <div className="space-y-2">
                 <div>
                   <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Document ID:</span>
-                  <p className="text-sm text-gray-900 dark:text-white">{document.id}</p>
+                  <p className="text-sm text-gray-900 dark:text-white">{document.documentId || document.id}</p>
                 </div>
                 <div>
                   <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Document Name:</span>
