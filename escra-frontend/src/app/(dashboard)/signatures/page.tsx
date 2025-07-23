@@ -193,7 +193,9 @@ export default function SignaturesPage() {
   const [isFinalSigning, setIsFinalSigning] = useState(false);
   const [currentSignature, setCurrentSignature] = useState<SignatureValue | null>(null);
 
-  const [selectedRecentlyUpdated, setSelectedRecentlyUpdated] = useState('Last 24 hours');
+  // State to track which recipients have signed
+  const [signedRecipients, setSignedRecipients] = useState<Set<string>>(new Set());
+    const [selectedRecentlyUpdated, setSelectedRecentlyUpdated] = useState('Last 24 hours');
   const [openRecentlyUpdatedDropdown, setOpenRecentlyUpdatedDropdown] = useState(false);
   const recentlyUpdatedDropdownRef = useRef<HTMLDivElement>(null);
   const recentlyUpdatedButtonRef = useRef<HTMLButtonElement>(null);
@@ -1916,7 +1918,10 @@ export default function SignaturesPage() {
       setSelectedDocument(updatedSignature);
       
       // Store the signature
-      setCurrentSignature(capturedSignatureData);
+      // Mark the current user as signed
+      setSignedRecipients(prev => new Set([...prev, currentUserName]));
+      
+            setCurrentSignature(capturedSignatureData);
       
       // Close the confirmation modal
       setShowSignatureConfirmationModal(false);
@@ -2980,7 +2985,9 @@ export default function SignaturesPage() {
                         className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" 
                         onClick={() => {
                           console.log('Row data being passed to modal:', row);
-                          setSelectedDocument({
+                          // Reset signed recipients when opening a new document
+                          setSignedRecipients(new Set());
+                                                    setSelectedDocument({
                             id: row.id,
                             document: row.document,
                             parties: row.parties,
@@ -3359,6 +3366,7 @@ export default function SignaturesPage() {
                     <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Recipients</h3>
                     <div className="w-full cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
                       {/* Mobile: Card-based layout */}
+                      {/* Mobile: Card-based layout */}
                       <div className="lg:hidden space-y-3">
                         {selectedDocument?.recipients?.map((recipient, idx) => (
                           <div key={recipient.name} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600 cursor-default select-none">
@@ -3366,31 +3374,34 @@ export default function SignaturesPage() {
                               <div className="text-center font-semibold text-sm bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center">
                                 {idx + 1}
                               </div>
-                                                              <div className="h-5 w-5 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900">
-                                </div>
+                              <div className="h-5 w-5 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 flex items-center justify-center">
+                                {parseInt(selectedDocument?.signatures.split(" of ")[0] || "0") > idx && (
+                                  <FaCheck className="text-primary" size={12} />
+                                )}
+                              </div>
                               <div className="font-bold text-sm text-gray-900 dark:text-white">{recipient.name}</div>
                             </div>
-                                                          <div className="grid grid-cols-2 gap-4 text-xs text-gray-600 dark:text-gray-400">
-                                <div>
-                                  <span className="text-gray-500 dark:text-gray-400">Email:</span>
-                                  <div className="text-gray-700 dark:text-gray-300">{recipient.email}</div>
-                                </div>
-                                <div>
-                                  <span className="text-gray-500 dark:text-gray-400">Status:</span>
-                                  <div className="font-semibold text-primary">Pending</div>
-                                </div>
-                                <div>
-                                  <span className="text-gray-500 dark:text-gray-400">Date/Time:</span>
-                                  <div className="text-gray-700 dark:text-gray-300">--</div>
-                                </div>
+                            <div className="grid grid-cols-2 gap-4 text-xs text-gray-600 dark:text-gray-400">
+                              <div>
+                                <span className="text-gray-500 dark:text-gray-400">Email:</span>
+                                <div className="text-gray-700 dark:text-gray-300">{recipient.email}</div>
                               </div>
+                              <div>
+                                <span className="text-gray-500 dark:text-gray-400">Status:</span>
+                                <div className="font-semibold text-primary">{parseInt(selectedDocument?.signatures.split(" of ")[0] || "0") > idx ? "Completed" : "Pending"}</div>
+                              </div>
+                              <div>
+                                <span className="text-gray-500 dark:text-gray-400">Date/Time:</span>
+                                <div className="text-gray-700 dark:text-gray-300">{parseInt(selectedDocument?.signatures.split(" of ")[0] || "0") > idx ? new Date().toLocaleString() : "--"}</div>
+                              </div>
+                            </div>
                           </div>
                         ))}
                       </div>
                       
                       {/* Desktop: Original table layout */}
                       <div className="hidden lg:block">
-                        <div className="grid grid-cols-[40px_40px_1.5fr_2fr_1fr_1.5fr] gap-2 px-2 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                        <div className="grid grid-cols-[40px_40px_1.5fr_2fr_1fr_1.5fr] gap-2 px-2 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700 cursor-default select-none" style={{ fontFamily: "Avenir, sans-serif" }}>
                           <div className="text-center">#</div>
                           <div></div>
                           <div className="text-left">Name</div>
@@ -3400,18 +3411,22 @@ export default function SignaturesPage() {
                         </div>
                         {/* Recipients Data */}
                         {selectedDocument?.recipients?.map((recipient, idx) => (
-                          <div key={recipient.name} className="grid grid-cols-[40px_40px_1.5fr_2fr_1fr_1.5fr] gap-2 items-center px-2 py-4 border-b border-gray-100 dark:border-gray-700 text-xs text-gray-800 dark:text-gray-200 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                          <div key={recipient.name} className="grid grid-cols-[40px_40px_1.5fr_2fr_1fr_1.5fr] gap-2 items-center px-2 py-4 border-b border-gray-100 dark:border-gray-700 text-xs text-gray-800 dark:text-gray-200 cursor-default select-none" style={{ fontFamily: "Avenir, sans-serif" }}>
                             <div className="text-center font-semibold">{idx + 1}</div>
-                                                          <div className="flex justify-center items-center">
-                                <div className="h-5 w-5 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900">
-                                </div>
+                            <div className="flex justify-center items-center">
+                              <div className="h-5 w-5 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 flex items-center justify-center">
+                                {parseInt(selectedDocument?.signatures.split(" of ")[0] || "0") > idx && (
+                                  <FaCheck className="text-primary" size={12} />
+                                )}
                               </div>
+                            </div>
                             <div className="font-bold">{recipient.name}</div>
                             <div className="text-gray-500 dark:text-gray-400">{recipient.email}</div>
                             <div className="font-semibold text-primary flex items-center justify-start">
-                              <span>Pending</span>
+                              <span>{parseInt(selectedDocument?.signatures.split(" of ")[0] || "0") > idx ? "Completed" : "Pending"}</span>
                             </div>
-                            <div className="text-gray-700 dark:text-gray-300">--</div>
+
+                            <div className="text-gray-700 dark:text-gray-300">{parseInt(selectedDocument?.signatures.split(" of ")[0] || "0") > idx ? new Date().toLocaleString() : "--"}</div>
                           </div>
                         ))}
                       </div>
@@ -3419,27 +3434,27 @@ export default function SignaturesPage() {
                   </div>
                 </div>
               </div>
-                {/* Sign Button - Bottom of Modal */}
-                <div className="flex justify-end pt-6 pb-6 px-6 border-t border-gray-200 dark:border-gray-700 mt-6">
-                  <button
-                    onClick={handleSign}
-                    disabled={isSigning || selectedDocument?.status === 'Completed' || selectedDocument?.status === 'Rejected' || selectedDocument?.status === 'Expired' || selectedDocument?.status === 'Voided'}
-                    className="flex items-center justify-center px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-all duration-200 font-semibold text-sm shadow-sm"
-                    style={{ fontFamily: 'Avenir, sans-serif' }}
-                  >
-                    {isSigning ? (
-                      <>
-                        <span className="animate-spin mr-2 w-4 h-4 border-2 border-t-transparent border-white rounded-full inline-block" />
-                        Signing...
-                      </>
-                    ) : (
-                      <>
-                        <TbPencilShare className="mr-2 text-lg" />
-                        Sign
-                      </>
-                    )}
-                  </button>
-                </div>
+              {/* Sign Button - Bottom of Modal */}
+              <div className="flex justify-end pt-6 pb-6 px-6 border-t border-gray-200 dark:border-gray-700 mt-6">
+                <button
+                  onClick={handleSign}
+                  disabled={isSigning || selectedDocument?.status === "Completed" || selectedDocument?.status === "Rejected" || selectedDocument?.status === "Expired" || selectedDocument?.status === "Voided"}
+                  className="flex items-center justify-center px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-all duration-200 font-semibold text-sm shadow-sm"
+                  style={{ fontFamily: "Avenir, sans-serif" }}
+                >
+                  {isSigning ? (
+                    <>
+                      <span className="animate-spin mr-2 w-4 h-4 border-2 border-t-transparent border-white rounded-full inline-block" />
+                      Signing...
+                    </>
+                  ) : (
+                    <>
+                      <TbPencilShare className="mr-2 text-lg" />
+                      Sign
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

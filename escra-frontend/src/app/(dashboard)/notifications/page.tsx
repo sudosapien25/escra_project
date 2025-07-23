@@ -33,34 +33,34 @@ function NotificationPageContent() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div className="pb-1">
-          <h1 className="text-[30px] font-bold text-black mb-1">Notifications</h1>
-          <p className="text-gray-500 text-[16px] mt-0">Stay updated on your escrow activities</p>
+          <h1 className="text-[30px] font-bold text-gray-900 dark:text-white mb-1">Notifications</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-[16px] mt-0">Stay updated on your escrow activities</p>
         </div>
         <div className="flex items-center gap-3">
           <button
-            className="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 bg-white text-gray-900 font-medium text-sm hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-2 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             onClick={markAllAsRead}
           >
             <FaCheck className="text-primary" />
             Mark All as Read
           </button>
-          <button className="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 bg-white text-gray-900 font-medium text-sm hover:bg-gray-50 transition-colors">
-            <FaCog className="text-gray-500" />
+          <button className="flex items-center gap-2 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            <FaCog className="text-gray-500 dark:text-gray-400" />
             Notification Settings
           </button>
         </div>
       </div>
 
       {/* Tabs/Filters */}
-      <div className="flex items-center gap-2 bg-gray-50 rounded-xl p-1 w-fit mb-2">
+      <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900 rounded-xl p-1 w-fit mb-2">
         {notificationTabs.map((tab) => (
           <button
             key={tab.key}
             className={clsx(
               'relative px-4 py-2 rounded-lg font-semibold text-sm transition-colors',
               filter === tab.key
-                ? 'bg-white text-primary shadow-sm'
-                : 'text-gray-500 hover:text-primary',
+                ? 'bg-white dark:bg-gray-800 text-primary shadow-sm'
+                : 'text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary',
               'focus:outline-none focus:ring-2 focus:ring-primary'
             )}
             onClick={() => setFilter(tab.key)}
@@ -76,32 +76,32 @@ function NotificationPageContent() {
       </div>
 
       {/* Notification List */}
-      <div className="rounded-2xl border border-gray-200 bg-white divide-y divide-gray-100">
+      <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-gray-700">
         {filtered.length === 0 && (
-          <div className="p-8 text-center text-gray-400 text-sm">No notifications found.</div>
+          <div className="p-8 text-center text-gray-400 dark:text-gray-500 text-sm">No notifications found.</div>
         )}
         {filtered.map((n) => (
           <div
             key={n.id}
             className={clsx(
               'flex items-start gap-4 p-6',
-              !n.read && 'bg-gray-50',
+              !n.read && 'bg-gray-50 dark:bg-gray-700',
               'transition-colors'
             )}
           >
             <div className="flex-shrink-0 mt-1">{getNotificationIcon(n.type)}</div>
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-gray-900 text-base">{n.title}</span>
+                <span className="font-semibold text-gray-900 dark:text-white text-base">{n.title}</span>
                 {!n.read && (
                   <span className="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-primary text-white">Unread</span>
                 )}
               </div>
-              <div className="text-gray-600 text-sm mt-1 mb-2">{n.message}</div>
+              <div className="text-gray-600 dark:text-gray-300 text-sm mt-1 mb-2">{n.message}</div>
               <a href={n.link || '#'} className="text-primary text-sm font-medium hover:underline">View Details</a>
             </div>
             <div className="flex flex-col items-end gap-2 min-w-[100px]">
-              <span className="text-xs text-gray-400 mb-2 whitespace-nowrap">{formatTimeAgo(n.timestamp)}</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500 mb-2 whitespace-nowrap">{formatTimeAgo(n.timestamp)}</span>
               {!n.read && (
                 <button
                   className="flex items-center gap-1 text-primary text-xs font-semibold hover:underline"

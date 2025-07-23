@@ -174,7 +174,11 @@ const SignaturePadDraw: React.FC<SignaturePadDrawProps> = ({ value, onChange }) 
     if (!ctx) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = '#000';
+    
+    // Check if dark mode is active - default to light mode (black ink)
+    const isDarkMode = document.documentElement.classList.contains('dark');
+    
+    ctx.strokeStyle = isDarkMode ? '#ffffff' : '#000000';
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
@@ -209,10 +213,9 @@ const SignaturePadDraw: React.FC<SignaturePadDrawProps> = ({ value, onChange }) 
           border: '2px solid #e5e7eb',
           borderRadius: '8px',
           cursor: 'crosshair',
-          backgroundColor: '#ffffff',
-          backgroundImage: 'radial-gradient(circle at 1px 1px, #f3f4f6 1px, transparent 0)',
           backgroundSize: '20px 20px',
         }}
+        className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 bg-[radial-gradient(circle_at_1px_1px,#f3f4f6_1px,transparent_0)] dark:bg-[radial-gradient(circle_at_1px_1px,#374151_1px,transparent_0)]"
         onMouseDown={onMouseDown}
         onMouseMove={onMouseMove}
         onMouseUp={onMouseUp}
@@ -225,13 +228,13 @@ const SignaturePadDraw: React.FC<SignaturePadDrawProps> = ({ value, onChange }) 
         <button
           onClick={undo}
           disabled={lines.length === 0}
-          className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded disabled:opacity-50"
+          className="px-3 py-1 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Undo
         </button>
         <button
           onClick={clearCanvas}
-          className="px-3 py-1 text-sm bg-red-500 text-white hover:bg-red-600 rounded"
+          className="px-3 py-1 text-sm bg-red-500 dark:bg-red-600 text-white hover:bg-red-600 dark:hover:bg-red-700 rounded"
         >
           Clear
         </button>

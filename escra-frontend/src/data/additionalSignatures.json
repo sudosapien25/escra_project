@@ -51,37 +51,5 @@
         "contractRole": "Closing Agent"
       }
     ]
-  },
-  {
-    "id": "EUHPATGCE",
-    "document": "Escra Contract Test",
-    "parties": [
-      "Benjamin Aiello",
-      "Nicholas Aquino"
-    ],
-    "status": "Pending",
-    "signatures": "0 of 2",
-    "contractId": "5084",
-    "contract": "Escra Test Contract",
-    "assignee": "John Smith",
-    "dateSent": "2025-07-22",
-    "dueDate": "2025-07-22",
-    "message": "Hello, \n\nPlease sign here!",
-    "subject": "Please Sign This Escra Test Contract",
-    "documentId": "8368",
-    "recipients": [
-      {
-        "name": "Benjamin Aiello",
-        "email": "benjamin@escra.io",
-        "signerRole": "Needs to Sign",
-        "contractRole": "Buyer"
-      },
-      {
-        "name": "Nicholas Aquino",
-        "email": "nicholas@escra.io",
-        "signerRole": "Needs to Sign",
-        "contractRole": "Seller"
-      }
-    ]
   }
 ]

@@ -23,6 +23,55 @@ import { PiHandCoins } from 'react-icons/pi';
 const BLOCK_HASH = "0x7ad9e3b8f2c1a4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9";
 const PROPOSER_HASH = "0xabc1234def5678fedcba9876543210abcdef1234567890fedcba0987654321ab";
 
+// Contract interface to match the contracts page
+interface Contract {
+  id: string;
+  title: string;
+  parties: string;
+  status: string;
+  updated: string;
+  value?: string;
+  documents?: number;
+  type: string;
+  buyer?: string;
+  seller?: string;
+  agent?: string;
+  milestone?: string;
+  notes?: string;
+  closingDate?: string;
+  dueDate?: string;
+  propertyAddress?: string;
+  propertyType?: string;
+  escrowNumber?: string;
+  buyerEmail?: string;
+  sellerEmail?: string;
+  agentEmail?: string;
+  earnestMoney?: string;
+  downPayment?: string;
+  loanAmount?: string;
+  interestRate?: string;
+  loanTerm?: string;
+  lenderName?: string;
+  sellerFinancialInstitution?: string;
+  buyerFinancialInstitution?: string;
+  buyerAccountNumber?: string;
+  sellerAccountNumber?: string;
+  buyerFinancialInstitutionRoutingNumber?: string;
+  sellerFinancialInstitutionRoutingNumber?: string;
+  titleCompany?: string;
+  insuranceCompany?: string;
+  inspectionPeriod?: string;
+  contingencies?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  country?: string;
+  additionalParties?: { name: string; email: string; role: string }[];
+  party1Role?: string;
+  party2Role?: string;
+  documentIds?: string[];
+}
+
 // Helper function to generate contract hash
 const getSmartContractChainId = (id: string) => {
   // Generate 10-digit Algorand-style Smart Contract Chain ID from string ID
@@ -55,22 +104,26 @@ const getStatusBadgeStyle = (status: string) => {
   }
 };
 
-const contracts = mockContracts.map(contract => ({
-  title: contract.title,
-  version: 'v1.0.0',
-  badges: [
-    { label: contract.status === 'Complete' ? 'MainNet' : 'TestNet', color: contract.status === 'Complete' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border border-green-800 dark:border-green-400' : 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400 border border-gray-800 dark:border-gray-400' },
-    { 
-      label: contract.status, 
-      color: getStatusBadgeStyle(contract.status)
-    },
-  ],
-  id: contract.id,
-  description: `${contract.type} contract between ${contract.parties}`,
-  deployed: contract.updated,
-  transactions: Math.floor(Math.random() * 200) + 20, // Random number between 20 and 220 for demo
-  status: contract.status,
-}));
+// Transform contracts data to match the blockchain page format
+const transformContractsForBlockchain = (contracts: Contract[]) => {
+  return contracts.map(contract => ({
+    title: contract.title,
+    version: 'v1.0.0',
+    badges: [
+      { label: contract.status === 'Complete' ? 'MainNet' : 'TestNet', color: contract.status === 'Complete' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border border-green-800 dark:border-green-400' : 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400 border border-gray-800 dark:border-gray-400' },
+      { 
+        label: contract.status, 
+        color: getStatusBadgeStyle(contract.status)
+      },
+    ],
+    id: contract.id,
+    description: `${contract.type} contract between ${contract.parties}`,
+    deployed: contract.updated,
+    transactions: Math.floor(Math.random() * 200) + 20, // Random number between 20 and 220 for demo
+    status: contract.status,
+  }));
+};
+const contracts = transformContractsForBlockchain(mockContracts);
 
 const activityData = [
   {
@@ -171,6 +224,51 @@ export default function BlockchainPage() {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [actionsRowsPerPage, setActionsRowsPerPage] = useState(5);
   const [showAllActivity, setShowAllActivity] = useState(false);
+  
+  // Dynamic contract state management
+  const [contracts, setContracts] = useState<Contract[]>(mockContracts);
+  const [blockchainContracts, setBlockchainContracts] = useState(transformContractsForBlockchain(mockContracts));
+  
+  // Load enhanced contracts data (same as contracts page)
+  useEffect(() => {
+    const loadEnhancedContracts = async () => {
+      try {
+        // Use the same API approach as contracts page
+        const response = await fetch('/api/contracts');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.contracts && Array.isArray(data.contracts)) {
+            setContracts(data.contracts);
+            setBlockchainContracts(transformContractsForBlockchain(data.contracts));
+            return;
+          }
+        }
+        
+        // Fallback to mockContracts if API fails
+        setContracts(mockContracts);
+        setBlockchainContracts(transformContractsForBlockchain(mockContracts));
+      } catch (error) {
+        console.error('Error loading contracts:', error);
+        // Fallback to mockContracts on error
+        setContracts(mockContracts);
+        setBlockchainContracts(transformContractsForBlockchain(mockContracts));
+      }
+    };
+
+    loadEnhancedContracts();
+
+    // Set up polling to refresh contracts every 5 seconds
+    const intervalId = setInterval(loadEnhancedContracts, 5000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, []);
+  
+  // Update blockchain contracts when contracts change
+  useEffect(() => {
+    setBlockchainContracts(transformContractsForBlockchain(contracts));
+  }, [contracts]);
   
   // Mock transaction data
   const transactionData = [
@@ -277,7 +375,7 @@ export default function BlockchainPage() {
   const desktopActivityTypeButtonRef = useRef<HTMLButtonElement>(null);
 
   // Filter contracts based on search term and selected statuses
-  const filteredContracts = contracts.filter(contract => {
+  const filteredContracts = blockchainContracts.filter(contract => {
     const search = searchTerm.toLowerCase();
     const matchesSearch = (
       contract.title.toLowerCase().includes(search) ||
@@ -624,7 +722,7 @@ export default function BlockchainPage() {
                         </div>
                         All
                       </button>
-                      {mockContracts
+                      {contracts
                         .filter(contract => 
                           contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
                           contract.title.toLowerCase().includes(contractSearch.toLowerCase())
@@ -804,7 +902,7 @@ export default function BlockchainPage() {
                         </div>
                         All
                       </button>
-                      {mockContracts
+                      {contracts
                         .filter(contract => 
                           contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
                           contract.title.toLowerCase().includes(contractSearch.toLowerCase())
@@ -1061,7 +1159,7 @@ export default function BlockchainPage() {
                         </div>
                         All
                       </button>
-                      {mockContracts
+                      {contracts
                         .filter(contract => 
                           contract.id.toLowerCase().includes(activityContractSearch.toLowerCase()) ||
                           contract.title.toLowerCase().includes(activityContractSearch.toLowerCase())
@@ -1239,8 +1337,8 @@ export default function BlockchainPage() {
                         </div>
                         All
                       </button>
-                      {mockContracts
-                        .filter(contract =>
+                      {contracts
+                        .filter(contract => 
                           contract.id.toLowerCase().includes(activityContractSearch.toLowerCase()) ||
                           contract.title.toLowerCase().includes(activityContractSearch.toLowerCase())
                         )
@@ -1522,9 +1620,9 @@ export default function BlockchainPage() {
       {/* Smart Contract Details Modal */}
       {selectedSmartContract && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="relative bg-white rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden">
+          <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden">
             {/* Sticky Header with Contract ID and Close buttons */}
-            <div className="sticky top-0 z-40 bg-white px-6 py-4">
+            <div className="sticky top-0 z-40 bg-white dark:bg-gray-800 px-6 py-4">
               <div className="flex items-start justify-between">
                 {/* Left: Contract ID */}
                 <div className="flex-1 min-w-0">
@@ -1536,7 +1634,7 @@ export default function BlockchainPage() {
                 </div>
                 {/* Right: Close Button */}
                 <button
-                  className="text-gray-400 hover:text-gray-600 p-2 rounded-full ml-4 mt-1"
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-full ml-4 mt-1"
                   onClick={() => setSelectedSmartContract(null)}
                   aria-label="Close"
                 >
@@ -1555,18 +1653,18 @@ export default function BlockchainPage() {
                   {/* Top Row: Block Details and Contract Information */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Block Details */}
-                    <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
-                      <h3 className="text-sm font-semibold text-gray-900 mb-4">Block Details</h3>
+                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 w-full">
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Block Details</h3>
                       <div className="grid grid-cols-2 gap-x-12 gap-y-4">
                         <div>
-                          <div className="text-gray-500 text-xs mb-1">Block ID</div>
-                          <div className="text-xs text-black">15283674</div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">Block ID</div>
+                          <div className="text-xs text-gray-900 dark:text-white">15283674</div>
                         </div>
                         <div>
-                          <div className="text-gray-500 text-xs mb-1">Block Hash</div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">Block Hash</div>
                           <div className="flex items-center">
                             <span
-                              className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
+                              className="text-xs font-mono text-gray-900 dark:text-white truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
                               style={{ maxWidth: '120px' }}
                               title={BLOCK_HASH}
                             >
@@ -1575,7 +1673,7 @@ export default function BlockchainPage() {
                             <div className="relative flex-shrink-0">
                               <button
                                 type="button"
-                                className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                                className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
                                 onClick={() => {
                                   navigator.clipboard.writeText(BLOCK_HASH);
                                   setCopiedContractId('block-hash');
@@ -1601,22 +1699,26 @@ export default function BlockchainPage() {
                           </div>
                         </div>
                         <div>
-                          <div className="text-gray-500 text-xs mb-1">Previous Round</div>
-                          <div className="text-xs text-black">15283673</div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">Previous Round</div>
+                          <div className="text-xs text-gray-900 dark:text-white">15283673</div>
                         </div>
                         <div>
-                          <div className="text-gray-500 text-xs mb-1">Next Round</div>
-                          <div className="text-xs text-black">15283675</div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">Next Round</div>
+                          <div className="text-xs text-gray-900 dark:text-white">15283675</div>
                         </div>
                         <div>
-                          <div className="text-gray-500 text-xs mb-1">Timestamp</div>
-                          <div className="text-xs text-black">2024-05-20 14:32:15</div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">Timestamp</div>
+                          <div className="text-xs text-gray-900 dark:text-white">2024-05-20 14:32:15</div>
                         </div>
                         <div>
-                          <div className="text-gray-500 text-xs mb-1">Proposer</div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">Base Fee</div>
+                          <div className="text-xs text-gray-900 dark:text-white">0.001 Λ</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">Proposer</div>
                           <div className="flex items-center">
                             <span
-                              className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
+                              className="text-xs font-mono text-gray-900 dark:text-white truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
                               style={{ maxWidth: '120px' }}
                               title={PROPOSER_HASH}
                             >
@@ -1625,24 +1727,24 @@ export default function BlockchainPage() {
                             <div className="relative flex-shrink-0">
                               <button
                                 type="button"
-                                className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                                className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
                                 onClick={() => {
                                   navigator.clipboard.writeText(PROPOSER_HASH);
-                                  setCopiedContractId('proposer');
+                                  setCopiedContractId('proposer-hash');
                                   setTimeout(() => setCopiedContractId(null), 1500);
                                 }}
-                                onMouseEnter={() => setHoveredContractId('proposer')}
+                                onMouseEnter={() => setHoveredContractId('proposer-hash')}
                                 onMouseLeave={() => setHoveredContractId(null)}
-                                aria-label="Copy proposer address"
+                                aria-label="Copy proposer hash"
                               >
                                 <HiOutlineDuplicate className="w-4 h-4" />
                               </button>
-                              {copiedContractId === 'proposer' && (
+                              {copiedContractId === 'proposer-hash' && (
                                 <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded">
                                   Copied!
                                 </div>
                               )}
-                              {hoveredContractId === 'proposer' && copiedContractId !== 'proposer' && (
+                              {hoveredContractId === 'proposer-hash' && copiedContractId !== 'proposer-hash' && (
                                 <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded">
                                   Copy
                                 </div>
@@ -1650,39 +1752,26 @@ export default function BlockchainPage() {
                             </div>
                           </div>
                         </div>
-                        <div>
-                          <div className="text-gray-500 text-xs mb-1">Base Fee</div>
-                          <div className="flex items-center">
-                            <span className="text-xs text-black">0.001</span>
-                            <Image
-                              src="/assets/algorand_logo_mark_black.png"
-                              alt="ALGO"
-                              width={22}
-                              height={22}
-                              className="-ml-0.5 opacity-75"
-                            />
-                          </div>
-                        </div>
                       </div>
                     </div>
 
                     {/* Contract Details */}
-                    <div className="bg-white border border-gray-200 rounded-lg p-6 w-full">
-                      <h3 className="text-sm font-semibold text-gray-900 mb-4">Contract Details</h3>
+                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 w-full">
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Contract Details</h3>
                       <div className="grid grid-cols-3 gap-x-12 gap-y-4">
                         <div>
-                          <div className="text-gray-500 text-xs mb-1">Contract ID</div>
-                          <div className="text-xs text-black">{selectedSmartContract.id}</div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">Contract ID</div>
+                          <div className="text-xs text-gray-900 dark:text-white">{selectedSmartContract.id}</div>
                         </div>
                         <div>
-                          <div className="text-gray-500 text-xs mb-1">Contract Name</div>
-                          <div className="text-xs text-black">{selectedSmartContract.title}</div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">Contract Name</div>
+                          <div className="text-xs text-gray-900 dark:text-white">{selectedSmartContract.title}</div>
                         </div>
                         <div>
-                          <div className="text-gray-500 text-xs mb-1">Smart Contract Chain ID</div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">Smart Contract Chain ID</div>
                           <div className="flex items-center">
                             <span
-                              className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
+                              className="text-xs font-mono text-gray-900 dark:text-white truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
                               style={{ maxWidth: '120px' }}
                               title={getSmartContractChainId(selectedSmartContract.id)}
                             >
@@ -1691,7 +1780,7 @@ export default function BlockchainPage() {
                             <div className="relative">
                               <button
                                 type="button"
-                                className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                                className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
                                 onClick={() => {
                                   navigator.clipboard.writeText(getSmartContractChainId(selectedSmartContract.id));
                                   setCopiedContractId(selectedSmartContract.id);
@@ -1717,21 +1806,21 @@ export default function BlockchainPage() {
                           </div>
                         </div>
                         <div>
-                          <div className="text-gray-500 text-xs mb-1">Version</div>
-                          <div className="text-xs text-black">{selectedSmartContract.version}</div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">Version</div>
+                          <div className="text-xs text-gray-900 dark:text-white">{selectedSmartContract.version}</div>
                         </div>
                         <div></div>
                         <div>
-                          <div className="text-gray-500 text-xs mb-1">On-Chain ID</div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">On-Chain ID</div>
                           <div className="flex items-center">
                             <span
-                              className="text-xs font-mono text-gray-900 truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
+                              className="text-xs font-mono text-gray-900 dark:text-white truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-pointer"
                               style={{ maxWidth: '120px' }}
                               title={getSmartContractChainId(selectedSmartContract.id)}
                             >
                               {getSmartContractChainId(selectedSmartContract.id)}
                             </span>
-                            <button className="ml-2 text-gray-400 hover:text-gray-600" onClick={() => {
+                            <button className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" onClick={() => {
                                   navigator.clipboard.writeText(getSmartContractChainId(selectedSmartContract.id));
                                   setCopiedContractId('on-chain-id');
                                   setTimeout(() => setCopiedContractId(null), 1500);
@@ -1741,29 +1830,29 @@ export default function BlockchainPage() {
                           </div>
                         </div>
                         <div>
-                          <div className="text-gray-500 text-xs mb-1">Status</div>
-                          <span className={`inline-flex items-center justify-center min-w-[130px] h-7 px-4 font-semibold rounded-full text-xs ${selectedSmartContract.badges[1]?.color || 'bg-gray-100 text-gray-700 border border-gray-400'}`}>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">Status</div>
+                          <span className={`inline-flex items-center justify-center min-w-[130px] h-7 px-4 font-semibold rounded-full text-xs ${selectedSmartContract.badges[1]?.color || 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-400 border border-gray-400 dark:border-gray-800'}`}>
                             {selectedSmartContract.status}
                           </span>
                         </div>
                         <div>
-                          <div className="text-gray-500 text-xs mb-1">Current Milestone</div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">Current Milestone</div>
                           <span className={`inline-flex items-center justify-center min-w-[130px] h-7 px-4 font-semibold rounded-full text-xs ${getStatusBadgeStyle('Wire Details')}`}>Wire Details</span>
                         </div>
                         {/* 4th row: Network left, Deployed middle */}
                         <div style={{gridColumn: '1 / 2'}}>
-                          <div className="text-gray-500 text-xs mb-1">Network</div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">Network</div>
                           <span className={`inline-flex items-center justify-center min-w-[130px] h-7 px-4 font-semibold rounded-full text-xs ${
                             selectedSmartContract.badges[0]?.label === 'MainNet' 
-                              ? 'bg-green-100 text-green-700 border border-green-500' 
-                              : 'bg-gray-100 text-gray-700 border border-gray-400'
+                              ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-500 dark:border-green-800' 
+                              : 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-400 border border-gray-400 dark:border-gray-800'
                           }`}>
                             {selectedSmartContract.badges[0]?.label || 'TestNet'}
                           </span>
                         </div>
                         <div style={{gridColumn: '2 / 3'}}>
-                          <div className="text-gray-500 text-xs mb-1">Deployed</div>
-                          <div className="text-xs text-black">{selectedSmartContract.deployed}</div>
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">Deployed</div>
+                          <div className="text-xs text-gray-900 dark:text-white">{selectedSmartContract.deployed}</div>
                         </div>
                         <div></div>
                       </div>
@@ -1773,39 +1862,39 @@ export default function BlockchainPage() {
                   {/* Bottom: Full-width Transactions - REMOVED */}
 
                   {/* Actions Box - Full-width */}
-                  <div className="bg-white border border-gray-200 rounded-lg p-6 w-full mb-6">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4">Actions</h3>
+                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 w-full mb-6">
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Actions</h3>
                     
                     {/* Actions Summary Elements */}
                     <div className="grid grid-cols-4 gap-4 mb-6">
                       <div className="p-3">
-                        <div className="text-xs text-gray-500 font-medium mb-1">Total Actions</div>
-                        <div className="text-base font-bold text-gray-900">{selectedSmartContract.transactions}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Total Actions</div>
+                        <div className="text-base font-bold text-gray-900 dark:text-white">{selectedSmartContract.transactions}</div>
                       </div>
                       <div className="p-3">
-                        <div className="text-xs text-gray-500 font-medium mb-1">Standard Actions</div>
-                        <div className="text-base font-bold text-gray-900">{transactionData.length}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Standard Actions</div>
+                        <div className="text-base font-bold text-gray-900 dark:text-white">{transactionData.length}</div>
                       </div>
                       <div className="p-3">
-                        <div className="text-xs text-gray-500 font-medium mb-1">Inner Actions</div>
-                        <div className="text-base font-bold text-gray-900">{Math.floor(selectedSmartContract.transactions * 0.3)}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Inner Actions</div>
+                        <div className="text-base font-bold text-gray-900 dark:text-white">{Math.floor(selectedSmartContract.transactions * 0.3)}</div>
                       </div>
                       <div className="p-3">
-                        <div className="text-xs text-gray-500 font-medium mb-1">Total Fees</div>
-                        <div className="text-base font-bold text-gray-900">
+                        <div className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Total Fees</div>
+                        <div className="text-base font-bold text-gray-900 dark:text-white">
                           {transactionData.reduce((sum, tx) => sum + parseFloat(tx.fee), 0).toFixed(3)}
                         </div>
                       </div>
                     </div>
 
                     {/* Tabs Row with Divider */}
-                    <div className="border-b border-gray-200 mb-4">
+                    <div className="border-b border-gray-200 dark:border-gray-700 mb-4">
                       <div className="flex space-x-4 overflow-x-auto w-full">
                         <button
                           className={`pb-2 text-sm font-semibold whitespace-nowrap border-b-2 ${
                             actionsTab === 'table'
                               ? 'text-primary border-primary'
-                              : 'text-gray-500 hover:text-gray-700 border-transparent'
+                              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 border-transparent'
                           }`}
                           onClick={() => setActionsTab('table')}
                         >
@@ -1815,7 +1904,7 @@ export default function BlockchainPage() {
                           className={`pb-2 text-sm font-semibold whitespace-nowrap border-b-2 ${
                             actionsTab === 'visual'
                               ? 'text-primary border-primary'
-                              : 'text-gray-500 hover:text-gray-700 border-transparent'
+                              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 border-transparent'
                           }`}
                           onClick={() => setActionsTab('visual')}
                         >
@@ -1829,49 +1918,49 @@ export default function BlockchainPage() {
                       <div className="space-y-4">
                         {/* Table */}
                         <div className="relative overflow-x-auto overflow-y-auto" style={{ maxHeight: '200px' }}>
-                          <table className="min-w-full divide-y divide-gray-200">
+                          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                             <thead>
                               <tr>
-                                <th className="sticky top-0 z-10 bg-gray-50 text-left px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none">
+                                <th className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-900 text-left px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none">
                                   Action ID
                                 </th>
-                                <th className="sticky top-0 z-10 bg-gray-50 text-left px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none">
+                                <th className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-900 text-left px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none">
                                   Block ID
                                 </th>
-                                <th className="sticky top-0 z-10 bg-gray-50 text-center px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none">
+                                <th className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-900 text-center px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none">
                                   Type
                                 </th>
-                                <th className="sticky top-0 z-10 bg-gray-50 text-left px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none">
+                                <th className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-900 text-left px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none">
                                   Hash
                                 </th>
-                                <th className="sticky top-0 z-10 bg-gray-50 text-left px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none">
+                                <th className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-900 text-left px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none">
                                   Timestamp
                                 </th>
                               </tr>
                             </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
+                            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                               {currentActions.map((transaction, index) => (
-                                <tr key={index} className="hover:bg-gray-50 cursor-pointer">
+                                <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
                                   <td className="px-3 py-2 whitespace-nowrap text-xs">
                                     <span className="text-primary underline font-semibold cursor-pointer">
                                       {transaction.id}
                                     </span>
                                   </td>
-                                  <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-900">
+                                  <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-900 dark:text-white">
                                     {transaction.groupId}
                                   </td>
-                                  <td className="px-3 py-2 whitespace-nowrap text-center text-xs">
-                                    <span className={`inline-flex items-center justify-center min-w-[120px] px-2 py-1 font-semibold rounded-full text-xs ${getTypeBadgeStyle(transaction.type)}`}>
+                                  <td className="px-3 py-2 whitespace-nowrap text-xs text-center">
+                                    <span className={`inline-flex items-center justify-center min-w-[130px] h-6 px-3 font-semibold rounded-full text-xs ${getTypeBadgeStyle(transaction.type)}`}>
                                       {transaction.type}
                                     </span>
                                   </td>
                                   <td className="px-3 py-2 whitespace-nowrap text-xs">
-                                    <span className="text-primary underline font-semibold cursor-pointer">
+                                    <span className="text-blue-600 dark:text-blue-400 underline font-semibold cursor-pointer">
                                       {transaction.from}
                                     </span>
                                   </td>
-                                  <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-900">
-                                    2024-05-20 14:32:15
+                                  <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-900 dark:text-white">
+                                    {transaction.timestamp}
                                   </td>
                                 </tr>
                               ))}
@@ -1880,141 +1969,50 @@ export default function BlockchainPage() {
                         </div>
 
                         {/* Pagination */}
-                        <div className="flex items-center justify-between text-xs">
-                          <div className="flex items-center gap-2">
-                            <span className="text-gray-500">Rows per page:</span>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                            <span>Rows per page:</span>
                             <select
                               value={actionsRowsPerPage}
-                              onChange={(e) => {
-                                setActionsRowsPerPage(Number(e.target.value));
-                                setActionsCurrentPage(1);
-                              }}
-                              className="border border-gray-200 rounded px-2 py-1 text-xs bg-white"
+                              onChange={(e) => setActionsRowsPerPage(Number(e.target.value))}
+                              className="ml-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded px-2 py-1"
                             >
                               <option value={5}>5</option>
                               <option value={10}>10</option>
                               <option value={25}>25</option>
                             </select>
                           </div>
-                          <div className="flex items-center gap-4">
-                            <span className="text-gray-500">
-                              Page {actionsCurrentPage} of {actionsTotalPages}
-                            </span>
-                            <div className="flex items-center gap-1">
-                              <button
-                                onClick={() => setActionsCurrentPage(Math.max(1, actionsCurrentPage - 1))}
-                                disabled={actionsCurrentPage === 1}
-                                className="px-2 py-1 border border-gray-200 rounded text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
-                              >
-                                Previous
-                              </button>
-                              <button
-                                onClick={() => setActionsCurrentPage(Math.min(actionsTotalPages, actionsCurrentPage + 1))}
-                                disabled={actionsCurrentPage === actionsTotalPages}
-                                className="px-2 py-1 border border-gray-200 rounded text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
-                              >
-                                Next
-                              </button>
-                            </div>
+                          <div className="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
+                            <span>Page {actionsCurrentPage} of {Math.ceil(transactionData.length / actionsRowsPerPage)}</span>
+                            <button
+                              onClick={() => setActionsCurrentPage(Math.max(1, actionsCurrentPage - 1))}
+                              disabled={actionsCurrentPage === 1}
+                              className="px-2 py-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
+                            >
+                              Previous
+                            </button>
+                            <button
+                              onClick={() => setActionsCurrentPage(Math.min(Math.ceil(transactionData.length / actionsRowsPerPage), actionsCurrentPage + 1))}
+                              disabled={actionsCurrentPage === Math.ceil(transactionData.length / actionsRowsPerPage)}
+                              className="px-2 py-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
+                            >
+                              Next
+                            </button>
                           </div>
+                        </div>
+
+                        {/* Total Actions */}
+                        <div className="text-sm text-gray-900 dark:text-white font-medium">
+                          Total Actions {selectedSmartContract.transactions}
                         </div>
                       </div>
                     )}
 
                     {actionsTab === 'visual' && (
-                      <div className="space-y-4">
-                        <div className="relative bg-white rounded-xl border border-gray-200 p-6 min-h-[400px]">
-                          {/* Address Nodes Row */}
-                          <div className="flex justify-between items-center mb-16 px-8">
-                            {[
-                              'WARN_SCAM',
-                              '1284326447',
-                              'KKGU_UZBI',
-                              'KFA2_T374',
-                              'D31M_B51E',
-                              'BUCT_B01A',
-                              'BL5Y_LE4E'
-                            ].map((address, index) => (
-                              <div key={address} className="flex flex-col items-center group relative">
-                                <div className="text-xs font-mono text-gray-700 mb-2 flex items-center">
-                                  {address}
-                                  <div className="ml-1 w-4 h-4 rounded-full bg-gray-100 flex items-center justify-center text-[10px] font-semibold text-gray-600">
-                                    {index + 1}
-                                  </div>
-                                </div>
-                                <div className="w-3 h-3 rounded-full border-2 border-primary bg-white" />
-                              </div>
-                            ))}
-                          </div>
-
-                          {/* Action Flow Lines */}
-                          <div className="space-y-6 px-8">
-                            {[
-                              { id: 'DLH04MH', type: 'App Call', amount: null },
-                              { id: '4U0HG7Q', type: 'Payment', amount: '0.000013' },
-                              { id: 'HNBJXTY', type: 'Payment', amount: '0.000013' },
-                              { id: 'UHDR4KP', type: 'Payment', amount: '0.000013' },
-                              { id: 'PAS06BJ', type: 'Payment', amount: '0.000013' },
-                              { id: 'ZXFRSCG', type: 'Payment', amount: '0.000013' }
-                            ].map((tx, index) => (
-                              <div key={tx.id} className="relative flex items-center">
-                                {/* Action ID */}
-                                <div className="w-24 text-xs font-mono text-gray-700 flex items-center">
-                                  <div className="w-2 h-2 rounded-full bg-primary mr-2" />
-                                  {tx.id}
-                                </div>
-
-                                {/* Action Line */}
-                                <div className="flex-grow relative" style={{ maxWidth: `${40 + (index * 10)}%` }}>
-                                  <div className={`h-[2px] w-full ${
-                                    tx.type === 'App Call' ? 'bg-primary' : 'bg-orange-400'
-                                  }`} />
-                                  
-                                  {/* Action Type & Amount */}
-                                  <div className="absolute left-4 -top-3 flex items-center">
-                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                                      tx.type === 'App Call' 
-                                        ? 'bg-blue-100 text-blue-700 border border-blue-500'
-                                        : 'bg-orange-100 text-orange-700 border border-orange-500'
-                                    }`}>
-                                      {tx.type}
-                                    </span>
-                                    {tx.amount && (
-                                      <span className="ml-2 flex items-center bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-[10px] font-medium">
-                                        {tx.amount}
-                                        <Image
-                                          src="/assets/algorand_logo_mark_black.png"
-                                          alt="ALGO"
-                                          width={12}
-                                          height={12}
-                                          className="ml-0.5 opacity-75"
-                                        />
-                                      </span>
-                                    )}
-                                  </div>
-
-                                  {/* Right Connection Point */}
-                                  <div className="absolute right-0 -top-[4px] w-3 h-3 rounded-full bg-white border-2 border-primary" />
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-
-                          {/* Total Actions Counter */}
-                          <div className="absolute bottom-4 right-4 flex items-center text-xs text-gray-500">
-                            <span className="mr-2">Total Actions:</span>
-                            <span className="font-semibold text-gray-900">58</span>
-                          </div>
-                        </div>
+                      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                        <p>Visual representation coming soon...</p>
                       </div>
                     )}
-
-                    <div className="mt-4 pt-3 border-t border-gray-200">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-gray-500">Total Actions</span>
-                        <span className="font-semibold text-gray-900">{selectedSmartContract.transactions}</span>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
