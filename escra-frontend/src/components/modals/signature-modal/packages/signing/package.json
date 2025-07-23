@@ -1,0 +1,23 @@
+{
+  "name": "@documenso/signing",
+  "version": "0.0.0",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "license": "AGPLv3",
+  "files": [
+    "transports/",
+    "index.ts"
+  ],
+  "scripts": {
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@documenso/tsconfig": "*",
+    "@documenso/pdf-sign": "^0.1.0",
+    "pdf-lib": "^1.17.1",
+    "ts-pattern": "^5.0.5"
+  },
+  "devDependencies": {
+    "vitest": "^3.1.4"
+  }
+}

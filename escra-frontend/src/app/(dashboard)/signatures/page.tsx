@@ -31,6 +31,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Logo } from '@/components/common/Logo';
 import { SignatureDocument, mockSignatures } from '@/data/mockSignatures';
+import { SignatureModal, useSignatureModal, SignatureValue } from '@/components/modals/signature-modal';
+import { SignatureConfirmationModal } from '@/components/modals/SignatureConfirmationModal';
 
 interface Document {
   id: string;
@@ -180,6 +182,16 @@ export default function SignaturesPage() {
   const [isDocuSignOnlySigner, setIsDocuSignOnlySigner] = useState(false);
   const [setSigningOrder, setSetSigningOrder] = useState(false);
   const [setDocuSignSigningOrder, setSetDocuSignSigningOrder] = useState(false);
+
+  // Sign button state
+  const [isSigning, setIsSigning] = useState(false);
+  // Signature modal state
+  const [showSignatureModal, setShowSignatureModal] = useState(false);
+  // Signature confirmation modal state
+  const [showSignatureConfirmationModal, setShowSignatureConfirmationModal] = useState(false);
+  const [capturedSignatureData, setCapturedSignatureData] = useState<SignatureValue | null>(null);
+  const [isFinalSigning, setIsFinalSigning] = useState(false);
+  const [currentSignature, setCurrentSignature] = useState<SignatureValue | null>(null);
 
   const [selectedRecentlyUpdated, setSelectedRecentlyUpdated] = useState('Last 24 hours');
   const [openRecentlyUpdatedDropdown, setOpenRecentlyUpdatedDropdown] = useState(false);
@@ -1850,6 +1862,84 @@ export default function SignaturesPage() {
     }
   };
 
+  // Handle sign button click - open signature modal
+  const handleSign = () => {
+    if (!selectedDocument) return;
+    setShowSignatureModal(true);
+  };
+
+  // Handle signature completion - open confirmation modal
+  const handleSignatureComplete = (signature: SignatureValue) => {
+    if (!selectedDocument) return;
+    
+    // Store the captured signature data
+    setCapturedSignatureData(signature);
+    
+    // Close the signature capture modal
+    setShowSignatureModal(false);
+    
+    // Open the confirmation modal
+    setShowSignatureConfirmationModal(true);
+  };
+
+  // Handle final signature submission
+  const handleFinalSignatureSubmit = async () => {
+    if (!selectedDocument || !capturedSignatureData) return;
+    
+    setIsFinalSigning(true);
+    
+    try {
+      // Simulate signing process
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Update the signature status
+      const updatedSignature = {
+        ...selectedDocument,
+        status: 'Completed',
+        signatures: selectedDocument.signatures.replace(/^\d+/, (parseInt(selectedDocument.signatures.split(' of ')[0]) + 1).toString())
+      };
+      
+      // Update the signatures data
+      setSignaturesData(prev => 
+        prev.map(sig => sig.id === selectedDocument.id ? updatedSignature : sig)
+      );
+      
+      // Update the selected document
+      setSelectedDocument(updatedSignature);
+      
+      // Store the signature
+      setCurrentSignature(capturedSignatureData);
+      
+      // Close the confirmation modal
+      setShowSignatureConfirmationModal(false);
+      
+      // Reset captured signature data
+      setCapturedSignatureData(null);
+      
+      // Show success message
+      toast({
+        title: "Document Signed Successfully",
+        description: `"${selectedDocument.document}" has been signed and completed.`,
+      });
+      
+    } catch (error) {
+      console.error('Error signing document:', error);
+      toast({
+        title: "Signing Error",
+        description: "Failed to sign document. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsFinalSigning(false);
+    }
+  };
+
+  // Handle confirmation modal close
+  const handleConfirmationModalClose = () => {
+    setShowSignatureConfirmationModal(false);
+    setCapturedSignatureData(null);
+  };
+
   return (
     <div className="space-y-4 cursor-default select-none">
       {/* Signatures Title and Button */}
@@ -3318,6 +3408,27 @@ export default function SignaturesPage() {
                   </div>
                 </div>
               </div>
+                {/* Sign Button - Bottom of Modal */}
+                <div className="flex justify-end pt-6 pb-6 px-6 border-t border-gray-200 dark:border-gray-700 mt-6">
+                  <button
+                    onClick={handleSign}
+                    disabled={isSigning || selectedDocument?.status === 'Completed' || selectedDocument?.status === 'Rejected' || selectedDocument?.status === 'Expired' || selectedDocument?.status === 'Voided'}
+                    className="flex items-center justify-center px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-all duration-200 font-semibold text-sm shadow-sm"
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                  >
+                    {isSigning ? (
+                      <>
+                        <span className="animate-spin mr-2 w-4 h-4 border-2 border-t-transparent border-white rounded-full inline-block" />
+                        Signing...
+                      </>
+                    ) : (
+                      <>
+                        <TbPencilShare className="mr-2 text-lg" />
+                        Sign
+                      </>
+                    )}
+                  </button>
+                </div>
             </div>
           </div>
         </div>
@@ -5159,6 +5270,7 @@ export default function SignaturesPage() {
         </div>
       )}
 
+
       {/* PDF Viewer Modal */}
       {showPdfViewer && selectedPdf && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 cursor-default select-none">
@@ -5189,7 +5301,34 @@ export default function SignaturesPage() {
         </div>
       )}
 
+      {/* Signature Modal */}
+      {showSignatureModal && selectedDocument && (
+        <SignatureModal
+          isOpen={showSignatureModal}
+          onClose={() => setShowSignatureModal(false)}
+          onSave={handleSignatureComplete}
+          drawEnabled={true}
+          typeEnabled={true}
+          uploadEnabled={true}
+          title={`Sign Document: ${selectedDocument?.document || 'Document'}`}
+          confirmText="Confirm Signature"
+          cancelText="Cancel"
+        />
+      )}
+
+      {/* Signature Confirmation Modal */}
+      {showSignatureConfirmationModal && selectedDocument && capturedSignatureData && (
+        <SignatureConfirmationModal
+          isOpen={showSignatureConfirmationModal}
+          onClose={handleConfirmationModalClose}
+          onConfirm={handleFinalSignatureSubmit}
+          signature={capturedSignatureData}
+          document={selectedDocument}
+          isLoading={isFinalSigning}
+        />
+      )}
+
       <Toaster />
     </div>
   );
-} 
+}

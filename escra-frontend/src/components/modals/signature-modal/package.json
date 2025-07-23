@@ -1,0 +1,36 @@
+{
+  "name": "@escra/signature-modal",
+  "version": "1.0.0",
+  "description": "A comprehensive signature modal component with drawing, typing, and upload capabilities",
+  "main": "index.ts",
+  "types": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "react": "^18.0.0",
+    "framer-motion": "^10.0.0",
+    "react-icons": "^4.0.0",
+    "lucide-react": "^0.263.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "keywords": [
+    "signature",
+    "modal",
+    "drawing",
+    "typing",
+    "upload",
+    "react",
+    "typescript",
+    "framer-motion"
+  ],
+  "author": "Escra Project",
+  "license": "MIT"
+} 

@@ -1,12 +1,7 @@
-from fastapi import FastAPI, Depends
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 import os
 from dotenv import load_dotenv
-from routes.mongo_routes import router as mongo_router
-from db.mongodb_config import setup_mongodb, close_mongodb_connection
-from fastapi.middleware.cors import CORSMiddleware
 
 # Load environment variables
 load_dotenv()
@@ -24,31 +19,6 @@ app.add_middleware(
     max_age=3600,  # Cache preflight requests for 1 hour
 )
 
-# Database setup
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://localhost/escra_db")
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
-
-# Dependency
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-# Include MongoDB routes
-app.include_router(mongo_router)
-
-@app.on_event("startup")
-async def startup_db_client():
-    await setup_mongodb()
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    await close_mongodb_connection()
-
 @app.get("/")
 async def root():
     return {"message": "Welcome to ESCRa Backend API"}
@@ -57,4 +27,6 @@ async def root():
 async def health_check():
     return {"status": "healthy"}
 
-# Add your routes and models here 
+@app.get("/api/test")
+async def test_endpoint():
+    return {"message": "Backend is working correctly!"} 
