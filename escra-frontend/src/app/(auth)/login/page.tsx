@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FaUser } from 'react-icons/fa';
 import { IoMailOutline } from 'react-icons/io5';
@@ -217,10 +217,10 @@ const COUNTRIES: SelectOption[] = [
   { value: 'ZW', label: 'Zimbabwe' }
 ];
 
-export default function AuthPage() {
+function AuthPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login } = useAuth();
+  const { login, register } = useAuth();
   const [tab, setTab] = useState<'login' | 'register'>(() => {
     return searchParams?.get('tab') === 'register' ? 'register' : 'login';
   });
@@ -252,6 +252,8 @@ export default function AuthPage() {
   });
 
   useEffect(() => {
+    document.title = 'ESCRA - Sign In';
+    
     // Load Vanta.js scripts
     const threeScript = document.createElement('script');
     threeScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js';
@@ -335,13 +337,23 @@ export default function AuthPage() {
     return errors;
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     const errors = validateRegister();
     setRegErrors(errors);
+    
     if (Object.keys(errors).length === 0) {
-      // TODO: register logic
-      router.push('/onboarding');
+      try {
+        setIsLoading(true);
+        await register(regEmail, regPassword, regName, regSurname);
+        toast.success('Account created successfully!');
+        // The register function will handle the redirect to /onboarding
+      } catch (error) {
+        toast.error('Failed to create account. Please try again.');
+        console.error('Registration error:', error);
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -409,6 +421,7 @@ export default function AuthPage() {
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 focus:outline-none"
                       onClick={() => setShowPassword(v => !v)}
                       tabIndex={-1}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
                     >
                       {showPassword ? <HiOutlineEyeOff className="w-4 h-4" /> : <HiOutlineEye className="w-4 h-4" />}
                     </button>
@@ -477,6 +490,7 @@ export default function AuthPage() {
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 focus:outline-none"
                       onClick={() => setShowRegPassword(v => !v)}
                       tabIndex={-1}
+                      aria-label={showRegPassword ? "Hide password" : "Show password"}
                     >
                       {showRegPassword ? <HiOutlineEyeOff className="w-4 h-4" /> : <HiOutlineEye className="w-4 h-4" />}
                     </button>
@@ -498,6 +512,7 @@ export default function AuthPage() {
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 focus:outline-none"
                       onClick={() => setShowRegConfirm(v => !v)}
                       tabIndex={-1}
+                      aria-label={showRegConfirm ? "Hide password" : "Show password"}
                     >
                       {showRegConfirm ? <HiOutlineEyeOff className="w-4 h-4" /> : <HiOutlineEye className="w-4 h-4" />}
                     </button>
@@ -506,9 +521,10 @@ export default function AuthPage() {
                 </div>
                 <button
                   type="submit"
-                  className="w-full py-1.5 rounded-lg bg-primary text-white font-semibold text-sm shadow hover:bg-primary/90 transition-colors"
+                  disabled={isLoading}
+                  className="w-full py-1.5 rounded-lg bg-primary text-white font-semibold text-sm shadow hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Create Account
+                  {isLoading ? 'Creating Account...' : 'Create Account'}
                 </button>
               </form>
             )}
@@ -519,5 +535,13 @@ export default function AuthPage() {
         </div>
       </div>
     </>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="text-gray-500">Loading...</div></div>}>
+      <AuthPageContent />
+    </Suspense>
   );
 } 

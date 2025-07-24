@@ -14,6 +14,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -59,6 +60,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const register = async (email: string, password: string, firstName: string, lastName: string) => {
+    try {
+      // TODO: Replace with actual API call
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          firstName,
+          lastName,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Registration failed');
+      }
+
+      const data = await response.json();
+      
+      // Store the token
+      Cookies.set('auth_token', data.token, { expires: 7 }); // Expires in 7 days
+      
+      // Set user data
+      setUser({
+        id: data.user.id,
+        email: data.user.email,
+        name: `${data.user.firstName} ${data.user.lastName}`,
+      });
+
+      // Redirect to onboarding
+      router.push('/onboarding');
+    } catch (error) {
+      console.error('Registration failed:', error);
+      throw error;
+    }
+  };
+
   const logout = () => {
     Cookies.remove('auth_token');
     setUser(null);
@@ -66,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

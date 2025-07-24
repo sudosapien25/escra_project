@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { useEffect } from 'react';
 import DecryptedText from '@/components/DecryptedText';
 import { HiMiniChevronRight } from 'react-icons/hi2';
 import { HiOutlineDuplicate } from 'react-icons/hi';
@@ -24,6 +25,10 @@ import VantaBackground from '@/components/VantaBackground';
 // }
 
 export default function LandingPage() {
+  useEffect(() => {
+    document.title = 'ESCRA - Secure, Streamlined Contracts';
+  }, []);
+
   return (
     <>
       <VantaBackground />
@@ -32,7 +37,7 @@ export default function LandingPage() {
           <div className="text-xl font-medium tracking-tight">
             <Link href="/" key={Date.now()}>
               <Image
-                src="/primary escra (color) copy.png"
+                src="/primary-escra-color.png"
                 alt="ESCRA Logo"
                 width={160}
                 height={53}

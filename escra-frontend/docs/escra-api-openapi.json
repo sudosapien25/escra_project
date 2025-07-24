@@ -1,0 +1,2490 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "ESCRA API",
+    "description": "ESCRA is a secure contract execution platform that enables users to create, manage, sign, and execute digital contracts with blockchain integration.\n\n## Authentication\nMost endpoints require authentication via JWT Bearer token. Include the token in the Authorization header:\n```\nAuthorization: Bearer <jwt_token>\n```\n\n## Rate Limiting\n- Authenticated requests: 1000 requests per hour\n- Unauthenticated requests: 100 requests per hour\n\n## Common Response Headers\n- `X-RateLimit-Limit`: Maximum requests per hour\n- `X-RateLimit-Remaining`: Remaining requests in current window\n- `X-RateLimit-Reset`: Unix timestamp when rate limit resets\n- `X-Request-ID`: Unique request identifier for debugging",
+    "version": "1.0.0",
+    "contact": {
+      "name": "ESCRA API Support",
+      "email": "api-support@escra.com",
+      "url": "https://docs.escra.com"
+    },
+    "license": {
+      "name": "Proprietary",
+      "url": "https://escra.com/license"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.escra.com/v1",
+      "description": "Production server"
+    },
+    {
+      "url": "https://staging-api.escra.com/v1",
+      "description": "Staging server"
+    },
+    {
+      "url": "http://localhost:8000/v1",
+      "description": "Local development server"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "User authentication and authorization endpoints"
+    },
+    {
+      "name": "Users",
+      "description": "User profile management"
+    },
+    {
+      "name": "Contracts",
+      "description": "Contract lifecycle management"
+    },
+    {
+      "name": "Signatures",
+      "description": "Digital signature workflows"
+    },
+    {
+      "name": "Templates",
+      "description": "Contract template management"
+    },
+    {
+      "name": "Blockchain",
+      "description": "Blockchain verification and integration"
+    },
+    {
+      "name": "Notifications",
+      "description": "User notification management"
+    }
+  ],
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Register new user",
+        "description": "Create a new user account with email and password",
+        "operationId": "registerUser",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              },
+              "examples": {
+                "personal": {
+                  "summary": "Personal account registration",
+                  "value": {
+                    "email": "user@example.com",
+                    "password": "SecurePassword123!",
+                    "firstName": "John",
+                    "lastName": "Doe",
+                    "accountType": "personal"
+                  }
+                },
+                "business": {
+                  "summary": "Business account registration",
+                  "value": {
+                    "email": "admin@company.com",
+                    "password": "SecurePassword123!",
+                    "firstName": "Jane",
+                    "lastName": "Smith",
+                    "accountType": "business"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User successfully registered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "409": {
+            "description": "Email already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "USER_EMAIL_EXISTS",
+                    "message": "Email address is already registered"
+                  },
+                  "meta": {
+                    "timestamp": "2024-01-01T00:00:00Z",
+                    "request_id": "550e8400-e29b-41d4-a716-446655440000"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "User login",
+        "description": "Authenticate user and receive access tokens",
+        "operationId": "loginUser",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "AUTH_INVALID_CREDENTIALS",
+                    "message": "Invalid email or password"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Account locked or suspended",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Refresh access token",
+        "description": "Get a new access token using refresh token",
+        "operationId": "refreshToken",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["refreshToken"],
+                "properties": {
+                  "refreshToken": {
+                    "type": "string",
+                    "description": "Valid refresh token"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "New access token generated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "token": {
+                          "type": "string"
+                        },
+                        "expiresIn": {
+                          "type": "integer",
+                          "description": "Token expiration time in seconds"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Logout user",
+        "description": "Invalidate current session and tokens",
+        "operationId": "logoutUser",
+        "responses": {
+          "200": {
+            "description": "Successfully logged out",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/auth/forgot-password": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Request password reset",
+        "description": "Send password reset email to user",
+        "operationId": "forgotPassword",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email"],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset email sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/reset-password": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Reset password",
+        "description": "Reset password using token from email",
+        "operationId": "resetPassword",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["token", "newPassword"],
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "description": "Reset token from email"
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "format": "password",
+                    "minLength": 8
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password successfully reset",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        }
+      }
+    },
+    "/users/me": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get current user profile",
+        "description": "Get authenticated user's profile information",
+        "operationId": "getCurrentUser",
+        "responses": {
+          "200": {
+            "description": "User profile retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/UserProfile"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Users"],
+        "summary": "Update user profile",
+        "description": "Update authenticated user's profile information",
+        "operationId": "updateCurrentUser",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/UserProfile"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/users/me/onboarding": {
+      "post": {
+        "tags": ["Users"],
+        "summary": "Complete user onboarding",
+        "description": "Submit additional information to complete onboarding",
+        "operationId": "completeOnboarding",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OnboardingRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Onboarding completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "onboardingCompleted": {
+                          "type": "boolean"
+                        },
+                        "user": {
+                          "$ref": "#/components/schemas/UserProfile"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/contracts": {
+      "get": {
+        "tags": ["Contracts"],
+        "summary": "List contracts",
+        "description": "Get paginated list of contracts for authenticated user",
+        "operationId": "listContracts",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Items per page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter by contract status",
+            "schema": {
+              "type": "string",
+              "enum": ["draft", "pending", "active", "completed", "cancelled"]
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Search in contract title and content",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sort field",
+            "schema": {
+              "type": "string",
+              "enum": ["createdAt", "updatedAt", "title"],
+              "default": "createdAt"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "Sort order",
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"],
+              "default": "desc"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contracts retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "contracts": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/ContractSummary"
+                          }
+                        },
+                        "pagination": {
+                          "$ref": "#/components/schemas/Pagination"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Contracts"],
+        "summary": "Create contract",
+        "description": "Create a new contract",
+        "operationId": "createContract",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateContractRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Contract created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Contract"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/contracts/{contractId}": {
+      "get": {
+        "tags": ["Contracts"],
+        "summary": "Get contract",
+        "description": "Get specific contract details",
+        "operationId": "getContract",
+        "parameters": [
+          {
+            "name": "contractId",
+            "in": "path",
+            "required": true,
+            "description": "Contract ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contract retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ContractDetail"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Contracts"],
+        "summary": "Update contract",
+        "description": "Update contract (only in draft status)",
+        "operationId": "updateContract",
+        "parameters": [
+          {
+            "name": "contractId",
+            "in": "path",
+            "required": true,
+            "description": "Contract ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateContractRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Contract updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Contract"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Contracts"],
+        "summary": "Delete contract",
+        "description": "Delete contract (only in draft status)",
+        "operationId": "deleteContract",
+        "parameters": [
+          {
+            "name": "contractId",
+            "in": "path",
+            "required": true,
+            "description": "Contract ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Contract deleted successfully"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/contracts/{contractId}/send": {
+      "post": {
+        "tags": ["Contracts"],
+        "summary": "Send contract for signature",
+        "description": "Send contract to parties for signature",
+        "operationId": "sendContract",
+        "parameters": [
+          {
+            "name": "contractId",
+            "in": "path",
+            "required": true,
+            "description": "Contract ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "type": "string",
+                    "description": "Custom message to include in notification"
+                  },
+                  "reminderDays": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    },
+                    "description": "Days after which to send reminders",
+                    "example": [3, 7, 14]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Contract sent successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "contractId": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": ["pending"]
+                        },
+                        "sentTo": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "email": {
+                                "type": "string"
+                              },
+                              "sentAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/signatures": {
+      "get": {
+        "tags": ["Signatures"],
+        "summary": "List signature requests",
+        "description": "Get list of signature requests for authenticated user",
+        "operationId": "listSignatures",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter by signature status",
+            "schema": {
+              "type": "string",
+              "enum": ["pending", "signed", "declined"]
+            }
+          },
+          {
+            "name": "contractId",
+            "in": "query",
+            "description": "Filter by contract ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Signature requests retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "signatures": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/SignatureRequest"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/signatures/{contractId}/sign": {
+      "post": {
+        "tags": ["Signatures"],
+        "summary": "Sign contract",
+        "description": "Sign a contract with digital signature",
+        "operationId": "signContract",
+        "parameters": [
+          {
+            "name": "contractId",
+            "in": "path",
+            "required": true,
+            "description": "Contract ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignContractRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Contract signed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/SignatureResponse"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/signatures/{contractId}/decline": {
+      "post": {
+        "tags": ["Signatures"],
+        "summary": "Decline signature",
+        "description": "Decline to sign a contract",
+        "operationId": "declineSignature",
+        "parameters": [
+          {
+            "name": "contractId",
+            "in": "path",
+            "required": true,
+            "description": "Contract ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["reason"],
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "description": "Reason for declining"
+                  },
+                  "message": {
+                    "type": "string",
+                    "description": "Additional message"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signature declined",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "contractId": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": ["declined"]
+                        },
+                        "declinedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/templates": {
+      "get": {
+        "tags": ["Templates"],
+        "summary": "List templates",
+        "description": "Get available contract templates",
+        "operationId": "listTemplates",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Filter by category",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "industry",
+            "in": "query",
+            "description": "Filter by industry",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Templates retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "templates": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/TemplateSummary"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/templates/{templateId}": {
+      "get": {
+        "tags": ["Templates"],
+        "summary": "Get template",
+        "description": "Get specific template details",
+        "operationId": "getTemplate",
+        "parameters": [
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "description": "Template ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Template retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/TemplateDetail"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/blockchain/verify": {
+      "post": {
+        "tags": ["Blockchain"],
+        "summary": "Verify contract on blockchain",
+        "description": "Verify contract authenticity on blockchain",
+        "operationId": "verifyContract",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["contractId", "hash"],
+                "properties": {
+                  "contractId": {
+                    "type": "string"
+                  },
+                  "hash": {
+                    "type": "string",
+                    "description": "Blockchain hash to verify"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Verification result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "verified": {
+                          "type": "boolean"
+                        },
+                        "blockchain": {
+                          "$ref": "#/components/schemas/BlockchainInfo"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/blockchain/status/{contractId}": {
+      "get": {
+        "tags": ["Blockchain"],
+        "summary": "Get blockchain status",
+        "description": "Get blockchain transaction status for a contract",
+        "operationId": "getBlockchainStatus",
+        "parameters": [
+          {
+            "name": "contractId",
+            "in": "path",
+            "required": true,
+            "description": "Contract ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Blockchain status retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "contractId": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": ["pending", "confirmed", "failed"]
+                        },
+                        "transactions": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/BlockchainTransaction"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/notifications": {
+      "get": {
+        "tags": ["Notifications"],
+        "summary": "Get notifications",
+        "description": "Get user notifications",
+        "operationId": "getNotifications",
+        "parameters": [
+          {
+            "name": "unread",
+            "in": "query",
+            "description": "Filter unread notifications only",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Filter by notification type",
+            "schema": {
+              "type": "string",
+              "enum": ["signature_request", "contract_signed", "contract_completed", "contract_declined"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notifications retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "notifications": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Notification"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/notifications/{notificationId}/read": {
+      "put": {
+        "tags": ["Notifications"],
+        "summary": "Mark notification as read",
+        "description": "Mark a notification as read",
+        "operationId": "markNotificationRead",
+        "parameters": [
+          {
+            "name": "notificationId",
+            "in": "path",
+            "required": true,
+            "description": "Notification ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notification marked as read",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "read": {
+                          "type": "boolean"
+                        },
+                        "readAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "Machine-readable error code"
+              },
+              "message": {
+                "type": "string",
+                "description": "Human-readable error message"
+              },
+              "details": {
+                "type": "object",
+                "description": "Additional error details"
+              }
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        }
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              }
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        }
+      },
+      "ResponseMeta": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "request_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "required": ["email", "password", "firstName", "lastName"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "minLength": 8,
+            "pattern": "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$",
+            "description": "Must contain uppercase, lowercase, number and special character"
+          },
+          "firstName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50
+          },
+          "lastName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50
+          },
+          "accountType": {
+            "type": "string",
+            "enum": ["personal", "business"],
+            "default": "personal"
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "format": "password"
+          }
+        }
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "$ref": "#/components/schemas/User"
+              },
+              "token": {
+                "type": "string",
+                "description": "JWT access token"
+              },
+              "refreshToken": {
+                "type": "string",
+                "description": "JWT refresh token"
+              },
+              "expiresIn": {
+                "type": "integer",
+                "description": "Token expiration time in seconds"
+              }
+            }
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "usr_1234567890"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "accountType": {
+            "type": "string",
+            "enum": ["personal", "business"]
+          },
+          "emailVerified": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "UserProfile": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/User"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "company": {
+                "$ref": "#/components/schemas/Company"
+              },
+              "preferences": {
+                "$ref": "#/components/schemas/UserPreferences"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "Company": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["sole_proprietorship", "partnership", "corporation", "llc", "other"]
+          },
+          "industry": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "address": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "website": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      },
+      "Address": {
+        "type": "object",
+        "required": ["street", "city", "state", "zipCode", "country"],
+        "properties": {
+          "street": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "zipCode": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          }
+        }
+      },
+      "UserPreferences": {
+        "type": "object",
+        "properties": {
+          "emailNotifications": {
+            "type": "boolean",
+            "default": true
+          },
+          "smsNotifications": {
+            "type": "boolean",
+            "default": false
+          },
+          "language": {
+            "type": "string",
+            "default": "en"
+          },
+          "timezone": {
+            "type": "string",
+            "default": "America/New_York"
+          }
+        }
+      },
+      "UpdateUserRequest": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "company": {
+            "$ref": "#/components/schemas/Company"
+          },
+          "preferences": {
+            "$ref": "#/components/schemas/UserPreferences"
+          }
+        }
+      },
+      "OnboardingRequest": {
+        "type": "object",
+        "required": ["company"],
+        "properties": {
+          "company": {
+            "$ref": "#/components/schemas/Company"
+          }
+        }
+      },
+      "ContractSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "con_1234567890"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["draft", "pending", "active", "completed", "cancelled"]
+          },
+          "type": {
+            "type": "string"
+          },
+          "parties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContractParty"
+            }
+          },
+          "value": {
+            "$ref": "#/components/schemas/ContractValue"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Contract": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ContractSummary"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "content": {
+                "$ref": "#/components/schemas/ContractContent"
+              },
+              "metadata": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        ]
+      },
+      "ContractDetail": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Contract"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "signatures": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Signature"
+                }
+              },
+              "blockchain": {
+                "$ref": "#/components/schemas/BlockchainInfo"
+              },
+              "attachments": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Attachment"
+                }
+              },
+              "audit": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AuditEntry"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "ContractParty": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "role": {
+            "type": "string"
+          },
+          "signatureStatus": {
+            "type": "string",
+            "enum": ["pending", "signed", "declined"]
+          },
+          "signedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ContractValue": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number"
+          },
+          "currency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$"
+          }
+        }
+      },
+      "ContractContent": {
+        "type": "object",
+        "properties": {
+          "html": {
+            "type": "string",
+            "description": "HTML content of the contract"
+          },
+          "variables": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Template variables and their values"
+          }
+        }
+      },
+      "CreateContractRequest": {
+        "type": "object",
+        "required": ["title", "type", "parties"],
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "templateId": {
+            "type": "string",
+            "description": "Optional template to use"
+          },
+          "content": {
+            "$ref": "#/components/schemas/ContractContent"
+          },
+          "parties": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "userId": {
+                  "type": "string",
+                  "description": "User ID if existing user"
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email",
+                  "description": "Email for external party"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Name for external party"
+                },
+                "role": {
+                  "type": "string"
+                },
+                "signatureRequired": {
+                  "type": "boolean",
+                  "default": true
+                },
+                "signatureOrder": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "value": {
+            "$ref": "#/components/schemas/ContractValue"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "UpdateContractRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "content": {
+            "$ref": "#/components/schemas/ContractContent"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "SignatureRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "contractId": {
+            "type": "string"
+          },
+          "contractTitle": {
+            "type": "string"
+          },
+          "requestedFrom": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              }
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "signed", "declined"]
+          },
+          "requestedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "SignContractRequest": {
+        "type": "object",
+        "required": ["signatureType", "acceptTerms"],
+        "properties": {
+          "signatureType": {
+            "type": "string",
+            "enum": ["drawn", "typed", "upload"]
+          },
+          "signatureData": {
+            "type": "string",
+            "description": "Base64 encoded signature image (for drawn/upload)"
+          },
+          "signatureText": {
+            "type": "string",
+            "description": "Text signature (for typed)"
+          },
+          "acceptTerms": {
+            "type": "boolean",
+            "description": "Must be true to sign"
+          },
+          "ipAddress": {
+            "type": "string",
+            "format": "ipv4",
+            "description": "Optional, auto-detected if not provided"
+          }
+        }
+      },
+      "Signature": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["electronic", "drawn", "typed"]
+          },
+          "ipAddress": {
+            "type": "string"
+          },
+          "userAgent": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "certificate": {
+            "type": "string",
+            "description": "Digital certificate"
+          }
+        }
+      },
+      "SignatureResponse": {
+        "type": "object",
+        "properties": {
+          "signatureId": {
+            "type": "string"
+          },
+          "contractId": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "certificate": {
+            "type": "string"
+          },
+          "blockchainHash": {
+            "type": "string"
+          }
+        }
+      },
+      "TemplateSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "industries": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "variables": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TemplateVariable"
+            }
+          },
+          "previewUrl": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      },
+      "TemplateDetail": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/TemplateSummary"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "content": {
+                "type": "object",
+                "properties": {
+                  "html": {
+                    "type": "string"
+                  },
+                  "css": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "TemplateVariable": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["text", "textarea", "number", "date", "email", "select"]
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "validation": {
+            "type": "object",
+            "properties": {
+              "minLength": {
+                "type": "integer"
+              },
+              "maxLength": {
+                "type": "integer"
+              },
+              "min": {
+                "type": "number"
+              },
+              "max": {
+                "type": "number"
+              },
+              "pattern": {
+                "type": "string"
+              },
+              "options": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "BlockchainInfo": {
+        "type": "object",
+        "properties": {
+          "hash": {
+            "type": "string"
+          },
+          "transactionId": {
+            "type": "string"
+          },
+          "network": {
+            "type": "string",
+            "enum": ["ethereum", "polygon", "binance_smart_chain"]
+          },
+          "blockNumber": {
+            "type": "integer"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "contractAddress": {
+            "type": "string"
+          }
+        }
+      },
+      "BlockchainTransaction": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["contract_creation", "signature_added"]
+          },
+          "hash": {
+            "type": "string"
+          },
+          "network": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "confirmed", "failed"]
+          },
+          "confirmations": {
+            "type": "integer"
+          },
+          "gasUsed": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Attachment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "filename": {
+            "type": "string"
+          },
+          "size": {
+            "type": "integer",
+            "description": "File size in bytes"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "uploadedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AuditEntry": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": ["created", "updated", "sent", "signed", "declined", "completed", "cancelled"]
+          },
+          "userId": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "Notification": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["signature_request", "contract_signed", "contract_completed", "contract_declined", "reminder"]
+          },
+          "title": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "contractId": {
+                "type": "string"
+              },
+              "requesterId": {
+                "type": "string"
+              }
+            }
+          },
+          "read": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "pages": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Bad request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "success": false,
+              "error": {
+                "code": "VALIDATION_ERROR",
+                "message": "Invalid request data",
+                "details": {
+                  "field": "email",
+                  "issue": "Invalid email format"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Unauthorized",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "success": false,
+              "error": {
+                "code": "AUTH_TOKEN_INVALID",
+                "message": "Invalid or expired token"
+              }
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Forbidden",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "success": false,
+              "error": {
+                "code": "ACCESS_DENIED",
+                "message": "You do not have permission to access this resource"
+              }
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Resource not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "success": false,
+              "error": {
+                "code": "RESOURCE_NOT_FOUND",
+                "message": "The requested resource was not found"
+              }
+            }
+          }
+        }
+      },
+      "RateLimitExceeded": {
+        "description": "Rate limit exceeded",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Request limit per hour"
+          },
+          "X-RateLimit-Remaining": {
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Remaining requests in current window"
+          },
+          "X-RateLimit-Reset": {
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Unix timestamp when rate limit resets"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "success": false,
+              "error": {
+                "code": "RATE_LIMIT_EXCEEDED",
+                "message": "Too many requests. Please try again later."
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {
+    "contractCreated": {
+      "post": {
+        "requestBody": {
+          "description": "Contract created event",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["contract.created"]
+                  },
+                  "created": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "contractId": {
+                        "type": "string"
+                      },
+                      "userId": {
+                        "type": "string"
+                      },
+                      "title": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook processed successfully"
+          }
+        }
+      }
+    },
+    "contractSigned": {
+      "post": {
+        "requestBody": {
+          "description": "Contract signed event",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["contract.signed"]
+                  },
+                  "created": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "contractId": {
+                        "type": "string"
+                      },
+                      "userId": {
+                        "type": "string"
+                      },
+                      "signatureId": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook processed successfully"
+          }
+        }
+      }
+    }
+  }
+}
