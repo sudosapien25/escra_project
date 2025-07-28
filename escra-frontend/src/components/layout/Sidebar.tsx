@@ -129,8 +129,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
                   </Link>
                 )}
               </li>
-              {/* Add sub-options under Signatures */}
-              {item.name === 'Signatures' && !isCollapsed && signaturesOpen && (
+              {/* Add sub-options under Signatures - HIDDEN */}
+              {/* {item.name === 'Signatures' && !isCollapsed && signaturesOpen && (
                 <ul className="ml-8 mb-2">
                   {[
                     { name: 'Inbox', href: '/signatures/inbox' },
@@ -152,7 +152,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
                     </li>
                   ))}
                 </ul>
-              )}
+              )} */}
             </React.Fragment>
           ))}
         </ul>

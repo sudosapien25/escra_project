@@ -1,24 +1,25 @@
 [
   {
-    "id": "AM80PM9G9",
-    "document": "Sales Agreement",
+    "id": "I3INBECGA",
+    "document": "Bill of Sale",
     "parties": [
       "Nicholas Aquino",
       "Benjamin Aiello",
       "Romanet Perez",
       "Molly Aiello",
-      "Mandy Mangosteen"
+      "Mandy Mangosteen",
+      "Steve Kuebler"
     ],
     "status": "Pending",
-    "signatures": "0 of 5",
-    "contractId": "7353",
-    "contract": "Dunedin Home",
-    "assignee": "Sarah Miller",
-    "dateSent": "2025-07-22",
-    "dueDate": "2025-09-03",
-    "message": "please sign it fools",
-    "subject": "Please sign the sales agreement for the Dunedin Home",
-    "documentId": "8717",
+    "signatures": "0 of 6",
+    "contractId": "7899",
+    "contract": "Palmetto Home",
+    "assignee": "Emma Johnson",
+    "dateSent": "2025-07-28",
+    "dueDate": "2025-08-08",
+    "message": "Hi Team, \n\nPlease sign the document attached. ",
+    "subject": "Review & Sign Bill of Sale",
+    "documentId": "8120",
     "recipients": [
       {
         "name": "Nicholas Aquino",
@@ -46,9 +47,15 @@
       },
       {
         "name": "Mandy Mangosteen",
-        "email": "mandy@bustedtitle.com",
+        "email": "mandy@elitetitle.com",
         "signerRole": "Needs to Sign",
         "contractRole": "Closing Agent"
+      },
+      {
+        "name": "Steve Kuebler",
+        "email": "steve@inspectorusa.com",
+        "signerRole": "Receives a Copy",
+        "contractRole": "Inspector"
       }
     ]
   }

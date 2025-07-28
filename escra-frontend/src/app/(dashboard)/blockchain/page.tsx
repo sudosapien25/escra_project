@@ -420,39 +420,9 @@ export default function BlockchainPage() {
       <hr className="my-3 md:my-6 border-gray-300 cursor-default select-none" />
 
       {/* Toggle Bar - Responsive Design */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 mb-6 cursor-default select-none">
-        {/* Mobile: Stacked layout */}
-        <div className="lg:hidden cursor-default select-none">
-          <div className="flex flex-col gap-2 cursor-default select-none">
-            {[
-              { key: 'smart-contracts', label: 'Smart Contracts' },
-              { key: 'on-chain-activity', label: 'On-Chain Activity' },
-              { key: 'explorers', label: 'Explorers' },
-              { key: 'tokens', label: 'Tokens' },
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center justify-between w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 font-medium text-xs shadow-sm whitespace-nowrap transition-all duration-300 ${
-                  activeTab === tab.key 
-                    ? 'bg-white dark:bg-gray-800 text-teal-500 dark:text-teal-400 border-2 border-gray-200 dark:border-gray-700' 
-                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
-                }`}
-                style={{ fontFamily: 'Avenir, sans-serif' }}
-              >
-                <span className="flex items-center">
-                  <span className={`inline-block transition-all duration-300 ${activeTab === tab.key ? 'opacity-100 mr-1.5' : 'opacity-0 w-0 mr-0'}`} style={{width: activeTab === tab.key ? 16 : 0}}>
-                    {activeTab === tab.key && <Logo width={16} height={16} className="pointer-events-none" />}
-                  </span>
-                  {tab.label}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Desktop: Horizontal layout */}
-        <div className="hidden lg:flex gap-1 cursor-default select-none">
+      {/* Mobile: Stacked layout */}
+      <div className="lg:hidden cursor-default select-none mb-6">
+        <div className="flex flex-col gap-2 cursor-default select-none">
           {[
             { key: 'smart-contracts', label: 'Smart Contracts' },
             { key: 'on-chain-activity', label: 'On-Chain Activity' },
@@ -462,19 +432,47 @@ export default function BlockchainPage() {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all duration-300 font-sans flex items-center justify-center ${
+              className={`flex items-center justify-between w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 font-medium text-xs shadow-sm whitespace-nowrap transition-all duration-300 ${
                 activeTab === tab.key 
-                  ? 'bg-white dark:bg-gray-800 text-teal-500 dark:text-teal-400 min-w-[130px] border-2 border-gray-200 dark:border-gray-700' 
-                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 w-fit border border-gray-200 dark:border-gray-700'
+                  ? 'bg-white dark:bg-gray-800 text-teal-500 dark:text-teal-400 border-2 border-gray-200 dark:border-gray-700' 
+                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
               }`}
+              style={{ fontFamily: 'Avenir, sans-serif' }}
             >
-              <span className={`inline-block transition-all duration-300 ${activeTab === tab.key ? 'opacity-100 mr-1.5' : 'opacity-0 w-0 mr-0'}`} style={{width: activeTab === tab.key ? 16 : 0}}>
-                {activeTab === tab.key && <Logo width={16} height={16} className="pointer-events-none" />}
+              <span className="flex items-center">
+                <span className={`inline-block transition-all duration-300 ${activeTab === tab.key ? 'opacity-100 mr-1.5' : 'opacity-0 w-0 mr-0'}`} style={{width: activeTab === tab.key ? 16 : 0}}>
+                  {activeTab === tab.key && <Logo width={16} height={16} className="pointer-events-none" />}
+                </span>
+                {tab.label}
               </span>
-              {tab.label}
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Desktop: Horizontal layout */}
+      <div className="hidden lg:flex gap-1 cursor-default select-none mb-6">
+        {[
+          { key: 'smart-contracts', label: 'Smart Contracts' },
+          { key: 'on-chain-activity', label: 'On-Chain Activity' },
+          { key: 'explorers', label: 'Explorers' },
+          { key: 'tokens', label: 'Tokens' },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all duration-300 font-sans flex items-center justify-center ${
+              activeTab === tab.key 
+                ? 'bg-white dark:bg-gray-800 text-teal-500 dark:text-teal-400 min-w-[130px] border-2 border-gray-200 dark:border-gray-700' 
+                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 w-fit border border-gray-200 dark:border-gray-700'
+            }`}
+          >
+            <span className={`inline-block transition-all duration-300 ${activeTab === tab.key ? 'opacity-100 mr-1.5' : 'opacity-0 w-0 mr-0'}`} style={{width: activeTab === tab.key ? 16 : 0}}>
+              {activeTab === tab.key && <Logo width={16} height={16} className="pointer-events-none" />}
+            </span>
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       <hr className="my-3 md:my-6 border-gray-300 cursor-default select-none" />

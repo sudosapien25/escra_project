@@ -629,7 +629,33 @@ export default function WorkflowsPage() {
       {/* Workflow Stats and Filters Section */}
       <div className="space-y-4">
         {/* Tabs */}
-        <div className="flex gap-1">
+        {/* Mobile: Stacked layout */}
+        <div className="lg:hidden cursor-default select-none mb-2">
+          <div className="flex flex-col gap-2 cursor-default select-none">
+            {kanbanTabs.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setKanbanTab(tab)}
+                className={`flex items-center justify-between w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 font-medium text-xs shadow-sm whitespace-nowrap transition-all duration-300 ${
+                  kanbanTab === tab 
+                    ? 'bg-white dark:bg-gray-800 text-teal-500 dark:text-teal-400 border-2 border-gray-200 dark:border-gray-700' 
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
+                }`}
+                style={{ fontFamily: 'Avenir, sans-serif' }}
+              >
+                <span className="flex items-center">
+                  <span className={`inline-block transition-all duration-300 ${kanbanTab === tab ? 'opacity-100 mr-1.5' : 'opacity-0 w-0 mr-0'}`} style={{width: kanbanTab === tab ? 16 : 0}}>
+                    {kanbanTab === tab && <Logo width={16} height={16} className="pointer-events-none" />}
+                  </span>
+                  {tab}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Desktop: Horizontal layout */}
+        <div className="hidden lg:flex gap-1 cursor-default select-none mb-6">
           {kanbanTabs.map((tab) => (
             <button
               key={tab}

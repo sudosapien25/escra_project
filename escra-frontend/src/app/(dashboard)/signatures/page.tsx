@@ -31,6 +31,9 @@ import { useToast } from '@/components/ui/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Logo } from '@/components/common/Logo';
 import { SignatureDocument, mockSignatures } from '@/data/mockSignatures';
+import { SignatureModal, SignatureValue } from '@/components/common/SignatureModal';
+import { SignatureConfirmationModal } from '@/components/common/SignatureConfirmationModal';
+import { DocumentPreparationModal } from '@/components/DocumentPreparationModal';
 
 interface Document {
   id: string;
@@ -75,6 +78,7 @@ export default function SignaturesPage() {
   const [selectedDocument, setSelectedDocument] = useState<SignatureDocument | null>(null);
   const [showRequestSignatureModal, setShowRequestSignatureModal] = useState(false);
   const [showDocuSignModal, setShowDocuSignModal] = useState(false);
+  const [showDocumentPreparationModal, setShowDocumentPreparationModal] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [docuSignUploadedFiles, setDocuSignUploadedFiles] = useState<File[]>([]);
   const [editingFileName, setEditingFileName] = useState<string | null>(null);
@@ -180,6 +184,12 @@ export default function SignaturesPage() {
   const [isDocuSignOnlySigner, setIsDocuSignOnlySigner] = useState(false);
   const [setSigningOrder, setSetSigningOrder] = useState(false);
   const [setDocuSignSigningOrder, setSetDocuSignSigningOrder] = useState(false);
+
+  // Signature modal state
+  const [showSignatureModal, setShowSignatureModal] = useState(false);
+  const [showSignatureConfirmationModal, setShowSignatureConfirmationModal] = useState(false);
+  const [capturedSignatureData, setCapturedSignatureData] = useState<SignatureValue | null>(null);
+  const [isFinalSigning, setIsFinalSigning] = useState(false);
 
   const [selectedRecentlyUpdated, setSelectedRecentlyUpdated] = useState('Last 24 hours');
   const [openRecentlyUpdatedDropdown, setOpenRecentlyUpdatedDropdown] = useState(false);
@@ -1670,7 +1680,7 @@ export default function SignaturesPage() {
       id: generateSignatureId(),
       document: getDocumentName(),
       parties: extractPartiesFromRecipients(),
-      status: 'Awaiting Signature',
+      status: 'Pending',
       signatures: calculateSignaturesRequired(),
       contractId: contractId,
       contract: contract,
@@ -1742,7 +1752,7 @@ export default function SignaturesPage() {
       id: generateSignatureId(),
       document: getDocumentName(),
       parties: docuSignRecipients.filter(r => r.name && r.name.trim() !== '').map(r => r.name),
-      status: 'Awaiting Signature',
+      status: 'Pending',
       signatures: `${docuSignRecipients.filter(r => r.name && r.name.trim() !== '').length} of ${docuSignRecipients.filter(r => r.name && r.name.trim() !== '').length}`,
       contractId: contractId,
       contract: contract,
@@ -1850,6 +1860,92 @@ export default function SignaturesPage() {
     }
   };
 
+  // Handle sign button click - open signature modal
+  const handleSign = () => {
+    if (!selectedDocument) return;
+    setShowSignatureModal(true);
+  };
+
+  // Handle signature completion - open confirmation modal
+  const handleSignatureComplete = (signature: SignatureValue) => {
+    if (!selectedDocument) return;
+    
+    // Store the captured signature data
+    setCapturedSignatureData(signature);
+    
+    // Close the signature capture modal
+    setShowSignatureModal(false);
+    
+    // Open the confirmation modal
+    setShowSignatureConfirmationModal(true);
+  };
+
+  // Handle final signature submission
+  const handleFinalSignatureSubmit = async () => {
+    if (!selectedDocument || !capturedSignatureData) return;
+    
+    setIsFinalSigning(true);
+    
+    try {
+      // Simulate signing process
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Parse current signature count
+      const [currentSignatures, totalRequired] = selectedDocument.signatures.split(" of ").map(num => parseInt(num));
+      const newSignatureCount = currentSignatures + 1;
+      
+      // Determine if this completes all required signatures
+      const isCompleted = newSignatureCount >= totalRequired;
+      
+      // Update the signature status
+      const updatedSignature = {
+        ...selectedDocument,
+        status: isCompleted ? "Completed" : "Pending",
+        signatures: `${newSignatureCount} of ${totalRequired}`
+      };
+      
+      // Update the signatures data
+      setSignaturesData(prev => 
+        prev.map(sig => sig.id === selectedDocument.id ? updatedSignature : sig)
+      );
+      
+      // Update the selected document
+      setSelectedDocument(updatedSignature);
+      
+      // Close the confirmation modal
+      setShowSignatureConfirmationModal(false);
+      
+      // Reset captured signature data
+      setCapturedSignatureData(null);
+      
+      // Show appropriate success message
+      const message = isCompleted 
+        ? `"${selectedDocument.document}" has been signed and completed.`
+        : `"${selectedDocument.document}" has been signed. ${totalRequired - newSignatureCount} signature(s) remaining.`;
+      
+      toast({
+        title: isCompleted ? "Document Signed Successfully" : "Signature Added Successfully",
+        description: message,
+      });
+      
+    } catch (error) {
+      console.error("Error signing document:", error);
+      toast({
+        title: "Signing Error",
+        description: "Failed to sign document. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsFinalSigning(false);
+    }
+  };
+
+  // Handle confirmation modal close
+  const handleConfirmationModalClose = () => {
+    setShowSignatureConfirmationModal(false);
+    setCapturedSignatureData(null);
+  };
+
   return (
     <div className="space-y-4 cursor-default select-none">
       {/* Signatures Title and Button */}
@@ -1871,7 +1967,33 @@ export default function SignaturesPage() {
       <hr className="my-3 sm:my-6 border-gray-300 cursor-default select-none" />
 
       {/* Signature Filter Tabs */}
-      <div className="flex gap-1">
+      {/* Mobile: Stacked layout */}
+      <div className="lg:hidden cursor-default select-none mb-6">
+        <div className="flex flex-col gap-2 cursor-default select-none">
+          {signatureFilterTabs.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setSignatureFilterTab(tab)}
+              className={`flex items-center justify-between w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 font-medium text-xs shadow-sm whitespace-nowrap transition-all duration-300 ${
+                signatureFilterTab === tab 
+                  ? 'bg-white dark:bg-gray-800 text-teal-500 dark:text-teal-400 border-2 border-gray-200 dark:border-gray-700' 
+                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
+              }`}
+              style={{ fontFamily: 'Avenir, sans-serif' }}
+            >
+              <span className="flex items-center">
+                <span className={`inline-block transition-all duration-300 ${signatureFilterTab === tab ? 'opacity-100 mr-1.5' : 'opacity-0 w-0 mr-0'}`} style={{width: signatureFilterTab === tab ? 16 : 0}}>
+                  {signatureFilterTab === tab && <Logo width={16} height={16} className="pointer-events-none" />}
+                </span>
+                {tab}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Desktop: Horizontal layout */}
+      <div className="hidden lg:flex gap-1 cursor-default select-none mb-6">
         {signatureFilterTabs.map((tab) => (
           <button
             key={tab}
@@ -2806,7 +2928,7 @@ export default function SignaturesPage() {
 
           {/* Signature List Content based on Active Tab */}
           <div className="mt-4">
-            <div style={{ height: 'calc(10 * 3.5rem)', minHeight: '350px' }} className="relative overflow-x-auto overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
+            <div style={{ height: 'calc(10 * 3.5rem)', minHeight: '350px' }} className="relative overflow-x-auto overflow-y-auto mt-4 pr-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700">
                   <tr>
@@ -3032,7 +3154,7 @@ export default function SignaturesPage() {
       {/* Signature Details Modal */}
       {selectedDocument && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-2 sm:p-4 cursor-default select-none">
-          <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-[1400px] max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden cursor-default select-none">
+          <div className="relative bg-gray-50 dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-[1400px] max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden cursor-default select-none">
             {/* Sticky Header with Document ID and Close buttons */}
             <div className="sticky top-0 z-40 bg-gray-50 dark:bg-gray-900 px-4 sm:px-6 py-4 cursor-default select-none">
               <div className="flex items-start justify-between cursor-default select-none">
@@ -3060,11 +3182,11 @@ export default function SignaturesPage() {
             <div className="flex flex-col flex-1 min-h-0 cursor-default select-none">
               <div className="overflow-y-auto p-4 sm:p-6 flex-1 bg-gray-50 dark:bg-gray-900 cursor-default select-none">
                 {/* Modal Content Grid: 2 columns on desktop, 1 column on mobile */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 w-full h-full min-h-0 -mt-2 items-start cursor-default select-none">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 w-full h-full min-h-0 -mt-2 items-stretch cursor-default select-none">
                   {/* LEFT COLUMN: Document Details */}
                   <div className="flex flex-col gap-4 sm:gap-6 w-full cursor-default select-none">
                     {/* Document Details Box */}
-                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 w-full cursor-default select-none">
+                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 w-full h-full cursor-default select-none">
                       <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Document Details</h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-x-12 gap-y-4 cursor-default select-none">
                         {/* Row 1: Document ID, Document Hash, and Contract ID */}
@@ -3186,7 +3308,7 @@ export default function SignaturesPage() {
                   {/* RIGHT COLUMN: Signature Details */}
                   <div className="flex flex-col gap-4 sm:gap-6 w-full cursor-default select-none">
                     {/* Signature Details Box */}
-                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 w-full cursor-default select-none">
+                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 w-full h-full cursor-default select-none">
                       <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Signature Details</h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-x-12 gap-y-4 cursor-default select-none">
                         {/* Row 1: Parties and Signatures */}
@@ -3276,7 +3398,7 @@ export default function SignaturesPage() {
                                 </div>
                                 <div>
                                   <span className="text-gray-500 dark:text-gray-400">Status:</span>
-                                  <div className="font-semibold text-primary">Awaiting Signature</div>
+                                  <div className="font-semibold text-primary">Pending</div>
                                 </div>
                                 <div>
                                   <span className="text-gray-500 dark:text-gray-400">Date/Time:</span>
@@ -3308,7 +3430,7 @@ export default function SignaturesPage() {
                             <div className="font-bold">{recipient.name}</div>
                             <div className="text-gray-500 dark:text-gray-400">{recipient.email}</div>
                             <div className="font-semibold text-primary flex items-center justify-start">
-                              <span>Awaiting Signature</span>
+                              <span>Pending</span>
                             </div>
                             <div className="text-gray-700 dark:text-gray-300">--</div>
                           </div>
@@ -3318,6 +3440,19 @@ export default function SignaturesPage() {
                   </div>
                 </div>
               </div>
+            </div>
+            
+            {/* Sign Button - Bottom of Modal */}
+            <div className="flex justify-end pt-0 pb-6 px-6 mt-0 bg-gray-50 dark:bg-gray-900">
+              <button
+                onClick={handleSign}
+                disabled={selectedDocument?.status === 'Completed' || selectedDocument?.status === 'Rejected' || selectedDocument?.status === 'Expired' || selectedDocument?.status === 'Voided'}
+                className="flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
+                style={{ fontFamily: 'Avenir, sans-serif' }}
+              >
+                <TbPencilShare className="mr-2 text-lg" />
+                <span className="whitespace-nowrap">Sign</span>
+              </button>
             </div>
           </div>
         </div>
@@ -3426,12 +3561,9 @@ export default function SignaturesPage() {
                     return;
                   }
                   
-                  // Create and save signature request
-                  await createSignatureRequest();
-                  
-                  // Reset form
-                  setShowRequestSignatureModal(false); 
-                  resetModalData();
+                  // Close the current modal and open document preparation modal
+                  setShowRequestSignatureModal(false);
+                  setShowDocumentPreparationModal(true);
                 }}>
                   <div className="space-y-6">
                     {/* Two Column Layout for Documents */}
@@ -3467,12 +3599,14 @@ export default function SignaturesPage() {
                           <div className="text-xs text-gray-500 dark:text-gray-400 font-semibold">Drop your files here or...</div>
                         {isDraggingOver && (
                           <div className="absolute inset-x-0 flex flex-col items-center justify-center" style={{ top: '0', height: '100%' }}>
-                            <div className="h-full w-full flex flex-col items-center justify-center bg-white/95 rounded-lg" style={{ marginTop: '1px' }}>
-                                <div className="h-11 w-11 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800 mb-1.5">
+                            <div className="h-full w-full flex flex-col items-center justify-center bg-white/95 dark:bg-gray-800/95 rounded-lg" style={{ marginTop: '1px' }}>
+                              <div className="-mt-4">
+                                <div className="h-11 w-11 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800 mb-1.5 mx-auto">
                                   <HiOutlineUpload size={22} className="text-teal-500 dark:text-teal-400" />
-                              </div>
-                              <div className="text-xs text-gray-700 font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                                Supported Formats: PDF, DOC, DOCX, OR JPG (max. 10 MB each)
+                                </div>
+                                <div className="text-xs text-gray-700 dark:text-gray-300 font-semibold text-center" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                  Supported Formats: PDF, DOC, DOCX, OR JPG (max. 10 MB each)
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -4238,7 +4372,7 @@ export default function SignaturesPage() {
                         className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       >
-                        Send for Signature
+                        Prepare Document
                       </button>
                     </div>
                   </div>
@@ -4328,12 +4462,14 @@ export default function SignaturesPage() {
                           <div className="text-xs text-gray-500 dark:text-gray-400 font-semibold">Drop your files here or...</div>
                           {isDocuSignDraggingOver && (
                             <div className="absolute inset-x-0 flex flex-col items-center justify-center" style={{ top: '0', height: '100%' }}>
-                              <div className="h-full w-full flex flex-col items-center justify-center bg-white/95 rounded-lg" style={{ marginTop: '1px' }}>
-                                <div className="h-11 w-11 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center border-2 border-blue-200 dark:border-blue-800 mb-1.5">
-                                  <HiOutlineUpload size={22} className="text-blue-500 dark:text-blue-400" />
-                                </div>
-                                <div className="text-xs text-gray-700 font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                                  Supported Formats: PDF, DOC, DOCX, OR JPG (max. 10 MB each)
+                              <div className="h-full w-full flex flex-col items-center justify-center bg-white/95 dark:bg-gray-800/95 rounded-lg" style={{ marginTop: '1px' }}>
+                                <div className="-mt-4">
+                                  <div className="h-11 w-11 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center border-2 border-blue-200 dark:border-blue-800 mb-1.5 mx-auto">
+                                    <HiOutlineUpload size={22} className="text-blue-500 dark:text-blue-400" />
+                                  </div>
+                                  <div className="text-xs text-gray-700 dark:text-gray-300 font-semibold text-center" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                    Supported Formats: PDF, DOC, DOCX, OR JPG (max. 10 MB each)
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -5188,6 +5324,44 @@ export default function SignaturesPage() {
           </div>
         </div>
       )}
+
+      {/* Signature Modal */}
+      {showSignatureModal && selectedDocument && (
+        <SignatureModal
+          isOpen={showSignatureModal}
+          onClose={() => setShowSignatureModal(false)}
+          onSave={handleSignatureComplete}
+          drawEnabled={true}
+          typeEnabled={true}
+          uploadEnabled={true}
+          title={`Sign Document: ${selectedDocument?.document || 'Document'}`}
+          confirmText="Confirm Signature"
+          cancelText="Cancel"
+        />
+      )}
+
+      {/* Signature Confirmation Modal */}
+      {showSignatureConfirmationModal && selectedDocument && capturedSignatureData && (
+        <SignatureConfirmationModal
+          isOpen={showSignatureConfirmationModal}
+          onClose={handleConfirmationModalClose}
+          onConfirm={handleFinalSignatureSubmit}
+          signature={capturedSignatureData}
+          document={selectedDocument}
+          isLoading={isFinalSigning}
+        />
+      )}
+
+      {/* Document Preparation Modal */}
+      <DocumentPreparationModal
+        isOpen={showDocumentPreparationModal}
+        onClose={() => setShowDocumentPreparationModal(false)}
+        documentData={{
+          recipients: recipients,
+          uploadedFiles: uploadedFiles,
+          selectedDocuments: selectedDocuments,
+        }}
+      />
 
       <Toaster />
     </div>
