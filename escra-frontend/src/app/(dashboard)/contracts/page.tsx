@@ -2480,11 +2480,18 @@ const ContractsPage: React.FC = () => {
 
   // Calculate total contract value
   const calculateTotalValue = () => {
-    return contracts.reduce((total, contract) => {
+    const total = contracts.reduce((total, contract) => {
       // Remove '$' and ',' from value string and convert to number
       const value = parseFloat(contract.value?.replace(/[$,]/g, '') || '0');
       return total + value;
-    }, 0).toLocaleString('en-US', {
+    }, 0);
+    
+    // Debug: Log contract count and total value to verify all contracts are included
+    console.log('Contracts Page - Total Contracts:', contracts.length);
+    console.log('Contracts Page - Total Value:', total);
+    console.log('Contracts Page - Contract Values:', contracts.map(c => ({ id: c.id, title: c.title, value: c.value })));
+    
+    return total.toLocaleString('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
