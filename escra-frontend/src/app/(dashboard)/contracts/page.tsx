@@ -3245,7 +3245,7 @@ const ContractsPage: React.FC = () => {
               <form onSubmit={handleSubmit} noValidate>
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="title" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Contract Name</label>
+                    <label htmlFor="title" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Contract Name</label>
                     <input
                       type="text"
                       id="title"
@@ -3263,7 +3263,7 @@ const ContractsPage: React.FC = () => {
                     )}
                   </div>
                   <div>
-                    <label htmlFor="escrowNumber" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Escrow Number</label>
+                    <label htmlFor="escrowNumber" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Escrow Number</label>
                     <input
                       type="text"
                       id="escrowNumber"
@@ -3275,7 +3275,7 @@ const ContractsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="type" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Contract Type</label>
+                    <label htmlFor="type" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Contract Type</label>
                     <div className="relative w-full" ref={contractTypeDropdownRef}>
                       <input
                         type="text"
@@ -3320,7 +3320,7 @@ const ContractsPage: React.FC = () => {
                     )}
                   </div>
                   <div>
-                    <label htmlFor="propertyType" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Property Type</label>
+                    <label htmlFor="propertyType" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Property Type</label>
                     <div className="relative w-full" ref={propertyTypeDropdownRef}>
                       <input
                         type="text"
@@ -3361,7 +3361,7 @@ const ContractsPage: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="milestone" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Milestone Template</label>
+                    <label htmlFor="milestone" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Milestone Template</label>
                     <div className="relative w-full" ref={milestoneDropdownRef}>
                       <input
                         type="text"
@@ -3402,7 +3402,7 @@ const ContractsPage: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="value" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Contract Value</label>
+                    <label htmlFor="value" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Contract Value</label>
                     <input
                       type="text"
                       id="value"
@@ -3417,7 +3417,7 @@ const ContractsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="dueDate" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Due Date</label>
+                    <label htmlFor="dueDate" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Due Date</label>
                     <div className="relative">
                       <input
                         type="date"
@@ -3450,7 +3450,7 @@ const ContractsPage: React.FC = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-6 mt-6">
                   <div>
-                    <label htmlFor="propertyAddress" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Address</label>
+                    <label htmlFor="propertyAddress" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Address</label>
                     <input
                       type="text"
                       id="propertyAddress"
@@ -3463,7 +3463,7 @@ const ContractsPage: React.FC = () => {
                   </div>
                   <div></div>
                   <div>
-                    <label htmlFor="city" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">City</label>
+                    <label htmlFor="city" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">City</label>
                     <input
                       type="text"
                       id="city"
@@ -3475,7 +3475,7 @@ const ContractsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="state" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">State</label>
+                    <label htmlFor="state" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">State</label>
                     <div className="relative w-full" ref={stateDropdownRef}>
                       <input
                         type="text"
@@ -3535,7 +3535,7 @@ const ContractsPage: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="zipCode" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Zip Code</label>
+                    <label htmlFor="zipCode" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Zip Code</label>
                     <input
                       type="text"
                       id="zipCode"
@@ -3547,7 +3547,7 @@ const ContractsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="country" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Country</label>
+                    <label htmlFor="country" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Country</label>
                     <div className="relative w-full" ref={countryDropdownRef}>
                       <input
                         type="text"
@@ -3608,7 +3608,7 @@ const ContractsPage: React.FC = () => {
                   </div>
                 </div>
                 <div className="mt-6">
-                  <label htmlFor="notes" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Notes (Optional)</label>
+                  <label htmlFor="notes" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Notes (Optional)</label>
                   <textarea
                     id="notes"
                     name="notes"
@@ -3884,7 +3884,7 @@ const ContractsPage: React.FC = () => {
               <form onSubmit={handleSubmit} noValidate>
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="titleCompany" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Title Company</label>
+                    <label htmlFor="titleCompany" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Title Company</label>
                     <input
                       type="text"
                       id="titleCompany"
@@ -3901,7 +3901,7 @@ const ContractsPage: React.FC = () => {
                     )}
                   </div>
                   <div>
-                    <label htmlFor="insuranceCompany" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Insurance Company</label>
+                    <label htmlFor="insuranceCompany" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Insurance Company</label>
                     <input
                       type="text"
                       id="insuranceCompany"
@@ -3913,7 +3913,7 @@ const ContractsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="buyerFinancialInstitution" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Buyer Financial Institution</label>
+                    <label htmlFor="buyerFinancialInstitution" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Buyer Financial Institution</label>
                     <input
                       type="text"
                       id="buyerFinancialInstitution"
@@ -3925,7 +3925,7 @@ const ContractsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="buyerFinancialInstitutionRoutingNumber" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Buyer Routing Number</label>
+                    <label htmlFor="buyerFinancialInstitutionRoutingNumber" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Buyer Routing Number</label>
                     <div className="relative bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-colors cursor-default select-none">
                       <input
                         type="text"
@@ -3957,7 +3957,7 @@ const ContractsPage: React.FC = () => {
                   </div>
                   <div></div>
                   <div>
-                    <label htmlFor="buyerAccountNumber" className="flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">
+                    <label htmlFor="buyerAccountNumber" className="flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">
                       Buyer Account Number
                       <button
                         type="button"
@@ -4001,7 +4001,7 @@ const ContractsPage: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="sellerFinancialInstitution" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Seller Financial Institution</label>
+                    <label htmlFor="sellerFinancialInstitution" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Seller Financial Institution</label>
                     <input
                       type="text"
                       id="sellerFinancialInstitution"
@@ -4013,7 +4013,7 @@ const ContractsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="sellerFinancialInstitutionRoutingNumber" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Seller Routing Number</label>
+                    <label htmlFor="sellerFinancialInstitutionRoutingNumber" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Seller Routing Number</label>
                     <div className="relative bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-colors cursor-default select-none">
                       <input
                         type="text"
@@ -4045,7 +4045,7 @@ const ContractsPage: React.FC = () => {
                   </div>
                   <div></div>
                   <div>
-                    <label htmlFor="sellerAccountNumber" className="flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">
+                    <label htmlFor="sellerAccountNumber" className="flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">
                       Seller Account Number
                       <button
                         type="button"
@@ -4089,7 +4089,7 @@ const ContractsPage: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="loanAmount" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Loan Amount</label>
+                    <label htmlFor="loanAmount" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Loan Amount</label>
                                           <input
                         type="text"
                         id="loanAmount"
@@ -4104,7 +4104,7 @@ const ContractsPage: React.FC = () => {
                       />
                   </div>
                   <div>
-                    <label htmlFor="loanTerm" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Loan Term (Years)</label>
+                    <label htmlFor="loanTerm" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Loan Term (Years)</label>
                     <input
                       type="text"
                       id="loanTerm"
@@ -4116,7 +4116,7 @@ const ContractsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="interestRate" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Interest Rate (%)</label>
+                    <label htmlFor="interestRate" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Interest Rate (%)</label>
                     <input
                       type="text"
                       id="interestRate"
@@ -4128,7 +4128,7 @@ const ContractsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="downPayment" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Down Payment</label>
+                    <label htmlFor="downPayment" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Down Payment</label>
                     <input
                       type="text"
                       id="downPayment"
@@ -4143,7 +4143,7 @@ const ContractsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="earnestMoney" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Earnest Money</label>
+                    <label htmlFor="earnestMoney" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Earnest Money</label>
                     <input
                       type="text"
                       id="earnestMoney"
@@ -4158,7 +4158,7 @@ const ContractsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="inspectionPeriod" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Inspection Period (Days)</label>
+                    <label htmlFor="inspectionPeriod" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Inspection Period (Days)</label>
                     <input
                       type="text"
                       id="inspectionPeriod"
@@ -4171,7 +4171,7 @@ const ContractsPage: React.FC = () => {
                   </div>
                 </div>
                 <div className="mt-6">
-                  <label htmlFor="contingencies" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Contingencies</label>
+                  <label htmlFor="contingencies" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Contingencies</label>
                   <textarea
                     id="contingencies"
                     name="contingencies"

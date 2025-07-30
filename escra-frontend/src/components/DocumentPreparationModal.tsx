@@ -889,30 +889,7 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
                             </div>
                           </div>
                           
-                          {/* Available Variables */}
-                          <div className="mt-6 bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                            <button
-                              onClick={() => setShowVariables(!showVariables)}
-                              className="flex items-center gap-1 text-left"
-                            >
-                              <span className="text-xs font-medium text-gray-700 dark:text-gray-300" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                                Available Variables
-                              </span>
-                              {showVariables ? (
-                                <HiMiniChevronUp size={14} className="inline-block align-middle -mt-[1px] text-gray-400" />
-                              ) : (
-                                <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px] text-gray-400" />
-                              )}
-                            </button>
-                            {showVariables && (
-                              <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-gray-600 dark:text-gray-400" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                                <div><code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">{'{{document_title}}'}</code> - Document name</div>
-                                <div><code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">{'{{recipient_name}}'}</code> - Recipient's name</div>
-                                <div><code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">{'{{sender_name}}'}</code> - Your name</div>
-                                <div><code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">{'{{signing_link}}'}</code> - Signing URL</div>
-                              </div>
-                            )}
-                          </div>
+
                         </div>
 
                         {/* Notification Settings */}
@@ -1165,7 +1142,7 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
                 </div>
 
                 {/* Fixed Action Buttons */}
-                <div className="bg-gray-100 dark:bg-gray-900 px-4 sm:px-6 pt-0 pb-3">
+                <div className="bg-gray-100 dark:bg-gray-900 px-4 sm:px-6 pt-0 pb-6">
                   <div className="flex justify-end gap-1">
                     <button
                       onClick={() => setCurrentStep('preparation')}
