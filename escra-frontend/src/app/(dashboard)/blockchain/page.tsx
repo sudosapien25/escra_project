@@ -463,7 +463,7 @@ export default function BlockchainPage() {
             onClick={() => setActiveTab(tab.key)}
             className={`px-4 py-2 rounded-lg text-xs font-bold transition-all duration-300 font-sans flex items-center justify-center ${
               activeTab === tab.key 
-                ? 'bg-white dark:bg-gray-800 text-teal-500 dark:text-teal-400 min-w-[130px] border-2 border-gray-200 dark:border-gray-700' 
+                ? `bg-white dark:bg-gray-800 text-teal-500 dark:text-teal-400 ${tab.key === 'tokens' || tab.key === 'explorers' ? 'min-w-[80px]' : 'min-w-[130px]'} border-2 border-gray-200 dark:border-gray-700` 
                 : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 w-fit border border-gray-200 dark:border-gray-700'
             }`}
           >

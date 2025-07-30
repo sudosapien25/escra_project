@@ -16,11 +16,16 @@ import {
   LuLink,
   LuSettings,
   LuType,
-  LuSend
+  LuSend,
+  LuCopyPlus,
+  LuBringToFront
 } from 'react-icons/lu';
-import { HiOutlineDocumentText } from 'react-icons/hi';
+import { HiOutlineDocumentText, HiOutlineTrash } from 'react-icons/hi';
 import { HiMiniChevronDown, HiMiniChevronUp } from 'react-icons/hi2';
 import { FaCheck } from 'react-icons/fa';
+import { MdOutlineAttachEmail } from 'react-icons/md';
+import { TbUnlink, TbMailBolt, TbLinkPlus, TbLink } from 'react-icons/tb';
+import { Logo } from '@/components/common/Logo';
 
 // Field Types
 export enum FieldType {
@@ -151,8 +156,19 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
     documentDeleted: false,
     ownerDocumentCompleted: true,
   });
+
+  const [reminderSettings, setReminderSettings] = useState({
+    every24Hours: false,
+    every2Days: false,
+    every7Days: false,
+    every14Days: false,
+    every30Days: false,
+    every60Days: false,
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showVariables, setShowVariables] = useState(false);
+  const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
+  const [selectedEmailTemplate, setSelectedEmailTemplate] = useState<string>('None');
 
   // Convert documentData recipients to our Recipient format
   useEffect(() => {
@@ -183,11 +199,20 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
   }, []);
 
   const handlePageClick = (event: React.MouseEvent) => {
+    // Close any open field toolbar
+    setSelectedFieldId(null);
+    
     if (!selectedField || !selectedRecipient) return;
 
     const rect = event.currentTarget.getBoundingClientRect();
     const x = ((event.clientX - rect.left) / rect.width) * 100;
     const y = ((event.clientY - rect.top) / rect.height) * 100;
+
+    // Set different dimensions based on field type
+    let pageWidth = 18; // Default width (same as signature)
+    let pageHeight = 5; // Default height (same as signature)
+
+    // All field types now use the same dimensions for consistency
 
     const newField: Field = {
       id: generateFieldId(),
@@ -197,8 +222,8 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
         pageNumber: currentPage,
         pageX: x,
         pageY: y,
-        pageWidth: 15, // Default width
-        pageHeight: 8, // Default height
+        pageWidth: pageWidth,
+        pageHeight: pageHeight,
       },
       inserted: false,
     };
@@ -216,6 +241,47 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
 
   const handleRemoveField = (fieldId: string) => {
     setFields(prev => prev.filter(f => f.id !== fieldId));
+    setSelectedFieldId(null);
+  };
+
+  const handleDuplicateField = (fieldId: string) => {
+    const fieldToDuplicate = fields.find(f => f.id === fieldId);
+    if (!fieldToDuplicate) return;
+
+    const newField: Field = {
+      ...fieldToDuplicate,
+      id: generateFieldId(),
+      position: {
+        ...fieldToDuplicate.position,
+        pageX: fieldToDuplicate.position.pageX + 2, // Offset slightly
+        pageY: fieldToDuplicate.position.pageY + 2,
+      },
+    };
+
+    setFields(prev => [...prev, newField]);
+  };
+
+  const handleDuplicateOnAllPages = (fieldId: string) => {
+    const fieldToDuplicate = fields.find(f => f.id === fieldId);
+    if (!fieldToDuplicate) return;
+
+    // For now, we'll just duplicate on the current page since we're assuming single page
+    // In a multi-page implementation, you'd iterate through all pages
+    const newField: Field = {
+      ...fieldToDuplicate,
+      id: generateFieldId(),
+      position: {
+        ...fieldToDuplicate.position,
+        pageX: fieldToDuplicate.position.pageX + 2,
+        pageY: fieldToDuplicate.position.pageY + 2,
+      },
+    };
+
+    setFields(prev => [...prev, newField]);
+  };
+
+  const handleFieldClick = (fieldId: string) => {
+    setSelectedFieldId(selectedFieldId === fieldId ? null : fieldId);
   };
 
   const handleZoomIn = () => {
@@ -301,63 +367,107 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
       switch (field.type) {
         case FieldType.SIGNATURE:
           return (
-            <div className="w-full h-full border-2 border-dashed border-primary bg-primary/5 rounded flex items-center justify-center">
-              <span className="text-xs text-primary font-medium" style={{ fontFamily: 'Avenir, sans-serif' }}>Signature</span>
+            <div className="border-2 border-dashed border-primary bg-primary/5 rounded flex items-center justify-center px-2 py-1">
+              <span 
+                className="text-lg text-primary font-medium whitespace-nowrap" 
+                style={{ 
+                  fontFamily: '"Dancing Script", "Great Vibes", "Alex Brush", "Brush Script MT", "Lucida Handwriting", cursive'
+                }}
+              >
+                Signature
+              </span>
             </div>
           );
         case FieldType.INITIALS:
           return (
-            <div className="w-full h-full border-2 border-dashed border-blue-500 bg-blue-50 rounded flex items-center justify-center">
-              <span className="text-xs text-blue-600 font-medium" style={{ fontFamily: 'Avenir, sans-serif' }}>Initials</span>
+            <div className="border-2 border-dashed border-primary bg-primary/5 rounded flex items-center justify-center px-2 py-1">
+              <span className="text-xs text-primary font-medium whitespace-nowrap" style={{ fontFamily: 'Avenir, sans-serif' }}>Initials</span>
             </div>
           );
         case FieldType.EMAIL:
           return (
-            <div className="w-full h-full border-2 border-dashed border-green-500 bg-green-50 rounded flex items-center justify-center">
-              <span className="text-xs text-green-600 font-medium" style={{ fontFamily: 'Avenir, sans-serif' }}>Email</span>
+            <div className="border-2 border-dashed border-primary bg-primary/5 rounded flex items-center justify-center px-2 py-1">
+              <span className="text-xs text-primary font-medium whitespace-nowrap" style={{ fontFamily: 'Avenir, sans-serif' }}>Email</span>
             </div>
           );
         case FieldType.NAME:
           return (
-            <div className="w-full h-full border-2 border-dashed border-purple-500 bg-purple-50 rounded flex items-center justify-center">
-              <span className="text-xs text-purple-600 font-medium" style={{ fontFamily: 'Avenir, sans-serif' }}>Name</span>
+            <div className="border-2 border-dashed border-primary bg-primary/5 rounded flex items-center justify-center px-2 py-1">
+              <span className="text-xs text-primary font-medium whitespace-nowrap" style={{ fontFamily: 'Avenir, sans-serif' }}>Name</span>
             </div>
           );
         case FieldType.DATE:
           return (
-            <div className="w-full h-full border-2 border-dashed border-orange-500 bg-orange-50 rounded flex items-center justify-center">
-              <span className="text-xs text-orange-600 font-medium" style={{ fontFamily: 'Avenir, sans-serif' }}>Date</span>
+            <div className="border-2 border-dashed border-primary bg-primary/5 rounded flex items-center justify-center px-2 py-1">
+              <span className="text-xs text-primary font-medium whitespace-nowrap" style={{ fontFamily: 'Avenir, sans-serif' }}>Date</span>
             </div>
           );
         case FieldType.TEXT:
           return (
-            <div className="w-full h-full border-2 border-dashed border-gray-500 bg-gray-50 rounded flex items-center justify-center">
-              <span className="text-xs text-gray-600 font-medium" style={{ fontFamily: 'Avenir, sans-serif' }}>Text</span>
+            <div className="border-2 border-dashed border-primary bg-primary/5 rounded flex items-center justify-center px-2 py-1">
+              <span className="text-xs text-primary font-medium whitespace-nowrap" style={{ fontFamily: 'Avenir, sans-serif' }}>Text</span>
             </div>
           );
         default:
           return (
-            <div className="w-full h-full border-2 border-dashed border-gray-300 bg-gray-50 rounded flex items-center justify-center">
-              <span className="text-xs text-gray-500 font-medium" style={{ fontFamily: 'Avenir, sans-serif' }}>{FIELD_TYPE_LABELS[field.type]}</span>
+            <div className="border-2 border-dashed border-primary bg-primary/5 rounded flex items-center justify-center px-2 py-1">
+              <span className="text-xs text-primary font-medium whitespace-nowrap" style={{ fontFamily: 'Avenir, sans-serif' }}>{FIELD_TYPE_LABELS[field.type]}</span>
             </div>
           );
       }
     };
 
+    const isSelected = selectedFieldId === field.id;
+
     return (
       <div
         key={field.id}
         style={style}
-        className="cursor-pointer hover:shadow-lg transition-shadow"
-        onClick={(e) => e.stopPropagation()}
+        className="cursor-pointer relative"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleFieldClick(field.id);
+        }}
       >
-        {getFieldContent()}
-        <button
-          onClick={() => handleRemoveField(field.id)}
-          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
-        >
-          <LuX size={10} />
-        </button>
+        <div className="hover:shadow-lg transition-shadow">
+          {getFieldContent()}
+        </div>
+        
+        {/* Toolbar - appears when field is selected */}
+        {isSelected && (
+          <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg px-2 py-1 flex items-center gap-1 z-50">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDuplicateField(field.id);
+              }}
+              className="p-1.5 text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+              title="Duplicate"
+            >
+              <LuCopyPlus size={14} />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDuplicateOnAllPages(field.id);
+              }}
+              className="p-1.5 text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+              title="Duplicate on all pages"
+            >
+              <LuBringToFront size={14} />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleRemoveField(field.id);
+              }}
+              className="p-1.5 text-gray-600 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+              title="Remove"
+            >
+              <HiOutlineTrash size={14} />
+            </button>
+          </div>
+        )}
       </div>
     );
   };
@@ -368,12 +478,9 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-2 sm:p-4">
       <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-[1600px] max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="sticky top-0 z-40 bg-gray-50 dark:bg-gray-900 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="sticky top-0 z-40 bg-gray-100 dark:bg-gray-900 px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="h-6 w-6 sm:h-8 sm:w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <HiOutlineDocumentText className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-              </div>
               <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white" style={{ fontFamily: 'Avenir, sans-serif' }}>
                 Document Preparation
               </h2>
@@ -443,11 +550,11 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
               </div>
 
               {/* Instructions */}
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                <h4 className="text-xs font-semibold text-blue-900 dark:text-blue-100 mb-2" style={{ fontFamily: 'Avenir, sans-serif' }}>
+              <div className="bg-gray-100 dark:bg-gray-900 p-3 rounded-lg border-2 border-gray-200 dark:border-gray-600">
+                <h4 className="text-xs font-semibold text-gray-900 dark:text-white mb-2" style={{ fontFamily: 'Avenir, sans-serif' }}>
                   Instructions
                 </h4>
-                <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-1">
+                <ul className="text-xs text-gray-700 dark:text-gray-300 space-y-1">
                   <li>• Select a field type</li>
                   <li>• Choose a recipient</li>
                   <li>• Click on the document to place fields</li>
@@ -592,7 +699,7 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
             // Distribution Screen
             <>
               {/* Left Sidebar - Distribution Settings */}
-              <div className="w-full lg:w-80 bg-gray-50 dark:bg-gray-900 px-4 sm:px-6 lg:pr-4 py-4 sm:py-6 flex flex-col">
+              <div className="w-full lg:w-80 bg-gray-100 dark:bg-gray-900 px-4 sm:px-6 lg:pr-4 py-4 sm:py-6 flex flex-col">
                 <div className="space-y-4 sm:space-y-6 flex-1">
                   {/* Recipient Summary */}
                   <div>
@@ -600,25 +707,25 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
                       Recipients
                     </h3>
                     <div className="grid grid-cols-2 lg:grid-cols-1 gap-2">
-                      <div className="text-center p-2 sm:p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg">
+                      <div className="text-center p-2 sm:p-3 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-lg">
                         <div className="text-base sm:text-lg font-semibold text-blue-600 dark:text-blue-400" style={{ fontFamily: 'Avenir, sans-serif' }}>
                           {getRecipientSummary().signers}
                         </div>
                         <div className="text-xs text-gray-600 dark:text-gray-400" style={{ fontFamily: 'Avenir, sans-serif' }}>Signers</div>
                       </div>
-                      <div className="text-center p-2 sm:p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg">
+                      <div className="text-center p-2 sm:p-3 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-lg">
                         <div className="text-base sm:text-lg font-semibold text-purple-600 dark:text-purple-400" style={{ fontFamily: 'Avenir, sans-serif' }}>
                           {getRecipientSummary().approvers}
                         </div>
                         <div className="text-xs text-gray-600 dark:text-gray-400" style={{ fontFamily: 'Avenir, sans-serif' }}>Approvers</div>
                       </div>
-                      <div className="text-center p-2 sm:p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg">
+                      <div className="text-center p-2 sm:p-3 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-lg">
                         <div className="text-base sm:text-lg font-semibold text-gray-600 dark:text-gray-400" style={{ fontFamily: 'Avenir, sans-serif' }}>
                           {getRecipientSummary().viewers}
                         </div>
                         <div className="text-xs text-gray-600 dark:text-gray-400" style={{ fontFamily: 'Avenir, sans-serif' }}>Viewers</div>
                       </div>
-                      <div className="text-center p-2 sm:p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg">
+                      <div className="text-center p-2 sm:p-3 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-lg">
                         <div className="text-base sm:text-lg font-semibold text-orange-600 dark:text-orange-400" style={{ fontFamily: 'Avenir, sans-serif' }}>
                           {getRecipientSummary().cc}
                         </div>
@@ -635,45 +742,47 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
                     <div className="space-y-2">
                       <button
                         onClick={() => setDistributionMethod('EMAIL')}
-                        className={`w-full p-2 sm:p-3 rounded-lg border text-left transition-all ${
+                        className={`w-full p-3 rounded-lg border-2 text-left transition-colors ${
                           distributionMethod === 'EMAIL'
-                            ? 'border-primary bg-primary/5'
-                            : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                            ? 'border-primary bg-primary/10 text-primary'
+                            : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500'
                         }`}
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
                       >
                         <div className="flex items-center gap-2">
-                          <div className={`p-1.5 sm:p-2 rounded-md ${
+                          <div className={`h-10 w-10 rounded-lg flex items-center justify-center border-2 ${
                             distributionMethod === 'EMAIL'
-                              ? 'bg-primary text-white'
-                              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                              ? 'bg-primary text-white border-primary'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-600'
                           }`}>
-                            <LuMail className="w-3 h-3 sm:w-4 sm:h-4" />
+                            <TbMailBolt size={20} />
                           </div>
                           <div>
-                            <div className="font-medium text-sm text-gray-900 dark:text-white" style={{ fontFamily: 'Avenir, sans-serif' }}>Email</div>
-                            <div className="text-xs text-gray-600 dark:text-gray-400" style={{ fontFamily: 'Avenir, sans-serif' }}>Send via email</div>
+                            <div className="text-sm font-medium" style={{ fontFamily: 'Avenir, sans-serif' }}>Email</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400" style={{ fontFamily: 'Avenir, sans-serif' }}>Send via email</div>
                           </div>
                         </div>
                       </button>
                       <button
                         onClick={() => setDistributionMethod('NONE')}
-                        className={`w-full p-2 sm:p-3 rounded-lg border text-left transition-all ${
+                        className={`w-full p-3 rounded-lg border-2 text-left transition-colors ${
                           distributionMethod === 'NONE'
-                            ? 'border-primary bg-primary/5'
-                            : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                            ? 'border-primary bg-primary/10 text-primary'
+                            : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500'
                         }`}
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
                       >
                         <div className="flex items-center gap-2">
-                          <div className={`p-1.5 sm:p-2 rounded-md ${
+                          <div className={`h-10 w-10 rounded-lg flex items-center justify-center border-2 ${
                             distributionMethod === 'NONE'
-                              ? 'bg-primary text-white'
-                              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                              ? 'bg-primary text-white border-primary'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-600'
                           }`}>
-                            <LuLink className="w-3 h-3 sm:w-4 sm:h-4" />
+                            <TbLinkPlus size={20} />
                           </div>
                           <div>
-                            <div className="font-medium text-sm text-gray-900 dark:text-white" style={{ fontFamily: 'Avenir, sans-serif' }}>Signing Links</div>
-                            <div className="text-xs text-gray-600 dark:text-gray-400" style={{ fontFamily: 'Avenir, sans-serif' }}>Generate links</div>
+                            <div className="text-sm font-medium" style={{ fontFamily: 'Avenir, sans-serif' }}>Signing Links</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400" style={{ fontFamily: 'Avenir, sans-serif' }}>Generate links</div>
                           </div>
                         </div>
                       </button>
@@ -719,33 +828,6 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
                     {/* Email Configuration */}
                     {distributionMethod === 'EMAIL' && (
                       <div className="space-y-4 sm:space-y-6">
-                        {/* Email Templates */}
-                        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6">
-                          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                            Email Templates
-                          </h3>
-                          <div className="flex flex-wrap gap-1">
-                            {[
-                              { name: 'Professional', subject: 'Please sign: {{document_title}}', message: 'Hi {{recipient_name}},\n\nPlease review and sign the attached document "{{document_title}}".\n\nThank you!' },
-                              { name: 'Friendly', subject: 'Document for your signature: {{document_title}}', message: 'Hello {{recipient_name}},\n\nI hope this email finds you well. I have a document that needs your signature: "{{document_title}}".\n\nThanks!' },
-                              { name: 'Brief', subject: 'Signature needed: {{document_title}}', message: 'Hi {{recipient_name}},\n\nPlease sign this document: {{document_title}}\n\nThanks!' },
-                              { name: 'None', subject: '', message: '' }
-                            ].map((template) => (
-                              <button
-                                key={template.name}
-                                onClick={() => {
-                                  setSubject(template.subject);
-                                  setMessage(template.message);
-                                }}
-                                className="px-3 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                                style={{ fontFamily: 'Avenir, sans-serif' }}
-                              >
-                                {template.name}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
                         {/* Subject and Message */}
                         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6">
                           <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>Add Message</h3>
@@ -772,13 +854,48 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
                             style={{ fontFamily: 'Avenir, sans-serif' }}
                           />
                           
-                          {/* Available Variables - Directly under message box */}
-                          <div className="mt-3 bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                          {/* Email Templates */}
+                          <div className="mt-6">
+                            <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                              Email Templates
+                            </h4>
+                            <div className="flex flex-wrap gap-1">
+                              {[
+                                { name: 'Professional', subject: 'Please sign: {{document_title}}', message: 'Hi {{recipient_name}},\n\nPlease review and sign the attached document "{{document_title}}".\n\nThank you!' },
+                                { name: 'Friendly', subject: 'Document for your signature: {{document_title}}', message: 'Hello {{recipient_name}},\n\nI hope this email finds you well. I have a document that needs your signature: "{{document_title}}".\n\nThanks!' },
+                                { name: 'Brief', subject: 'Signature needed: {{document_title}}', message: 'Hi {{recipient_name}},\n\nPlease sign this document: {{document_title}}\n\nThanks!' },
+                                { name: 'None', subject: '', message: '' }
+                              ].map((template) => (
+                                <button
+                                  key={template.name}
+                                  onClick={() => {
+                                    setSelectedEmailTemplate(template.name);
+                                    setSubject(template.subject);
+                                    setMessage(template.message);
+                                  }}
+                                                                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all duration-300 font-sans flex items-center justify-center ${
+                                  selectedEmailTemplate === template.name 
+                                    ? `bg-white dark:bg-gray-800 text-teal-500 dark:text-teal-400 ${template.name === 'None' || template.name === 'Brief' || template.name === 'Friendly' ? 'min-w-[80px]' : 'min-w-[130px]'} border-2 border-gray-200 dark:border-gray-700` 
+                                    : `bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 ${template.name === 'None' || template.name === 'Brief' || template.name === 'Friendly' ? 'w-fit' : 'w-fit'} border border-gray-200 dark:border-gray-700`
+                                }`}
+                                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                                >
+                                  <span className={`inline-block transition-all duration-300 ${selectedEmailTemplate === template.name ? 'opacity-100 mr-1.5' : 'opacity-0 w-0 mr-0'}`} style={{width: selectedEmailTemplate === template.name ? 16 : 0}}>
+                                    {selectedEmailTemplate === template.name && <Logo width={16} height={16} className="pointer-events-none" />}
+                                  </span>
+                                  {template.name}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          {/* Available Variables */}
+                          <div className="mt-6 bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
                             <button
                               onClick={() => setShowVariables(!showVariables)}
                               className="flex items-center gap-1 text-left"
                             >
-                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                              <span className="text-xs font-medium text-gray-700 dark:text-gray-300" style={{ fontFamily: 'Avenir, sans-serif' }}>
                                 Available Variables
                               </span>
                               {showVariables ? (
@@ -800,10 +917,13 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
 
                         {/* Notification Settings */}
                         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6">
-                          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                            Notification Settings
-                          </h3>
-                          <div className="space-y-4">
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {/* Left Column - Notification Settings */}
+                            <div>
+                              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                Notification Settings
+                              </h3>
+                              <div className="space-y-4">
                             <div className="flex items-center gap-2">
                               <div className="w-5 h-5 border border-gray-300 rounded flex items-center justify-center cursor-pointer" onClick={() => setEmailSettings(prev => ({ ...prev, recipientSigned: !prev.recipientSigned }))}>
                                 {emailSettings.recipientSigned && (
@@ -906,6 +1026,118 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
                               </label>
                             </div>
                           </div>
+                            </div>
+
+                            {/* Right Column - Add Reminders */}
+                            <div>
+                              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                Add Reminders
+                              </h3>
+                              <div className="space-y-4">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-5 h-5 border border-gray-300 rounded flex items-center justify-center cursor-pointer" onClick={() => setReminderSettings(prev => ({ ...prev, every24Hours: !prev.every24Hours }))}>
+                                    {reminderSettings.every24Hours && (
+                                      <div className="w-4 h-4 bg-primary rounded-sm flex items-center justify-center">
+                                        <FaCheck className="text-white" size={10} />
+                                      </div>
+                                    )}
+                                  </div>
+                                  <label 
+                                    className="text-xs font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
+                                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                                    onClick={() => setReminderSettings(prev => ({ ...prev, every24Hours: !prev.every24Hours }))}
+                                  >
+                                    Every 24 hours
+                                  </label>
+                                </div>
+                                
+                                <div className="flex items-center gap-2">
+                                  <div className="w-5 h-5 border border-gray-300 rounded flex items-center justify-center cursor-pointer" onClick={() => setReminderSettings(prev => ({ ...prev, every2Days: !prev.every2Days }))}>
+                                    {reminderSettings.every2Days && (
+                                      <div className="w-4 h-4 bg-primary rounded-sm flex items-center justify-center">
+                                        <FaCheck className="text-white" size={10} />
+                                      </div>
+                                    )}
+                                  </div>
+                                  <label 
+                                    className="text-xs font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
+                                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                                    onClick={() => setReminderSettings(prev => ({ ...prev, every2Days: !prev.every2Days }))}
+                                  >
+                                    Every 2 days
+                                  </label>
+                                </div>
+                                
+                                <div className="flex items-center gap-2">
+                                  <div className="w-5 h-5 border border-gray-300 rounded flex items-center justify-center cursor-pointer" onClick={() => setReminderSettings(prev => ({ ...prev, every7Days: !prev.every7Days }))}>
+                                    {reminderSettings.every7Days && (
+                                      <div className="w-4 h-4 bg-primary rounded-sm flex items-center justify-center">
+                                        <FaCheck className="text-white" size={10} />
+                                      </div>
+                                    )}
+                                  </div>
+                                  <label 
+                                    className="text-xs font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
+                                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                                    onClick={() => setReminderSettings(prev => ({ ...prev, every7Days: !prev.every7Days }))}
+                                  >
+                                    Every 7 days
+                                  </label>
+                                </div>
+                                
+                                <div className="flex items-center gap-2">
+                                  <div className="w-5 h-5 border border-gray-300 rounded flex items-center justify-center cursor-pointer" onClick={() => setReminderSettings(prev => ({ ...prev, every14Days: !prev.every14Days }))}>
+                                    {reminderSettings.every14Days && (
+                                      <div className="w-4 h-4 bg-primary rounded-sm flex items-center justify-center">
+                                        <FaCheck className="text-white" size={10} />
+                                      </div>
+                                    )}
+                                  </div>
+                                  <label 
+                                    className="text-xs font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
+                                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                                    onClick={() => setReminderSettings(prev => ({ ...prev, every14Days: !prev.every14Days }))}
+                                  >
+                                    Every 14 days
+                                  </label>
+                                </div>
+                                
+                                <div className="flex items-center gap-2">
+                                  <div className="w-5 h-5 border border-gray-300 rounded flex items-center justify-center cursor-pointer" onClick={() => setReminderSettings(prev => ({ ...prev, every30Days: !prev.every30Days }))}>
+                                    {reminderSettings.every30Days && (
+                                      <div className="w-4 h-4 bg-primary rounded-sm flex items-center justify-center">
+                                        <FaCheck className="text-white" size={10} />
+                                      </div>
+                                    )}
+                                  </div>
+                                  <label 
+                                    className="text-xs font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
+                                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                                    onClick={() => setReminderSettings(prev => ({ ...prev, every30Days: !prev.every30Days }))}
+                                  >
+                                    Every 30 days
+                                  </label>
+                                </div>
+                                
+                                <div className="flex items-center gap-2">
+                                  <div className="w-5 h-5 border border-gray-300 rounded flex items-center justify-center cursor-pointer" onClick={() => setReminderSettings(prev => ({ ...prev, every60Days: !prev.every60Days }))}>
+                                    {reminderSettings.every60Days && (
+                                      <div className="w-4 h-4 bg-primary rounded-sm flex items-center justify-center">
+                                        <FaCheck className="text-white" size={10} />
+                                      </div>
+                                    )}
+                                  </div>
+                                  <label 
+                                    className="text-xs font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
+                                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                                    onClick={() => setReminderSettings(prev => ({ ...prev, every60Days: !prev.every60Days }))}
+                                  >
+                                    Every 60 days
+                                  </label>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -918,7 +1150,7 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
                         </h3>
                         <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
                           <div className="flex items-center gap-2 mb-2">
-                            <LuLink className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                            <TbLink className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                             <span className="text-sm font-medium text-gray-700 dark:text-gray-300" style={{ fontFamily: 'Avenir, sans-serif' }}>
                               Signing links will be generated
                             </span>

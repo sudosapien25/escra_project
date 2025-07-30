@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaSearch, FaClock, FaSort, FaPlus, FaDollarSign, FaTimes, FaChevronDown, FaChevronUp, FaRegClock, FaCheck } from 'react-icons/fa';
 import { FaArrowUpRightFromSquare } from 'react-icons/fa6';
-import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutlineEye, HiOutlineEyeOff, HiOutlineClipboardList, HiOutlineExclamation, HiChevronDown, HiOutlineDocumentSearch, HiOutlineDocumentAdd, HiOutlineUpload, HiOutlineTrash, HiOutlineX } from 'react-icons/hi';
+import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutlineEye, HiOutlineEyeOff, HiOutlineClipboardList, HiOutlineExclamation, HiChevronDown, HiOutlineDocumentSearch, HiOutlineDocumentAdd, HiOutlineUpload, HiOutlineTrash, HiOutlineX, HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight } from 'react-icons/hi';
 import { HiOutlineViewBoards } from 'react-icons/hi';
 import { LuCalendarFold, LuPen } from 'react-icons/lu';
 import { BiDotsHorizontal, BiCommentAdd } from 'react-icons/bi';
@@ -33,7 +33,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { useAuth } from '@/context/AuthContext';
 import { useDocumentStore } from '@/data/documentNameStore';
 import { PiMoneyWavyBold, PiBankBold, PiSignatureBold, PiCaretUpDownBold } from 'react-icons/pi';
-import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive } from 'react-icons/tb';
+import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbChevronsDownRight, TbMailPlus } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
 import { FaCheckCircle } from 'react-icons/fa';
@@ -1731,6 +1731,13 @@ const ContractsPage: React.FC = () => {
   
   // State for editing existing step 4 documents
   const [editingStep4Document, setEditingStep4Document] = useState<number | null>(null);
+  
+  // State for rows per page
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [visibleRows, setVisibleRows] = useState(15); // Number of visible rows in the table
+  const [isResizing, setIsResizing] = useState(false);
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
 
   // Function to handle dropdown clicks
   const handleDropdownClick = (
@@ -1995,6 +2002,73 @@ const ContractsPage: React.FC = () => {
     
     return () => clearTimeout(timeoutId);
   }, []);
+
+  // Table resize handlers
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    // Only start resizing if the left mouse button is pressed
+    if (e.button === 0) {
+      setIsResizing(true);
+      isDraggingRef.current = false; // Reset drag state
+    }
+  };
+
+  const handleResizeMove = (e: MouseEvent) => {
+    if (!isResizing || !tableContainerRef.current) return;
+
+    // Only resize if the mouse button is actually pressed (button 0 = left mouse button)
+    if (e.buttons !== 1) {
+      setIsResizing(false);
+      isDraggingRef.current = false;
+      return;
+    }
+
+    // Set dragging to true on first move
+    if (!isDraggingRef.current) {
+      isDraggingRef.current = true;
+      return; // Skip the first move to avoid immediate resize
+    }
+
+    const container = tableContainerRef.current;
+    const rect = container.getBoundingClientRect();
+    const newHeight = e.clientY - rect.top;
+    
+    // Calculate number of visible rows based on height
+    // Account for tabs, padding, and results bar
+    const tabsHeight = 60; // Approximate tabs height
+    const padding = 48; // Container padding (24px top + 24px bottom)
+    const resultsBarHeight = 60; // Results bar height
+    const headerHeight = 48; // Table header height
+    const rowHeight = 56; // 3.5rem per row
+    
+    const availableHeight = newHeight - tabsHeight - padding - resultsBarHeight - headerHeight;
+    const newVisibleRows = Math.max(5, Math.floor(availableHeight / rowHeight));
+    
+    setVisibleRows(newVisibleRows);
+  };
+
+  const handleResizeEnd = () => {
+    setIsResizing(false);
+  };
+
+  // Additional check to prevent resize on mouse up if not actually dragging
+  const handleMouseUp = () => {
+    setIsResizing(false);
+    isDraggingRef.current = false;
+  };
+
+  // Add resize event listeners
+  useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', handleResizeMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      
+      return () => {
+        document.removeEventListener('mousemove', handleResizeMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isResizing]);
 
   // Function to download a stored document
   const downloadDocument = (documentId: string) => {
@@ -3181,7 +3255,7 @@ const ContractsPage: React.FC = () => {
                       className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white dark:border-gray-600 ${
                         formErrors.title ? 'border-red-300' : 'border-gray-200 dark:border-gray-600'
                       }`}
-                      placeholder="Enter contract name"
+                      placeholder="Enter contract name..."
                       required
                     />
                     {formErrors.title && (
@@ -3197,7 +3271,7 @@ const ContractsPage: React.FC = () => {
                       value={modalForm.escrowNumber}
                       onChange={handleModalChange}
                       className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
-                      placeholder="Enter escrow number"
+                      placeholder="Enter escrow number..."
                     />
                   </div>
                   <div>
@@ -3339,7 +3413,7 @@ const ContractsPage: React.FC = () => {
                         setModalForm(prev => ({ ...prev, value: formattedValue }));
                       }}
                       className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
-                      placeholder="Enter contract value"
+                      placeholder="Enter contract value..."
                     />
                   </div>
                   <div>
@@ -3384,7 +3458,7 @@ const ContractsPage: React.FC = () => {
                       value={modalForm.propertyAddress}
                       onChange={handleModalChange}
                       className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
-                      placeholder="Enter address"
+                      placeholder="Enter address..."
                     />
                   </div>
                   <div></div>
@@ -3397,7 +3471,7 @@ const ContractsPage: React.FC = () => {
                       value={modalForm.city}
                       onChange={handleModalChange}
                       className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
-                      placeholder="Enter city"
+                      placeholder="Enter city..."
                     />
                   </div>
                   <div>
@@ -3406,7 +3480,7 @@ const ContractsPage: React.FC = () => {
                       <input
                         type="text"
                         className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 bg-white dark:bg-gray-900"
-                        placeholder="Select State"
+                        placeholder="Select State..."
                         value={stateSearchTerm || US_STATES.find(s => s.value === modalForm.state)?.label || ''}
                         onChange={handleStateSearch}
                         onKeyDown={(e) => {
@@ -3469,7 +3543,7 @@ const ContractsPage: React.FC = () => {
                       value={modalForm.zipCode}
                       onChange={handleModalChange}
                       className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
-                      placeholder="Enter zip code"
+                      placeholder="Enter zip code..."
                     />
                   </div>
                   <div>
@@ -3478,7 +3552,7 @@ const ContractsPage: React.FC = () => {
                       <input
                         type="text"
                         className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 bg-white dark:bg-gray-900"
-                        placeholder="Select Country"
+                        placeholder="Select Country..."
                         value={countrySearchTerm || COUNTRIES.find(c => c.value === modalForm.country)?.label || ''}
                         onChange={handleCountrySearch}
                         onKeyDown={(e) => {
@@ -3541,7 +3615,7 @@ const ContractsPage: React.FC = () => {
                     value={modalForm.notes}
                     onChange={handleModalChange}
                     className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs min-h-[120px] dark:bg-gray-900 dark:text-white"
-                    placeholder="Enter any additional notes for this contract"
+                    placeholder="Enter any additional notes for this contract..."
                   />
                 </div>
                 <div className="flex justify-end mt-6">
@@ -3743,7 +3817,7 @@ const ContractsPage: React.FC = () => {
                               <input
                                 type="text"
                                 className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white"
-                                placeholder="Enter party's name..."
+                                placeholder="Enter party name..."
                                 style={{ fontFamily: 'Avenir, sans-serif' }}
                                 value={recipient.name}
                                 onChange={e => {
@@ -3763,18 +3837,23 @@ const ContractsPage: React.FC = () => {
                             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
                               Email <span className="text-primary">*</span>
                             </label>
-                            <input
-                              type="email"
-                              className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white"
-                              placeholder="Enter party's email address..."
-                              style={{ fontFamily: 'Avenir, sans-serif' }}
-                              value={recipient.email}
-                              onChange={e => {
-                                setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, email: e.target.value } : r));
-                                setRecipientErrors(prev => ({ ...prev, [`email-${idx}`]: false }));
-                                if (idx === 0) setOnlySignerError(false); // Clear checkbox error when first party fills email
-                              }}
-                            />
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                                <TbMailPlus className="w-4 h-4" />
+                              </span>
+                              <input
+                                type="email"
+                                className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white"
+                                placeholder="Enter party email address..."
+                                style={{ fontFamily: 'Avenir, sans-serif' }}
+                                value={recipient.email}
+                                onChange={e => {
+                                  setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, email: e.target.value } : r));
+                                  setRecipientErrors(prev => ({ ...prev, [`email-${idx}`]: false }));
+                                  if (idx === 0) setOnlySignerError(false); // Clear checkbox error when first party fills email
+                                }}
+                              />
+                            </div>
                             {recipientErrors[`email-${idx}`] && (
                               <p className="text-red-600 text-xs mt-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
                                 {!recipient.email || recipient.email.trim() === '' ? 'Email is required' : 'Please enter a valid email address'}
@@ -3815,7 +3894,7 @@ const ContractsPage: React.FC = () => {
                       className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white ${
                         formErrors.titleCompany ? 'border-red-300' : 'border-gray-200 dark:border-gray-600'
                       }`}
-                      placeholder="Enter title company name"
+                      placeholder="Enter title company name..."
                     />
                     {formErrors.titleCompany && (
                       <p className="mt-1 text-xs text-red-600 font-medium cursor-default select-none">Please fill out this field</p>
@@ -3830,7 +3909,7 @@ const ContractsPage: React.FC = () => {
                       value={modalForm.insuranceCompany}
                       onChange={handleModalChange}
                       className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
-                      placeholder="Enter insurance company name"
+                      placeholder="Enter insurance company name..."
                     />
                   </div>
                   <div>
@@ -3842,7 +3921,7 @@ const ContractsPage: React.FC = () => {
                       value={modalForm.buyerFinancialInstitution}
                       onChange={handleModalChange}
                       className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
-                      placeholder="Enter buyer financial institution"
+                      placeholder="Enter buyer financial institution..."
                     />
                   </div>
                   <div>
@@ -3854,7 +3933,7 @@ const ContractsPage: React.FC = () => {
                         name="buyerFinancialInstitutionRoutingNumber"
                         className="w-full px-4 py-2 bg-transparent text-xs text-gray-900 dark:text-white border-none focus:outline-none"
                         style={{ fontFamily: buyerRoutingDisplay ? 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace' : 'Avenir, sans-serif' }}
-                        placeholder="Enter buyer routing number"
+                        placeholder="Enter buyer routing number..."
                         maxLength={9}
                         pattern="[0-9]*"
                         inputMode="numeric"
@@ -3899,7 +3978,7 @@ const ContractsPage: React.FC = () => {
                         name="buyerAccountNumber"
                         className="w-full px-4 py-2 bg-transparent text-xs text-gray-900 dark:text-white border-none focus:outline-none"
                         style={{ fontFamily: buyerAccountVisible ? 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace' : (buyerAccountDisplay ? 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace' : 'Avenir, sans-serif') }}
-                        placeholder="Enter buyer account number"
+                        placeholder="Enter buyer account number..."
                         maxLength={12}
                         pattern="[0-9]*"
                         inputMode="numeric"
@@ -3930,7 +4009,7 @@ const ContractsPage: React.FC = () => {
                       value={modalForm.sellerFinancialInstitution}
                       onChange={handleModalChange}
                       className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
-                      placeholder="Enter seller financial institution"
+                      placeholder="Enter seller financial institution..."
                     />
                   </div>
                   <div>
@@ -3942,7 +4021,7 @@ const ContractsPage: React.FC = () => {
                         name="sellerFinancialInstitutionRoutingNumber"
                         className="w-full px-4 py-2 bg-transparent text-xs text-gray-900 dark:text-white border-none focus:outline-none"
                         style={{ fontFamily: sellerRoutingDisplay ? 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace' : 'Avenir, sans-serif' }}
-                        placeholder="Enter seller routing number"
+                        placeholder="Enter seller routing number..."
                         maxLength={9}
                         pattern="[0-9]*"
                         inputMode="numeric"
@@ -3987,7 +4066,7 @@ const ContractsPage: React.FC = () => {
                         name="sellerAccountNumber"
                         className="w-full px-4 py-2 bg-transparent text-xs text-gray-900 dark:text-white border-none focus:outline-none"
                         style={{ fontFamily: sellerAccountVisible ? 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace' : (sellerAccountDisplay ? 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace' : 'Avenir, sans-serif') }}
-                        placeholder="Enter seller account number"
+                        placeholder="Enter seller account number..."
                         maxLength={12}
                         pattern="[0-9]*"
                         inputMode="numeric"
@@ -4021,7 +4100,7 @@ const ContractsPage: React.FC = () => {
                           setModalForm(prev => ({ ...prev, loanAmount: formattedValue }));
                         }}
                         className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
-                        placeholder="Enter loan amount"
+                        placeholder="Enter loan amount..."
                       />
                   </div>
                   <div>
@@ -4033,7 +4112,7 @@ const ContractsPage: React.FC = () => {
                       value={modalForm.loanTerm}
                       onChange={handleModalChange}
                       className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
-                      placeholder="Enter loan term"
+                      placeholder="Enter loan term..."
                     />
                   </div>
                   <div>
@@ -4045,7 +4124,7 @@ const ContractsPage: React.FC = () => {
                       value={modalForm.interestRate}
                       onChange={handleModalChange}
                       className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
-                      placeholder="Enter interest rate"
+                      placeholder="Enter interest rate..."
                     />
                   </div>
                   <div>
@@ -4060,7 +4139,7 @@ const ContractsPage: React.FC = () => {
                         setModalForm(prev => ({ ...prev, downPayment: formattedValue }));
                       }}
                       className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
-                      placeholder="Enter down payment amount"
+                      placeholder="Enter down payment amount..."
                     />
                   </div>
                   <div>
@@ -4075,7 +4154,7 @@ const ContractsPage: React.FC = () => {
                         setModalForm(prev => ({ ...prev, earnestMoney: formattedValue }));
                       }}
                       className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
-                      placeholder="Enter earnest money amount"
+                      placeholder="Enter earnest money amount..."
                     />
                   </div>
                   <div>
@@ -4087,7 +4166,7 @@ const ContractsPage: React.FC = () => {
                       value={modalForm.inspectionPeriod}
                       onChange={handleModalChange}
                       className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
-                      placeholder="Enter inspection period"
+                      placeholder="Enter inspection period..."
                     />
                   </div>
                 </div>
@@ -4098,8 +4177,8 @@ const ContractsPage: React.FC = () => {
                     name="contingencies"
                     value={modalForm.contingencies}
                     onChange={handleModalChange}
-                    className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs min-h-[80px] dark:bg-gray-900 dark:text-white"
-                    placeholder="Enter any contingencies for this contract"
+                    className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs min-h-[120px] dark:bg-gray-900 dark:text-white"
+                    placeholder="Enter any contingencies for this contract..."
                   />
                 </div>
                 <div className="flex justify-between mt-6">
@@ -4896,7 +4975,10 @@ const ContractsPage: React.FC = () => {
       </div>
 
       {/* Table Section with Tabs in Outlined Box */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 select-none">
+      <div 
+        ref={tableContainerRef}
+        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 select-none relative"
+      >
         {/* Tabs Row with Divider */}
         <div className="border-b border-gray-200 dark:border-gray-700">
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0 w-full">
@@ -4941,7 +5023,8 @@ const ContractsPage: React.FC = () => {
         </div>
         {/* Table */}
         {activeContentTab === 'contractList' && (
-          <div style={{ height: 'calc(10 * 3.5rem)', minHeight: '350px' }} className="relative overflow-x-auto overflow-y-auto mt-4 pr-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700">
+          <>
+            <div style={{ height: `calc(${visibleRows} * 3.5rem + 3rem)`, minHeight: '300px' }} className="relative overflow-x-auto overflow-y-auto mt-4 pr-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead>
                 <tr>
@@ -5092,10 +5175,57 @@ const ContractsPage: React.FC = () => {
               </tbody>
             </table>
           </div>
+
+          {/* Results Bar for Contracts Table */}
+          <div className="bg-white dark:bg-gray-800 px-6 py-3 border-t border-gray-200 dark:border-gray-600">
+            <div className="flex items-center justify-between">
+              <div className="text-xs text-gray-700 dark:text-gray-300">
+                Showing {Math.min(visibleRows, sortedContracts.length)} of {sortedContracts.length} results.
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-gray-700 dark:text-gray-300">Rows per page</span>
+                  <div className="relative">
+                    <select 
+                      className="text-xs border border-gray-300 dark:border-gray-600 rounded px-2 py-1 pr-6 bg-white dark:bg-gray-800 text-gray-900 dark:text-white appearance-none"
+                      value={rowsPerPage}
+                      onChange={(e) => setRowsPerPage(Number(e.target.value))}
+                    >
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                    </select>
+                    <div className="absolute inset-y-0 right-1 flex items-center pointer-events-none">
+                      <HiChevronDown className="w-3 h-3 text-gray-400" />
+                    </div>
+                  </div>
+                </div>
+                <div className="text-xs text-gray-700 dark:text-gray-300">
+                  Page 1 of 1
+                </div>
+                <div className="flex space-x-1">
+                  <button className="p-1 text-gray-400 cursor-not-allowed">
+                    <HiOutlineChevronDoubleLeft className="w-3 h-3" />
+                  </button>
+                  <button className="p-1 text-gray-400 cursor-not-allowed">
+                    <HiOutlineChevronDoubleLeft className="w-3 h-3 rotate-180" />
+                  </button>
+                  <button className="p-1 text-gray-400 cursor-not-allowed">
+                    <HiOutlineChevronDoubleRight className="w-3 h-3 rotate-180" />
+                  </button>
+                  <button className="p-1 text-gray-400 cursor-not-allowed">
+                    <HiOutlineChevronDoubleRight className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          </>
         )}
         {/* Documents tab/table */}
         {activeContentTab === 'documents' && (
-          <div style={{ height: 'calc(10 * 3.5rem)', minHeight: '350px' }} className="relative overflow-x-auto overflow-y-auto mt-4 pr-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700">
+          <>
+            <div style={{ height: `calc(${visibleRows} * 3.5rem + 3rem)`, minHeight: '300px' }} className="relative overflow-x-auto overflow-y-auto mt-4 pr-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
@@ -5242,9 +5372,62 @@ const ContractsPage: React.FC = () => {
               </tbody>
             </table>
           </div>
+
+          {/* Results Bar for Documents Table */}
+          <div className="bg-white dark:bg-gray-800 px-6 py-3 border-t border-gray-200 dark:border-gray-600">
+            <div className="flex items-center justify-between">
+              <div className="text-xs text-gray-700 dark:text-gray-300">
+                Showing {Math.min(visibleRows, sortedDocuments.length)} of {sortedDocuments.length} results.
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-gray-700 dark:text-gray-300">Rows per page</span>
+                  <div className="relative">
+                    <select 
+                      className="text-xs border border-gray-300 dark:border-gray-600 rounded px-2 py-1 pr-6 bg-white dark:bg-gray-800 text-gray-900 dark:text-white appearance-none"
+                      value={rowsPerPage}
+                      onChange={(e) => setRowsPerPage(Number(e.target.value))}
+                    >
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                    </select>
+                    <div className="absolute inset-y-0 right-1 flex items-center pointer-events-none">
+                      <HiChevronDown className="w-3 h-3 text-gray-400" />
+                    </div>
+                  </div>
+                </div>
+                <div className="text-xs text-gray-700 dark:text-gray-300">
+                  Page 1 of 1
+                </div>
+                <div className="flex space-x-1">
+                  <button className="p-1 text-gray-400 cursor-not-allowed">
+                    <HiOutlineChevronDoubleLeft className="w-3 h-3" />
+                  </button>
+                  <button className="p-1 text-gray-400 cursor-not-allowed">
+                    <HiOutlineChevronDoubleLeft className="w-3 h-3 rotate-180" />
+                  </button>
+                  <button className="p-1 text-gray-400 cursor-not-allowed">
+                    <HiOutlineChevronDoubleRight className="w-3 h-3 rotate-180" />
+                  </button>
+                  <button className="p-1 text-gray-400 cursor-not-allowed">
+                    <HiOutlineChevronDoubleRight className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          </>
         )}
-                    </div>
-                    </div>
+        
+        {/* Resize Handle */}
+        <div 
+          className="absolute bottom-0 right-0 w-4 h-4 cursor-nw-resize opacity-0 hover:opacity-100 transition-opacity z-10"
+          onMouseDown={handleResizeStart}
+          style={{ cursor: isResizing ? 'nw-resize' : 'nw-resize' }}
+        />
+      </div>
+    </div>
     
 
     {/* Modal for contract details */}
@@ -7191,4 +7374,5 @@ const ContractsPage: React.FC = () => {
     </>
   );
 }
+
 export default ContractsPage;

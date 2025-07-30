@@ -19,7 +19,7 @@ import { TiUserAddOutline } from 'react-icons/ti';
 import { Modal } from '@/components/common/Modal';
 import { RiLayoutColumnLine, RiDashboardLine, RiBox3Line, RiUserSharedLine, RiUserSearchLine } from 'react-icons/ri';
 import { FaSignature } from 'react-icons/fa';
-import { HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight } from 'react-icons/hi';
+import { HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight, HiChevronDown } from 'react-icons/hi';
 import { MdOutlineLightMode, MdOutlineDarkMode } from 'react-icons/md';
 import { FaDochub } from 'react-icons/fa6';
 import { SiAdobe } from 'react-icons/si';
@@ -85,6 +85,11 @@ export default function SignaturesPage() {
   const [editingDocuSignFileName, setEditingDocuSignFileName] = useState<string | null>(null);
   const [customFileNames, setCustomFileNames] = useState<{[key: string]: string}>({});
   const [customDocuSignFileNames, setCustomDocuSignFileNames] = useState<{[key: string]: string}>({});
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [visibleRows, setVisibleRows] = useState(15); // Number of visible rows in the table
+  const [isResizing, setIsResizing] = useState(false);
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
   
   // Contract association modal state
   const [showContractModal, setShowContractModal] = useState(false);
@@ -355,6 +360,73 @@ export default function SignaturesPage() {
     
     return () => clearTimeout(timeoutId);
   }, []);
+
+  // Table resize handlers
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    // Only start resizing if the left mouse button is pressed
+    if (e.button === 0) {
+      setIsResizing(true);
+      isDraggingRef.current = false; // Reset drag state
+    }
+  };
+
+  const handleResizeMove = (e: MouseEvent) => {
+    if (!isResizing || !tableContainerRef.current) return;
+
+    // Only resize if the mouse button is actually pressed (button 0 = left mouse button)
+    if (e.buttons !== 1) {
+      setIsResizing(false);
+      isDraggingRef.current = false;
+      return;
+    }
+
+    // Set dragging to true on first move
+    if (!isDraggingRef.current) {
+      isDraggingRef.current = true;
+      return; // Skip the first move to avoid immediate resize
+    }
+
+    const container = tableContainerRef.current;
+    const rect = container.getBoundingClientRect();
+    const newHeight = e.clientY - rect.top;
+    
+    // Calculate number of visible rows based on height
+    // Account for tabs, padding, and results bar
+    const tabsHeight = 60; // Approximate tabs height
+    const padding = 48; // Container padding (24px top + 24px bottom)
+    const resultsBarHeight = 60; // Results bar height
+    const headerHeight = 48; // Table header height
+    const rowHeight = 56; // 3.5rem per row
+    
+    const availableHeight = newHeight - tabsHeight - padding - resultsBarHeight - headerHeight;
+    const newVisibleRows = Math.max(5, Math.floor(availableHeight / rowHeight));
+    
+    setVisibleRows(newVisibleRows);
+  };
+
+  const handleResizeEnd = () => {
+    setIsResizing(false);
+  };
+
+  // Additional check to prevent resize on mouse up if not actually dragging
+  const handleMouseUp = () => {
+    setIsResizing(false);
+    isDraggingRef.current = false;
+  };
+
+  // Add resize event listeners
+  useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', handleResizeMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      
+      return () => {
+        document.removeEventListener('mousemove', handleResizeMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isResizing]);
   
 
 
@@ -2786,7 +2858,10 @@ export default function SignaturesPage() {
       {/* Page content - Tabs and Signature List */}
       <div className="space-y-4 cursor-default select-none">
         {/* White Box Container */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 cursor-default select-none">
+        <div 
+          ref={tableContainerRef}
+          className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 cursor-default select-none relative"
+        >
           {/* Tabs Row with Divider */}
           <div className="border-b border-gray-200 dark:border-gray-700 cursor-default select-none">
             <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 cursor-default select-none">
@@ -2928,7 +3003,7 @@ export default function SignaturesPage() {
 
           {/* Signature List Content based on Active Tab */}
           <div className="mt-4">
-            <div style={{ height: 'calc(10 * 3.5rem)', minHeight: '350px' }} className="relative overflow-x-auto overflow-y-auto mt-4 pr-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700">
+            <div style={{ height: `calc(${visibleRows} * 3.5rem + 3rem)`, minHeight: '300px' }} className="relative overflow-x-auto overflow-y-auto mt-4 pr-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700">
                   <tr>
@@ -3147,6 +3222,57 @@ export default function SignaturesPage() {
                 </tbody>
               </table>
             </div>
+            
+            {/* Results Bar */}
+            <div className="bg-white dark:bg-gray-800 px-6 py-3 border-t border-gray-200 dark:border-gray-600">
+              <div className="flex items-center justify-between">
+                <div className="text-xs text-gray-700 dark:text-gray-300">
+                  Showing {Math.min(visibleRows, filteredRows.length)} of {filteredRows.length} results.
+                </div>
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs text-gray-700 dark:text-gray-300">Rows per page</span>
+                    <div className="relative">
+                      <select 
+                        className="text-xs border border-gray-300 dark:border-gray-600 rounded px-2 py-1 pr-6 bg-white dark:bg-gray-800 text-gray-900 dark:text-white appearance-none"
+                        value={rowsPerPage}
+                        onChange={(e) => setRowsPerPage(Number(e.target.value))}
+                      >
+                        <option value={10}>10</option>
+                        <option value={20}>20</option>
+                      </select>
+                      <div className="absolute inset-y-0 right-1 flex items-center pointer-events-none">
+                        <HiChevronDown className="w-3 h-3 text-gray-400" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-xs text-gray-700 dark:text-gray-300">
+                    Page 1 of 1
+                  </div>
+                  <div className="flex space-x-1">
+                    <button className="p-1 text-gray-400 cursor-not-allowed">
+                      <HiOutlineChevronDoubleLeft className="w-3 h-3" />
+                    </button>
+                    <button className="p-1 text-gray-400 cursor-not-allowed">
+                      <HiOutlineChevronDoubleLeft className="w-3 h-3 rotate-180" />
+                    </button>
+                    <button className="p-1 text-gray-400 cursor-not-allowed">
+                      <HiOutlineChevronDoubleRight className="w-3 h-3 rotate-180" />
+                    </button>
+                    <button className="p-1 text-gray-400 cursor-not-allowed">
+                      <HiOutlineChevronDoubleRight className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Resize Handle */}
+            <div
+              className="absolute bottom-0 right-0 w-4 h-4 cursor-nw-resize opacity-0 hover:opacity-100 transition-opacity z-10"
+              onMouseDown={handleResizeStart}
+              style={{ cursor: isResizing ? 'nw-resize' : 'nw-resize' }}
+            />
           </div>
         </div>
       </div>
@@ -4306,32 +4432,7 @@ export default function SignaturesPage() {
                       </div>
                     </div>
 
-                    {/* Message Field */}
-                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>Add Message</h3>
-                      
-                      {/* Subject Field */}
-                      <div className="mb-4">
-                        <input
-                          type="text"
-                          className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-xs font-medium bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                          placeholder="Enter subject..."
-                          value={subject}
-                          onChange={(e) => setSubject(e.target.value)}
-                          style={{ fontFamily: 'Avenir, sans-serif' }}
-                        />
-                      </div>
-                      
-                      {/* Message Textarea */}
-                      <textarea
-                        className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-xs font-medium bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                        rows={4}
-                        placeholder="Enter your message..."
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        style={{ fontFamily: 'Avenir, sans-serif' }}
-                      />
-                    </div>
+
 
                     <div className="flex justify-end gap-1">
                       <button
