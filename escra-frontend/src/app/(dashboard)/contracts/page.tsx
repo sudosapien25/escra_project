@@ -291,7 +291,7 @@ const ContractsPage: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState('allContracts');
   const [activeContentTab, setActiveContentTab] = useState('contractList');
-  const [activeRole, setActiveRole] = useState('creator');
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>(['All']);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
@@ -302,8 +302,12 @@ const ContractsPage: React.FC = () => {
   const [openAssigneeDropdown, setOpenAssigneeDropdown] = useState(false);
   const [openRecentlyUpdatedDropdown, setOpenRecentlyUpdatedDropdown] = useState(false);
   const [selectedRecentlyUpdated, setSelectedRecentlyUpdated] = useState('Last 24 hours');
+  const [openCompletionTimeDropdown, setOpenCompletionTimeDropdown] = useState(false);
+  const [selectedCompletionTime, setSelectedCompletionTime] = useState('Last 30 days');
   const assigneeButtonRef = useRef<HTMLButtonElement>(null);
   const contractButtonRef = useRef<HTMLButtonElement>(null);
+  const completionTimeDropdownRef = useRef<HTMLDivElement>(null);
+  const completionTimeButtonRef = useRef<HTMLButtonElement>(null);
   const [showNewContractForm, setShowNewContractForm] = useState(false);
   const [modalStep, setModalStep] = useState(1);
   const [lastUpdatedSort, setLastUpdatedSort] = useState<'asc' | 'desc'>('desc');
@@ -3146,6 +3150,20 @@ const ContractsPage: React.FC = () => {
     };
   }, [showNewContractFileSourceDropdown]);
 
+  // Click outside handler for completion time dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (openCompletionTimeDropdown && !completionTimeDropdownRef.current?.contains(event.target as Node)) {
+        setOpenCompletionTimeDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openCompletionTimeDropdown]);
+
   return (
     <>
       <div className="space-y-4 select-none cursor-default">
@@ -3157,38 +3175,13 @@ const ContractsPage: React.FC = () => {
               Manage & monitor all your contracts
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 w-full md:w-auto cursor-default select-none">
-            <div className="inline-block rounded-full bg-primary/10 dark:bg-primary/20 px-2 py-0.5 text-primary dark:text-primary font-semibold text-xs border border-primary/20 dark:border-primary/30 self-start sm:self-center cursor-default select-none">
-              Logged in as: Creator
-            </div>
-            <div className="inline-flex self-start sm:self-center border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden cursor-default select-none">
-              {['admin', 'creator', 'editor', 'viewer'].map((role, idx, arr) => (
-                <button
-                  key={role}
-                  className={`px-3 py-1.5 text-xs font-medium transition-colors border-0 ${
-                    idx !== 0 ? 'border-l border-gray-200 dark:border-gray-700' : ''
-                  } ${
-                    idx === 0 ? 'rounded-l-lg' : ''
-                  } ${
-                    idx === arr.length - 1 ? 'rounded-r-lg' : ''
-                  } ${
-                    activeRole === role
-                      ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-                  } cursor-pointer`}
-                  onClick={() => setActiveRole(role)}
-                >
-                  {role.charAt(0).toUpperCase() + role.slice(1)}
-                </button>
-              ))}
-            </div>
-            <button 
-              onClick={() => setShowNewContractForm(!showNewContractForm)}
-              className="flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold w-full sm:w-auto cursor-pointer"
-            >
-              <MdOutlineAddToPhotos className="mr-2 text-lg" />
-              New Contract
-            </button>
-          </div>
+          <button 
+            onClick={() => setShowNewContractForm(!showNewContractForm)}
+            className="flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold w-full sm:w-auto cursor-pointer"
+          >
+            <MdOutlineAddToPhotos className="mr-2 text-lg" />
+            New Contract
+          </button>
         </div>
 
         <hr className="my-3 md:my-6 border-gray-300 cursor-default select-none" />
@@ -4313,6 +4306,49 @@ const ContractsPage: React.FC = () => {
                 <p className="text-xs invisible cursor-default select-none">placeholder</p>
               </div>
             </div>
+            {/* Avg. Completion Time */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
+              <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center border-2 border-blue-200 dark:border-blue-800 cursor-default select-none">
+                <TbClockUp size={20} className="text-blue-500 dark:text-blue-400" />
+              </div>
+              <div className="flex flex-col items-start h-full cursor-default select-none">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Average Completion Time</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">3.2 days</p>
+                <div className="relative -ml-2.5">
+                  <button
+                    ref={completionTimeButtonRef}
+                    className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-lg px-3 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                    onClick={() => setOpenCompletionTimeDropdown(!openCompletionTimeDropdown)}
+                  >
+                    <span>{selectedCompletionTime}</span>
+                    <HiMiniChevronDown className="text-gray-400" size={16} />
+                  </button>
+                  {openCompletionTimeDropdown && (
+                    <div 
+                      ref={completionTimeDropdownRef}
+                      className="absolute top-full left-0 mt-1 w-32 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-1"
+                    >
+                      {['Last 24 hours', 'Last 7 days', 'Last 30 days', 'Last month', 'This quarter', 'Last quarter', 'Last 6 months', 'Last year', 'Last 2 years'].map((option) => (
+                        <button
+                          key={option}
+                          className={`w-full px-3 py-1.5 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedCompletionTime === option ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                          onClick={() => setSelectedCompletionTime(option)}
+                        >
+                          <div className="w-3 h-3 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                            {selectedCompletionTime === option && (
+                              <div className="w-2 h-2 bg-primary rounded-sm flex items-center justify-center">
+                                <FaCheck className="text-white" size={6} />
+                              </div>
+                            )}
+                          </div>
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
             {/* Pending Signatures */}
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
               <div className="h-10 w-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center border-2 border-purple-200 dark:border-purple-800 cursor-default select-none">
@@ -4335,29 +4371,18 @@ const ContractsPage: React.FC = () => {
                 <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">Needs attention</p>
               </div>
             </div>
-            {/* Avg. Completion Time */}
+            {/* Total Contract Value */}
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
-              <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center border-2 border-blue-200 dark:border-blue-800 cursor-default select-none">
-                <TbClockUp size={20} className="text-blue-500 dark:text-blue-400" />
+              <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800 cursor-default select-none">
+                <GrMoney size={20} className="text-teal-500 dark:text-teal-400" />
               </div>
               <div className="flex flex-col items-start h-full cursor-default select-none">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Average Completion Time</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">3.2 days</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">Last 30 days</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contract Value</p>
+                <p className="text-2xl font-bold text-primary cursor-default select-none">{calculateTotalValue()}</p>
+                <p className="text-xs text-green-600 dark:text-green-400 font-semibold cursor-default select-none">↑ 12% from last month</p>
               </div>
             </div>
 
-          </div>
-          {/* Total Contract Value Box */}
-          <div className="mb-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full select-none cursor-default">
-            <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800 cursor-default select-none">
-              <GrMoney size={20} className="text-teal-500 dark:text-teal-400" />
-            </div>
-            <div className="flex flex-col items-start h-full cursor-default select-none">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contract Value</p>
-              <p className="text-2xl font-bold text-primary cursor-default select-none">{calculateTotalValue()}</p>
-              <p className="text-xs text-green-600 dark:text-green-400 font-semibold cursor-default select-none">↑ 12% from last month</p>
-            </div>
           </div>
         </>
       )}

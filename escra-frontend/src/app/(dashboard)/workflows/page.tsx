@@ -5,18 +5,18 @@ import { mockContracts } from '@/data/mockContracts';
 import { Task } from '@/types/task';
 
 // Icons
-import { HiOutlineDocumentText, HiOutlineViewBoards, HiOutlineUpload, HiOutlineEye, HiOutlineDownload, HiOutlineTrash, HiPlus, HiChevronDown } from 'react-icons/hi';
+import { HiOutlineDocumentText, HiOutlineViewBoards, HiOutlineUpload, HiOutlineEye, HiOutlineDownload, HiOutlineTrash, HiPlus, HiChevronDown, HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight } from 'react-icons/hi';
 import { HiMiniChevronDown } from 'react-icons/hi2';
 import { CgPlayPauseR, CgPlayStopR } from 'react-icons/cg';
 import { BsPerson } from 'react-icons/bs';
-import { LuCalendarClock, LuSendHorizontal, LuCalendarFold } from 'react-icons/lu';
+import { LuCalendarClock, LuSendHorizontal, LuCalendarFold, LuTable2 } from 'react-icons/lu';
 import { FaPlus, FaSearch, FaRetweet, FaCheckCircle, FaCheck } from 'react-icons/fa';
 import { PiListMagnifyingGlassBold, PiListPlusBold, PiDotsThreeOutline } from 'react-icons/pi';
 import { FaRegSquareCheck } from 'react-icons/fa6';
 import { BiDotsHorizontal, BiCommentAdd } from 'react-icons/bi';
 import { MdCancelPresentation, MdOutlineLibraryAddCheck } from 'react-icons/md';
 import { MdOutlineLightMode, MdOutlineDarkMode } from 'react-icons/md';
-import { RiUserSearchLine } from 'react-icons/ri';
+import { RiUserSearchLine, RiKanbanView2 } from 'react-icons/ri';
 import { HiOutlineDocumentSearch } from 'react-icons/hi';
 import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
@@ -138,6 +138,9 @@ export default function WorkflowsPage() {
   const [showUploadModalAssigneeDropdown, setShowUploadModalAssigneeDropdown] = useState(false);
   const uploadModalAssigneeDropdownRef = useRef<HTMLDivElement>(null);
   const uploadModalAssigneeInputRef = useRef<HTMLInputElement>(null);
+  
+  // View toggle state (Kanban vs Table)
+  const [viewMode, setViewMode] = useState<'kanban' | 'table'>('kanban');
 
   // Use the task store
   const {
@@ -607,6 +610,20 @@ export default function WorkflowsPage() {
     }
   };
 
+  // Helper function to get status badge styling (matching signatures table but using kanban icon colors)
+  const getTaskStatusBadgeStyle = (status: string) => {
+    switch (status) {
+      case 'To Do': return 'bg-gray-100 dark:bg-gray-700/30 text-gray-800 dark:text-gray-400 border border-gray-800 dark:border-gray-500';
+      case 'In Progress': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 border border-blue-800 dark:border-blue-800';
+      case 'In Review': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 border border-yellow-800 dark:border-yellow-800';
+      case 'Done': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border border-green-800 dark:border-green-800';
+      case 'Blocked': return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 border border-red-800 dark:border-red-800';
+      case 'On Hold': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-400 border border-orange-800 dark:border-orange-800';
+      case 'Canceled': return 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400 border border-purple-800 dark:border-purple-800';
+      default: return 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400 border border-gray-800 dark:border-gray-800';
+    }
+  };
+
   return (
     <div className="space-y-4">
       {/* Workflow Title and Button */}
@@ -1002,6 +1019,38 @@ export default function WorkflowsPage() {
                   </div>
                 )}
               </div>
+              
+              {/* View Toggle - Mobile */}
+              <div className="relative flex-shrink-0 mt-2">
+                <div className="flex bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-1 h-10 justify-center">
+                  <button
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors relative group ${
+                      viewMode === 'kanban' 
+                        ? 'bg-primary text-white shadow-sm' 
+                        : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                    }`}
+                    onClick={() => setViewMode('kanban')}
+                  >
+                    <RiKanbanView2 className="w-4 h-4" />
+                    <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                      Kanban
+                    </span>
+                  </button>
+                  <button
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors relative group ${
+                      viewMode === 'table' 
+                        ? 'bg-primary text-white shadow-sm' 
+                        : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                    }`}
+                    onClick={() => setViewMode('table')}
+                  >
+                    <LuTable2 className="w-4 h-4" />
+                    <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                      Table
+                    </span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
           {/* Desktop: Horizontal layout */}
@@ -1261,19 +1310,52 @@ export default function WorkflowsPage() {
                   </div>
                 )}
               </div>
+              
+              {/* View Toggle */}
+              <div className="relative flex-shrink-0 ml-1">
+                <div className="flex bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-1 h-10">
+                  <button
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors relative group ${
+                      viewMode === 'kanban' 
+                        ? 'bg-primary text-white shadow-sm' 
+                        : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                    }`}
+                    onClick={() => setViewMode('kanban')}
+                  >
+                    <RiKanbanView2 className="w-4 h-4" />
+                    <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                      Kanban
+                    </span>
+                  </button>
+                  <button
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors relative group ${
+                      viewMode === 'table' 
+                        ? 'bg-primary text-white shadow-sm' 
+                        : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                    }`}
+                    onClick={() => setViewMode('table')}
+                  >
+                    <LuTable2 className="w-4 h-4" />
+                    <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                      Table
+                    </span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Kanban Board Section (filtered by tab) */}
-      {kanbanTab === 'All' && (
-        <DragDropContext onDragEnd={onDragEnd}>
-          <div
-            ref={kanbanBoardRef}
-            onWheel={handleKanbanWheel}
-            className="flex flex-grow overflow-x-auto space-x-6 p-4 rounded-lg [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500"
-          >
+      {viewMode === 'kanban' && kanbanTab === 'All' && (
+        <div className="mt-4">
+          <DragDropContext onDragEnd={onDragEnd}>
+            <div
+              ref={kanbanBoardRef}
+              onWheel={handleKanbanWheel}
+              className="flex flex-grow overflow-x-auto space-x-6 pt-4 pr-4 pb-4 pl-0 rounded-lg [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500"
+            >
             {kanbanColumns
               .filter(col => selectedStatuses.includes('All') || selectedStatuses.includes(col.key as TaskStatus))
               .map((col) => (
@@ -1293,7 +1375,7 @@ export default function WorkflowsPage() {
                           </div>
                         </div>
                       </div>
-                      <div className="p-4 overflow-y-auto h-[600px] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
+                      <div className="p-4 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ height: 'calc(15 * 3.5rem + 3rem)' }}>
                         <div className="space-y-3">
                           {filterTasks(col.tasks).map((task, index) => (
                             <Draggable key={task.code} draggableId={task.code} index={index}>
@@ -1345,7 +1427,7 @@ export default function WorkflowsPage() {
                                     </span>
                                   </div>
 
-                                  {/* Task Title */}
+                                  {/* Task Name */}
                                   <h3 className="text-xs font-bold text-gray-900 dark:text-white mb-2">{task.title}</h3>
 
                                   {/* Contract Info */}
@@ -1397,14 +1479,16 @@ export default function WorkflowsPage() {
               ))}
           </div>
         </DragDropContext>
+        </div>
       )}
-      {kanbanTab === 'Active' && (
-        <DragDropContext onDragEnd={onDragEnd}>
-          <div
-            ref={kanbanBoardRef}
-            onWheel={handleKanbanWheel}
-            className="flex flex-grow overflow-x-auto space-x-6 p-4 rounded-lg [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500"
-          >
+      {viewMode === 'kanban' && kanbanTab === 'Active' && (
+        <div className="mt-4">
+          <DragDropContext onDragEnd={onDragEnd}>
+            <div
+              ref={kanbanBoardRef}
+              onWheel={handleKanbanWheel}
+              className="flex flex-grow overflow-x-auto space-x-6 pt-4 pr-4 pb-4 pl-0 rounded-lg [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500"
+            >
             {kanbanColumns
               .filter(col => col.key !== 'Done' && col.key !== 'Canceled')
               .map((col) => (
@@ -1424,7 +1508,7 @@ export default function WorkflowsPage() {
                           </div>
                         </div>
                       </div>
-                      <div className="p-4 overflow-y-auto h-[600px] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
+                      <div className="p-4 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ height: 'calc(15 * 3.5rem + 3rem)' }}>
                         <div className="space-y-3">
                           {filterTasks(col.tasks).map((task, index) => (
                             <Draggable key={task.code} draggableId={task.code} index={index}>
@@ -1472,7 +1556,7 @@ export default function WorkflowsPage() {
                                       # {task.contractId}
                                     </span>
                                   </div>
-                                  {/* Task Title */}
+                                  {/* Task Name */}
                                   <h3 className="text-xs font-bold text-gray-900 mb-2">{task.title}</h3>
                                   {/* Contract Info */}
                                   <div className="flex items-center justify-between mb-1">
@@ -1521,6 +1605,145 @@ export default function WorkflowsPage() {
               ))}
           </div>
         </DragDropContext>
+        </div>
+      )}
+
+      {/* Table View */}
+      {viewMode === 'table' && (
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 cursor-default select-none relative">
+          <div style={{ height: 'calc(15 * 3.5rem + 3rem)', minHeight: '300px' }} className="relative overflow-x-auto overflow-y-auto mt-4 pr-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '100px' }}>
+                    Task ID
+                  </th>
+                  <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-left" style={{ minWidth: '200px' }}>
+                    Task
+                  </th>
+                  <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '120px' }}>
+                    Contract ID
+                  </th>
+                  <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-left" style={{ minWidth: '200px' }}>
+                    Contract
+                  </th>
+                  <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '120px' }}>
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '120px' }}>
+                    Due Date
+                  </th>
+                  <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '120px' }}>
+                    Subtasks
+                  </th>
+                  <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '120px' }}>
+                    Created Date
+                  </th>
+                  <th className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-center" style={{ minWidth: '120px' }}>
+                    Last Updated
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                {tasks.map((task) => (
+                  <tr
+                    key={task.id}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                    onClick={() => setSelectedTask(task)}
+                  >
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                      <span className="text-primary underline font-semibold cursor-pointer">{task.taskNumber}</span>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-sm">
+                      <div className="text-xs font-bold text-gray-900 dark:text-white">{task.title}</div>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                      <span className="text-primary underline font-semibold cursor-pointer">{task.contractId}</span>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-sm">
+                      <div className="text-xs font-bold text-gray-900 dark:text-white">
+                        {mockContracts.find(c => c.id === task.contractId)?.title || 'Unknown Contract'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                      <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full ${getTaskStatusBadgeStyle(task.status)}`} style={{ minWidth: '7rem', display: 'inline-flex', borderWidth: '1px' }}>
+                        {task.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                      <span className="text-gray-900 dark:text-white">{(() => {
+                        if (!task.due) return '';
+                        const d = new Date(task.due);
+                        if (isNaN(d.getTime())) return task.due;
+                        const year = d.getFullYear();
+                        const month = String(d.getMonth() + 1).padStart(2, '0');
+                        const day = String(d.getDate()).padStart(2, '0');
+                        return `${year}-${month}-${day}`;
+                      })()}</span>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                      <span className="text-gray-900 dark:text-white">{(() => {
+                        const taskSubtasks = task.subtasks || [];
+                        const completed = taskSubtasks.filter(st => st.completed).length;
+                        return `${completed} of ${taskSubtasks.length}`;
+                      })()}</span>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                      <span className="text-gray-900 dark:text-white">2024-05-01</span>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                      <span className="text-gray-900 dark:text-white">2024-05-02</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          {/* Results Bar */}
+          <div className="bg-white dark:bg-gray-800 px-6 py-3 border-t border-gray-200 dark:border-gray-600">
+            <div className="flex items-center justify-between">
+              <div className="text-xs text-gray-700 dark:text-gray-300">
+                Showing {tasks.length} of {tasks.length} results.
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-gray-700 dark:text-gray-300">Rows per page</span>
+                  <div className="relative">
+                    <select 
+                      className="text-xs border border-gray-300 dark:border-gray-600 rounded px-2 py-1 pr-6 bg-white dark:bg-gray-800 text-gray-900 dark:text-white appearance-none"
+                      value={10}
+                      onChange={() => {}}
+                    >
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                    </select>
+                    <div className="absolute inset-y-0 right-1 flex items-center pointer-events-none">
+                      <HiChevronDown className="w-3 h-3 text-gray-400" />
+                    </div>
+                  </div>
+                </div>
+                <div className="text-xs text-gray-700 dark:text-gray-300">
+                  Page 1 of 1
+                </div>
+                <div className="flex space-x-1">
+                  <button className="p-1 text-gray-400 cursor-not-allowed">
+                    <HiOutlineChevronDoubleLeft className="w-3 h-3" />
+                  </button>
+                  <button className="p-1 text-gray-400 cursor-not-allowed">
+                    <HiOutlineChevronDoubleLeft className="w-3 h-3 rotate-180" />
+                  </button>
+                  <button className="p-1 text-gray-400 cursor-not-allowed">
+                    <HiOutlineChevronDoubleRight className="w-3 h-3 rotate-180" />
+                  </button>
+                  <button className="p-1 text-gray-400 cursor-not-allowed">
+                    <HiOutlineChevronDoubleRight className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Task Details Modal */}
@@ -1577,10 +1800,10 @@ export default function WorkflowsPage() {
                         </div>
                       </div>
                     </div>
-                                              {/* Row 1: Task Title | Contract Name */}
+                                              {/* Row 1: Task Name | Contract Name */}
                     <div className="grid grid-cols-2 gap-6 mb-4 cursor-default select-none">
                       <div>
-                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Task Title</div>
+                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Task Name</div>
                         <input
                           type="text"
                           className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900"

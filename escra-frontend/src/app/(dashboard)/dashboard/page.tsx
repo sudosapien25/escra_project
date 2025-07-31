@@ -11,6 +11,9 @@ import { GrMoney } from 'react-icons/gr';
 import NewContractModal from '@/components/common/NewContractModal';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, BarChart, Bar } from 'recharts';
 import { mockContracts } from '@/data/mockContracts';
+import { SignatureDocument, mockSignatures } from '@/data/mockSignatures';
+import { useTaskStore } from '@/data/taskStore';
+import { Task } from '@/types/task';
 
 // Define Contract interface to match contracts page
 interface Contract {
@@ -110,7 +113,7 @@ const processContractDataForChart = (contracts: Contract[]) => {
 };
 
 // Utility function to process contract data for bar charts
-const processContractDataForBarChart = (contracts: Contract[], view: 'types' | 'statuses') => {
+const processContractDataForBarChart = (contracts: Contract[], signatures: SignatureDocument[], view: 'types' | 'statuses' | 'signatureStates') => {
   if (view === 'types') {
     const typeCounts: { [key: string]: number } = {};
     contracts.forEach(contract => {
@@ -123,7 +126,7 @@ const processContractDataForBarChart = (contracts: Contract[], view: 'types' | '
     }));
     console.log('Types data:', result);
     return result;
-  } else {
+  } else if (view === 'statuses') {
     const statusCounts: { [key: string]: number } = {};
     contracts.forEach(contract => {
       statusCounts[contract.status] = (statusCounts[contract.status] || 0) + 1;
@@ -135,11 +138,73 @@ const processContractDataForBarChart = (contracts: Contract[], view: 'types' | '
     }));
     console.log('Statuses data:', result);
     return result;
+  } else {
+    const signatureStatusCounts: { [key: string]: number } = {};
+    signatures.forEach(signature => {
+      signatureStatusCounts[signature.status] = (signatureStatusCounts[signature.status] || 0) + 1;
+    });
+    
+    const result = Object.entries(signatureStatusCounts).map(([status, count]) => ({
+      name: status,
+      count: count
+    }));
+    console.log('Signature States data:', result);
+    return result;
   }
 };
 
+// Helper function to parse parties string into array (same as contracts page)
+const parseParties = (partiesString: string): string[] => {
+  return partiesString.split(' & ').map(party => party.trim());
+};
+
+  // Helper function for status badge styling (same as contracts page)
+  const getStatusBadgeStyle = (status: string) => {
+    switch (status) {
+      case 'Initiation': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 border border-blue-800 dark:border-blue-800';
+      case 'Preparation': return 'bg-gray-100 dark:bg-gray-700/30 text-gray-800 dark:text-gray-400 border border-gray-800 dark:border-gray-500';
+      case 'In Review': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 border border-yellow-800 dark:border-yellow-800';
+      case 'Wire Details': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-400 border border-orange-800 dark:border-orange-800';
+      case 'Signatures': return 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400 border border-purple-800 dark:border-purple-800';
+      case 'Funds Disbursed': return 'bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-400 border border-teal-800 dark:border-teal-800';
+      case 'Completed': return 'bg-green-100 dark:bg-green-900/30 text-green-500 dark:text-green-400 border border-green-200 dark:border-green-800';
+      case 'Complete': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border border-green-800 dark:border-green-800';
+      case 'Verified': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border border-green-800 dark:border-green-800';
+      case 'Pending': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 border border-yellow-800 dark:border-yellow-800';
+      case 'Rejected': return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 border border-red-800 dark:border-red-800';
+      default: return 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400 border border-gray-800 dark:border-gray-800';
+    }
+  };
+
+  // Helper function for signature status badge styling (same as signatures page)
+  const getSignatureStatusBadgeStyle = (status: string) => {
+    switch (status) {
+      case 'Pending': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 border border-yellow-800 dark:border-yellow-800';
+      case 'Completed': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border border-green-800 dark:border-green-800';
+      case 'Rejected': return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 border border-red-800 dark:border-red-800';
+      case 'Expired': return 'bg-gray-100 dark:bg-gray-700/30 text-gray-800 dark:text-gray-400 border border-gray-800 dark:border-gray-500';
+      case 'Voided': return 'bg-gray-100 dark:bg-gray-700/30 text-gray-800 dark:text-gray-400 border border-gray-800 dark:border-gray-500';
+      default: return 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400 border border-gray-800 dark:border-gray-800';
+    }
+  };
+
+  // Helper function for task status badge styling (same as workflows page)
+  const getTaskStatusBadgeStyle = (status: string) => {
+    switch (status) {
+      case 'To Do': return 'bg-gray-100 dark:bg-gray-700/30 text-gray-800 dark:text-gray-400 border border-gray-800 dark:border-gray-500';
+      case 'In Progress': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 border border-blue-800 dark:border-blue-800';
+      case 'In Review': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 border border-yellow-800 dark:border-yellow-800';
+      case 'Done': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border border-green-800 dark:border-green-800';
+      case 'Blocked': return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 border border-red-800 dark:border-red-800';
+      case 'On Hold': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-400 border border-orange-800 dark:border-orange-800';
+      case 'Canceled': return 'bg-gray-100 dark:bg-gray-700/30 text-gray-800 dark:text-gray-400 border border-gray-800 dark:border-gray-500';
+      default: return 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400 border border-gray-800 dark:border-gray-800';
+    }
+  };
+
 export default function DashboardPage() {
   const [showNewContractModal, setShowNewContractModal] = React.useState(false);
+  const [activeRole, setActiveRole] = React.useState('creator');
   const [hoveredValue, setHoveredValue] = React.useState<number | null>(null);
   const [hoveredDate, setHoveredDate] = React.useState<string | null>(null);
   const [contracts, setContracts] = React.useState<Contract[]>(mockContracts);
@@ -147,11 +212,408 @@ export default function DashboardPage() {
   const [selectedRecentlyUpdated, setSelectedRecentlyUpdated] = React.useState('Last 30 days');
   const recentlyUpdatedDropdownRef = React.useRef<HTMLDivElement>(null);
   const recentlyUpdatedButtonRef = React.useRef<HTMLButtonElement>(null);
-  const [chartView, setChartView] = React.useState<'types' | 'statuses'>('statuses');
+  const [chartView, setChartView] = React.useState<'types' | 'statuses' | 'signatureStates'>('statuses');
   const [openBarChartDropdown, setOpenBarChartDropdown] = React.useState(false);
   const [selectedBarChartPeriod, setSelectedBarChartPeriod] = React.useState('Last 30 days');
   const barChartDropdownRef = React.useRef<HTMLDivElement>(null);
   const barChartButtonRef = React.useRef<HTMLButtonElement>(null);
+  
+  // Sorting state variables
+  const [idSortDirection, setIdSortDirection] = React.useState<'asc' | 'desc' | null>('asc');
+  const [contractSortDirection, setContractSortDirection] = React.useState<'asc' | 'desc' | null>(null);
+  const [partiesSortDirection, setPartiesSortDirection] = React.useState<'asc' | 'desc' | null>(null);
+  const [statusSortDirection, setStatusSortDirection] = React.useState<'asc' | 'desc' | null>(null);
+  
+  // Signature sorting state variables
+  const [signatureIdSortDirection, setSignatureIdSortDirection] = React.useState<'asc' | 'desc' | null>('asc');
+  const [signatureDocumentSortDirection, setSignatureDocumentSortDirection] = React.useState<'asc' | 'desc' | null>(null);
+  const [signatureContractIdSortDirection, setSignatureContractIdSortDirection] = React.useState<'asc' | 'desc' | null>(null);
+  const [signatureContractSortDirection, setSignatureContractSortDirection] = React.useState<'asc' | 'desc' | null>(null);
+  const [signatureRecipientsSortDirection, setSignatureRecipientsSortDirection] = React.useState<'asc' | 'desc' | null>(null);
+  const [signatureStatusSortDirection, setSignatureStatusSortDirection] = React.useState<'asc' | 'desc' | null>(null);
+  const [signatureSignaturesSortDirection, setSignatureSignaturesSortDirection] = React.useState<'asc' | 'desc' | null>(null);
+  const [signatureAssigneeSortDirection, setSignatureAssigneeSortDirection] = React.useState<'asc' | 'desc' | null>(null);
+  
+  // Task sorting state variables
+  const [taskIdSortDirection, setTaskIdSortDirection] = React.useState<'asc' | 'desc' | null>('asc');
+  const [taskTitleSortDirection, setTaskTitleSortDirection] = React.useState<'asc' | 'desc' | null>(null);
+  const [taskContractIdSortDirection, setTaskContractIdSortDirection] = React.useState<'asc' | 'desc' | null>(null);
+  const [taskContractSortDirection, setTaskContractSortDirection] = React.useState<'asc' | 'desc' | null>(null);
+  const [taskStatusSortDirection, setTaskStatusSortDirection] = React.useState<'asc' | 'desc' | null>(null);
+  const [taskDueDateSortDirection, setTaskDueDateSortDirection] = React.useState<'asc' | 'desc' | null>(null);
+  const [taskSubtasksSortDirection, setTaskSubtasksSortDirection] = React.useState<'asc' | 'desc' | null>(null);
+  
+  // Signatures data state
+  const [signaturesData, setSignaturesData] = React.useState<SignatureDocument[]>(mockSignatures);
+  
+  // Tasks data state
+  const { tasks, initializeTasks } = useTaskStore();
+  
+  // Tab state
+  const [activeTab, setActiveTab] = React.useState('contracts');
+  
+  // Tab configuration
+  const DASHBOARD_TABS = [
+    { key: 'contracts', label: 'Contracts' },
+    { key: 'signatureRequests', label: 'Signatures' },
+    { key: 'tasks', label: 'Tasks' },
+  ];
+  
+  // Sorting functions (same as contracts page)
+  const handleIdSort = () => {
+    setIdSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setContractSortDirection(null);
+    setPartiesSortDirection(null);
+    setStatusSortDirection(null);
+  };
+
+  const handleContractSort = () => {
+    setContractSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setIdSortDirection(null);
+    setPartiesSortDirection(null);
+    setStatusSortDirection(null);
+  };
+
+  const handlePartiesSort = () => {
+    setPartiesSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setIdSortDirection(null);
+    setContractSortDirection(null);
+    setStatusSortDirection(null);
+  };
+
+  const handleStatusSort = () => {
+    setStatusSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setIdSortDirection(null);
+    setContractSortDirection(null);
+    setPartiesSortDirection(null);
+  };
+
+  // Signature sorting functions (same as signatures page)
+  const handleSignatureIdSort = () => {
+    setSignatureIdSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setSignatureDocumentSortDirection(null);
+    setSignatureContractIdSortDirection(null);
+    setSignatureContractSortDirection(null);
+    setSignatureRecipientsSortDirection(null);
+    setSignatureStatusSortDirection(null);
+    setSignatureSignaturesSortDirection(null);
+    setSignatureAssigneeSortDirection(null);
+  };
+
+  const handleSignatureDocumentSort = () => {
+    setSignatureDocumentSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setSignatureIdSortDirection(null);
+    setSignatureContractIdSortDirection(null);
+    setSignatureContractSortDirection(null);
+    setSignatureRecipientsSortDirection(null);
+    setSignatureStatusSortDirection(null);
+    setSignatureSignaturesSortDirection(null);
+    setSignatureAssigneeSortDirection(null);
+  };
+
+  const handleSignatureContractIdSort = () => {
+    setSignatureContractIdSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setSignatureIdSortDirection(null);
+    setSignatureDocumentSortDirection(null);
+    setSignatureContractSortDirection(null);
+    setSignatureRecipientsSortDirection(null);
+    setSignatureStatusSortDirection(null);
+    setSignatureSignaturesSortDirection(null);
+    setSignatureAssigneeSortDirection(null);
+  };
+
+  const handleSignatureContractSort = () => {
+    setSignatureContractSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setSignatureIdSortDirection(null);
+    setSignatureDocumentSortDirection(null);
+    setSignatureContractIdSortDirection(null);
+    setSignatureRecipientsSortDirection(null);
+    setSignatureStatusSortDirection(null);
+    setSignatureSignaturesSortDirection(null);
+    setSignatureAssigneeSortDirection(null);
+  };
+
+  const handleSignatureRecipientsSort = () => {
+    setSignatureRecipientsSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setSignatureIdSortDirection(null);
+    setSignatureDocumentSortDirection(null);
+    setSignatureContractIdSortDirection(null);
+    setSignatureContractSortDirection(null);
+    setSignatureStatusSortDirection(null);
+    setSignatureSignaturesSortDirection(null);
+    setSignatureAssigneeSortDirection(null);
+  };
+
+  const handleSignatureStatusSort = () => {
+    setSignatureStatusSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setSignatureIdSortDirection(null);
+    setSignatureDocumentSortDirection(null);
+    setSignatureContractIdSortDirection(null);
+    setSignatureContractSortDirection(null);
+    setSignatureRecipientsSortDirection(null);
+    setSignatureSignaturesSortDirection(null);
+    setSignatureAssigneeSortDirection(null);
+  };
+
+  const handleSignatureSignaturesSort = () => {
+    setSignatureSignaturesSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setSignatureIdSortDirection(null);
+    setSignatureDocumentSortDirection(null);
+    setSignatureContractIdSortDirection(null);
+    setSignatureContractSortDirection(null);
+    setSignatureRecipientsSortDirection(null);
+    setSignatureStatusSortDirection(null);
+    setSignatureAssigneeSortDirection(null);
+  };
+
+  const handleSignatureAssigneeSort = () => {
+    setSignatureAssigneeSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setSignatureIdSortDirection(null);
+    setSignatureDocumentSortDirection(null);
+    setSignatureContractIdSortDirection(null);
+    setSignatureContractSortDirection(null);
+    setSignatureRecipientsSortDirection(null);
+    setSignatureStatusSortDirection(null);
+    setSignatureSignaturesSortDirection(null);
+  };
+
+  // Task sorting functions
+  const handleTaskIdSort = () => {
+    setTaskIdSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setTaskTitleSortDirection(null);
+    setTaskContractIdSortDirection(null);
+    setTaskContractSortDirection(null);
+    setTaskStatusSortDirection(null);
+    setTaskDueDateSortDirection(null);
+    setTaskSubtasksSortDirection(null);
+  };
+
+  const handleTaskTitleSort = () => {
+    setTaskTitleSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setTaskIdSortDirection(null);
+    setTaskContractIdSortDirection(null);
+    setTaskContractSortDirection(null);
+    setTaskStatusSortDirection(null);
+    setTaskDueDateSortDirection(null);
+    setTaskSubtasksSortDirection(null);
+  };
+
+  const handleTaskContractIdSort = () => {
+    setTaskContractIdSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setTaskIdSortDirection(null);
+    setTaskTitleSortDirection(null);
+    setTaskContractSortDirection(null);
+    setTaskStatusSortDirection(null);
+    setTaskDueDateSortDirection(null);
+    setTaskSubtasksSortDirection(null);
+  };
+
+  const handleTaskContractSort = () => {
+    setTaskContractSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setTaskIdSortDirection(null);
+    setTaskTitleSortDirection(null);
+    setTaskContractIdSortDirection(null);
+    setTaskStatusSortDirection(null);
+    setTaskDueDateSortDirection(null);
+    setTaskSubtasksSortDirection(null);
+  };
+
+  const handleTaskStatusSort = () => {
+    setTaskStatusSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setTaskIdSortDirection(null);
+    setTaskTitleSortDirection(null);
+    setTaskContractIdSortDirection(null);
+    setTaskContractSortDirection(null);
+    setTaskDueDateSortDirection(null);
+    setTaskSubtasksSortDirection(null);
+  };
+
+  const handleTaskDueDateSort = () => {
+    setTaskDueDateSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setTaskIdSortDirection(null);
+    setTaskTitleSortDirection(null);
+    setTaskContractIdSortDirection(null);
+    setTaskContractSortDirection(null);
+    setTaskStatusSortDirection(null);
+    setTaskSubtasksSortDirection(null);
+  };
+
+  const handleTaskSubtasksSort = () => {
+    setTaskSubtasksSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setTaskIdSortDirection(null);
+    setTaskTitleSortDirection(null);
+    setTaskContractIdSortDirection(null);
+    setTaskContractSortDirection(null);
+    setTaskStatusSortDirection(null);
+    setTaskDueDateSortDirection(null);
+  };
+
+  // Sort contracts based on current sort direction
+  const sortedContracts = [...contracts].sort((a, b) => {
+    if (statusSortDirection) {
+      const aStatus = a.status.toLowerCase();
+      const bStatus = b.status.toLowerCase();
+      if (statusSortDirection === 'asc') {
+        return aStatus.localeCompare(bStatus);
+      } else {
+        return bStatus.localeCompare(aStatus);
+      }
+    } else if (partiesSortDirection) {
+      const aParties = a.parties.toLowerCase();
+      const bParties = b.parties.toLowerCase();
+      if (partiesSortDirection === 'asc') {
+        return aParties.localeCompare(bParties);
+      } else {
+        return bParties.localeCompare(aParties);
+      }
+    } else if (contractSortDirection) {
+      const aTitle = a.title.toLowerCase();
+      const bTitle = b.title.toLowerCase();
+      if (contractSortDirection === 'asc') {
+        return aTitle.localeCompare(bTitle);
+      } else {
+        return bTitle.localeCompare(aTitle);
+      }
+    } else {
+      const aId = Number(a.id);
+      const bId = Number(b.id);
+      if (idSortDirection === 'asc') {
+        return aId - bId;
+      } else {
+        return bId - aId;
+      }
+    }
+  });
+
+  // Sort signatures based on current sort direction
+  const sortedSignatures = [...signaturesData].sort((a, b) => {
+    if (signatureAssigneeSortDirection) {
+      const aAssignee = a.assignee.toLowerCase();
+      const bAssignee = b.assignee.toLowerCase();
+      if (signatureAssigneeSortDirection === 'asc') {
+        return aAssignee.localeCompare(bAssignee);
+      } else {
+        return bAssignee.localeCompare(aAssignee);
+      }
+    } else if (signatureSignaturesSortDirection) {
+      const aSignatures = a.signatures.toLowerCase();
+      const bSignatures = b.signatures.toLowerCase();
+      if (signatureSignaturesSortDirection === 'asc') {
+        return aSignatures.localeCompare(bSignatures);
+      } else {
+        return bSignatures.localeCompare(aSignatures);
+      }
+    } else if (signatureStatusSortDirection) {
+      const aStatus = a.status.toLowerCase();
+      const bStatus = b.status.toLowerCase();
+      if (signatureStatusSortDirection === 'asc') {
+        return aStatus.localeCompare(bStatus);
+      } else {
+        return bStatus.localeCompare(aStatus);
+      }
+    } else if (signatureRecipientsSortDirection) {
+      const aRecipients = a.parties.join(', ').toLowerCase();
+      const bRecipients = b.parties.join(', ').toLowerCase();
+      if (signatureRecipientsSortDirection === 'asc') {
+        return aRecipients.localeCompare(bRecipients);
+      } else {
+        return bRecipients.localeCompare(aRecipients);
+      }
+    } else if (signatureContractSortDirection) {
+      const aContract = a.contract.toLowerCase();
+      const bContract = b.contract.toLowerCase();
+      if (signatureContractSortDirection === 'asc') {
+        return aContract.localeCompare(bContract);
+      } else {
+        return bContract.localeCompare(aContract);
+      }
+    } else if (signatureContractIdSortDirection) {
+      const aContractId = Number(a.contractId);
+      const bContractId = Number(b.contractId);
+      if (signatureContractIdSortDirection === 'asc') {
+        return aContractId - bContractId;
+      } else {
+        return bContractId - aContractId;
+      }
+    } else if (signatureDocumentSortDirection) {
+      const aDocument = a.document.toLowerCase();
+      const bDocument = b.document.toLowerCase();
+      if (signatureDocumentSortDirection === 'asc') {
+        return aDocument.localeCompare(bDocument);
+      } else {
+        return bDocument.localeCompare(aDocument);
+      }
+    } else {
+      const aId = Number(a.id);
+      const bId = Number(b.id);
+      if (signatureIdSortDirection === 'asc') {
+        return aId - bId;
+      } else {
+        return bId - aId;
+      }
+    }
+  });
+
+  // Sort tasks based on current sort direction
+  const sortedTasks = [...tasks].sort((a, b) => {
+    if (taskSubtasksSortDirection) {
+      const aSubtasks = a.subtasks.length;
+      const bSubtasks = b.subtasks.length;
+      if (taskSubtasksSortDirection === 'asc') {
+        return aSubtasks - bSubtasks;
+      } else {
+        return bSubtasks - aSubtasks;
+      }
+    } else if (taskDueDateSortDirection) {
+      const aDate = new Date(a.due);
+      const bDate = new Date(b.due);
+      if (taskDueDateSortDirection === 'asc') {
+        return aDate.getTime() - bDate.getTime();
+      } else {
+        return bDate.getTime() - aDate.getTime();
+      }
+    } else if (taskStatusSortDirection) {
+      const aStatus = a.status.toLowerCase();
+      const bStatus = b.status.toLowerCase();
+      if (taskStatusSortDirection === 'asc') {
+        return aStatus.localeCompare(bStatus);
+      } else {
+        return bStatus.localeCompare(aStatus);
+      }
+    } else if (taskContractSortDirection) {
+      const aContract = mockContracts.find(c => c.id === a.contractId)?.title || '';
+      const bContract = mockContracts.find(c => c.id === b.contractId)?.title || '';
+      if (taskContractSortDirection === 'asc') {
+        return aContract.localeCompare(bContract);
+      } else {
+        return bContract.localeCompare(aContract);
+      }
+    } else if (taskContractIdSortDirection) {
+      const aContractId = Number(a.contractId);
+      const bContractId = Number(b.contractId);
+      if (taskContractIdSortDirection === 'asc') {
+        return aContractId - bContractId;
+      } else {
+        return bContractId - aContractId;
+      }
+    } else if (taskTitleSortDirection) {
+      const aTitle = a.title.toLowerCase();
+      const bTitle = b.title.toLowerCase();
+      if (taskTitleSortDirection === 'asc') {
+        return aTitle.localeCompare(bTitle);
+      } else {
+        return bTitle.localeCompare(aTitle);
+      }
+    } else {
+      const aId = a.taskNumber;
+      const bId = b.taskNumber;
+      if (taskIdSortDirection === 'asc') {
+        return aId - bId;
+      } else {
+        return bId - aId;
+      }
+    }
+  });
   
   // Click outside functionality for dropdown
   React.useEffect(() => {
@@ -217,6 +679,41 @@ export default function DashboardPage() {
     
     return () => clearTimeout(timeoutId);
   }, []);
+
+  // Load enhanced signatures (same as signatures page)
+  React.useEffect(() => {
+    const loadEnhancedSignatures = async () => {
+      try {
+        const response = await fetch('/api/signatures');
+        if (response.ok) {
+          const data = await response.json();
+          // Only update if we got valid data that's different from initial mockSignatures
+          if (data.signatures && data.signatures.length > 0) {
+            setSignaturesData(data.signatures);
+          }
+        } else {
+          console.error('Failed to load enhanced signatures');
+          // Keep the initial mockSignatures that are already loaded
+        }
+      } catch (error) {
+        console.error('Error loading enhanced signatures:', error);
+        // Keep the initial mockSignatures that are already loaded
+      }
+    };
+
+    // Small delay to let the initial render complete, then enhance with API data
+    const timeoutId = setTimeout(loadEnhancedSignatures, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, []);
+
+  // Initialize tasks (same as workflows page)
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      initializeTasks();
+      console.log('Initialized tasks:', tasks);
+    }
+  }, []); // Remove initializeTasks from dependencies to prevent infinite loop
   
   const chartData = processContractDataForChart(contracts);
   const currentValue = calculateTotalContractValue(contracts);
@@ -267,18 +764,43 @@ export default function DashboardPage() {
           <h1 className="text-[30px] font-bold text-black dark:text-white mb-0">Dashboard</h1>
           <p className="text-gray-500 dark:text-gray-400 text-[16px] mt-0">Overview of your contract closing activities & metrics</p>
         </div>
-        <button
-          className="flex items-center justify-center w-full md:w-auto px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
-          onClick={() => setShowNewContractModal(true)}
-        >
-          <MdOutlineAddToPhotos className="mr-2 text-lg" />
-          New Contract
-        </button>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 w-full md:w-auto cursor-default select-none">
+          <div className="inline-block rounded-full bg-primary/10 dark:bg-primary/20 px-2 py-0.5 text-primary dark:text-primary font-semibold text-xs border border-primary/20 dark:border-primary/30 self-start sm:self-center cursor-default select-none">
+            Logged in as: Creator
+          </div>
+          <div className="inline-flex self-start sm:self-center border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden cursor-default select-none">
+            {['admin', 'creator', 'editor', 'viewer'].map((role, idx, arr) => (
+              <button
+                key={role}
+                className={`px-3 py-1.5 text-xs font-medium transition-colors border-0 ${
+                  idx !== 0 ? 'border-l border-gray-200 dark:border-gray-700' : ''
+                } ${
+                  idx === 0 ? 'rounded-l-lg' : ''
+                } ${
+                  idx === arr.length - 1 ? 'rounded-r-lg' : ''
+                } ${
+                  activeRole === role
+                    ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                } cursor-pointer`}
+                onClick={() => setActiveRole(role)}
+              >
+                {role.charAt(0).toUpperCase() + role.slice(1)}
+              </button>
+            ))}
+          </div>
+          <button
+            className="flex items-center justify-center w-full md:w-auto px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+            onClick={() => setShowNewContractModal(true)}
+          >
+            <MdOutlineAddToPhotos className="mr-2 text-lg" />
+            New Contract
+          </button>
+        </div>
         <NewContractModal isOpen={showNewContractModal} onClose={() => setShowNewContractModal(false)} />
       </div>
 
       {/* Horizontal line below subtitle */}
-      <hr className="my-3 md:my-6 border-gray-300 dark:border-gray-700 cursor-default select-none" />
+      <hr className="my-3 md:my-6 border-gray-300 cursor-default select-none" />
 
       {/* Key Metrics Section */}
       <h2 className="text-[15px] font-bold text-gray-700 dark:text-gray-300 pt-6 mb-4">KEY METRICS</h2>
@@ -435,7 +957,7 @@ export default function DashboardPage() {
               )}
             </div>
             
-            <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+            <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 border-2 border-gray-200 dark:border-gray-600">
               <button
                 className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
                   chartView === 'types' 
@@ -454,7 +976,17 @@ export default function DashboardPage() {
                 }`}
                 onClick={() => setChartView('statuses')}
               >
-                Contract States
+                Contract Status
+              </button>
+              <button
+                className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                  chartView === 'signatureStates' 
+                    ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' 
+                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                }`}
+                onClick={() => setChartView('signatureStates')}
+              >
+                Signature Status
               </button>
             </div>
           </div>
@@ -462,7 +994,7 @@ export default function DashboardPage() {
           <div className="flex-1 min-h-[370px] pb-2.5">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={processContractDataForBarChart(contracts, chartView)}
+                data={processContractDataForBarChart(contracts, signaturesData, chartView)}
                 margin={{ top: 20, right: 30, left: 5, bottom: -10 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
@@ -514,16 +1046,16 @@ export default function DashboardPage() {
       </div>
 
       {/* Recent Activity Section */}
-      <h2 className="text-[15px] font-bold text-gray-700 dark:text-gray-300 pt-6 mb-4">RECENT ACTIVITY</h2>
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center pt-6 mb-4 gap-4 md:gap-0">
+        <h2 className="text-[15px] font-bold text-gray-700 dark:text-gray-300">RECENT ACTIVITY</h2>
+        <button className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-semibold text-xs hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer" style={{ fontFamily: 'Avenir, sans-serif' }}>
+          View All
+        </button>
+      </div>
 
       <Card className="p-6 rounded-xl border border-gray-300 dark:border-gray-700 overflow-x-auto bg-white dark:bg-gray-800">
         <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-4 md:gap-0 min-w-0">
           <h3 className="text-lg font-semibold text-primary dark:text-primary">Activity Timeline</h3>
-          <button className="text-teal-600 dark:text-teal-400 hover:underline flex items-center text-sm px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md whitespace-nowrap">
-            View All
-            {/* Placeholder for arrow icon */}
-            <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-          </button>
         </div>
         {/* Activity Timeline Entries */}
         <div className="relative pl-6 min-w-0">
@@ -584,100 +1116,315 @@ export default function DashboardPage() {
         </div>
       </Card>
 
-      {/* Contracts in Progress Section */}
-      <h2 className="text-[15px] font-bold text-gray-700 dark:text-gray-300 pt-6">CONTRACTS IN PROGRESS</h2>
-
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-4 md:gap-0">
-        <h3 className="text-lg font-semibold text-primary dark:text-primary">Active Contracts</h3>
-        {/* View All Contracts Button */}
-        <button className="text-teal-600 dark:text-teal-400 hover:underline flex items-center text-sm px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md whitespace-nowrap">
-          View All Contracts
-          {/* Placeholder for arrow icon */}
-          <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+      {/* Contracts/Signatures in Progress Section */}
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center pt-6 mb-4 gap-4 md:gap-0">
+        <h2 className="text-[15px] font-bold text-gray-700 dark:text-gray-300">
+          {activeTab === 'contracts' ? 'CONTRACTS IN PROGRESS' : activeTab === 'signatureRequests' ? 'SIGNATURES IN PROGRESS' : 'TASKS IN PROGRESS'}
+        </h2>
+        {/* View All Button */}
+        <button className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-semibold text-xs hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer" style={{ fontFamily: 'Avenir, sans-serif' }}>
+          {activeTab === 'contracts' ? 'View All Contracts' : activeTab === 'signatureRequests' ? 'View All Signatures' : 'View All Tasks'}
         </button>
       </div>
 
-      {/* Active Contracts Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Contract cards will go here */}
-        {/* Property Sale Contract Card */}
-        <Card className="p-4 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800">
-          <div className="flex justify-between items-start mb-2">
-            <h4 className="text-md font-semibold text-black dark:text-white whitespace-nowrap overflow-hidden text-ellipsis">Property Sale Contract</h4>
-          </div>
-          <div className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
-            <p><span className="font-semibold text-gray-500 dark:text-gray-400">Contract ID:</span> <span className="text-teal-600 dark:text-teal-400">#8423</span></p>
-            <p><span className="font-semibold text-gray-500 dark:text-gray-400">Milestone:</span> Wire Transfer</p>
-            <p><span className="font-semibold text-gray-500 dark:text-gray-400">Next Step:</span> Awaiting Funds</p>
-          </div>
-          <div className="flex justify-between items-end mt-4">
-            <div className="">
-              <button className="text-teal-600 dark:text-teal-400 hover:underline flex items-center text-sm px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md">
-                View
-                {/* Placeholder for arrow icon */}
-                <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+      {/* Active Contracts Table */}
+      <Card className="rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden">
+        {/* Tabs Row with Divider */}
+        <div className="border-b border-gray-200 dark:border-gray-700">
+          <div className="flex space-x-4 overflow-x-auto w-full [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
+            {DASHBOARD_TABS.map((tab) => (
+              <button
+                key={tab.key}
+                className={`pb-2 text-sm font-semibold whitespace-nowrap border-b-2 ${
+                  activeTab === tab.key
+                    ? 'text-primary border-primary'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 border-transparent'
+                }`}
+                onClick={() => setActiveTab(tab.key)}
+              >
+                {tab.label}
               </button>
-            </div>
-            <div className="flex flex-col items-end">
-              <span className="text-xs font-semibold px-2 py-1 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 whitespace-nowrap overflow-hidden text-ellipsis">In Progress</span>
-              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">3 of 5 tasks completed</div>
-            </div>
+            ))}
           </div>
-        </Card>
-
-        {/* Commercial Lease Escrow Card */}
-        <Card className="p-4 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800">
-          <div className="flex justify-between items-start mb-2">
-            <h4 className="text-md font-semibold text-black dark:text-white whitespace-nowrap overflow-hidden text-ellipsis">Commercial Lease Escrow</h4>
+        </div>
+        
+        {/* Tab Content */}
+        {activeTab === 'contracts' && (
+          <div style={{ height: '300px' }} className="relative overflow-x-auto overflow-y-auto mt-4 pr-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead>
+                <tr>
+                  <th 
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleIdSort}
+                  >
+                    Contract ID
+                  </th>
+                  <th 
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleContractSort}
+                  >
+                    Contract
+                  </th>
+                  <th 
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handlePartiesSort}
+                  >
+                    Parties
+                  </th>
+                  <th 
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleStatusSort}
+                  >
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                {sortedContracts.map((contract) => (
+                  <tr
+                    key={contract.id}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                  >
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                      <span className="text-primary underline font-semibold cursor-pointer">{contract.id}</span>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-sm">
+                      <div className="text-xs font-bold text-gray-900 dark:text-white">{contract.title}</div>
+                    </td>
+                    <td className="px-6 py-2.5 text-xs">
+                      {(() => {
+                        const parties = parseParties(contract.parties);
+                        
+                        return (
+                          <div className="flex flex-col space-y-1">
+                            {/* Show first 2 parties only for dashboard */}
+                            {parties.slice(0, 2).map((party, index) => (
+                              <div key={index} className="text-gray-900 dark:text-white">{party}</div>
+                            ))}
+                            
+                            {/* Show ellipsis if more than 2 parties */}
+                            {parties.length > 2 && (
+                              <div className="text-gray-500 dark:text-gray-400 text-xs">
+                                +{parties.length - 2} more
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                      <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full ${getStatusBadgeStyle(contract.status)}`}
+                        style={{ minWidth: '7rem', display: 'inline-flex', borderWidth: '1px' }}>{contract.status}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <div className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
-            <p><span className="font-semibold text-gray-500 dark:text-gray-400">Contract ID:</span> <span className="text-teal-600 dark:text-teal-400">#9102</span></p>
-            <p><span className="font-semibold text-gray-500 dark:text-gray-400">Milestone:</span> Signatures</p>
-            <p><span className="font-semibold text-gray-500 dark:text-gray-400">Next Step:</span> Tenant Signature</p>
+        )}
+        
+        {activeTab === 'signatureRequests' && (
+          <div style={{ height: '300px' }} className="relative overflow-x-auto overflow-y-auto mt-4 pr-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead>
+                <tr>
+                  <th 
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleSignatureIdSort}
+                  >
+                    Document ID
+                  </th>
+                  <th 
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleSignatureDocumentSort}
+                  >
+                    Document
+                  </th>
+                  <th 
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleSignatureContractIdSort}
+                  >
+                    Contract ID
+                  </th>
+                  <th 
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleSignatureContractSort}
+                  >
+                    Contract
+                  </th>
+                  <th 
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleSignatureRecipientsSort}
+                  >
+                    Recipients
+                  </th>
+                  <th 
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleSignatureStatusSort}
+                  >
+                    Status
+                  </th>
+                  <th 
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleSignatureSignaturesSort}
+                  >
+                    Signatures
+                  </th>
+                  <th 
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleSignatureAssigneeSort}
+                  >
+                    Assignee
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                {sortedSignatures.map((signature) => (
+                  <tr
+                    key={signature.id}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                  >
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                      <span className="text-primary underline font-semibold cursor-pointer">{signature.id}</span>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-sm">
+                      <div className="text-xs font-bold text-gray-900 dark:text-white">{signature.document}</div>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                      <span className="text-primary underline font-semibold cursor-pointer">{signature.contractId}</span>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-sm">
+                      <div className="text-xs font-bold text-gray-900 dark:text-white">{signature.contract}</div>
+                    </td>
+                    <td className="px-6 py-2.5 text-xs">
+                      <div className="flex flex-col space-y-1">
+                        {/* Show first 2 recipients only for dashboard */}
+                        {signature.parties.slice(0, 2).map((party, index) => (
+                          <div key={index} className="text-gray-900 dark:text-white">{party}</div>
+                        ))}
+                        
+                        {/* Show ellipsis if more than 2 recipients */}
+                        {signature.parties.length > 2 && (
+                          <div className="text-gray-500 dark:text-gray-400 text-xs">
+                            +{signature.parties.length - 2} more
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                      <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full ${getSignatureStatusBadgeStyle(signature.status)}`}
+                        style={{ minWidth: '7rem', display: 'inline-flex', borderWidth: '1px' }}>{signature.status}</span>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                      <span className="text-gray-900 dark:text-white font-semibold">{signature.signatures}</span>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-sm">
+                      <div className="text-xs text-gray-900 dark:text-white">{signature.assignee}</div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <div className="flex justify-between items-end mt-4">
-            <div className="">
-              <button className="text-teal-600 dark:text-teal-400 hover:underline flex items-center text-sm px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md">
-                View
-                {/* Placeholder for arrow icon */}
-                <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-              </button>
-            </div>
-            <div className="flex flex-col items-end">
-              <span className="text-xs font-semibold px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 whitespace-nowrap overflow-hidden text-ellipsis">Document Review</span>
-              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">2 of 4 tasks completed</div>
-            </div>
+        )}
+        
+        {activeTab === 'tasks' && (
+          <div style={{ height: '300px' }} className="relative overflow-x-auto overflow-y-auto mt-4 pr-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead>
+                <tr>
+                  <th 
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleTaskIdSort}
+                  >
+                    Task ID
+                  </th>
+                  <th 
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleTaskTitleSort}
+                  >
+                    Task
+                  </th>
+                  <th 
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleTaskContractIdSort}
+                  >
+                    Contract ID
+                  </th>
+                  <th 
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleTaskContractSort}
+                  >
+                    Contract
+                  </th>
+                  <th 
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleTaskStatusSort}
+                  >
+                    Status
+                  </th>
+                  <th 
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleTaskDueDateSort}
+                  >
+                    Due Date
+                  </th>
+                  <th 
+                    className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
+                    onClick={handleTaskSubtasksSort}
+                  >
+                    Subtasks
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                {sortedTasks.map((task) => (
+                  <tr
+                    key={task.id}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                  >
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                      <span className="text-primary underline font-semibold cursor-pointer">{task.taskNumber}</span>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-sm">
+                      <div className="text-xs font-bold text-gray-900 dark:text-white">{task.title}</div>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                      <span className="text-primary underline font-semibold cursor-pointer">{task.contractId}</span>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-sm">
+                      <div className="text-xs font-bold text-gray-900 dark:text-white">
+                        {mockContracts.find(c => c.id === task.contractId)?.title || 'Unknown Contract'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                      <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full ${getTaskStatusBadgeStyle(task.status)}`}
+                        style={{ minWidth: '7rem', display: 'inline-flex', borderWidth: '1px' }}>{task.status}</span>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                      <span className="text-gray-900 dark:text-white font-semibold">{(() => {
+                        if (!task.due) return '';
+                        const d = new Date(task.due);
+                        if (isNaN(d.getTime())) return task.due;
+                        const year = d.getFullYear();
+                        const month = String(d.getMonth() + 1).padStart(2, '0');
+                        const day = String(d.getDate()).padStart(2, '0');
+                        return `${year}-${month}-${day}`;
+                      })()}</span>
+                    </td>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                      <span className="text-gray-900 dark:text-white font-semibold">{task.subtasks.length}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </Card>
-
-        {/* Construction Escrow Card */}
-        <Card className="p-4 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800">
-          <div className="flex justify-between items-start mb-2">
-            <h4 className="text-md font-semibold text-black dark:text-white whitespace-nowrap overflow-hidden text-ellipsis">Construction Escrow</h4>
-          </div>
-          <div className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
-            <p><span className="font-semibold text-gray-500 dark:text-gray-400">Contract ID:</span> <span className="text-teal-600 dark:text-teal-400">#7650</span></p>
-            <p><span className="font-semibold text-gray-500 dark:text-gray-400">Milestone:</span> Document Collection</p>
-            <p><span className="font-semibold text-gray-500 dark:text-gray-400">Next Step:</span> Upload Permits</p>
-          </div>
-          <div className="flex justify-between items-end mt-4">
-            <div className="">
-              <button className="text-teal-600 dark:text-teal-400 hover:underline flex items-center text-sm px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md">
-                View
-                {/* Placeholder for arrow icon */}
-                <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-              </button>
-            </div>
-            <div className="flex flex-col items-end">
-              <span className="text-xs font-semibold px-2 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 whitespace-nowrap overflow-hidden text-ellipsis">Initial Setup</span>
-              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">1 of 6 tasks completed</div>
-            </div>
-          </div>
-        </Card>
-      </div>
+        )}
+      </Card>
 
       {/* Placeholder for other dashboard sections */}
-      {/* Add more sections like Recent Activity, Charts, etc. here */}
 
     </div>
   );

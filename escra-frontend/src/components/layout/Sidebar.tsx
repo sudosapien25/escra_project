@@ -106,19 +106,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
                         }
                       }}
                       className={clsx(
-                        'flex items-center w-full p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150',
+                        'flex items-center w-full p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150 relative group',
                         isSignaturesPage ? 'bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-400' : '',
                       )}
                     >
                       <IconWrapper icon={item.icon} className={clsx('w-5 h-5 flex-shrink-0', 'mr-2')} />
                       <span className="text-sm font-medium flex-1 text-left">{item.name}</span>
+                      {isCollapsed && (
+                        <span className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                          {item.name}
+                        </span>
+                      )}
                     </button>
                   </div>
                 ) : (
                   <Link
                     href={item.href}
                     className={clsx(
-                      'flex items-center p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150',
+                      'flex items-center p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150 relative group',
                       pathname === item.href ? 'bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-400' : '',
                       isCollapsed ? 'justify-center' : '',
                       isCollapsed && pathname === item.href ? 'px-4' : ''
@@ -126,6 +131,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
                   >
                     <IconWrapper icon={item.icon} className={clsx('w-5 h-5 flex-shrink-0', !isCollapsed && 'mr-2')} />
                     {!isCollapsed && <span className="text-sm font-medium">{item.name}</span>}
+                    {isCollapsed && (
+                      <span className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                        {item.name}
+                      </span>
+                    )}
                   </Link>
                 )}
               </li>
@@ -163,7 +173,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
               <Link
                 href={item.href}
                 className={clsx(
-                  'flex items-center p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150',
+                  'flex items-center p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150 relative group',
                   pathname === item.href ? 'bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-400' : '',
                   isCollapsed ? 'justify-center' : '',
                   isCollapsed && pathname === item.href ? 'px-4' : ''
@@ -171,6 +181,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
               >
                 <IconWrapper icon={item.icon} className={clsx('w-5 h-5 flex-shrink-0', !isCollapsed && 'mr-2')} />
                 {!isCollapsed && <span className="text-sm font-medium">{item.name}</span>}
+                {isCollapsed && (
+                  <span className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                    {item.name}
+                  </span>
+                )}
               </Link>
             </li>
           ))}
@@ -182,7 +197,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
         <button
           onClick={toggleTheme}
           className={clsx(
-            'flex items-center w-full p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150',
+            'flex items-center w-full p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150 relative group',
             isCollapsed ? 'justify-center' : ''
           )}
           aria-label={theme.isDark ? 'Switch to light mode' : 'Switch to dark mode'}
@@ -193,13 +208,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
             <IconWrapper icon={MdOutlineDarkMode} className={clsx('w-5 h-5 flex-shrink-0', !isCollapsed && 'mr-2')} />
           )}
           {!isCollapsed && <span className="text-sm font-medium">{theme.isDark ? 'Light Mode' : 'Dark Mode'}</span>}
+          {isCollapsed && (
+            <span className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+              {theme.isDark ? 'Light Mode' : 'Dark Mode'}
+            </span>
+          )}
         </button>
 
         {/* Collapse Button */}
         <button
           onClick={toggleSidebar}
           className={clsx(
-            'flex items-center w-full p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150',
+            'flex items-center w-full p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150 relative group',
             isCollapsed ? 'justify-center' : ''
           )}
         >
@@ -209,6 +229,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
             <IconWrapper icon={HiOutlineChevronDoubleLeft} className={clsx('w-5 h-5 flex-shrink-0', !isCollapsed && 'mr-2')} />
           )}
           {!isCollapsed && <span className="text-sm font-medium">Collapse</span>}
+          {isCollapsed && (
+            <span className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+              Expand
+            </span>
+          )}
         </button>
       </div>
     </aside>
