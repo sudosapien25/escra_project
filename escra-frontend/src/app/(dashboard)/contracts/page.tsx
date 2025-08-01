@@ -314,6 +314,8 @@ const ContractsPage: React.FC = () => {
   const [showNewDocumentFileSourceDropdown, setShowNewDocumentFileSourceDropdown] = useState(false);
   const [selectedNewDocumentFileSource, setSelectedNewDocumentFileSource] = useState('');
   const [showNewDocumentAssigneeDropdown, setShowNewDocumentAssigneeDropdown] = useState(false);
+  const [showNewDocumentContractDropdown, setShowNewDocumentContractDropdown] = useState(false);
+  const [newDocumentContractSearch, setNewDocumentContractSearch] = useState('');
   const [modalStep, setModalStep] = useState(1);
   const [lastUpdatedSort, setLastUpdatedSort] = useState<'asc' | 'desc'>('desc');
   const [modalForm, setModalForm] = useState({
@@ -359,7 +361,9 @@ const ContractsPage: React.FC = () => {
     type: '',
     description: '',
     assignee: '',
+    contract: '',
   });
+  const [documentFormErrors, setDocumentFormErrors] = useState<Record<string, boolean>>({});
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [uploadedDocumentIds, setUploadedDocumentIds] = useState<string[]>([]);
   const [documentName, setDocumentName] = useState('');
@@ -480,7 +484,6 @@ const ContractsPage: React.FC = () => {
   const [sellerAccountDisplay, setSellerAccountDisplay] = useState('');
   const [contractAccountDisplay, setContractAccountDisplay] = useState('');
   const [contractAccountValue, setContractAccountValue] = useState('');
-  
   // Account number visibility state
   const [buyerAccountVisible, setBuyerAccountVisible] = useState(false);
   const [sellerAccountVisible, setSellerAccountVisible] = useState(false);
@@ -783,7 +786,6 @@ const ContractsPage: React.FC = () => {
     { value: 'WI', label: 'Wisconsin' },
     { value: 'WY', label: 'Wyoming' }
   ];
-
   const COUNTRIES = [
     // Most commonly used countries first
     { value: 'US', label: 'United States' },
@@ -1054,39 +1056,25 @@ const ContractsPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    // Only use browser validation for step 1
-    if (modalStep === 1) {
-      const form = e.currentTarget;
-      const isValid = form.checkValidity();
-      
-      if (!isValid) {
-        const newErrors: Record<string, boolean> = {};
-        Array.from(form.elements).forEach((element) => {
-          if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement) {
-            if (element.required && !element.value) {
-              newErrors[element.name] = true;
-            }
-          }
-        });
-        setFormErrors(newErrors);
-        return;
-      }
-    }
+    // Skip browser validation and use custom validation for step 1
 
     if (modalStep === 1) {
-      // For step 1, only validate the essential fields for contract creation
-      const requiredFields = ['title', 'type'];
-      const missingFields = requiredFields.filter(field => !modalForm[field as keyof typeof modalForm]);
+      // For step 1, validate the essential fields for contract creation
+      const newErrors: Record<string, boolean> = {};
       
-      if (missingFields.length > 0) {
-        const newErrors: Record<string, boolean> = {};
-        missingFields.forEach(field => {
-          newErrors[field] = true;
-        });
+      if (!modalForm.title.trim()) {
+        newErrors.title = true;
+      }
+      if (!modalForm.type.trim()) {
+        newErrors.type = true;
+      }
+      
+      if (Object.keys(newErrors).length > 0) {
         setFormErrors(newErrors);
         return;
       }
       
+      setFormErrors({});
       setModalStep(2);
     } else if (modalStep === 2) {
       // Step 2: Validate recipients (parties) with visual error feedback
@@ -1625,7 +1613,6 @@ const ContractsPage: React.FC = () => {
       setEditingContractCommentId(commentId);
     }
   };
-
   const handleDeleteContractComment = (commentId: string) => {
     if (!selectedContract) return;
     const contractId = selectedContract.id;
@@ -1735,6 +1722,7 @@ const ContractsPage: React.FC = () => {
   const newContractFileSourceDropdownRef = useRef<HTMLDivElement>(null);
   const newDocumentFileSourceDropdownRef = useRef<HTMLDivElement>(null);
   const newDocumentAssigneeDropdownRef = useRef<HTMLDivElement>(null);
+  const newDocumentContractDropdownRef = useRef<HTMLDivElement>(null);
   
   // Selected files state for step 4 documents
   const [step4SelectedFiles, setStep4SelectedFiles] = useState<File[]>([]);
@@ -2086,7 +2074,6 @@ const ContractsPage: React.FC = () => {
       };
     }
   }, [isResizing]);
-
   // Function to download a stored document
   const downloadDocument = (documentId: string) => {
     const { getDocument } = useDocumentStore.getState();
@@ -2581,7 +2568,6 @@ const ContractsPage: React.FC = () => {
     ],
     content: '',
   });
-
   // Add state for sorting
   const [idSortDirection, setIdSortDirection] = useState<'asc' | 'desc'>('asc');
   const [contractSortDirection, setContractSortDirection] = useState<'asc' | 'desc' | null>(null);
@@ -3045,7 +3031,6 @@ const ContractsPage: React.FC = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [recipients]);
-
   // Add style element for dark mode autofill fix
   React.useEffect(() => {
     const styleId = 'dark-mode-autofill-fix';
@@ -3180,16 +3165,19 @@ const ContractsPage: React.FC = () => {
   // Click outside handler for new document assignee dropdown
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (showNewDocumentAssigneeDropdown && !newDocumentAssigneeDropdownRef.current?.contains(event.target as Node)) {
-        setShowNewDocumentAssigneeDropdown(false);
-      }
+          if (showNewDocumentAssigneeDropdown && !newDocumentAssigneeDropdownRef.current?.contains(event.target as Node)) {
+      setShowNewDocumentAssigneeDropdown(false);
+    }
+    if (showNewDocumentContractDropdown && !newDocumentContractDropdownRef.current?.contains(event.target as Node)) {
+      setShowNewDocumentContractDropdown(false);
+    }
     }
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showNewDocumentAssigneeDropdown]);
+  }, [showNewDocumentAssigneeDropdown, showNewDocumentContractDropdown]);
 
   // Click outside handler for completion time dropdown
   useEffect(() => {
@@ -3218,14 +3206,20 @@ const ContractsPage: React.FC = () => {
           </div>
           <div className="flex w-full sm:w-auto">
             <button 
-              onClick={() => setShowNewDocumentModal(!showNewDocumentModal)}
+              onClick={() => {
+                setShowNewDocumentModal(true);
+                setShowNewContractForm(false);
+              }}
               className="flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold w-full sm:w-auto cursor-pointer"
             >
               <MdOutlineAddToPhotos className="mr-2 text-lg" />
               New Document
             </button>
             <button 
-              onClick={() => setShowNewContractForm(!showNewContractForm)}
+              onClick={() => {
+                setShowNewContractForm(true);
+                setShowNewDocumentModal(false);
+              }}
               className="flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold w-full sm:w-auto cursor-pointer ml-1"
             >
               <HiOutlineDocumentAdd className="mr-2 text-lg" />
@@ -3236,7 +3230,9 @@ const ContractsPage: React.FC = () => {
 
         <hr className="my-3 md:my-6 border-gray-300 cursor-default select-none" />
 
-      {/* Stat Boxes or New Contract Modal or New Document Modal */}
+      {/* Scrollable Content Area */}
+      <div className="overflow-y-auto max-h-[calc(100vh-300px)] [&::-webkit-scrollbar]:hidden">
+        {/* Stat Boxes or New Contract Modal or New Document Modal */}
       {showNewContractForm ? (
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-300 dark:border-gray-700 px-6 py-4 mb-6 select-none">
           <div className="flex items-center justify-between mb-4">
@@ -3295,16 +3291,19 @@ const ContractsPage: React.FC = () => {
               <form onSubmit={handleSubmit} noValidate>
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="title" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Contract Name</label>
+                    <label htmlFor="title" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Contract Name <span className="text-red-500">*</span></label>
                     <input
                       type="text"
                       id="title"
                       name="title"
                       value={modalForm.title}
-                      onChange={handleModalChange}
-                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white dark:border-gray-600 ${
-                        formErrors.title ? 'border-red-300' : 'border-gray-200 dark:border-gray-600'
-                      }`}
+                      onChange={(e) => {
+                        handleModalChange(e);
+                        if (formErrors.title) {
+                          setFormErrors(prev => ({ ...prev, title: false }));
+                        }
+                      }}
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
                       placeholder="Enter contract name..."
                       required
                     />
@@ -3325,11 +3324,12 @@ const ContractsPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="type" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Contract Type</label>
+                    <label htmlFor="type" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Contract Type <span className="text-red-500">*</span></label>
                     <div className="relative w-full" ref={contractTypeDropdownRef}>
                       <input
                         type="text"
-                        className="w-full px-3 py-2 border-2 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-600 caret-transparent"
+                        required
+                        className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white dark:bg-gray-900 caret-transparent"
                         placeholder="Select contract type"
                         value={CONTRACT_TYPES.find(t => t === modalForm.type) || ''}
                         readOnly
@@ -3481,9 +3481,7 @@ const ContractsPage: React.FC = () => {
                             setModalForm(prev => ({ ...prev, dueDate: '' }));
                           }
                         }}
-                        className={`w-full px-4 py-2 pr-10 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs text-black dark:text-white bg-white dark:bg-gray-900 [&::-webkit-calendar-picker-indicator]:hidden ${
-                          formErrors.dueDate ? 'border-red-300' : 'border-gray-200 dark:border-gray-600'
-                        }`}
+                        className="w-full px-4 py-2 pr-10 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs text-black dark:text-white bg-white dark:bg-gray-900 [&::-webkit-calendar-picker-indicator]:hidden"
                       />
                       <button
                         type="button"
@@ -3858,7 +3856,7 @@ const ContractsPage: React.FC = () => {
                         <div className="space-y-4">
                           <div>
                             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                              Name <span className="text-primary">*</span>
+                              Name <span className="text-red-500">*</span>
                             </label>
                             <div className="relative">
                               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
@@ -3885,7 +3883,7 @@ const ContractsPage: React.FC = () => {
                           </div>
                           <div>
                             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                              Email <span className="text-primary">*</span>
+                              Email <span className="text-red-500">*</span>
                             </label>
                             <div className="relative">
                               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
@@ -3929,7 +3927,6 @@ const ContractsPage: React.FC = () => {
                 </div>
               </form>
             )}
-
             {modalStep === 3 && (
               <form onSubmit={handleSubmit} noValidate>
                 <div className="grid grid-cols-2 gap-6">
@@ -3941,9 +3938,7 @@ const ContractsPage: React.FC = () => {
                       name="titleCompany"
                       value={modalForm.titleCompany}
                       onChange={handleModalChange}
-                      className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white ${
-                        formErrors.titleCompany ? 'border-red-300' : 'border-gray-200 dark:border-gray-600'
-                      }`}
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
                       placeholder="Enter title company name..."
                     />
                     {formErrors.titleCompany && (
@@ -4355,7 +4350,7 @@ const ContractsPage: React.FC = () => {
               </div>
             </div>
             <button
-              onClick={() => { setShowNewDocumentModal(false); setDocumentModalStep(1); setDocumentModalForm({ name: '', type: '', description: '', assignee: '' }); }} 
+              onClick={() => { setShowNewDocumentModal(false); setDocumentModalStep(1); setDocumentModalForm({ name: '', type: '', description: '', assignee: '', contract: '' }); setDocumentFormErrors({}); }} 
               className="text-gray-400 hover:text-gray-600 p-2 rounded-full"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -4395,120 +4390,232 @@ const ContractsPage: React.FC = () => {
           {/* Form Content */}
           <div className="space-y-6 pt-4">
             {documentModalStep === 1 && (
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <label htmlFor="documentName" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Document Name</label>
-                  <input
-                    type="text"
-                    id="documentName"
-                    name="name"
-                    value={documentModalForm.name}
-                    onChange={(e) => setDocumentModalForm(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
-                    placeholder="Enter document name..."
-                  />
-                </div>
-                <div>
-                  <label htmlFor="documentType" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Document Type</label>
-                  <input
-                    type="text"
-                    id="documentType"
-                    name="type"
-                    value={documentModalForm.type}
-                    onChange={(e) => setDocumentModalForm(prev => ({ ...prev, type: e.target.value }))}
-                    className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
-                    placeholder="Enter document type..."
-                  />
-                </div>
-                <div>
-                  <label htmlFor="documentAssignee" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Assignee <span className="text-red-500">*</span></label>
-                  <div className="relative" ref={newDocumentAssigneeDropdownRef}>
+              <>
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label htmlFor="documentName" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Document Name <span className="text-red-500">*</span></label>
                     <input
                       type="text"
-                      id="documentAssignee"
-                      name="assignee"
-                      className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs transition-colors cursor-text focus:ring-2 focus:ring-primary focus:border-primary pr-10"
-                      placeholder="Choose an assignee..."
-                      value={documentModalForm.assignee}
-                      onChange={(e) => setDocumentModalForm(prev => ({ ...prev, assignee: e.target.value }))}
-                      onFocus={() => setShowNewDocumentAssigneeDropdown(true)}
-                      style={{ fontFamily: 'Avenir, sans-serif' }}
-                      autoComplete="off"
+                      id="documentName"
+                      name="name"
+                      required
+                      value={documentModalForm.name}
+                      onChange={(e) => {
+                        setDocumentModalForm(prev => ({ ...prev, name: e.target.value }));
+                        if (documentFormErrors.name) {
+                          setDocumentFormErrors(prev => ({ ...prev, name: false }));
+                        }
+                      }}
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
+                      placeholder="Enter document name..."
                     />
-                    <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    
-                    {showNewDocumentAssigneeDropdown && (
-                      <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                        {allAssignees.length > 0 ? (
-                          <>
-                            {allAssignees.map((assignee: string) => (
+                    {documentFormErrors.name && (
+                      <p className="mt-1 text-xs text-red-600 font-medium cursor-default select-none">Document name is required</p>
+                    )}
+                  </div>
+                  <div>
+                    <label htmlFor="documentType" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Document Type</label>
+                    <input
+                      type="text"
+                      id="documentType"
+                      name="type"
+                      value={documentModalForm.type}
+                      onChange={(e) => setDocumentModalForm(prev => ({ ...prev, type: e.target.value }))}
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
+                      placeholder="Enter document type..."
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="documentAssignee" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Assignee <span className="text-red-500">*</span></label>
+                    <div className="relative" ref={newDocumentAssigneeDropdownRef}>
+                      <input
+                        type="text"
+                        id="documentAssignee"
+                        name="assignee"
+                        required
+                        className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs transition-colors cursor-text focus:ring-2 focus:ring-primary focus:border-primary pr-10"
+                        placeholder="Choose an assignee..."
+                        value={documentModalForm.assignee}
+                        onChange={(e) => {
+                          setDocumentModalForm(prev => ({ ...prev, assignee: e.target.value }));
+                          if (documentFormErrors.assignee) {
+                            setDocumentFormErrors(prev => ({ ...prev, assignee: false }));
+                          }
+                          if (e.target.value === '') {
+                            setShowNewDocumentAssigneeDropdown(false);
+                          } else if (!showNewDocumentAssigneeDropdown) {
+                            setShowNewDocumentAssigneeDropdown(true);
+                          }
+                        }}
+                        onFocus={() => setShowNewDocumentAssigneeDropdown(true)}
+                        onClick={() => setShowNewDocumentAssigneeDropdown(true)}
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                        autoComplete="off"
+                      />
+                      <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      {showNewDocumentAssigneeDropdown && (
+                        <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                          {allAssignees.length > 0 ? (
+                            <>
+                              {allAssignees.map((assignee: string) => (
+                                <div
+                                  key={assignee}
+                                  className={`px-4 py-2 text-xs cursor-pointer ${documentModalForm.assignee === assignee ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'} select-none`}
+                                  onClick={() => {
+                                    setDocumentModalForm(prev => ({ ...prev, assignee }));
+                                    setShowNewDocumentAssigneeDropdown(false);
+                                  }}
+                                >
+                                  {assignee}
+                                </div>
+                              ))}
+                              <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
                               <div
-                                key={assignee}
-                                className={`px-4 py-2 text-xs cursor-pointer ${documentModalForm.assignee === assignee ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'} select-none`}
+                                className="px-4 py-2 text-xs cursor-pointer text-primary hover:bg-primary/10 select-none flex items-center gap-2"
                                 onClick={() => {
-                                  setDocumentModalForm(prev => ({ ...prev, assignee }));
+                                  // TODO: Add logic to create new assignee
                                   setShowNewDocumentAssigneeDropdown(false);
                                 }}
                               >
-                                {assignee}
+                                <FaPlus className="text-xs" />
+                                Add new assignee
                               </div>
-                            ))}
-                            <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
-                            <div
-                              className="px-4 py-2 text-xs cursor-pointer text-primary hover:bg-primary/10 select-none flex items-center gap-2"
-                              onClick={() => {
-                                // TODO: Add logic to create new assignee
-                                setShowNewDocumentAssigneeDropdown(false);
-                              }}
-                            >
-                              <FaPlus className="text-xs" />
-                              Add new assignee
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <div className="px-4 py-2 text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">No assignees found</div>
-                            <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
-                            <div
-                              className="px-4 py-2 text-xs cursor-pointer text-primary hover:bg-primary/10 select-none flex items-center gap-2"
-                              onClick={() => {
-                                // TODO: Add logic to create new assignee
-                                setShowNewDocumentAssigneeDropdown(false);
-                              }}
-                            >
-                              <FaPlus className="text-xs" />
-                              Add new assignee
-                            </div>
-                          </>
-                        )}
-                      </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="px-4 py-2 text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">No assignees found</div>
+                              <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                              <div
+                                className="px-4 py-2 text-xs cursor-pointer text-primary hover:bg-primary/10 select-none flex items-center gap-2"
+                                onClick={() => {
+                                  // TODO: Add logic to create new assignee
+                                  setShowNewDocumentAssigneeDropdown(false);
+                                }}
+                              >
+                                <FaPlus className="text-xs" />
+                                Add new assignee
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    {documentFormErrors.assignee && (
+                      <p className="mt-1 text-xs text-red-600 font-medium cursor-default select-none">Assignee selection is required</p>
                     )}
                   </div>
-                </div>
-                <div></div>
-                <div className="col-span-2">
-                  <label htmlFor="documentDescription" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Description</label>
-                  <textarea
-                    id="documentDescription"
-                    name="description"
-                    value={documentModalForm.description}
-                    onChange={(e) => setDocumentModalForm(prev => ({ ...prev, description: e.target.value }))}
-                    className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
-                    placeholder="Enter document description..."
-                    rows={3}
-                  />
-                </div>
-                <div className="flex justify-between mt-6">
+                  <div>
+                    <label htmlFor="documentContract" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Contract <span className="text-red-500">*</span></label>
+                    <div className="relative" ref={newDocumentContractDropdownRef}>
+                      <input
+                        type="text"
+                        id="documentContract"
+                        name="contract"
+                        required
+                        className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs transition-colors cursor-text focus:ring-2 focus:ring-primary focus:border-primary pr-10"
+                        placeholder="Choose a contract..."
+                        value={documentModalForm.contract}
+                        onChange={(e) => {
+                          setDocumentModalForm(prev => ({ ...prev, contract: e.target.value }));
+                          if (documentFormErrors.contract) {
+                            setDocumentFormErrors(prev => ({ ...prev, contract: false }));
+                          }
+                          if (e.target.value === '') {
+                            setShowNewDocumentContractDropdown(false);
+                          } else if (!showNewDocumentContractDropdown) {
+                            setShowNewDocumentContractDropdown(true);
+                          }
+                        }}
+                        onFocus={() => setShowNewDocumentContractDropdown(true)}
+                        onClick={() => setShowNewDocumentContractDropdown(true)}
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                        autoComplete="off"
+                      />
+                      <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      {showNewDocumentContractDropdown && (
+                        <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                          {/* Search Bar */}
+                          <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+                            <div className="relative">
+                              <input
+                                type="text"
+                                placeholder="Search contracts..."
+                                value={newDocumentContractSearch}
+                                onChange={(e) => setNewDocumentContractSearch(e.target.value)}
+                                className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-700 dark:text-white bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                                style={{ fontFamily: 'Avenir, sans-serif' }}
+                              />
+                              <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                            </div>
+                          </div>
+                          {mockContracts
+                            .filter(contract => 
+                              contract.id.toLowerCase().includes(newDocumentContractSearch.toLowerCase()) ||
+                              contract.title.toLowerCase().includes(newDocumentContractSearch.toLowerCase())
+                            )
+                            .map(contract => (
+                              <div
+                                key={contract.id}
+                                className={`px-4 py-2 text-xs cursor-pointer ${documentModalForm.contract === `${contract.id} - ${contract.title}` ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'} select-none`}
+                                onClick={() => {
+                                  setDocumentModalForm(prev => ({ ...prev, contract: `${contract.id} - ${contract.title}` }));
+                                  setShowNewDocumentContractDropdown(false);
+                                }}
+                              >
+                                {contract.id} - {contract.title}
+                              </div>
+                            ))}
+                        </div>
+                      )}
+                    </div>
+                    {documentFormErrors.contract && (
+                      <p className="mt-1 text-xs text-red-600 font-medium cursor-default select-none">Contract selection is required</p>
+                    )}
+                  </div>
                   <div></div>
+                  <div className="col-span-2">
+                    <label htmlFor="documentDescription" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Description</label>
+                    <textarea
+                      id="documentDescription"
+                      name="description"
+                      value={documentModalForm.description}
+                      onChange={(e) => setDocumentModalForm(prev => ({ ...prev, description: e.target.value }))}
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
+                      placeholder="Enter document description..."
+                      rows={3}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end mt-6">
                   <button 
-                    onClick={() => setDocumentModalStep(2)}
+                    onClick={() => {
+                      const newErrors: Record<string, boolean> = {};
+                      
+                      if (!documentModalForm.name.trim()) {
+                        newErrors.name = true;
+                      }
+                      if (!documentModalForm.assignee.trim()) {
+                        newErrors.assignee = true;
+                      }
+                      if (!documentModalForm.contract.trim()) {
+                        newErrors.contract = true;
+                      }
+                      
+                      if (Object.keys(newErrors).length > 0) {
+                        setDocumentFormErrors(newErrors);
+                        return;
+                      }
+                      
+                      setDocumentFormErrors({});
+                      setDocumentModalStep(2);
+                    }}
                     className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm"
                     style={{ fontFamily: 'Avenir, sans-serif' }}
                   >
                     Continue
                   </button>
                 </div>
-              </div>
+              </>
             )}
             {documentModalStep === 2 && (
               <div className="space-y-4">
@@ -4629,7 +4736,7 @@ const ContractsPage: React.FC = () => {
                     <div 
                       className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 py-8 px-4 text-center transition hover:border-primary cursor-pointer"
                       onClick={() => {
-                        setShowNewContractDocumentModal(true);
+                        document.getElementById('file-upload')?.click();
                       }}
                     >
                       <HiOutlineUpload className="text-2xl text-gray-400 mb-2" />
@@ -4691,7 +4798,8 @@ const ContractsPage: React.FC = () => {
                       console.log('Creating document:', documentModalForm);
                       setShowNewDocumentModal(false);
                       setDocumentModalStep(1);
-                      setDocumentModalForm({ name: '', type: '', description: '', assignee: '' });
+                      setDocumentModalForm({ name: '', type: '', description: '', assignee: '', contract: '' });
+                      setDocumentFormErrors({});
                     }}
                     className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm"
                     style={{ fontFamily: 'Avenir, sans-serif' }}
@@ -4705,16 +4813,27 @@ const ContractsPage: React.FC = () => {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 select-none cursor-default">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 select-none cursor-default" style={{ gridTemplateRows: 'minmax(0, 120px)' }}>
             {/* Total Contracts */}
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
               <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800 cursor-default select-none">
-                <HiOutlineDocumentText size={18} className="text-teal-500 dark:text-teal-400" />
+                <HiOutlineDocumentText size={20} className="text-teal-500 dark:text-teal-400" />
               </div>
               <div className="flex flex-col items-start h-full cursor-default select-none">
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contracts</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{mockContracts.length}</p>
-                <p className="text-xs invisible cursor-default select-none">placeholder</p>
+                <div className="flex-1"></div>
+              </div>
+            </div>
+            {/* Total Contract Value */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
+              <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800 cursor-default select-none">
+                <GrMoney size={20} className="text-teal-500 dark:text-teal-400" />
+              </div>
+              <div className="flex flex-col items-start h-full cursor-default select-none">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contract Value</p>
+                <p className="text-2xl font-bold text-primary cursor-default select-none">{calculateTotalValue()}</p>
+                <p className="text-xs text-green-600 dark:text-green-400 font-semibold cursor-default select-none">↑ 12% from last month</p>
               </div>
             </div>
             {/* Avg. Completion Time */}
@@ -4725,10 +4844,10 @@ const ContractsPage: React.FC = () => {
               <div className="flex flex-col items-start h-full cursor-default select-none">
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Average Completion Time</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">3.2 days</p>
-                <div className="relative -ml-2.5">
+                <div className="relative">
                   <button
                     ref={completionTimeButtonRef}
-                    className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-lg px-3 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                    className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-lg px-2 py-1 text-gray-700 dark:text-gray-300 font-medium text-xs hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
                     onClick={() => setOpenCompletionTimeDropdown(!openCompletionTimeDropdown)}
                   >
                     <span>{selectedCompletionTime}</span>
@@ -4760,6 +4879,7 @@ const ContractsPage: React.FC = () => {
                 </div>
               </div>
             </div>
+
             {/* Pending Signatures */}
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
               <div className="h-10 w-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center border-2 border-purple-200 dark:border-purple-800 cursor-default select-none">
@@ -4768,29 +4888,7 @@ const ContractsPage: React.FC = () => {
               <div className="flex flex-col items-start h-full cursor-default select-none">
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Pending Signatures</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{mockContracts.filter(contract => contract.status === 'Signatures').length}</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">Requires action</p>
-              </div>
-            </div>
-            {/* Awaiting Wire Instructions */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
-              <div className="h-10 w-10 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center border-2 border-orange-200 dark:border-orange-800 cursor-default select-none">
-                <PiBankBold size={20} className="text-orange-500 dark:text-orange-400" />
-              </div>
-              <div className="flex flex-col items-start h-full cursor-default select-none">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Awaiting Wire Details</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{mockContracts.filter(contract => contract.status === 'Wire Details').length}</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">Needs attention</p>
-              </div>
-            </div>
-            {/* Total Contract Value */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
-              <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800 cursor-default select-none">
-                <GrMoney size={20} className="text-teal-500 dark:text-teal-400" />
-              </div>
-              <div className="flex flex-col items-start h-full cursor-default select-none">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contract Value</p>
-                <p className="text-2xl font-bold text-primary cursor-default select-none">{calculateTotalValue()}</p>
-                <p className="text-xs text-green-600 dark:text-green-400 font-semibold cursor-default select-none">↑ 12% from last month</p>
+                <div className="flex-1"></div>
               </div>
             </div>
 
@@ -4799,7 +4897,6 @@ const ContractsPage: React.FC = () => {
       )}
 
       <hr className="mb-6 border-gray-300 cursor-default select-none" />
-
       {/* Search/Filter Bar - Responsive Design */}
       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 mb-6 mt-2">
         {/* Mobile: Stacked layout */}
@@ -5107,7 +5204,6 @@ const ContractsPage: React.FC = () => {
             </div>
           </div>
         </div>
-
         {/* Desktop: Horizontal layout */}
         <div className="hidden lg:flex items-center gap-1">
           {/* Search Bar */}
@@ -5871,8 +5967,6 @@ const ContractsPage: React.FC = () => {
         />
       </div>
     </div>
-    
-
     {/* Modal for contract details */}
     {selectedContract && (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 cursor-default select-none">
@@ -7040,7 +7134,6 @@ const ContractsPage: React.FC = () => {
         </div>
       </div>
     )}
-    
     {showUploadModal && (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 upload-modal cursor-default select-none">
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 cursor-default select-none">
@@ -7163,6 +7256,7 @@ const ContractsPage: React.FC = () => {
                       style={{ fontFamily: 'Avenir, sans-serif' }}
                       autoComplete="off"
                     />
+                    <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     {showUploadModalAssigneeDropdown && (
                       <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ fontFamily: 'Avenir, sans-serif' }}>
                         {allAssignees.length > 0 ? (
@@ -7486,7 +7580,6 @@ const ContractsPage: React.FC = () => {
         </div>
       </div>
     )}
-
     {/* Document Upload Modal */}
     {showDocumentUploadModal && selectedFile && (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 cursor-default select-none">
@@ -7813,6 +7906,7 @@ const ContractsPage: React.FC = () => {
       </div>
     )}
 
+      </div>
     <Toaster />
     </>
   );

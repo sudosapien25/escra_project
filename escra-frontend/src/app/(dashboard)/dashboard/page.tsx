@@ -4,9 +4,11 @@ import { Card } from '@/components/common/Card';
 import { FaFileContract, FaMoneyBillAlt, FaClock, FaPlus, FaArrowUp, FaDollarSign, FaCheckCircle, FaBox, FaChartLine, FaCheck } from 'react-icons/fa';
 import { IconBaseProps } from 'react-icons';
 import { LuPen } from 'react-icons/lu';
+import { PiMoneyWavyBold } from 'react-icons/pi';
 import { MdOutlineAddToPhotos } from 'react-icons/md';
-import { TbClockPin } from 'react-icons/tb';
+import { TbClockPin, TbClockUp } from 'react-icons/tb';
 import { HiMiniChevronDown } from 'react-icons/hi2';
+import { HiOutlineDocumentText } from 'react-icons/hi';
 import { GrMoney } from 'react-icons/gr';
 import NewContractModal from '@/components/common/NewContractModal';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, BarChart, Bar } from 'recharts';
@@ -217,6 +219,12 @@ export default function DashboardPage() {
   const [selectedBarChartPeriod, setSelectedBarChartPeriod] = React.useState('Last 30 days');
   const barChartDropdownRef = React.useRef<HTMLDivElement>(null);
   const barChartButtonRef = React.useRef<HTMLButtonElement>(null);
+  
+  // Completion time dropdown state
+  const [selectedCompletionTime, setSelectedCompletionTime] = React.useState('Last 30 days');
+  const [openCompletionTimeDropdown, setOpenCompletionTimeDropdown] = React.useState(false);
+  const completionTimeButtonRef = React.useRef<HTMLButtonElement>(null);
+  const completionTimeDropdownRef = React.useRef<HTMLDivElement>(null);
   
   // Sorting state variables
   const [idSortDirection, setIdSortDirection] = React.useState<'asc' | 'desc' | null>('asc');
@@ -653,6 +661,25 @@ export default function DashboardPage() {
     }
   }, [openBarChartDropdown]);
   
+  // Click outside functionality for completion time dropdown
+  React.useEffect(() => {
+    if (openCompletionTimeDropdown) {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (
+          completionTimeDropdownRef.current &&
+          !completionTimeDropdownRef.current.contains(event.target as Node) &&
+          completionTimeButtonRef.current &&
+          !completionTimeButtonRef.current.contains(event.target as Node)
+        ) {
+          setOpenCompletionTimeDropdown(false);
+        }
+      };
+
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [openCompletionTimeDropdown]);
+  
   // Load enhanced contracts (same as contracts page)
   React.useEffect(() => {
     const loadEnhancedContracts = async () => {
@@ -802,8 +829,10 @@ export default function DashboardPage() {
       {/* Horizontal line below subtitle */}
       <hr className="my-3 md:my-6 border-gray-300 cursor-default select-none" />
 
-      {/* Key Metrics Section */}
-      <h2 className="text-[15px] font-bold text-gray-700 dark:text-gray-300 pt-6 mb-4">KEY METRICS</h2>
+      {/* Scrollable Content Area */}
+      <div className="overflow-y-auto max-h-[calc(100vh-300px)] [&::-webkit-scrollbar]:hidden">
+        {/* Key Metrics Section */}
+      <h2 className="text-[15px] font-bold text-gray-700 dark:text-gray-300 pt-3 mb-4">KEY METRICS</h2>
 
       {/* Flex container for the first two metric cards */}
       <div className="flex flex-col md:flex-row gap-4">
@@ -1015,38 +1044,92 @@ export default function DashboardPage() {
       </div>
 
       {/* Metric Cards Grid - Remaining Cards */}
-      <div className="w-full mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Metric Card 2: Pending Signatures */}
-        <Card className="flex flex-col items-center text-center rounded-xl border border-gray-300 dark:border-gray-700 min-h-[120px] min-w-0 bg-white dark:bg-gray-800">
-          <div className="mb-2 p-3 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300">
-            {React.createElement(LuPen, { className: "text-2xl text-teal-600 dark:text-teal-400" } as IconBaseProps)}
+      <div className="w-full mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 mt-4" style={{ gridTemplateRows: 'minmax(0, 120px)' }}>
+        {/* Metric Card 2: Total Contracts */}
+        <Card className="flex items-center gap-4 rounded-xl border border-gray-300 dark:border-gray-700 min-h-[120px] min-w-0 bg-white dark:bg-gray-800 p-6">
+          <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800">
+            <HiOutlineDocumentText size={20} className="text-teal-500 dark:text-teal-400" />
           </div>
-          <p className="text-sm text-tertiary dark:text-gray-400">Pending Signatures</p>
-          <p className="text-xl font-bold text-primary dark:text-primary">2</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Requires action</p>
+          <div className="flex flex-col items-start">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contracts</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">{contracts.length}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">Active contracts</p>
+          </div>
         </Card>
 
-        {/* Metric Card 4: Wire Transfers Pending */}
-        <Card className="flex flex-col items-center text-center rounded-xl border border-gray-300 dark:border-gray-700 min-h-[120px] min-w-0 bg-white dark:bg-gray-800">
-          <div className="mb-2 p-3 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300">
-            {React.createElement(FaMoneyBillAlt, { className: "text-2xl text-teal-600 dark:text-teal-400" } as IconBaseProps)}
+        {/* Metric Card 4: Average Completion Time */}
+        <Card className="flex items-center gap-4 rounded-xl border border-gray-300 dark:border-gray-700 min-h-[120px] min-w-0 bg-white dark:bg-gray-800 p-6">
+          <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center border-2 border-blue-200 dark:border-blue-800">
+            <TbClockUp size={20} className="text-blue-500 dark:text-blue-400" />
           </div>
-          <p className="text-sm text-tertiary dark:text-gray-400">Wire Transfers Pending</p>
-          <p className="text-xl font-bold text-primary dark:text-primary">3</p>
+          <div className="flex flex-col items-start">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Average Completion Time</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">3.2 days</p>
+            <div className="relative">
+              <button
+                ref={completionTimeButtonRef}
+                className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-lg px-2 py-1 text-gray-700 dark:text-gray-300 font-medium text-xs hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                onClick={() => setOpenCompletionTimeDropdown(!openCompletionTimeDropdown)}
+              >
+                <span>{selectedCompletionTime}</span>
+                <HiMiniChevronDown className="text-gray-400" size={16} />
+              </button>
+              {openCompletionTimeDropdown && (
+                <div 
+                  ref={completionTimeDropdownRef}
+                  className="absolute top-full left-0 mt-1 w-32 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-1"
+                >
+                  {['Last 24 hours', 'Last 7 days', 'Last 30 days', 'Last month', 'This quarter', 'Last quarter', 'Last 6 months', 'Last year', 'Last 2 years'].map((option) => (
+                    <button
+                      key={option}
+                      className={`w-full px-3 py-1.5 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedCompletionTime === option ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                      onClick={() => setSelectedCompletionTime(option)}
+                    >
+                      <div className="w-3 h-3 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                        {selectedCompletionTime === option && (
+                          <div className="w-2 h-2 bg-primary rounded-sm flex items-center justify-center">
+                            <FaCheck className="text-white" size={6} />
+                          </div>
+                        )}
+                      </div>
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </Card>
 
-        {/* Metric Card 5: Avg. Completion Time */}
-        <Card className="flex flex-col items-center text-center rounded-xl border border-gray-300 dark:border-gray-700 min-h-[120px] min-w-0 bg-white dark:bg-gray-800">
-          <div className="mb-2 p-3 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300">
-            {React.createElement(FaClock, { className: "text-2xl text-teal-600 dark:text-teal-400" } as IconBaseProps)}
+        {/* Metric Card 5: Pending Signatures */}
+        <Card className="flex items-center gap-4 rounded-xl border border-gray-300 dark:border-gray-700 min-h-[120px] min-w-0 bg-white dark:bg-gray-800 p-6">
+          <div className="h-10 w-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center border-2 border-purple-200 dark:border-purple-800">
+            {React.createElement(LuPen, { size: 20, className: "text-purple-500 dark:text-purple-400" } as IconBaseProps)}
           </div>
-            <p className="text-sm text-tertiary dark:text-gray-400">Avg. Completion Time</p>
-            <p className="text-xl font-bold text-primary dark:text-primary">14 days</p>
-          </Card>
+          <div className="flex flex-col items-start">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Pending Signatures</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">2</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">Requires action</p>
+          </div>
+        </Card>
+
+        {/* Metric Card 6: Wire Transfers Pending */}
+        <Card className="flex items-center gap-4 rounded-xl border border-gray-300 dark:border-gray-700 min-h-[120px] min-w-0 bg-white dark:bg-gray-800 p-6">
+          <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center border-2 border-green-200 dark:border-green-800">
+            <PiMoneyWavyBold size={20} className="text-green-500 dark:text-green-400" />
+          </div>
+          <div className="flex flex-col items-start">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Wire Transfers Pending</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">3</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">Awaiting transfer</p>
+          </div>
+        </Card>
       </div>
 
+      <hr className="my-3 md:my-6 border-gray-300 cursor-default select-none" />
+
       {/* Recent Activity Section */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center pt-6 mb-4 gap-4 md:gap-0">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-4 md:gap-0">
         <h2 className="text-[15px] font-bold text-gray-700 dark:text-gray-300">RECENT ACTIVITY</h2>
         <button className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-semibold text-xs hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer" style={{ fontFamily: 'Avenir, sans-serif' }}>
           View All
@@ -1426,6 +1509,7 @@ export default function DashboardPage() {
 
       {/* Placeholder for other dashboard sections */}
 
+      </div>
     </div>
   );
 } 

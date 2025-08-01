@@ -2038,7 +2038,9 @@ export default function SignaturesPage() {
 
       <hr className="my-3 sm:my-6 border-gray-300 cursor-default select-none" />
 
-      {/* Signature Filter Tabs */}
+      {/* Scrollable Content Area */}
+      <div className="overflow-y-auto max-h-[calc(100vh-300px)] [&::-webkit-scrollbar]:hidden">
+        {/* Signature Filter Tabs */}
       {/* Mobile: Stacked layout */}
       <div className="lg:hidden cursor-default select-none mb-6">
         <div className="flex flex-col gap-2 cursor-default select-none">
@@ -2085,7 +2087,7 @@ export default function SignaturesPage() {
       </div>
 
       {/* Stat Boxes */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 cursor-default select-none">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 cursor-default select-none" style={{ gridTemplateRows: 'minmax(0, 120px)' }}>
         {/* Action Required */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
           <div className="h-10 w-10 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center border-2 border-orange-200 dark:border-orange-800 cursor-default select-none">
@@ -2095,6 +2097,7 @@ export default function SignaturesPage() {
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Action Required</p>
             <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{statBoxesData.actionRequired}</p>
             <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">Needs your attention</p>
+            <p className="text-xs invisible cursor-default select-none">placeholder</p>
           </div>
         </div>
 
@@ -2107,30 +2110,33 @@ export default function SignaturesPage() {
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Waiting on Others</p>
             <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{signaturesData.filter(sig => sig.status === 'Pending' && sig.signatures.split(' of ')[0] !== '0').length}</p>
             <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">Requires action</p>
+            <p className="text-xs invisible cursor-default select-none">placeholder</p>
           </div>
         </div>
 
         {/* Expiring Soon */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
           <div className="h-10 w-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center border-2 border-red-200 dark:border-red-800 cursor-default select-none">
-            <LuCalendarClock size={18} className="text-red-500 dark:text-red-400" />
+            <LuCalendarClock size={20} className="text-red-500 dark:text-red-400" />
           </div>
           <div className="flex flex-col items-start h-full cursor-default select-none">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Expiring Soon</p>
             <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{statBoxesData.expiringSoon}</p>
             <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">Within 3 days</p>
+            <p className="text-xs invisible cursor-default select-none">placeholder</p>
           </div>
         </div>
 
         {/* Completed */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
           <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center border-2 border-green-200 dark:border-green-800 cursor-default select-none">
-            <FaRegSquareCheck size={18} className="text-green-500 dark:text-green-400" />
+            <FaRegSquareCheck size={20} className="text-green-500 dark:text-green-400" />
           </div>
           <div className="flex flex-col items-start h-full cursor-default select-none">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Completed</p>
             <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{statBoxesData.completed}</p>
             <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">This month</p>
+            <p className="text-xs invisible cursor-default select-none">placeholder</p>
           </div>
         </div>
       </div>
@@ -2138,11 +2144,11 @@ export default function SignaturesPage() {
       <hr className="my-3 md:my-6 border-gray-300 cursor-default select-none" />
 
       {/* Search/Filter Bar - Responsive Design */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 mb-6 mt-2 cursor-default select-none">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 mb-6 mt-2">
         {/* Mobile: Stacked layout */}
-        <div className="lg:hidden cursor-default select-none">
+        <div className="lg:hidden">
           {/* Search Bar */}
-          <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 w-full cursor-default select-none">
+          <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 w-full">
             <FaSearch className="text-gray-400 mr-2" size={18} />
             <input
               type="text"
@@ -2154,7 +2160,7 @@ export default function SignaturesPage() {
             />
           </div>
           {/* Filter Buttons - Stacked, full width, visually soothing */}
-          <div className="flex flex-col gap-2 mt-2 cursor-default select-none">
+          <div className="flex flex-col gap-2 mt-2">
             {/* Status Filter */}
             <div className="relative">
               <button 
@@ -5464,6 +5470,7 @@ export default function SignaturesPage() {
         }}
       />
 
+      </div>
       <Toaster />
     </div>
   );

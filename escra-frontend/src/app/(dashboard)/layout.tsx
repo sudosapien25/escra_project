@@ -48,7 +48,7 @@ export default function DashboardLayout({
   const currentSidebarWidth = isCollapsed ? COLLAPSED_SIDEBAR_WIDTH : DEFAULT_SIDEBAR_WIDTH;
   return (
     <div className="flex flex-col h-screen">
-      <header className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center bg-white dark:bg-gray-800 justify-between">
+      <header className="fixed top-0 left-0 right-0 z-50 p-4 border-b border-gray-200 dark:border-gray-700 flex items-center bg-white dark:bg-gray-800 justify-between">
         <div className={clsx(isCollapsed && "w-16 flex justify-center items-center -ml-4")}>
           <Logo theme={theme.isDark ? 'dark' : 'light'} />
         </div>
@@ -80,17 +80,16 @@ export default function DashboardLayout({
         </div>
       </header>
       {isCollapsed !== undefined ? (
-        <div className="flex flex-grow">
-          <div style={{ width: `${currentSidebarWidth}px` }} className="flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-width duration-150 ease-in-out">
+        <div className="flex flex-grow pt-16">
+          <div style={{ width: `${currentSidebarWidth}px` }} className="fixed left-0 top-16 h-full z-40 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-width duration-150 ease-in-out">
             <Sidebar 
               width={currentSidebarWidth} 
               isCollapsed={isCollapsed} 
               toggleSidebar={toggleSidebar}
             />
           </div>
-          <div className="flex flex-col flex-grow overflow-hidden flex-basis-0 min-w-0">
-            <header className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-end space-x-4 bg-white dark:bg-gray-800"></header>
-            <main className="py-4 px-8 flex-grow bg-gray-50 dark:bg-gray-900">
+          <div className="flex flex-col flex-grow overflow-hidden flex-basis-0 min-w-0 ml-0" style={{ marginLeft: `${currentSidebarWidth}px` }}>
+            <main className="pt-6 pb-4 px-8 flex-grow bg-gray-50 dark:bg-gray-900">
               <div>
                 <PageContentWrapper>
                   {children}
@@ -100,7 +99,7 @@ export default function DashboardLayout({
           </div>
         </div>
       ) : (
-        <div className="flex flex-grow items-center justify-center">Loading layout...</div>
+        <div className="flex flex-grow items-center justify-center pt-16">Loading layout...</div>
       )}
     </div>
   );

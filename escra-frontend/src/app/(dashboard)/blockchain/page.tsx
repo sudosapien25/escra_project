@@ -419,7 +419,9 @@ export default function BlockchainPage() {
 
       <hr className="my-3 md:my-6 border-gray-300 cursor-default select-none" />
 
-      {/* Toggle Bar - Responsive Design */}
+      {/* Scrollable Content Area */}
+      <div className="overflow-y-auto max-h-[calc(100vh-300px)] [&::-webkit-scrollbar]:hidden">
+        {/* Toggle Bar - Responsive Design */}
       {/* Mobile: Stacked layout */}
       <div className="lg:hidden cursor-default select-none mb-6">
         <div className="flex flex-col gap-2 cursor-default select-none">
@@ -2671,6 +2673,7 @@ export default function BlockchainPage() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 } 

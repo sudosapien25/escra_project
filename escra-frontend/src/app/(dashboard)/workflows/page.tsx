@@ -643,11 +643,13 @@ export default function WorkflowsPage() {
 
       <hr className="my-3 md:my-6 border-gray-300 cursor-default select-none" />
 
-      {/* Workflow Stats and Filters Section */}
-      <div className="space-y-4">
+      {/* Scrollable Content Area */}
+      <div className="overflow-y-auto max-h-[calc(100vh-300px)] [&::-webkit-scrollbar]:hidden">
+        {/* Workflow Stats and Filters Section */}
+      <div>
         {/* Tabs */}
         {/* Mobile: Stacked layout */}
-        <div className="lg:hidden cursor-default select-none mb-2">
+        <div className="lg:hidden cursor-default select-none mb-6">
           <div className="flex flex-col gap-2 cursor-default select-none">
             {kanbanTabs.map((tab) => (
               <button
@@ -694,50 +696,50 @@ export default function WorkflowsPage() {
         {/* Stat Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 mt-4">
           {/* Tasks in Progress */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full">
-            <div className="h-10 w-10 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center border-2 border-blue-200 dark:border-blue-800">
-              <FaRetweet size={18} className="text-blue-500 dark:text-blue-400" />
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
+            <div className="h-10 w-10 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center border-2 border-blue-200 dark:border-blue-800 cursor-default select-none">
+              <FaRetweet size={20} className="text-blue-500 dark:text-blue-400" />
             </div>
-            <div className="flex flex-col items-start h-full">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans">Tasks in Progress</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{kanbanColumns.find(col => col.key === 'In Progress')?.tasks.length || 0}</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500">Currently active</p>
+            <div className="flex flex-col items-start h-full cursor-default select-none">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Tasks in Progress</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{kanbanColumns.find(col => col.key === 'In Progress')?.tasks.length || 0}</p>
+              <p className="text-xs invisible cursor-default select-none">placeholder</p>
             </div>
           </div>
 
           {/* Due Within 7 Days */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full">
-            <div className="h-10 w-10 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center border-2 border-yellow-200 dark:border-yellow-800">
-              <LuCalendarClock size={18} className="text-yellow-500 dark:text-yellow-400" />
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
+            <div className="h-10 w-10 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center border-2 border-yellow-200 dark:border-yellow-800 cursor-default select-none">
+              <LuCalendarClock size={20} className="text-yellow-500 dark:text-yellow-400" />
             </div>
-            <div className="flex flex-col items-start h-full">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans">Due Within 7 Days</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">5</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500">Needs attention</p>
+            <div className="flex flex-col items-start h-full cursor-default select-none">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Due Within 7 Days</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">5</p>
+              <p className="text-xs invisible cursor-default select-none">placeholder</p>
             </div>
           </div>
 
           {/* Blocked Tasks */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full">
-            <div className="h-10 w-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center border-2 border-red-200 dark:border-red-800">
-              <CgPlayStopR size={18} className="text-red-500 dark:text-red-400" />
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
+            <div className="h-10 w-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center border-2 border-red-200 dark:border-red-800 cursor-default select-none">
+              <CgPlayStopR size={20} className="text-red-500 dark:text-red-400" />
             </div>
-            <div className="flex flex-col items-start h-full">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans">Blocked Tasks</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{kanbanColumns.find(col => col.key === 'Blocked')?.tasks.length || 0}</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500">Requires action</p>
+            <div className="flex flex-col items-start h-full cursor-default select-none">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Blocked Tasks</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{kanbanColumns.find(col => col.key === 'Blocked')?.tasks.length || 0}</p>
+              <p className="text-xs invisible cursor-default select-none">placeholder</p>
             </div>
           </div>
 
           {/* Completed Tasks */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full">
-            <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center border-2 border-green-200 dark:border-green-800">
-              <FaRegSquareCheck size={18} className="text-green-500 dark:text-green-400" />
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
+            <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center border-2 border-green-200 dark:border-green-800 cursor-default select-none">
+              <FaRegSquareCheck size={20} className="text-green-500 dark:text-green-400" />
             </div>
-            <div className="flex flex-col items-start h-full">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans">Completed</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{kanbanColumns.find(col => col.key === 'Done')?.tasks.length || 0}</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500">This month</p>
+            <div className="flex flex-col items-start h-full cursor-default select-none">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Completed</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{kanbanColumns.find(col => col.key === 'Done')?.tasks.length || 0}</p>
+              <p className="text-xs invisible cursor-default select-none">placeholder</p>
             </div>
           </div>
         </div>
@@ -1022,9 +1024,9 @@ export default function WorkflowsPage() {
               
               {/* View Toggle - Mobile */}
               <div className="relative flex-shrink-0 mt-2">
-                <div className="flex bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-1 h-10 justify-center">
+                <div className="flex bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-1 justify-center">
                   <button
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors relative group ${
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors relative group ${
                       viewMode === 'kanban' 
                         ? 'bg-primary text-white shadow-sm' 
                         : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
@@ -1037,7 +1039,7 @@ export default function WorkflowsPage() {
                     </span>
                   </button>
                   <button
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors relative group ${
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors relative group ${
                       viewMode === 'table' 
                         ? 'bg-primary text-white shadow-sm' 
                         : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
@@ -1313,7 +1315,7 @@ export default function WorkflowsPage() {
               
               {/* View Toggle */}
               <div className="relative flex-shrink-0 ml-1">
-                <div className="flex bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-1 h-10">
+                <div className="flex bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-0">
                   <button
                     className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors relative group ${
                       viewMode === 'kanban' 
@@ -2562,6 +2564,7 @@ export default function WorkflowsPage() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
