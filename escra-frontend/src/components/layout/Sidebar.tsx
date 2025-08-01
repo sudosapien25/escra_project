@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { HiOutlineDocumentText, HiOutlineBell, HiOutlineCog } from 'react-icons/hi';
 import { RiLayoutColumnLine, RiDashboardLine, RiBox3Line } from 'react-icons/ri';
 import { FaSignature } from 'react-icons/fa';
-import { TbSubtask, TbCubeSpark } from 'react-icons/tb';
+import { TbSubtask, TbCubeSpark, TbLayoutDashboard } from 'react-icons/tb';
 import { IconBaseProps } from 'react-icons';
 import clsx from 'clsx';
 import { HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight } from 'react-icons/hi';
@@ -70,7 +70,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
   const isSignaturesPage = pathname === '/signatures' || pathname.startsWith('/signatures/');
 
   const navItems: NavItem[] = [
-    { name: 'Dashboard', href: '/dashboard', icon: RiDashboardLine },
+    { name: 'Dashboard', href: '/dashboard', icon: TbLayoutDashboard },
     { name: 'Contracts', href: '/contracts', icon: HiOutlineDocumentText },
     { name: 'Tasks', href: '/workflows', icon: TbSubtask },
     { name: 'Signatures', href: '/signatures', icon: FaSignature },
