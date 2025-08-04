@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { HiOutlineDocumentText, HiChevronDown, HiOutlineUpload, HiOutlineTrash, HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
+import { HiMiniChevronDown } from 'react-icons/hi2';
 import { Logo } from '@/components/common/Logo';
 import { FaCheck, FaPlus, FaSearch } from 'react-icons/fa';
 import { LuPen, LuCalendarFold } from 'react-icons/lu';
@@ -182,20 +183,8 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
     {
       name: '',
       email: '',
-      signerRole: 'Buyer',
-      contractRole: 'Buyer',
-      showSignerRoleDropdown: false,
-      showContractRoleDropdown: false,
-      signerRoleButtonRef: React.createRef<HTMLButtonElement>(),
-      signerRoleDropdownRef: React.createRef<HTMLDivElement>(),
-      contractRoleButtonRef: React.createRef<HTMLButtonElement>(),
-      contractRoleDropdownRef: React.createRef<HTMLDivElement>(),
-    },
-    {
-      name: '',
-      email: '',
-      signerRole: 'Seller',
-      contractRole: 'Seller',
+      signerRole: '',
+      contractRole: '',
       showSignerRoleDropdown: false,
       showContractRoleDropdown: false,
       signerRoleButtonRef: React.createRef<HTMLButtonElement>(),
@@ -272,19 +261,23 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
   };
 
   const handleAddRecipient = () => {
-    const newRecipient: Recipient = {
-      name: '',
-      email: '',
-      signerRole: 'Signer',
-      contractRole: 'Party',
-      showSignerRoleDropdown: false,
-      showContractRoleDropdown: false,
-      signerRoleButtonRef: React.createRef<HTMLButtonElement>(),
-      signerRoleDropdownRef: React.createRef<HTMLDivElement>(),
-      contractRoleButtonRef: React.createRef<HTMLButtonElement>(),
-      contractRoleDropdownRef: React.createRef<HTMLDivElement>(),
-    };
-    setRecipients(prev => [...prev, newRecipient]);
+    setRecipients(prev => {
+      return [
+        ...prev,
+        {
+          name: '',
+          email: '',
+          signerRole: '',
+          contractRole: '',
+          showSignerRoleDropdown: false,
+          showContractRoleDropdown: false,
+          signerRoleButtonRef: React.createRef<HTMLButtonElement>(),
+          signerRoleDropdownRef: React.createRef<HTMLDivElement>(),
+          contractRoleButtonRef: React.createRef<HTMLButtonElement>(),
+          contractRoleDropdownRef: React.createRef<HTMLDivElement>(),
+        },
+      ];
+    });
   };
 
   const handleDeleteRecipient = (idx: number) => {
@@ -466,6 +459,37 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showContractTypeDropdown, showPropertyTypeDropdown, showMilestoneDropdown, showStateDropdown, showCountryDropdown]);
+
+  // Click-off behavior for each recipient role dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      recipients.forEach((recipient, idx) => {
+        const target = event.target as Node;
+        if (
+          recipient.signerRoleButtonRef.current?.contains(target) ||
+          recipient.signerRoleDropdownRef.current?.contains(target)
+        ) {
+          // Click inside signer role button or dropdown: do nothing
+          return;
+        }
+        if (recipient.showSignerRoleDropdown) {
+          setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showSignerRoleDropdown: false } : r));
+        }
+        if (
+          recipient.contractRoleButtonRef.current?.contains(target) ||
+          recipient.contractRoleDropdownRef.current?.contains(target)
+        ) {
+          // Click inside contract role button or dropdown: do nothing
+          return;
+        }
+        if (recipient.showContractRoleDropdown) {
+          setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showContractRoleDropdown: false } : r));
+        }
+      });
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [recipients]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -1044,88 +1068,85 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                           >
                             <LuPen className="w-3 h-3 text-primary dark:text-white" />
                             <span>{recipient.signerRole || 'Signer Role'}</span>
-                            <HiChevronDown className="w-3 h-3" />
+                            <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px]" />
                           </button>
                           {recipient.showSignerRoleDropdown && (
-                            <div 
+                            <div
                               ref={recipient.signerRoleDropdownRef}
-                              className="absolute left-0 mt-1 w-32 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-1"
+                              className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[160px]"
+                              style={{ fontFamily: 'Avenir, sans-serif' }}
                             >
-                              {['Buyer', 'Seller', 'Agent', 'Escrow Officer', 'Attorney', 'Other'].map((role) => (
+                              {['Needs to Sign', 'In Person Signer', 'Receives a Copy', 'Needs to View'].map((role) => (
                                 <button
                                   key={role}
-                                  className={`w-full px-3 py-1.5 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${recipient.signerRole === role ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                                  className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${recipient.signerRole === role ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                                  style={{ background: 'none', border: 'none', boxShadow: 'none' }}
                                   onClick={() => {
                                     setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, signerRole: role, showSignerRoleDropdown: false } : r));
                                     setRecipientErrors(prev => ({ ...prev, [`signerRole-${idx}`]: false }));
                                   }}
                                 >
-                                  <div className="w-3 h-3 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                                    {recipient.signerRole === role && (
-                                      <div className="w-2 h-2 bg-primary rounded-sm flex items-center justify-center">
-                                        <FaCheck className="text-white" size={6} />
-                                      </div>
-                                    )}
-                                  </div>
                                   {role}
                                 </button>
                               ))}
                             </div>
                           )}
+                          {recipientErrors[`signerRole-${idx}`] && (
+                            <p className="text-red-600 text-xs mt-1.5" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                              Select signer role
+                            </p>
+                          )}
                         </div>
-
-                        {/* Contract Role selection button */}
+                        
+                        {/* Contract Role button */}
                         <div className="relative">
                           <button
                             ref={recipient.contractRoleButtonRef}
                             type="button"
-                            className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-700 dark:text-white border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-primary rounded-md hover:bg-gray-200 dark:hover:bg-primary-dark transition-colors"
+                            className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-700 dark:text-white border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-primary rounded-md hover:bg-gray-200 dark:hover:bg-primary-dark transition-colors whitespace-nowrap"
                             onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showContractRoleDropdown: !r.showContractRoleDropdown } : r))}
                             tabIndex={0}
                           >
-                            <TbEdit className="w-3 h-3 text-primary dark:text-white" />
                             <span>{recipient.contractRole || 'Contract Role'}</span>
-                            <HiChevronDown className="w-3 h-3" />
+                            <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px]" />
                           </button>
                           {recipient.showContractRoleDropdown && (
-                            <div 
+                            <div
                               ref={recipient.contractRoleDropdownRef}
-                              className="absolute left-0 mt-1 w-32 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-1"
+                              className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[160px]"
+                              style={{ fontFamily: 'Avenir, sans-serif' }}
                             >
-                              {['Buyer', 'Seller', 'Agent', 'Escrow Officer', 'Attorney', 'Other'].map((role) => (
+                              {['Standard', 'Buyer', 'Seller', 'Buyer Agent', 'Seller Agent', 'Closing Agent', 'Inspector', 'Appraiser'].map((contractRole) => (
                                 <button
-                                  key={role}
-                                  className={`w-full px-3 py-1.5 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${recipient.contractRole === role ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                                  key={contractRole}
+                                  className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${recipient.contractRole === contractRole ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                                  style={{ background: 'none', border: 'none', boxShadow: 'none' }}
                                   onClick={() => {
-                                    setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, contractRole: role, showContractRoleDropdown: false } : r));
+                                    setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, contractRole, showContractRoleDropdown: false } : r));
                                     setRecipientErrors(prev => ({ ...prev, [`contractRole-${idx}`]: false }));
                                   }}
                                 >
-                                  <div className="w-3 h-3 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                                    {recipient.contractRole === role && (
-                                      <div className="w-2 h-2 bg-primary rounded-sm flex items-center justify-center">
-                                        <FaCheck className="text-white" size={6} />
-                                      </div>
-                                    )}
-                                  </div>
-                                  {role}
+                                  {contractRole}
                                 </button>
                               ))}
                             </div>
                           )}
+                          {recipientErrors[`contractRole-${idx}`] && (
+                            <p className="text-red-600 text-xs mt-1.5" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                              Select contract role
+                            </p>
+                          )}
                         </div>
                       </div>
                       
-                      {/* Delete button for additional recipients */}
-                      {idx >= 2 && (
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteRecipient(idx)}
-                          className="text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors p-1"
-                        >
-                          <HiOutlineTrash className="w-4 h-4" />
-                        </button>
-                      )}
+                      {/* Delete button */}
+                      <button 
+                        className="self-end sm:self-auto text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1" 
+                        onClick={() => handleDeleteRecipient(idx)} 
+                        disabled={recipients.length === 1}
+                      >
+                        <HiOutlineTrash className="w-4 h-4" />
+                      </button>
                     </div>
                     
                     {/* Form fields */}
