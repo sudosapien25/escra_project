@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { FaUser } from 'react-icons/fa';
 import { TbCameraCog, TbActivity } from 'react-icons/tb';
 import { HiChevronDown, HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight, HiOutlineKey } from 'react-icons/hi';
-import { MdOutlineGeneratingTokens } from 'react-icons/md';
+import { MdOutlineGeneratingTokens, MdWebhook } from 'react-icons/md';
 import { HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
 import { PiEjectBold, PiPowerBold, PiLockKeyBold } from 'react-icons/pi';
 
@@ -23,6 +23,16 @@ const USER_ROLES = ['Admin', 'Creator', 'Editor', 'Viewer'];
 const DOCUMENT_LANGUAGES = ['English', 'Spanish', 'French', 'Italian'];
 const SIGNATURE_SETTINGS = ['Draw', 'Type', 'Upload'];
 const SIGNING_CERTIFICATE_OPTIONS = ['Yes', 'No'];
+const WEBHOOK_TRIGGERS = [
+  'document.created',
+  'document.signed',
+  'document.completed',
+  'document.deleted',
+  'signature.requested',
+  'signature.completed',
+  'user.invited',
+  'user.removed'
+];
 
 // Mock activity data
 const recentActivityData = [
@@ -119,6 +129,16 @@ const apiTokensData = [
   }
 ];
 
+// Mock webhooks data
+const webhooksData = [
+  {
+    name: 'Contract Signed Webhook',
+    url: 'https://api.example.com/webhooks/contract-signed',
+    created: '2 weeks ago',
+    lastUsed: '1 day ago'
+  }
+];
+
 export default function AdminSettingsPage() {
   const [activeTab, setActiveTab] = useState('profile');
   const [avatarImage, setAvatarImage] = useState<string | null>(null);
@@ -142,6 +162,15 @@ export default function AdminSettingsPage() {
   const [tokenNeverExpire, setTokenNeverExpire] = useState(true);
   const [showTokenExpirationDropdown, setShowTokenExpirationDropdown] = useState(false);
   const [selectedTokenExpiration, setSelectedTokenExpiration] = useState('');
+  const [showWebhooks, setShowWebhooks] = useState(false);
+  const [showAddWebhookModal, setShowAddWebhookModal] = useState(false);
+  const [webhookName, setWebhookName] = useState('');
+  const [webhookUrl, setWebhookUrl] = useState('');
+  const [webhookEnabled, setWebhookEnabled] = useState(true);
+  const [webhookSecret, setWebhookSecret] = useState('');
+  const [webhookSecretVisible, setWebhookSecretVisible] = useState(false);
+  const [webhookTriggers, setWebhookTriggers] = useState<string[]>([]);
+  const [showTriggersDropdown, setShowTriggersDropdown] = useState(false);
   
   // Password visibility states
   const [currentPasswordVisible, setCurrentPasswordVisible] = useState(false);
@@ -365,7 +394,7 @@ export default function AdminSettingsPage() {
           {/* Page Title and Subtitle */}
           <div>
             <h1 className="text-[30px] font-bold text-black dark:text-white mb-1">Admin Settings</h1>
-            <p className="text-gray-500 dark:text-gray-400 text-[16px] mt-0">Manage your account and system preferences</p>
+            <p className="text-gray-500 dark:text-gray-400 text-[16px] mt-0">Manage your account & system preferences</p>
           </div>
           {/* Tab Content */}
           {activeTab === 'profile' && (
@@ -1195,9 +1224,113 @@ export default function AdminSettingsPage() {
           
           {activeTab === 'webhooks' && (
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm">
-              <h2 className="text-xl font-bold mb-4 text-black dark:text-white">Webhooks</h2>
-              <p className="text-gray-600 dark:text-gray-400 text-xs mb-6">Create new webhooks & manage the existing ones</p>
-              {/* Webhooks content will go here */}
+              <h2 className="text-lg font-bold mb-4 text-black dark:text-white">Webhooks</h2>
+              <p className="text-gray-600 dark:text-gray-400 text-xs mb-6">Create new webhooks & manage existing ones</p>
+              {!showWebhooks && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center border-2 border-gray-200 dark:border-gray-600">
+                      <MdWebhook size={20} className="text-gray-600 dark:text-gray-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">{webhooksData.length} webhooks configured</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Manage your webhooks for secure notifications</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setShowWebhooks(!showWebhooks)}
+                    className="flex items-center gap-2 px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer" style={{ fontFamily: 'Avenir, sans-serif' }}
+                  >
+                    Manage Webhooks
+                  </button>
+                </div>
+              )}
+              
+              {showWebhooks && (
+                <div className="flex justify-end mb-4">
+                  <div className="flex flex-col gap-2">
+                    <button 
+                      onClick={() => setShowWebhooks(!showWebhooks)}
+                      className="flex items-center gap-2 px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                    >
+                      Hide Webhooks
+                    </button>
+                    <button 
+                      onClick={() => setShowAddWebhookModal(true)}
+                      className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                    >
+                      Add Webhook
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              {showWebhooks && (
+                <div className="mt-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                  <div className="overflow-x-auto overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700">
+                    <table className="w-full">
+                      <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-2/5">Webhook Name</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-2/5">URL</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5">Created</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5">Last Used</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        {webhooksData.map((webhook, index) => (
+                          <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-2/5">{webhook.name}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-2/5">{webhook.url}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/5">{webhook.created}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/5">{webhook.lastUsed}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="bg-gray-50 dark:bg-gray-700 px-6 py-3 border-t border-gray-200 dark:border-gray-600">
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs text-gray-700 dark:text-gray-300">
+                        Showing {webhooksData.length} webhooks.
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs text-gray-700 dark:text-gray-300">Rows per page</span>
+                          <div className="relative">
+                            <select className="text-xs border border-gray-300 dark:border-gray-600 rounded px-2 py-1 pr-6 bg-white dark:bg-gray-800 text-gray-900 dark:text-white appearance-none">
+                              <option>10</option>
+                              <option>20</option>
+                            </select>
+                            <div className="absolute inset-y-0 right-1 flex items-center pointer-events-none">
+                              <HiChevronDown className="w-3 h-3 text-gray-400" />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-xs text-gray-700 dark:text-gray-300">
+                          Page 1 of 1
+                        </div>
+                        <div className="flex space-x-1">
+                          <button className="p-1 text-gray-400 cursor-not-allowed">
+                            <HiOutlineChevronDoubleLeft className="w-3 h-3" />
+                          </button>
+                          <button className="p-1 text-gray-400 cursor-not-allowed">
+                            <HiOutlineChevronDoubleLeft className="w-3 h-3 rotate-180" />
+                          </button>
+                          <button className="p-1 text-gray-400 cursor-not-allowed">
+                            <HiOutlineChevronDoubleRight className="w-3 h-3 rotate-180" />
+                          </button>
+                          <button className="p-1 text-gray-400 cursor-not-allowed">
+                            <HiOutlineChevronDoubleRight className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
           
@@ -1468,6 +1601,164 @@ export default function AdminSettingsPage() {
                 style={{ fontFamily: 'Avenir, sans-serif' }}
               >
                 Enable 2FA
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Webhook Modal */}
+      {showAddWebhookModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 cursor-default select-none">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg p-6 cursor-default select-none">
+            <div className="flex justify-between items-start mb-4 cursor-default select-none">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white cursor-default select-none">Create webhook</h2>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1 cursor-default select-none">On this page, you can create a new webhook.</p>
+              </div>
+              <button
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
+                onClick={() => setShowAddWebhookModal(false)}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="space-y-6 cursor-default select-none">
+              {/* Webhook URL Section */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-medium text-gray-900 dark:text-white cursor-default select-none">
+                    Webhook URL *
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-900 dark:text-white cursor-default select-none">Enabled</span>
+                    <button
+                      type="button"
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                        webhookEnabled ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-600'
+                      }`}
+                      onClick={() => setWebhookEnabled(!webhookEnabled)}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          webhookEnabled ? 'translate-x-5' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+                <input
+                  type="url"
+                  value={webhookUrl}
+                  onChange={(e) => setWebhookUrl(e.target.value)}
+                  className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                  placeholder="https://your-domain.com/webhook-endpoint"
+                />
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 cursor-default select-none">
+                  URL for where Escra will send webhook events
+                </p>
+              </div>
+              
+              {/* Triggers Section */}
+              <div>
+                <label className="block text-xs font-medium text-gray-900 dark:text-white mb-1 cursor-default select-none">
+                  Triggers *
+                </label>
+                <div className="relative" ref={tokenExpirationDropdownRef}>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs pr-10 cursor-pointer caret-transparent"
+                    placeholder="Select triggers"
+                    value={webhookTriggers.length === 0 ? '' : webhookTriggers.join(', ')}
+                    readOnly
+                    onClick={() => setShowTriggersDropdown(!showTriggersDropdown)}
+                  />
+                  <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  {showTriggersDropdown && (
+                    <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-y-auto">
+                      {WEBHOOK_TRIGGERS.map(trigger => (
+                        <button
+                          key={trigger}
+                          className={`w-full text-left px-3 py-2 text-xs font-medium flex items-center ${webhookTriggers.includes(trigger) ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                          onClick={() => {
+                            setWebhookTriggers(prev => 
+                              prev.includes(trigger)
+                                ? prev.filter(t => t !== trigger)
+                                : [...prev, trigger]
+                            );
+                          }}
+                        >
+                          <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                            {webhookTriggers.includes(trigger) && (
+                              <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                                <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+                          {trigger}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 cursor-default select-none">
+                  Events that will trigger a webhook be sent to your URL
+                </p>
+              </div>
+              
+              {/* Secret Section */}
+              <div>
+                <label className="block text-xs font-medium text-gray-900 dark:text-white mb-1 cursor-default select-none">
+                  Secret
+                </label>
+                <div className="relative">
+                  <input
+                    type={webhookSecretVisible ? 'text' : 'password'}
+                    value={webhookSecret}
+                    onChange={(e) => setWebhookSecret(e.target.value)}
+                    className="w-full px-4 py-2 pr-10 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                    placeholder="Enter secret (optional)"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setWebhookSecretVisible(!webhookSecretVisible)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer p-1 rounded"
+                  >
+                    {webhookSecretVisible ? (
+                      <HiOutlineEyeOff className="h-3.5 w-3.5" />
+                    ) : (
+                      <HiOutlineEye className="h-3.5 w-3.5" />
+                    )}
+                  </button>
+                </div>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 cursor-default select-none">
+                  A secret that will be sent to your URL & used to verify the request has been sent by Escra
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-3 mt-8 cursor-default select-none">
+              <button
+                onClick={() => setShowAddWebhookModal(false)}
+                className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
+                style={{ fontFamily: 'Avenir, sans-serif' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  // Handle create webhook logic here
+                  setShowAddWebhookModal(false);
+                }}
+                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+                style={{ fontFamily: 'Avenir, sans-serif' }}
+              >
+                Create
               </button>
             </div>
           </div>

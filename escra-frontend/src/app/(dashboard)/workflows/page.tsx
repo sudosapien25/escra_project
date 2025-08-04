@@ -1386,7 +1386,7 @@ export default function WorkflowsPage() {
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
-                                  className={`bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 p-4 shadow-lg hover:shadow-md transition-shadow relative ${
+                                  className={`bg-gray-100 dark:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 p-4 shadow-lg hover:shadow-md transition-shadow relative ${
                                     snapshot.isDragging ? 'shadow-lg' : ''
                                   }`}
                                   onClick={() => {
@@ -1440,7 +1440,7 @@ export default function WorkflowsPage() {
                                   </div>
                                   <div className="flex items-center gap-1 mb-3">
                                     <LuCalendarClock className="text-gray-400 text-sm" />
-                                    <span className="text-xs text-gray-500">{formatDatePretty(task.due)}</span>
+                                    <span className="text-xs text-gray-900 dark:text-white">{formatDatePretty(task.due)}</span>
                                   </div>
 
                                   {/* Progress Section */}
@@ -1519,7 +1519,9 @@ export default function WorkflowsPage() {
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
-                                  className={`bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 p-4 shadow-lg hover:shadow-md transition-shadow relative ${snapshot.isDragging ? 'shadow-lg' : ''}`}
+                                  className={`bg-gray-100 dark:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 p-4 shadow-lg hover:shadow-md transition-shadow relative ${
+                                    snapshot.isDragging ? 'shadow-lg' : ''
+                                  }`}
                                   onClick={() => {
                                     const fullTask = tasks.find(t => t.code === task.code);
                                     setSelectedTask(fullTask || task);
@@ -1568,7 +1570,7 @@ export default function WorkflowsPage() {
                                   </div>
                                   <div className="flex items-center gap-1 mb-3">
                                     <LuCalendarClock className="text-gray-400 text-sm" />
-                                    <span className="text-xs text-gray-500">{formatDatePretty(task.due)}</span>
+                                    <span className="text-xs text-gray-900 dark:text-white">{formatDatePretty(task.due)}</span>
                                   </div>
                                   {/* Progress Section */}
                                   <div className="space-y-2 mb-3">

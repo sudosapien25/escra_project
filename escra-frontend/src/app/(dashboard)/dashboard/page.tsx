@@ -1,5 +1,6 @@
 "use client";
 import React from 'react';
+import Link from 'next/link';
 import { Card } from '@/components/common/Card';
 import { FaFileContract, FaMoneyBillAlt, FaClock, FaPlus, FaArrowUp, FaDollarSign, FaCheckCircle, FaBox, FaChartLine, FaCheck } from 'react-icons/fa';
 import { IconBaseProps } from 'react-icons';
@@ -407,6 +408,10 @@ export default function DashboardPage() {
   const [taskDueDateSortDirection, setTaskDueDateSortDirection] = React.useState<'asc' | 'desc' | null>(null);
   const [taskSubtasksSortDirection, setTaskSubtasksSortDirection] = React.useState<'asc' | 'desc' | null>(null);
   
+  // Expanded parties state
+  const [expandedParties, setExpandedParties] = React.useState<Set<string>>(new Set());
+  const [expandedRecipients, setExpandedRecipients] = React.useState<Set<string>>(new Set());
+  
   // Signatures data state
   const [signaturesData, setSignaturesData] = React.useState<SignatureDocument[]>(mockSignatures);
   
@@ -610,6 +615,32 @@ export default function DashboardPage() {
     setTaskContractSortDirection(null);
     setTaskStatusSortDirection(null);
     setTaskDueDateSortDirection(null);
+  };
+
+  // Handle expanding/collapsing parties
+  const handleToggleParties = (contractId: string) => {
+    setExpandedParties(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(contractId)) {
+        newSet.delete(contractId);
+      } else {
+        newSet.add(contractId);
+      }
+      return newSet;
+    });
+  };
+
+  // Handle expanding/collapsing recipients
+  const handleToggleRecipients = (signatureId: string) => {
+    setExpandedRecipients(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(signatureId)) {
+        newSet.delete(signatureId);
+      } else {
+        newSet.add(signatureId);
+      }
+      return newSet;
+    });
   };
 
   // Sort contracts based on current sort direction
@@ -939,13 +970,13 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 cursor-default select-none">
       {/* Dashboard Title and Subtitle Group */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0 mb-3 sm:mb-6">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0 mb-3 sm:mb-6 cursor-default select-none">
         {/* Group title and subtitle with controlled spacing */}
-        <div className="pb-1">
-          <h1 className="text-[30px] font-bold text-black dark:text-white mb-0">Dashboard</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-[16px] mt-0">Overview of your contract closing activities & metrics</p>
+        <div className="pb-1 cursor-default select-none">
+          <h1 className="text-[30px] font-bold text-black dark:text-white mb-0 cursor-default select-none">Dashboard</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-[16px] mt-0 cursor-default select-none">Overview of your contract closing activities & metrics</p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 w-full md:w-auto cursor-default select-none">
           <div className="inline-block rounded-full bg-primary/10 dark:bg-primary/20 px-2 py-0.5 text-primary dark:text-primary font-semibold text-xs border border-primary/20 dark:border-primary/30 self-start sm:self-center cursor-default select-none">
@@ -986,31 +1017,31 @@ export default function DashboardPage() {
       <hr className="my-3 md:my-6 border-gray-300 cursor-default select-none" />
 
       {/* Scrollable Content Area */}
-      <div className="overflow-y-auto max-h-[calc(100vh-300px)] [&::-webkit-scrollbar]:hidden">
+      <div className="overflow-y-auto max-h-[calc(100vh-300px)] [&::-webkit-scrollbar]:hidden cursor-default select-none">
         {/* Key Metrics Section */}
-      <h2 className="text-[15px] font-bold text-gray-700 dark:text-gray-300 pt-3 mb-4">KEY METRICS</h2>
+      <h2 className="text-[15px] font-bold text-gray-700 dark:text-gray-300 pt-3 mb-4 cursor-default select-none">KEY METRICS</h2>
 
       {/* Flex container for the first two metric cards */}
-      <div className="flex flex-col md:flex-row gap-4">
+      <div className="flex flex-col md:flex-row gap-4 cursor-default select-none">
         {/* Interactive Total Contract Value Chart - Replacing Total Contracts Box */}
-        <Card className="flex flex-col rounded-xl border border-gray-300 dark:border-gray-700 min-h-[375px] w-[600px] bg-white dark:bg-gray-800 p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800">
+        <Card className="flex flex-col rounded-xl border border-gray-300 dark:border-gray-700 min-h-[375px] w-[600px] bg-white dark:bg-gray-800 p-4 cursor-default select-none">
+          <div className="flex items-center justify-between mb-3 cursor-default select-none">
+            <div className="flex items-center gap-2 cursor-default select-none">
+              <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800 cursor-default select-none">
                 <GrMoney size={20} className="text-teal-500 dark:text-teal-400" />
               </div>
-              <div>
-                <p className="text-sm text-tertiary dark:text-gray-400">Total Contract Value</p>
-                <p className="text-lg font-bold text-primary dark:text-primary">
+              <div className="cursor-default select-none">
+                <p className="text-sm text-tertiary dark:text-gray-400 cursor-default select-none">Total Contract Value</p>
+                <p className="text-lg font-bold text-primary dark:text-primary cursor-default select-none">
                   ${hoveredValue ? hoveredValue.toLocaleString() : currentValue.toLocaleString()}
                 </p>
                 {hoveredDate && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{hoveredDate}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 cursor-default select-none">{hoveredDate}</p>
                 )}
               </div>
             </div>
-            <div className="text-right">
-              <p className={`text-sm flex items-center ${percentageChange >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+            <div className="text-right cursor-default select-none">
+              <p className={`text-sm flex items-center ${percentageChange >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'} cursor-default select-none`}>
                 <FaArrowUp className={`mr-1 ${percentageChange < 0 ? 'rotate-180' : ''}`} />
                 {Math.abs(percentageChange).toFixed(1)}% from last week
               </p>
@@ -1018,10 +1049,10 @@ export default function DashboardPage() {
           </div>
           
           {/* Time Filter Dropdown */}
-          <div className="relative mb-3">
+          <div className="relative mb-3 cursor-default select-none">
             <button
               ref={recentlyUpdatedButtonRef}
-              className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-lg px-3 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-lg px-3 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
               onClick={() => setOpenRecentlyUpdatedDropdown(!openRecentlyUpdatedDropdown)}
             >
               <span>{selectedRecentlyUpdated}</span>
@@ -1030,17 +1061,17 @@ export default function DashboardPage() {
             {openRecentlyUpdatedDropdown && (
               <div 
                 ref={recentlyUpdatedDropdownRef}
-                className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2"
+                className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 cursor-default select-none"
               >
                 {['Last 24 hours', 'Last 7 days', 'Last 30 days', 'This quarter', 'Last quarter', 'Last 6 months', 'Last year', 'Last 2 years'].map((option) => (
                   <button
                     key={option}
-                    className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedRecentlyUpdated === option ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                    className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center cursor-pointer ${selectedRecentlyUpdated === option ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                     onClick={() => setSelectedRecentlyUpdated(option)}
                   >
-                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center cursor-default select-none">
                       {selectedRecentlyUpdated === option && (
-                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center cursor-default select-none">
                           <FaCheck className="text-white" size={8} />
                         </div>
                       )}
@@ -1053,7 +1084,7 @@ export default function DashboardPage() {
           </div>
           
           {/* Interactive Line Chart */}
-          <div className="flex-1 min-h-[200px] -mx-6 -mb-6">
+          <div className="flex-1 min-h-[200px] -mx-6 -mb-6 cursor-default select-none">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
                 data={chartData}
@@ -1079,7 +1110,7 @@ export default function DashboardPage() {
                   dataKey="date" 
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 9, fill: '#6B7280', fontWeight: 'bold' }}
+                  tick={{ fontSize: 9, fill: '#6B7280', fontWeight: '900' }}
                   interval={0}
                   dy={6}
                   padding={{ left: 10, right: 10 }}
@@ -1103,13 +1134,13 @@ export default function DashboardPage() {
         </Card>
 
         {/* Contract Analytics Bar Chart */}
-        <Card className="flex flex-1 flex-col rounded-xl border border-gray-300 dark:border-gray-700 min-h-[400px] min-w-0 bg-white dark:bg-gray-800 p-4 pb-2">
-          <div className="flex items-center justify-between mb-4">
+        <Card className="flex flex-1 flex-col rounded-xl border border-gray-300 dark:border-gray-700 min-h-[400px] min-w-0 bg-white dark:bg-gray-800 p-4 pb-2 cursor-default select-none">
+          <div className="flex items-center justify-between mb-4 cursor-default select-none">
             {/* Time Filter Dropdown */}
-            <div className="relative">
+            <div className="relative cursor-default select-none">
               <button
                 ref={barChartButtonRef}
-                className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-lg px-3 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-lg px-3 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
                 onClick={() => setOpenBarChartDropdown(!openBarChartDropdown)}
               >
                 <span>{selectedBarChartPeriod}</span>
@@ -1118,17 +1149,17 @@ export default function DashboardPage() {
               {openBarChartDropdown && (
                 <div 
                   ref={barChartDropdownRef}
-                  className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2"
+                  className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 cursor-default select-none"
                 >
                   {['Last 24 hours', 'Last 7 days', 'Last 30 days', 'Last month', 'This quarter', 'Last quarter', 'Last 6 months', 'Last year', 'Last 2 years'].map((option) => (
                     <button
                       key={option}
-                      className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedBarChartPeriod === option ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                      className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center cursor-pointer ${selectedBarChartPeriod === option ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                       onClick={() => setSelectedBarChartPeriod(option)}
                     >
-                      <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                      <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center cursor-default select-none">
                         {selectedBarChartPeriod === option && (
-                          <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                          <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center cursor-default select-none">
                             <FaCheck className="text-white" size={8} />
                           </div>
                         )}
@@ -1140,9 +1171,9 @@ export default function DashboardPage() {
               )}
             </div>
             
-            <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 border-2 border-gray-200 dark:border-gray-600">
+            <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 border-2 border-gray-200 dark:border-gray-600 cursor-default select-none">
               <button
-                className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                   chartView === 'types' 
                     ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' 
                     : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
@@ -1152,7 +1183,7 @@ export default function DashboardPage() {
                 Contract Types
               </button>
               <button
-                className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                   chartView === 'statuses' 
                     ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' 
                     : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
@@ -1162,7 +1193,7 @@ export default function DashboardPage() {
                 Contract Status
               </button>
               <button
-                className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                   chartView === 'signatureStates' 
                     ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' 
                     : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
@@ -1174,7 +1205,7 @@ export default function DashboardPage() {
             </div>
           </div>
           
-          <div className="flex-1 min-h-[370px] pb-2.5">
+          <div className="flex-1 min-h-[370px] pb-2.5 cursor-default select-none">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={processContractDataForBarChart(contracts, signaturesData, chartView)}
@@ -1198,28 +1229,28 @@ export default function DashboardPage() {
       </div>
 
       {/* Metric Cards Grid - Remaining Cards */}
-      <div className="w-full mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 mt-4" style={{ gridTemplateRows: 'minmax(0, 120px)' }}>
+      <div className="w-full mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 mt-4 cursor-default select-none" style={{ gridTemplateRows: 'minmax(0, 120px)' }}>
         {/* Metric Card 2: Total Contracts */}
-        <Card className="flex items-center gap-4 rounded-xl border border-gray-300 dark:border-gray-700 min-h-[120px] min-w-0 bg-white dark:bg-gray-800 p-6">
-          <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800">
+        <Card className="flex items-center gap-4 rounded-xl border border-gray-300 dark:border-gray-700 min-h-[120px] min-w-0 bg-white dark:bg-gray-800 p-6 cursor-default select-none">
+          <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800 cursor-default select-none">
             <HiOutlineDocumentText size={20} className="text-teal-500 dark:text-teal-400" />
           </div>
-          <div className="flex flex-col items-start">
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contracts</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{contracts.length}</p>
-            <p className="text-xs text-gray-400 dark:text-gray-500">Active contracts</p>
+          <div className="flex flex-col items-start cursor-default select-none">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contracts</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{contracts.length}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">Active contracts</p>
           </div>
         </Card>
 
         {/* Metric Card 4: Average Completion Time */}
-        <Card className="flex items-center gap-4 rounded-xl border border-gray-300 dark:border-gray-700 min-h-[120px] min-w-0 bg-white dark:bg-gray-800 p-6">
-          <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center border-2 border-blue-200 dark:border-blue-800">
+        <Card className="flex items-center gap-4 rounded-xl border border-gray-300 dark:border-gray-700 min-h-[120px] min-w-0 bg-white dark:bg-gray-800 p-6 cursor-default select-none">
+          <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center border-2 border-blue-200 dark:border-blue-800 cursor-default select-none">
             <TbClockUp size={20} className="text-blue-500 dark:text-blue-400" />
           </div>
-          <div className="flex flex-col items-start">
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Average Completion Time</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">3.2 days</p>
-            <div className="relative">
+          <div className="flex flex-col items-start cursor-default select-none">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Average Completion Time</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">3.2 days</p>
+            <div className="relative cursor-default select-none">
               <button
                 ref={completionTimeButtonRef}
                 className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-lg px-2 py-1 text-gray-700 dark:text-gray-300 font-medium text-xs hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
@@ -1231,17 +1262,17 @@ export default function DashboardPage() {
               {openCompletionTimeDropdown && (
                 <div 
                   ref={completionTimeDropdownRef}
-                  className="absolute top-full left-0 mt-1 w-32 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-1"
+                  className="absolute top-full left-0 mt-1 w-32 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-1 cursor-default select-none"
                 >
                   {['Last 24 hours', 'Last 7 days', 'Last 30 days', 'Last month', 'This quarter', 'Last quarter', 'Last 6 months', 'Last year', 'Last 2 years'].map((option) => (
                     <button
                       key={option}
-                      className={`w-full px-3 py-1.5 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedCompletionTime === option ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                      className={`w-full px-3 py-1.5 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center cursor-pointer ${selectedCompletionTime === option ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                       onClick={() => setSelectedCompletionTime(option)}
                     >
-                      <div className="w-3 h-3 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                      <div className="w-3 h-3 border border-gray-300 rounded mr-2 flex items-center justify-center cursor-default select-none">
                         {selectedCompletionTime === option && (
-                          <div className="w-2 h-2 bg-primary rounded-sm flex items-center justify-center">
+                          <div className="w-2 h-2 bg-primary rounded-sm flex items-center justify-center cursor-default select-none">
                             <FaCheck className="text-white" size={6} />
                           </div>
                         )}
@@ -1256,26 +1287,26 @@ export default function DashboardPage() {
         </Card>
 
         {/* Metric Card 5: Pending Signatures */}
-        <Card className="flex items-center gap-4 rounded-xl border border-gray-300 dark:border-gray-700 min-h-[120px] min-w-0 bg-white dark:bg-gray-800 p-6">
-          <div className="h-10 w-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center border-2 border-purple-200 dark:border-purple-800">
+        <Card className="flex items-center gap-4 rounded-xl border border-gray-300 dark:border-gray-700 min-h-[120px] min-w-0 bg-white dark:bg-gray-800 p-6 cursor-default select-none">
+          <div className="h-10 w-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center border-2 border-purple-200 dark:border-purple-800 cursor-default select-none">
             {React.createElement(LuPen, { size: 20, className: "text-purple-500 dark:text-purple-400" } as IconBaseProps)}
           </div>
-          <div className="flex flex-col items-start">
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Pending Signatures</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">2</p>
-            <p className="text-xs text-gray-400 dark:text-gray-500">Requires action</p>
+          <div className="flex flex-col items-start cursor-default select-none">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Pending Signatures</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">2</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">Requires action</p>
           </div>
         </Card>
 
         {/* Metric Card 6: Wire Transfers Pending */}
-        <Card className="flex items-center gap-4 rounded-xl border border-gray-300 dark:border-gray-700 min-h-[120px] min-w-0 bg-white dark:bg-gray-800 p-6">
-          <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center border-2 border-green-200 dark:border-green-800">
+        <Card className="flex items-center gap-4 rounded-xl border border-gray-300 dark:border-gray-700 min-h-[120px] min-w-0 bg-white dark:bg-gray-800 p-6 cursor-default select-none">
+          <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center border-2 border-green-200 dark:border-green-800 cursor-default select-none">
             <PiMoneyWavyBold size={20} className="text-green-500 dark:text-green-400" />
           </div>
-          <div className="flex flex-col items-start">
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Wire Transfers Pending</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">3</p>
-            <p className="text-xs text-gray-400 dark:text-gray-500">Awaiting transfer</p>
+          <div className="flex flex-col items-start cursor-default select-none">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Wire Transfers Pending</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">3</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">Awaiting transfer</p>
           </div>
         </Card>
       </div>
@@ -1283,70 +1314,70 @@ export default function DashboardPage() {
       <hr className="my-3 md:my-6 border-gray-300 cursor-default select-none" />
 
       {/* Recent Activity Section */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-4 md:gap-0">
-        <h2 className="text-[15px] font-bold text-gray-700 dark:text-gray-300">RECENT ACTIVITY</h2>
-        <button className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-semibold text-xs hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer" style={{ fontFamily: 'Avenir, sans-serif' }}>
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-4 md:gap-0 cursor-default select-none">
+        <h2 className="text-[15px] font-bold text-gray-700 dark:text-gray-300 cursor-default select-none">RECENT ACTIVITY</h2>
+        <Link href="/contracts" className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-semibold text-xs hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer" style={{ fontFamily: 'Avenir, sans-serif' }}>
           View All
-        </button>
+        </Link>
       </div>
 
-      <Card className="p-6 rounded-xl border border-gray-300 dark:border-gray-700 overflow-x-auto bg-white dark:bg-gray-800">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-4 md:gap-0 min-w-0">
-          <h3 className="text-lg font-semibold text-primary dark:text-primary">Activity Timeline</h3>
+      <Card className="p-6 rounded-xl border border-gray-300 dark:border-gray-700 overflow-x-auto bg-white dark:bg-gray-800 cursor-default select-none">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-4 md:gap-0 min-w-0 cursor-default select-none">
+          <h3 className="text-lg font-semibold text-primary dark:text-primary cursor-default select-none">Activity Timeline</h3>
         </div>
         {/* Activity Timeline Entries */}
-        <div className="relative pl-6 min-w-0">
+        <div className="relative pl-6 min-w-0 cursor-default select-none">
           {/* Vertical timeline line */}
-          <div className="absolute left-[23px] top-0 bottom-0 w-px bg-gray-300 dark:bg-gray-600 z-0"></div>
-          <div className="space-y-4">
+          <div className="absolute left-[23px] top-0 bottom-0 w-px bg-gray-300 dark:bg-gray-600 z-0 cursor-default select-none"></div>
+          <div className="space-y-4 cursor-default select-none">
             {/* Timeline entries will go here */}
-            <div className="flex items-center">
-              <div className="flex-shrink-0 relative -left-3 z-10 bg-white dark:bg-gray-800 rounded-full p-1 flex items-center justify-center w-6 h-6">
+            <div className="flex items-center cursor-default select-none">
+              <div className="flex-shrink-0 relative -left-3 z-10 bg-white dark:bg-gray-800 rounded-full p-1 flex items-center justify-center w-6 h-6 cursor-default select-none">
                 {React.createElement(FaCheckCircle, { className: "text-green-500 dark:text-green-400 text-base" } as IconBaseProps)}
               </div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-700 dark:text-gray-300"><span className="font-semibold">Contract #8423</span> moved to 'Wire Details'</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">May 18, 2025 · 14:32</p>
+              <div className="flex-1 cursor-default select-none">
+                <p className="text-sm text-gray-700 dark:text-gray-300 cursor-default select-none"><span className="font-semibold">Contract #8423</span> moved to 'Wire Details'</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 cursor-default select-none">May 18, 2025 · 14:32</p>
               </div>
             </div>
 
-            <div className="flex items-center">
-              <div className="flex-shrink-0 relative -left-3 z-10 bg-white dark:bg-gray-800 rounded-full p-1 flex items-center justify-center w-6 h-6">
+            <div className="flex items-center cursor-default select-none">
+              <div className="flex-shrink-0 relative -left-3 z-10 bg-white dark:bg-gray-800 rounded-full p-1 flex items-center justify-center w-6 h-6 cursor-default select-none">
                 {React.createElement(LuPen, { className: "text-blue-500 dark:text-blue-400 text-base" } as IconBaseProps)}
               </div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-700 dark:text-gray-300"><span className="font-semibold">Sarah Johnson</span> signed Contract #9102</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">May 18, 2025 · 10:15</p>
+              <div className="flex-1 cursor-default select-none">
+                <p className="text-sm text-gray-700 dark:text-gray-300 cursor-default select-none"><span className="font-semibold">Sarah Johnson</span> signed Contract #9102</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 cursor-default select-none">May 18, 2025 · 10:15</p>
               </div>
             </div>
 
-            <div className="flex items-center">
-              <div className="flex-shrink-0 relative -left-3 z-10 bg-white dark:bg-gray-800 rounded-full p-1 flex items-center justify-center w-6 h-6">
+            <div className="flex items-center cursor-default select-none">
+              <div className="flex-shrink-0 relative -left-3 z-10 bg-white dark:bg-gray-800 rounded-full p-1 flex items-center justify-center w-6 h-6 cursor-default select-none">
                 {React.createElement(FaBox, { className: "text-purple-500 dark:text-purple-400 text-base" } as IconBaseProps)}
               </div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-700 dark:text-gray-300">Wire transfer of <span className="font-semibold">$42,500</span> received for <span className="text-teal-600 dark:text-teal-400 font-semibold">#7650</span></p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">May 17, 2025 · 16:48</p>
+              <div className="flex-1 cursor-default select-none">
+                <p className="text-sm text-gray-700 dark:text-gray-300 cursor-default select-none">Wire transfer of <span className="font-semibold">$42,500</span> received for <span className="text-teal-600 dark:text-teal-400 font-semibold">#7650</span></p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 cursor-default select-none">May 17, 2025 · 16:48</p>
               </div>
             </div>
 
-            <div className="flex items-center">
-              <div className="flex-shrink-0 relative -left-3 z-10 bg-white dark:bg-gray-800 rounded-full p-1 flex items-center justify-center w-6 h-6">
+            <div className="flex items-center cursor-default select-none">
+              <div className="flex-shrink-0 relative -left-3 z-10 bg-white dark:bg-gray-800 rounded-full p-1 flex items-center justify-center w-6 h-6 cursor-default select-none">
                 {React.createElement(FaFileContract, { className: "text-orange-500 dark:text-orange-400 text-base" } as IconBaseProps)}
               </div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-700 dark:text-gray-300"><span className="font-semibold">Contract #8901</span> created</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">May 17, 2025 · 11:20</p>
+              <div className="flex-1 cursor-default select-none">
+                <p className="text-sm text-gray-700 dark:text-gray-300 cursor-default select-none"><span className="font-semibold">Contract #8901</span> created</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 cursor-default select-none">May 17, 2025 · 11:20</p>
               </div>
             </div>
 
-            <div className="flex items-center">
-              <div className="flex-shrink-0 relative -left-3 z-10 bg-white dark:bg-gray-800 rounded-full p-1 flex items-center justify-center w-6 h-6">
+            <div className="flex items-center cursor-default select-none">
+              <div className="flex-shrink-0 relative -left-3 z-10 bg-white dark:bg-gray-800 rounded-full p-1 flex items-center justify-center w-6 h-6 cursor-default select-none">
                 {React.createElement(FaChartLine, { className: "text-red-500 dark:text-red-400 text-base" } as IconBaseProps)}
               </div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-700 dark:text-gray-300">Inspection completed for <span className="font-semibold">Contract #8423</span></p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">May 16, 2025 · 15:05</p>
+              <div className="flex-1 cursor-default select-none">
+                <p className="text-sm text-gray-700 dark:text-gray-300 cursor-default select-none">Inspection completed for <span className="font-semibold">Contract #8423</span></p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 cursor-default select-none">May 16, 2025 · 15:05</p>
               </div>
             </div>
           </div>
@@ -1354,25 +1385,37 @@ export default function DashboardPage() {
       </Card>
 
       {/* Contracts/Signatures in Progress Section */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center pt-6 mb-4 gap-4 md:gap-0">
-        <h2 className="text-[15px] font-bold text-gray-700 dark:text-gray-300">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center pt-6 mb-4 gap-4 md:gap-0 cursor-default select-none">
+        <h2 className="text-[15px] font-bold text-gray-700 dark:text-gray-300 cursor-default select-none">
           {activeTab === 'contracts' ? 'CONTRACTS IN PROGRESS' : activeTab === 'signatureRequests' ? 'SIGNATURES IN PROGRESS' : 'TASKS IN PROGRESS'}
         </h2>
         {/* View All Button */}
-        <button className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-semibold text-xs hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer" style={{ fontFamily: 'Avenir, sans-serif' }}>
-          {activeTab === 'contracts' ? 'View All Contracts' : activeTab === 'signatureRequests' ? 'View All Signatures' : 'View All Tasks'}
-        </button>
+        {activeTab === 'contracts' && (
+          <Link href="/contracts" className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-semibold text-xs hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer" style={{ fontFamily: 'Avenir, sans-serif' }}>
+            View All Contracts
+          </Link>
+        )}
+        {activeTab === 'signatureRequests' && (
+          <Link href="/signatures" className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-semibold text-xs hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer" style={{ fontFamily: 'Avenir, sans-serif' }}>
+            View All Signatures
+          </Link>
+        )}
+        {activeTab === 'tasks' && (
+          <Link href="/workflows" className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-semibold text-xs hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer" style={{ fontFamily: 'Avenir, sans-serif' }}>
+            View All Tasks
+          </Link>
+        )}
       </div>
 
       {/* Active Contracts Table */}
-      <Card className="rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden">
+      <Card className="rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden cursor-default select-none">
         {/* Tabs Row with Divider */}
-        <div className="border-b border-gray-200 dark:border-gray-700">
-          <div className="flex space-x-4 overflow-x-auto w-full [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
+        <div className="border-b border-gray-200 dark:border-gray-700 cursor-default select-none">
+          <div className="flex space-x-4 overflow-x-auto w-full cursor-default select-none [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
             {DASHBOARD_TABS.map((tab) => (
               <button
                 key={tab.key}
-                className={`pb-2 text-sm font-semibold whitespace-nowrap border-b-2 ${
+                className={`pb-2 text-sm font-semibold whitespace-nowrap border-b-2 cursor-pointer ${
                   activeTab === tab.key
                     ? 'text-primary border-primary'
                     : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 border-transparent'
@@ -1387,10 +1430,10 @@ export default function DashboardPage() {
         
         {/* Tab Content */}
         {activeTab === 'contracts' && (
-          <div style={{ height: '300px' }} className="relative overflow-x-auto overflow-y-auto mt-4 pr-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead>
-                <tr>
+          <div style={{ height: '300px' }} className="relative overflow-x-auto overflow-y-auto mt-4 pr-2 cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 cursor-default select-none">
+              <thead className="cursor-default select-none">
+                <tr className="cursor-default select-none">
                   <th 
                     className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
                     onClick={handleIdSort}
@@ -1417,41 +1460,48 @@ export default function DashboardPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700 cursor-default select-none">
                 {sortedContracts.map((contract) => (
                   <tr
                     key={contract.id}
                     className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
                   >
-                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs cursor-default select-none">
                       <span className="text-primary underline font-semibold cursor-pointer">{contract.id}</span>
                     </td>
-                    <td className="px-6 py-2.5 whitespace-nowrap text-sm">
-                      <div className="text-xs font-bold text-gray-900 dark:text-white">{contract.title}</div>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-sm cursor-default select-none">
+                      <div className="text-xs font-bold text-gray-900 dark:text-white cursor-default select-none">{contract.title}</div>
                     </td>
-                    <td className="px-6 py-2.5 text-xs">
+                    <td className="px-6 py-2.5 text-xs cursor-default select-none">
                       {(() => {
                         const parties = parseParties(contract.parties);
+                        const isExpanded = expandedParties.has(contract.id);
                         
                         return (
-                          <div className="flex flex-col space-y-1">
-                            {/* Show first 2 parties only for dashboard */}
-                            {parties.slice(0, 2).map((party, index) => (
-                              <div key={index} className="text-gray-900 dark:text-white">{party}</div>
+                          <div className="flex flex-col space-y-1 cursor-default select-none">
+                            {/* Show parties based on expanded state */}
+                            {parties.slice(0, isExpanded ? parties.length : 2).map((party, index) => (
+                              <div key={index} className="text-gray-900 dark:text-white cursor-default select-none">{party}</div>
                             ))}
                             
-                            {/* Show ellipsis if more than 2 parties */}
+                            {/* Show expand/collapse button if more than 2 parties */}
                             {parties.length > 2 && (
-                              <div className="text-gray-500 dark:text-gray-400 text-xs">
-                                +{parties.length - 2} more
-                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleToggleParties(contract.id);
+                                }}
+                                className="text-primary hover:text-primary-dark text-xs font-medium cursor-pointer transition-colors text-left"
+                              >
+                                {isExpanded ? 'Show less' : `+${parties.length - 2} more`}
+                              </button>
                             )}
                           </div>
                         );
                       })()}
                     </td>
-                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
-                      <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full ${getStatusBadgeStyle(contract.status)}`}
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs cursor-default select-none">
+                      <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full ${getStatusBadgeStyle(contract.status)} cursor-default select-none`}
                         style={{ minWidth: '7rem', display: 'inline-flex', borderWidth: '1px' }}>{contract.status}</span>
                     </td>
                   </tr>
@@ -1462,10 +1512,10 @@ export default function DashboardPage() {
         )}
         
         {activeTab === 'signatureRequests' && (
-          <div style={{ height: '300px' }} className="relative overflow-x-auto overflow-y-auto mt-4 pr-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead>
-                <tr>
+          <div style={{ height: '300px' }} className="relative overflow-x-auto overflow-y-auto mt-4 pr-2 cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 cursor-default select-none">
+              <thead className="cursor-default select-none">
+                <tr className="cursor-default select-none">
                   <th 
                     className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
                     onClick={handleSignatureIdSort}
@@ -1516,48 +1566,57 @@ export default function DashboardPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700 cursor-default select-none">
                 {sortedSignatures.map((signature) => (
                   <tr
                     key={signature.id}
                     className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
                   >
-                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs cursor-default select-none">
                       <span className="text-primary underline font-semibold cursor-pointer">{signature.id}</span>
                     </td>
-                    <td className="px-6 py-2.5 whitespace-nowrap text-sm">
-                      <div className="text-xs font-bold text-gray-900 dark:text-white">{signature.document}</div>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-sm cursor-default select-none">
+                      <div className="text-xs font-bold text-gray-900 dark:text-white cursor-default select-none">{signature.document}</div>
                     </td>
-                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs cursor-default select-none">
                       <span className="text-primary underline font-semibold cursor-pointer">{signature.contractId}</span>
                     </td>
-                    <td className="px-6 py-2.5 whitespace-nowrap text-sm">
-                      <div className="text-xs font-bold text-gray-900 dark:text-white">{signature.contract}</div>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-sm cursor-default select-none">
+                      <div className="text-xs font-bold text-gray-900 dark:text-white cursor-default select-none">{signature.contract}</div>
                     </td>
-                    <td className="px-6 py-2.5 text-xs">
-                      <div className="flex flex-col space-y-1">
-                        {/* Show first 2 recipients only for dashboard */}
-                        {signature.parties.slice(0, 2).map((party, index) => (
-                          <div key={index} className="text-gray-900 dark:text-white">{party}</div>
-                        ))}
+                    <td className="px-6 py-2.5 text-xs cursor-default select-none">
+                      <div className="flex flex-col space-y-1 cursor-default select-none">
+                        {/* Show recipients based on expanded state */}
+                        {(() => {
+                          const isExpanded = expandedRecipients.has(signature.id);
+                          return signature.parties.slice(0, isExpanded ? signature.parties.length : 2).map((party, index) => (
+                            <div key={index} className="text-gray-900 dark:text-white cursor-default select-none">{party}</div>
+                          ));
+                        })()}
                         
-                        {/* Show ellipsis if more than 2 recipients */}
+                        {/* Show expand/collapse button if more than 2 recipients */}
                         {signature.parties.length > 2 && (
-                          <div className="text-gray-500 dark:text-gray-400 text-xs">
-                            +{signature.parties.length - 2} more
-                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleRecipients(signature.id);
+                            }}
+                            className="text-primary hover:text-primary-dark text-xs font-medium cursor-pointer transition-colors text-left"
+                          >
+                            {expandedRecipients.has(signature.id) ? 'Show less' : `+${signature.parties.length - 2} more`}
+                          </button>
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
-                      <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full ${getSignatureStatusBadgeStyle(signature.status)}`}
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs cursor-default select-none">
+                      <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full ${getSignatureStatusBadgeStyle(signature.status)} cursor-default select-none`}
                         style={{ minWidth: '7rem', display: 'inline-flex', borderWidth: '1px' }}>{signature.status}</span>
                     </td>
-                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
-                      <span className="text-gray-900 dark:text-white font-semibold">{signature.signatures}</span>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs cursor-default select-none">
+                      <span className="text-gray-900 dark:text-white font-semibold cursor-default select-none">{signature.signatures}</span>
                     </td>
-                    <td className="px-6 py-2.5 whitespace-nowrap text-sm">
-                      <div className="text-xs text-gray-900 dark:text-white">{signature.assignee}</div>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-sm cursor-default select-none">
+                      <div className="text-xs text-gray-900 dark:text-white cursor-default select-none">{signature.assignee}</div>
                     </td>
                   </tr>
                 ))}
@@ -1567,10 +1626,10 @@ export default function DashboardPage() {
         )}
         
         {activeTab === 'tasks' && (
-          <div style={{ height: '300px' }} className="relative overflow-x-auto overflow-y-auto mt-4 pr-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead>
-                <tr>
+          <div style={{ height: '300px' }} className="relative overflow-x-auto overflow-y-auto mt-4 pr-2 cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 cursor-default select-none">
+              <thead className="cursor-default select-none">
+                <tr className="cursor-default select-none">
                   <th 
                     className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700 text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none"
                     onClick={handleTaskIdSort}
@@ -1615,32 +1674,32 @@ export default function DashboardPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700 cursor-default select-none">
                 {sortedTasks.map((task) => (
                   <tr
                     key={task.id}
                     className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
                   >
-                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs cursor-default select-none">
                       <span className="text-primary underline font-semibold cursor-pointer">{task.taskNumber}</span>
                     </td>
-                    <td className="px-6 py-2.5 whitespace-nowrap text-sm">
-                      <div className="text-xs font-bold text-gray-900 dark:text-white">{task.title}</div>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-sm cursor-default select-none">
+                      <div className="text-xs font-bold text-gray-900 dark:text-white cursor-default select-none">{task.title}</div>
                     </td>
-                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs cursor-default select-none">
                       <span className="text-primary underline font-semibold cursor-pointer">{task.contractId}</span>
                     </td>
-                    <td className="px-6 py-2.5 whitespace-nowrap text-sm">
-                      <div className="text-xs font-bold text-gray-900 dark:text-white">
+                    <td className="px-6 py-2.5 whitespace-nowrap text-sm cursor-default select-none">
+                      <div className="text-xs font-bold text-gray-900 dark:text-white cursor-default select-none">
                         {mockContracts.find(c => c.id === task.contractId)?.title || 'Unknown Contract'}
                       </div>
                     </td>
-                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
-                      <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full ${getTaskStatusBadgeStyle(task.status)}`}
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs cursor-default select-none">
+                      <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full ${getTaskStatusBadgeStyle(task.status)} cursor-default select-none`}
                         style={{ minWidth: '7rem', display: 'inline-flex', borderWidth: '1px' }}>{task.status}</span>
                     </td>
-                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
-                      <span className="text-gray-900 dark:text-white font-semibold">{(() => {
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs cursor-default select-none">
+                      <span className="text-gray-900 dark:text-white font-semibold cursor-default select-none">{(() => {
                         if (!task.due) return '';
                         const d = new Date(task.due);
                         if (isNaN(d.getTime())) return task.due;
@@ -1650,8 +1709,8 @@ export default function DashboardPage() {
                         return `${year}-${month}-${day}`;
                       })()}</span>
                     </td>
-                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
-                      <span className="text-gray-900 dark:text-white font-semibold">{task.subtasks.length}</span>
+                    <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs cursor-default select-none">
+                      <span className="text-gray-900 dark:text-white font-semibold cursor-default select-none">{task.subtasks.length}</span>
                     </td>
                   </tr>
                 ))}

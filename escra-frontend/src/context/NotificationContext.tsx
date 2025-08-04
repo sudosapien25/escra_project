@@ -1,22 +1,27 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Notification, NotificationType } from '../types/notifications';
-import { FaCheckCircle, FaExclamationTriangle, FaUserPlus, FaEdit, FaFileSignature, FaCommentDots, FaMoneyCheckAlt, FaTimesCircle, FaClock, FaLock } from 'react-icons/fa';
+import { FaCheckCircle, FaExclamationTriangle, FaUserPlus, FaEdit, FaFileSignature, FaCommentDots, FaMoneyCheckAlt, FaTimesCircle, FaClock, FaLock, FaChartLine, FaCheck } from 'react-icons/fa';
+import { TbWritingSign, TbCloudUpload } from 'react-icons/tb';
+import { PiMoneyWavyBold } from 'react-icons/pi';
+import { AiOutlineFileDone } from 'react-icons/ai';
+import { HiOutlineClipboardCheck } from 'react-icons/hi';
+import { LuCalendarPlus } from 'react-icons/lu';
 
 // Map notification type to icon component
 const notificationIcons: Record<NotificationType, React.ReactNode> = {
-  contract_signed: <FaFileSignature className="text-primary text-xl" />,
-  comment_added: <FaCommentDots className="text-primary text-xl" />,
-  wire_info_submitted: <FaMoneyCheckAlt className="text-primary text-xl" />,
+  contract_signed: <TbWritingSign className="text-primary text-2xl" />,
+  comment_added: <TbCloudUpload className="text-primary text-2xl" />,
+  wire_info_submitted: <PiMoneyWavyBold className="text-primary text-2xl" />,
   contract_modified: <FaEdit className="text-primary text-xl" />,
   invited: <FaUserPlus className="text-primary text-xl" />,
   action_required: <FaExclamationTriangle className="text-yellow-500 text-xl" />,
   contract_rejected: <FaTimesCircle className="text-red-500 text-xl" />,
   role_change: <FaUserPlus className="text-primary text-xl" />,
-  all_signatures_complete: <FaCheckCircle className="text-green-500 text-xl" />,
-  funds_received: <FaMoneyCheckAlt className="text-primary text-xl" />,
+  all_signatures_complete: <HiOutlineClipboardCheck className="text-primary text-2xl" />,
+  funds_received: <PiMoneyWavyBold className="text-primary text-2xl" />,
   transaction_complete: <FaCheckCircle className="text-green-500 text-xl" />,
   transaction_cancelled: <FaTimesCircle className="text-red-500 text-xl" />,
-  approaching_deadline: <FaClock className="text-yellow-500 text-xl" />,
+  approaching_deadline: <LuCalendarPlus className="text-primary text-2xl" />,
   overdue_action: <FaExclamationTriangle className="text-red-500 text-xl" />,
   security_alert: <FaLock className="text-red-500 text-xl" />,
 };

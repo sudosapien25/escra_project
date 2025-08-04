@@ -44,6 +44,23 @@ export default function DashboardLayout({
     setIsCollapsed(initialCollapsed);
   }, []);
 
+  // Click outside functionality for avatar dropdown
+  useEffect(() => {
+    if (showAvatarDropdown) {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (
+          avatarDropdownRef.current &&
+          !avatarDropdownRef.current.contains(event.target as Node)
+        ) {
+          setShowAvatarDropdown(false);
+        }
+      };
+
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showAvatarDropdown]);
+
   const { theme, setTheme } = useTheme();
   const currentSidebarWidth = isCollapsed ? COLLAPSED_SIDEBAR_WIDTH : DEFAULT_SIDEBAR_WIDTH;
   return (
@@ -61,17 +78,17 @@ export default function DashboardLayout({
               <Avatar size="sm" alt="User" src={undefined} />
             </div>
             {showAvatarDropdown && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 py-2" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
-                <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 hover:bg-primary/10 hover:text-primary transition-colors" onClick={() => { setShowAvatarDropdown(false); router.push('/admin-settings'); }}>
-                  Profile
+              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
+                <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 dark:text-gray-300 hover:bg-primary/10 hover:text-primary transition-colors" onClick={() => { setShowAvatarDropdown(false); router.push('/notifications'); }}>
+                  Inbox
                 </button>
-                <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 hover:bg-primary/10 hover:text-primary transition-colors" onClick={() => { setShowAvatarDropdown(false); router.push('/admin-settings'); }}>
+                <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 dark:text-gray-300 hover:bg-primary/10 hover:text-primary transition-colors" onClick={() => { setShowAvatarDropdown(false); router.push('/admin-settings'); }}>
                   Settings
                 </button>
-                <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 hover:bg-primary/10 hover:text-primary transition-colors" onClick={() => setShowAvatarDropdown(false)}>
+                <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 dark:text-gray-300 hover:bg-primary/10 hover:text-primary transition-colors" onClick={() => setShowAvatarDropdown(false)}>
                   Billing
                 </button>
-                <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 hover:bg-red-50 hover:text-red-700 transition-colors" onClick={() => { setShowAvatarDropdown(false); logout(); }}>
+                <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-400 transition-colors" onClick={() => { setShowAvatarDropdown(false); logout(); }}>
                   Sign Out
                 </button>
               </div>

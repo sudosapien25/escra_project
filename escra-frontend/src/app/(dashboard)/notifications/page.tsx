@@ -2,7 +2,9 @@
 
 import React from 'react';
 import { NotificationProvider, useNotifications, getNotificationIcon } from '@/context/NotificationContext';
-import { FaCheck, FaCog } from 'react-icons/fa';
+import { FaCheck } from 'react-icons/fa';
+import { HiOutlineCog } from 'react-icons/hi';
+import { MdOutlineCheckBox } from 'react-icons/md';
 import clsx from 'clsx';
 
 const notificationTabs = [
@@ -33,41 +35,39 @@ function NotificationPageContent() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div className="pb-1">
-          <h1 className="text-[30px] font-bold text-black mb-1">Notifications</h1>
-          <p className="text-gray-500 text-[16px] mt-0">Stay updated on your escrow activities</p>
+          <h1 className="text-[30px] font-bold text-black dark:text-white mb-1">Notifications</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-[16px] mt-0">Stay updated on your activities</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex">
           <button
-            className="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 bg-white text-gray-900 font-medium text-sm hover:bg-gray-50 transition-colors"
+            className="flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
             onClick={markAllAsRead}
           >
-            <FaCheck className="text-primary" />
+            <MdOutlineCheckBox className="mr-2 text-lg" />
             Mark All as Read
           </button>
-          <button className="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 bg-white text-gray-900 font-medium text-sm hover:bg-gray-50 transition-colors">
-            <FaCog className="text-gray-500" />
+          <button className="flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold ml-1">
+            <HiOutlineCog className="mr-2 text-lg" />
             Notification Settings
           </button>
         </div>
       </div>
 
       {/* Tabs/Filters */}
-      <div className="flex items-center gap-2 bg-gray-50 rounded-xl p-1 w-fit mb-2">
+      <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 border-2 border-gray-200 dark:border-gray-600 w-fit mb-2">
         {notificationTabs.map((tab) => (
           <button
             key={tab.key}
-            className={clsx(
-              'relative px-4 py-2 rounded-lg font-semibold text-sm transition-colors',
+            className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
               filter === tab.key
-                ? 'bg-white text-primary shadow-sm'
-                : 'text-gray-500 hover:text-primary',
-              'focus:outline-none focus:ring-2 focus:ring-primary'
-            )}
+                ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+            }`}
             onClick={() => setFilter(tab.key)}
           >
             {tab.label}
             {tab.key === 'unread' && unreadCount > 0 && (
-              <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-full bg-primary text-white">
+              <span className="ml-2 inline-block text-[10px] font-bold bg-primary text-white px-2 py-0.5 rounded border border-primary">
                 {unreadCount}
               </span>
             )}
@@ -76,32 +76,33 @@ function NotificationPageContent() {
       </div>
 
       {/* Notification List */}
-      <div className="rounded-2xl border border-gray-200 bg-white divide-y divide-gray-100">
+      <div className="rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden">
         {filtered.length === 0 && (
-          <div className="p-8 text-center text-gray-400 text-sm">No notifications found.</div>
+          <div className="p-8 text-center text-gray-400 dark:text-gray-500 text-xs">No notifications found.</div>
         )}
-        {filtered.map((n) => (
+        {filtered.map((n, index) => (
           <div
             key={n.id}
             className={clsx(
-              'flex items-start gap-4 p-6',
-              !n.read && 'bg-gray-50',
+              'flex items-start gap-4 p-6 mx-1 my-1 rounded',
+              !n.read && 'bg-gray-100 dark:bg-gray-600',
+              index > 0 && 'border-t border-gray-100 dark:border-gray-700',
               'transition-colors'
             )}
           >
             <div className="flex-shrink-0 mt-1">{getNotificationIcon(n.type)}</div>
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-gray-900 text-base">{n.title}</span>
+                <span className="font-semibold text-gray-900 dark:text-white text-sm">{n.title}</span>
                 {!n.read && (
                   <span className="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-primary text-white">Unread</span>
                 )}
               </div>
-              <div className="text-gray-600 text-sm mt-1 mb-2">{n.message}</div>
-              <a href={n.link || '#'} className="text-primary text-sm font-medium hover:underline">View Details</a>
+              <div className="text-gray-600 dark:text-gray-400 text-xs mt-1 mb-2">{n.message}</div>
+              <a href={n.link || '#'} className="text-primary text-xs font-medium hover:underline">View Details</a>
             </div>
             <div className="flex flex-col items-end gap-2 min-w-[100px]">
-              <span className="text-xs text-gray-400 mb-2 whitespace-nowrap">{formatTimeAgo(n.timestamp)}</span>
+              <span className="text-xs text-gray-900 dark:text-white mb-2 whitespace-nowrap">{formatTimeAgo(n.timestamp)}</span>
               {!n.read && (
                 <button
                   className="flex items-center gap-1 text-primary text-xs font-semibold hover:underline"
