@@ -19,7 +19,7 @@ const TABS = [
   { key: 'billing', label: 'Billing' },
 ];
 
-const USER_ROLES = ['Admin', 'Creator', 'Editor', 'Viewer'];
+const USER_ROLES = ['Viewer', 'Signer', 'Editor', 'Creator', 'Admin'];
 const DOCUMENT_LANGUAGES = ['English', 'Spanish', 'French', 'Italian'];
 const SIGNATURE_SETTINGS = ['Draw', 'Type', 'Upload'];
 const SIGNING_CERTIFICATE_OPTIONS = ['Yes', 'No'];
@@ -139,6 +139,69 @@ const webhooksData = [
   }
 ];
 
+// Billing plans data
+const billingPlans = [
+  {
+    name: 'Essential',
+    monthlyPrice: 9,
+    yearlyPrice: 90,
+    description: 'Tamper-proof essential signing tools',
+    features: [
+      '5 contracts per month',
+      '20 GB document storage',
+      'Unlimited Recipients',
+      '2FA Authentication',
+      'KYC verification',
+      'Blockchain secured completion'
+    ]
+  },
+  {
+    name: 'Pro',
+    monthlyPrice: 29,
+    yearlyPrice: 290,
+    description: 'Enhanced contract capacity, advanced security & granular auditability',
+    features: [
+      '50 contracts per month',
+      '5 custom templates',
+      '100 GB document storage',
+      'Complete audit trail',
+      'KYC/KYB verification',
+      'Advanced Analytics',
+      'Select third-party integrations'
+    ]
+  },
+  {
+    name: 'Growth',
+    monthlyPrice: 99,
+    yearlyPrice: 990,
+    description: 'A shared workspace for your team',
+    features: [
+      '500 contracts per month',
+      'Up to 10 custom templates',
+      '750 GB document storage',
+      'Includes 3 members',
+      'Add more users at $9 per month',
+      'Custom branding',
+      'Robust third-party integrations'
+    ]
+  },
+  {
+    name: 'Enterprise',
+    monthlyPrice: null,
+    yearlyPrice: null,
+    description: 'Signing solutions tailored for organizations at scale',
+    features: [
+      'Unlimited contracts',
+      '1 TB+ document storage',
+      'Multi-team support',
+      'Flexible user licensing',
+      'Whitelabeling',
+      'Dedicated account manager',
+      'Integration Support'
+    ]
+  }
+];
+
 export default function AdminSettingsPage() {
   const [activeTab, setActiveTab] = useState('profile');
   const [avatarImage, setAvatarImage] = useState<string | null>(null);
@@ -171,6 +234,10 @@ export default function AdminSettingsPage() {
   const [webhookSecretVisible, setWebhookSecretVisible] = useState(false);
   const [webhookTriggers, setWebhookTriggers] = useState<string[]>([]);
   const [showTriggersDropdown, setShowTriggersDropdown] = useState(false);
+  const [showOrganizations, setShowOrganizations] = useState(false);
+  
+  // Billing state
+  const [billingPeriod, setBillingPeriod] = useState('monthly');
   
   // Password visibility states
   const [currentPasswordVisible, setCurrentPasswordVisible] = useState(false);
@@ -1225,7 +1292,7 @@ export default function AdminSettingsPage() {
           {activeTab === 'webhooks' && (
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm">
               <h2 className="text-lg font-bold mb-4 text-black dark:text-white">Webhooks</h2>
-              <p className="text-gray-600 dark:text-gray-400 text-xs mb-6">Create new webhooks & manage existing ones</p>
+              <p className="text-gray-600 dark:text-gray-400 text-xs mb-6">Create & manage webhooks</p>
               {!showWebhooks && (
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -1334,7 +1401,235 @@ export default function AdminSettingsPage() {
             </div>
           )}
           
-          {activeTab !== 'profile' && activeTab !== 'api' && activeTab !== 'webhooks' && activeTab !== 'security' && (
+          {activeTab === 'billing' && (
+            <div className="space-y-4">
+              {/* Header Section */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm">
+                <div>
+                  <h2 className="text-lg font-bold text-black dark:text-white mb-1">Billing</h2>
+                  <div className="flex justify-between items-center">
+                    <p className="text-gray-500 dark:text-gray-400 text-xs">You are currently on the Free Plan.</p>
+                    <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold">
+                      Manage billing
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Billing Period Toggle */}
+              <div className="flex items-center justify-start">
+                <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 border-2 border-gray-200 dark:border-gray-600">
+                  <button
+                    onClick={() => setBillingPeriod('monthly')}
+                    className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                      billingPeriod === 'monthly'
+                        ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                        : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                    }`}
+                  >
+                    Monthly
+                  </button>
+                  <button
+                    onClick={() => setBillingPeriod('yearly')}
+                    className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                      billingPeriod === 'yearly'
+                        ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                        : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                    }`}
+                  >
+                    Yearly
+                  </button>
+                </div>
+              </div>
+
+              {/* Pricing Plans */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {billingPlans.map((plan, index) => (
+                  <div key={index} className="bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-600 p-6 shadow-sm flex flex-col min-h-[550px]">
+                    <div className="text-center mb-6 h-24">
+                      <h3 className="text-lg font-bold text-black dark:text-white mb-2">{plan.name}</h3>
+                      <div className="mb-2">
+                        {plan.monthlyPrice !== null ? (
+                          <>
+                            <span className="text-2xl font-bold text-black dark:text-white">${billingPeriod === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice}</span>
+                            <span className="text-sm text-gray-500 dark:text-gray-400 ml-1">USD per {billingPeriod === 'monthly' ? 'month' : 'year'}</span>
+                          </>
+                        ) : (
+                          <span className="text-2xl font-bold text-black dark:text-white">Custom</span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{plan.description}</p>
+                    </div>
+                    
+                    <div className="mb-6 flex-grow flex flex-col">
+                      <h4 className="text-sm font-semibold text-black dark:text-white mb-3 mt-6">Includes:</h4>
+                      <div className="space-y-2 flex-grow">
+                        {plan.features.map((feature, featureIndex) => (
+                          <div key={featureIndex} className="flex items-center">
+                            <div className="w-1 h-1 bg-gray-400 dark:bg-gray-500 rounded-full mr-3 flex-shrink-0"></div>
+                            <span className="text-sm text-gray-700 dark:text-gray-300">{feature}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {plan.name === 'Essential' ? (
+                      <div className="mt-auto space-y-1">
+                        <button className="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-semibold border border-gray-200 dark:border-gray-600">
+                          30-day Free Trial
+                        </button>
+                        <button className="w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold">
+                          Subscribe
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="mt-auto space-y-2">
+                        {plan.name === 'Pro' && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                            (Everything in the Essential tier + much more)
+                          </p>
+                        )}
+                        {plan.name === 'Growth' && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                            (Everything in the Pro tier + much more)
+                          </p>
+                        )}
+                        {plan.name === 'Enterprise' && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                            (Everything in the Growth tier + much more)
+                          </p>
+                        )}
+                        <button className="w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold">
+                          {plan.name === 'Enterprise' ? 'Contact Us' : 'Subscribe'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'company' && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm">
+              <h2 className="text-lg font-bold mb-4 text-black dark:text-white">Organizations</h2>
+              <p className="text-gray-600 dark:text-gray-400 text-xs mb-6">Create & manage organizations</p>
+              {!showOrganizations && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center border-2 border-gray-200 dark:border-gray-600">
+                      <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">1 organization configured</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Manage your organizations and memberships</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setShowOrganizations(!showOrganizations)}
+                    className="flex items-center gap-2 px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer" style={{ fontFamily: 'Avenir, sans-serif' }}
+                  >
+                    Manage Organizations
+                  </button>
+                </div>
+              )}
+              
+              {showOrganizations && (
+                <div className="flex justify-end mb-4">
+                  <div className="flex flex-col gap-2">
+                    <button 
+                      onClick={() => setShowOrganizations(!showOrganizations)}
+                      className="flex items-center gap-2 px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                    >
+                      Hide Organizations
+                    </button>
+                    <button 
+                      className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                    >
+                      Create Organization
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              {showOrganizations && (
+                <div className="mt-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                  <div className="overflow-x-auto overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700">
+                    <table className="w-full">
+                      <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Organization</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Role</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created At</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        <tr className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center mr-3">
+                                <span className="text-white font-semibold text-sm">P</span>
+                              </div>
+                              <div>
+                                <div className="text-sm font-semibold text-gray-900 dark:text-white">Personal</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">Your personal organization.</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white">Owner</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white">Jun 27, 2025</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="bg-gray-50 dark:bg-gray-700 px-6 py-3 border-t border-gray-200 dark:border-gray-600">
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs text-gray-700 dark:text-gray-300">
+                        Showing 1 organization.
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs text-gray-700 dark:text-gray-300">Rows per page</span>
+                          <div className="relative">
+                            <select className="text-xs border border-gray-300 dark:border-gray-600 rounded px-2 py-1 pr-6 bg-white dark:bg-gray-800 text-gray-900 dark:text-white appearance-none">
+                              <option>10</option>
+                              <option>20</option>
+                            </select>
+                            <div className="absolute inset-y-0 right-1 flex items-center pointer-events-none">
+                              <HiChevronDown className="w-3 h-3 text-gray-400" />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-xs text-gray-700 dark:text-gray-300">
+                          Page 1 of 1
+                        </div>
+                        <div className="flex space-x-1">
+                          <button className="p-1 text-gray-400 cursor-not-allowed">
+                            <HiOutlineChevronDoubleLeft className="w-3 h-3" />
+                          </button>
+                          <button className="p-1 text-gray-400 cursor-not-allowed">
+                            <HiOutlineChevronDoubleLeft className="w-3 h-3 rotate-180" />
+                          </button>
+                          <button className="p-1 text-gray-400 cursor-not-allowed">
+                            <HiOutlineChevronDoubleRight className="w-3 h-3 rotate-180" />
+                          </button>
+                          <button className="p-1 text-gray-400 cursor-not-allowed">
+                            <HiOutlineChevronDoubleRight className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab !== 'profile' && activeTab !== 'api' && activeTab !== 'webhooks' && activeTab !== 'security' && activeTab !== 'billing' && activeTab !== 'company' && (
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm">
               <h2 className="text-xl font-bold mb-4 text-black dark:text-white">{TABS.find(tab => tab.key === activeTab)?.label} (Placeholder)</h2>
               <p className="text-gray-600 dark:text-gray-400 text-xs">Content for the {TABS.find(tab => tab.key === activeTab)?.label} tab will go here.</p>
