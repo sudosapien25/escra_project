@@ -2,11 +2,17 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { FaUser } from 'react-icons/fa';
-import { TbCameraCog, TbActivity } from 'react-icons/tb';
+import { TbCameraCog, TbActivity, TbBuildingEstate, TbShoppingBagEdit, TbWorld } from 'react-icons/tb';
 import { HiChevronDown, HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight, HiOutlineKey } from 'react-icons/hi';
-import { MdOutlineGeneratingTokens, MdWebhook } from 'react-icons/md';
+import { MdOutlineGeneratingTokens, MdWebhook, MdOutlineSportsFootball, MdOutlineMovieFilter, MdOutlineHealthAndSafety } from 'react-icons/md';
 import { HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
 import { PiEjectBold, PiPowerBold, PiLockKeyBold } from 'react-icons/pi';
+import { LuConstruction, LuBriefcaseBusiness } from 'react-icons/lu';
+import { GrMoney, GrUserWorker } from 'react-icons/gr';
+import { VscLaw } from 'react-icons/vsc';
+import { LiaToolsSolid } from 'react-icons/lia';
+import { HiOutlineChip } from 'react-icons/hi';
+import { IconType } from 'react-icons';
 
 const TABS = [
   { key: 'profile', label: 'Profile' },
@@ -32,6 +38,528 @@ const WEBHOOK_TRIGGERS = [
   'signature.completed',
   'user.invited',
   'user.removed'
+];
+
+interface IndustryOption {
+  value: string;
+  label: string;
+  icon: IconType;
+}
+
+const COMPANY_TYPES = [
+  { value: 'sole_proprietorship', label: 'Sole Proprietorship' },
+  { value: 'partnership', label: 'Partnership' },
+  { value: 'corporation', label: 'Corporation' },
+  { value: 'llc', label: 'Limited Liability Company (LLC)' },
+  { value: 'other', label: 'Other' }
+];
+
+const INDUSTRIES: IndustryOption[] = [
+  { value: 'real_estate', label: 'Real Estate', icon: TbBuildingEstate },
+  { value: 'athletics', label: 'Athletics', icon: MdOutlineSportsFootball },
+  { value: 'construction', label: 'Construction', icon: LuConstruction },
+  { value: 'entertainment', label: 'Entertainment', icon: MdOutlineMovieFilter },
+  { value: 'finance', label: 'Finance', icon: GrMoney },
+  { value: 'healthcare', label: 'Healthcare', icon: MdOutlineHealthAndSafety },
+  { value: 'labor', label: 'Labor', icon: GrUserWorker },
+  { value: 'legal', label: 'Legal', icon: VscLaw },
+  { value: 'manufacturing', label: 'Manufacturing', icon: LiaToolsSolid },
+  { value: 'retail', label: 'Retail', icon: TbShoppingBagEdit },
+  { value: 'supply_chain', label: 'Logistics', icon: TbWorld },
+  { value: 'technology', label: 'Technology', icon: HiOutlineChip },
+  { value: 'other', label: 'Other', icon: LuBriefcaseBusiness }
+];
+
+const US_STATES = [
+  { value: 'AL', label: 'Alabama' },
+  { value: 'AK', label: 'Alaska' },
+  { value: 'AZ', label: 'Arizona' },
+  { value: 'AR', label: 'Arkansas' },
+  { value: 'CA', label: 'California' },
+  { value: 'CO', label: 'Colorado' },
+  { value: 'CT', label: 'Connecticut' },
+  { value: 'DE', label: 'Delaware' },
+  { value: 'FL', label: 'Florida' },
+  { value: 'GA', label: 'Georgia' },
+  { value: 'HI', label: 'Hawaii' },
+  { value: 'ID', label: 'Idaho' },
+  { value: 'IL', label: 'Illinois' },
+  { value: 'IN', label: 'Indiana' },
+  { value: 'IA', label: 'Iowa' },
+  { value: 'KS', label: 'Kansas' },
+  { value: 'KY', label: 'Kentucky' },
+  { value: 'LA', label: 'Louisiana' },
+  { value: 'ME', label: 'Maine' },
+  { value: 'MD', label: 'Maryland' },
+  { value: 'MA', label: 'Massachusetts' },
+  { value: 'MI', label: 'Michigan' },
+  { value: 'MN', label: 'Minnesota' },
+  { value: 'MS', label: 'Mississippi' },
+  { value: 'MO', label: 'Missouri' },
+  { value: 'MT', label: 'Montana' },
+  { value: 'NE', label: 'Nebraska' },
+  { value: 'NV', label: 'Nevada' },
+  { value: 'NH', label: 'New Hampshire' },
+  { value: 'NJ', label: 'New Jersey' },
+  { value: 'NM', label: 'New Mexico' },
+  { value: 'NY', label: 'New York' },
+  { value: 'NC', label: 'North Carolina' },
+  { value: 'ND', label: 'North Dakota' },
+  { value: 'OH', label: 'Ohio' },
+  { value: 'OK', label: 'Oklahoma' },
+  { value: 'OR', label: 'Oregon' },
+  { value: 'PA', label: 'Pennsylvania' },
+  { value: 'RI', label: 'Rhode Island' },
+  { value: 'SC', label: 'South Carolina' },
+  { value: 'SD', label: 'South Dakota' },
+  { value: 'TN', label: 'Tennessee' },
+  { value: 'TX', label: 'Texas' },
+  { value: 'UT', label: 'Utah' },
+  { value: 'VT', label: 'Vermont' },
+  { value: 'VA', label: 'Virginia' },
+  { value: 'WA', label: 'Washington' },
+  { value: 'WV', label: 'West Virginia' },
+  { value: 'WI', label: 'Wisconsin' },
+  { value: 'WY', label: 'Wyoming' }
+];
+
+const COUNTRIES = [
+  { value: 'US', label: 'United States' },
+  { value: 'CA', label: 'Canada' },
+  { value: 'MX', label: 'Mexico' },
+  { value: 'GB', label: 'United Kingdom' },
+  { value: 'DE', label: 'Germany' },
+  { value: 'FR', label: 'France' },
+  { value: 'IT', label: 'Italy' },
+  { value: 'ES', label: 'Spain' },
+  { value: 'AU', label: 'Australia' },
+  { value: 'JP', label: 'Japan' },
+  { value: 'CN', label: 'China' },
+  { value: 'IN', label: 'India' },
+  { value: 'BR', label: 'Brazil' },
+  { value: 'RU', label: 'Russia' },
+  { value: 'KR', label: 'South Korea' },
+  { value: 'NL', label: 'Netherlands' },
+  { value: 'SE', label: 'Sweden' },
+  { value: 'CH', label: 'Switzerland' },
+  { value: 'NO', label: 'Norway' },
+  { value: 'DK', label: 'Denmark' },
+  { value: 'FI', label: 'Finland' },
+  { value: 'PL', label: 'Poland' },
+  { value: 'AT', label: 'Austria' },
+  { value: 'BE', label: 'Belgium' },
+  { value: 'PT', label: 'Portugal' },
+  { value: 'IE', label: 'Ireland' },
+  { value: 'NZ', label: 'New Zealand' },
+  { value: 'SG', label: 'Singapore' },
+  { value: 'HK', label: 'Hong Kong' },
+  { value: 'TW', label: 'Taiwan' },
+  { value: 'IL', label: 'Israel' },
+  { value: 'AE', label: 'United Arab Emirates' },
+  { value: 'SA', label: 'Saudi Arabia' },
+  { value: 'TR', label: 'Turkey' },
+  { value: 'TH', label: 'Thailand' },
+  { value: 'MY', label: 'Malaysia' },
+  { value: 'PH', label: 'Philippines' },
+  { value: 'VN', label: 'Vietnam' },
+  { value: 'ID', label: 'Indonesia' },
+  { value: 'AR', label: 'Argentina' },
+  { value: 'CL', label: 'Chile' },
+  { value: 'CO', label: 'Colombia' },
+  { value: 'PE', label: 'Peru' },
+  { value: 'VE', label: 'Venezuela' },
+  { value: 'ZA', label: 'South Africa' },
+  { value: 'EG', label: 'Egypt' },
+  { value: 'NG', label: 'Nigeria' },
+  { value: 'KE', label: 'Kenya' },
+  { value: 'MA', label: 'Morocco' },
+  { value: 'TN', label: 'Tunisia' },
+  { value: 'DZ', label: 'Algeria' },
+  { value: 'GH', label: 'Ghana' },
+  { value: 'ET', label: 'Ethiopia' },
+  { value: 'UG', label: 'Uganda' },
+  { value: 'TZ', label: 'Tanzania' },
+  { value: 'ZM', label: 'Zambia' },
+  { value: 'ZW', label: 'Zimbabwe' },
+  { value: 'BW', label: 'Botswana' },
+  { value: 'NA', label: 'Namibia' },
+  { value: 'MZ', label: 'Mozambique' },
+  { value: 'AO', label: 'Angola' },
+  { value: 'MG', label: 'Madagascar' },
+  { value: 'MU', label: 'Mauritius' },
+  { value: 'SC', label: 'Seychelles' },
+  { value: 'DJ', label: 'Djibouti' },
+  { value: 'SO', label: 'Somalia' },
+  { value: 'SD', label: 'Sudan' },
+  { value: 'SS', label: 'South Sudan' },
+  { value: 'CF', label: 'Central African Republic' },
+  { value: 'TD', label: 'Chad' },
+  { value: 'NE', label: 'Niger' },
+  { value: 'ML', label: 'Mali' },
+  { value: 'BF', label: 'Burkina Faso' },
+  { value: 'CI', label: 'Ivory Coast' },
+  { value: 'SN', label: 'Senegal' },
+  { value: 'GN', label: 'Guinea' },
+  { value: 'SL', label: 'Sierra Leone' },
+  { value: 'LR', label: 'Liberia' },
+  { value: 'TG', label: 'Togo' },
+  { value: 'BJ', label: 'Benin' },
+  { value: 'GW', label: 'Guinea-Bissau' },
+  { value: 'CV', label: 'Cape Verde' },
+  { value: 'GM', label: 'Gambia' },
+  { value: 'MR', label: 'Mauritania' },
+  { value: 'LY', label: 'Libya' },
+  { value: 'ER', label: 'Eritrea' },
+  { value: 'KM', label: 'Comoros' },
+  { value: 'KM', label: 'Comoros' },
+  { value: 'ST', label: 'Sao Tome and Principe' },
+  { value: 'GQ', label: 'Equatorial Guinea' },
+  { value: 'GA', label: 'Gabon' },
+  { value: 'CG', label: 'Republic of the Congo' },
+  { value: 'CD', label: 'Democratic Republic of the Congo' },
+  { value: 'RW', label: 'Rwanda' },
+  { value: 'BI', label: 'Burundi' },
+  { value: 'MW', label: 'Malawi' },
+  { value: 'SZ', label: 'Eswatini' },
+  { value: 'LS', label: 'Lesotho' },
+  { value: 'RE', label: 'Reunion' },
+  { value: 'YT', label: 'Mayotte' },
+  { value: 'SH', label: 'Saint Helena' },
+  { value: 'AC', label: 'Ascension Island' },
+  { value: 'TA', label: 'Tristan da Cunha' },
+  { value: 'IO', label: 'British Indian Ocean Territory' },
+  { value: 'TF', label: 'French Southern Territories' },
+  { value: 'HM', label: 'Heard Island and McDonald Islands' },
+  { value: 'AQ', label: 'Antarctica' },
+  { value: 'BV', label: 'Bouvet Island' },
+  { value: 'GS', label: 'South Georgia and the South Sandwich Islands' },
+  { value: 'FK', label: 'Falkland Islands' },
+  { value: 'GF', label: 'French Guiana' },
+  { value: 'GY', label: 'Guyana' },
+  { value: 'SR', label: 'Suriname' },
+  { value: 'UY', label: 'Uruguay' },
+  { value: 'PY', label: 'Paraguay' },
+  { value: 'BO', label: 'Bolivia' },
+  { value: 'EC', label: 'Ecuador' },
+  { value: 'CR', label: 'Costa Rica' },
+  { value: 'PA', label: 'Panama' },
+  { value: 'NI', label: 'Nicaragua' },
+  { value: 'HN', label: 'Honduras' },
+  { value: 'SV', label: 'El Salvador' },
+  { value: 'GT', label: 'Guatemala' },
+  { value: 'BZ', label: 'Belize' },
+  { value: 'CU', label: 'Cuba' },
+  { value: 'JM', label: 'Jamaica' },
+  { value: 'HT', label: 'Haiti' },
+  { value: 'DO', label: 'Dominican Republic' },
+  { value: 'PR', label: 'Puerto Rico' },
+  { value: 'VI', label: 'U.S. Virgin Islands' },
+  { value: 'VG', label: 'British Virgin Islands' },
+  { value: 'AI', label: 'Anguilla' },
+  { value: 'AW', label: 'Aruba' },
+  { value: 'CW', label: 'Curacao' },
+  { value: 'SX', label: 'Sint Maarten' },
+  { value: 'BL', label: 'Saint Barthelemy' },
+  { value: 'MF', label: 'Saint Martin' },
+  { value: 'GP', label: 'Guadeloupe' },
+  { value: 'MQ', label: 'Martinique' },
+  { value: 'DM', label: 'Dominica' },
+  { value: 'LC', label: 'Saint Lucia' },
+  { value: 'VC', label: 'Saint Vincent and the Grenadines' },
+  { value: 'BB', label: 'Barbados' },
+  { value: 'GD', label: 'Grenada' },
+  { value: 'TT', label: 'Trinidad and Tobago' },
+  { value: 'KN', label: 'Saint Kitts and Nevis' },
+  { value: 'AG', label: 'Antigua and Barbuda' },
+  { value: 'BS', label: 'Bahamas' },
+  { value: 'TC', label: 'Turks and Caicos Islands' },
+  { value: 'KY', label: 'Cayman Islands' },
+  { value: 'BM', label: 'Bermuda' },
+  { value: 'GL', label: 'Greenland' },
+  { value: 'IS', label: 'Iceland' },
+  { value: 'FO', label: 'Faroe Islands' },
+  { value: 'SJ', label: 'Svalbard and Jan Mayen' },
+  { value: 'AX', label: 'Aland Islands' },
+  { value: 'AD', label: 'Andorra' },
+  { value: 'MC', label: 'Monaco' },
+  { value: 'LI', label: 'Liechtenstein' },
+  { value: 'SM', label: 'San Marino' },
+  { value: 'VA', label: 'Vatican City' },
+  { value: 'MT', label: 'Malta' },
+  { value: 'CY', label: 'Cyprus' },
+  { value: 'GR', label: 'Greece' },
+  { value: 'HR', label: 'Croatia' },
+  { value: 'SI', label: 'Slovenia' },
+  { value: 'HU', label: 'Hungary' },
+  { value: 'SK', label: 'Slovakia' },
+  { value: 'CZ', label: 'Czech Republic' },
+  { value: 'RO', label: 'Romania' },
+  { value: 'BG', label: 'Bulgaria' },
+  { value: 'RS', label: 'Serbia' },
+  { value: 'ME', label: 'Montenegro' },
+  { value: 'BA', label: 'Bosnia and Herzegovina' },
+  { value: 'MK', label: 'North Macedonia' },
+  { value: 'AL', label: 'Albania' },
+  { value: 'XK', label: 'Kosovo' },
+  { value: 'MD', label: 'Moldova' },
+  { value: 'UA', label: 'Ukraine' },
+  { value: 'BY', label: 'Belarus' },
+  { value: 'LV', label: 'Latvia' },
+  { value: 'LT', label: 'Lithuania' },
+  { value: 'EE', label: 'Estonia' },
+  { value: 'KZ', label: 'Kazakhstan' },
+  { value: 'UZ', label: 'Uzbekistan' },
+  { value: 'TM', label: 'Turkmenistan' },
+  { value: 'TJ', label: 'Tajikistan' },
+  { value: 'KG', label: 'Kyrgyzstan' },
+  { value: 'AF', label: 'Afghanistan' },
+  { value: 'PK', label: 'Pakistan' },
+  { value: 'BD', label: 'Bangladesh' },
+  { value: 'LK', label: 'Sri Lanka' },
+  { value: 'NP', label: 'Nepal' },
+  { value: 'BT', label: 'Bhutan' },
+  { value: 'MV', label: 'Maldives' },
+  { value: 'MM', label: 'Myanmar' },
+  { value: 'KH', label: 'Cambodia' },
+  { value: 'LA', label: 'Laos' },
+  { value: 'MN', label: 'Mongolia' },
+  { value: 'KP', label: 'North Korea' },
+  { value: 'MO', label: 'Macau' },
+  { value: 'BN', label: 'Brunei' },
+  { value: 'TL', label: 'East Timor' },
+  { value: 'PG', label: 'Papua New Guinea' },
+  { value: 'FJ', label: 'Fiji' },
+  { value: 'NC', label: 'New Caledonia' },
+  { value: 'VU', label: 'Vanuatu' },
+  { value: 'SB', label: 'Solomon Islands' },
+  { value: 'TO', label: 'Tonga' },
+  { value: 'WS', label: 'Samoa' },
+  { value: 'KI', label: 'Kiribati' },
+  { value: 'TV', label: 'Tuvalu' },
+  { value: 'NR', label: 'Nauru' },
+  { value: 'PW', label: 'Palau' },
+  { value: 'FM', label: 'Micronesia' },
+  { value: 'MH', label: 'Marshall Islands' },
+  { value: 'CK', label: 'Cook Islands' },
+  { value: 'NU', label: 'Niue' },
+  { value: 'TK', label: 'Tokelau' },
+  { value: 'AS', label: 'American Samoa' },
+  { value: 'GU', label: 'Guam' },
+  { value: 'MP', label: 'Northern Mariana Islands' },
+  { value: 'PF', label: 'French Polynesia' },
+  { value: 'WF', label: 'Wallis and Futuna' },
+  { value: 'TK', label: 'Tokelau' },
+  { value: 'NU', label: 'Niue' },
+  { value: 'CK', label: 'Cook Islands' },
+  { value: 'MH', label: 'Marshall Islands' },
+  { value: 'FM', label: 'Micronesia' },
+  { value: 'PW', label: 'Palau' },
+  { value: 'NR', label: 'Nauru' },
+  { value: 'TV', label: 'Tuvalu' },
+  { value: 'KI', label: 'Kiribati' },
+  { value: 'WS', label: 'Samoa' },
+  { value: 'TO', label: 'Tonga' },
+  { value: 'SB', label: 'Solomon Islands' },
+  { value: 'VU', label: 'Vanuatu' },
+  { value: 'NC', label: 'New Caledonia' },
+  { value: 'FJ', label: 'Fiji' },
+  { value: 'PG', label: 'Papua New Guinea' },
+  { value: 'TL', label: 'East Timor' },
+  { value: 'BN', label: 'Brunei' },
+  { value: 'MO', label: 'Macau' },
+  { value: 'KP', label: 'North Korea' },
+  { value: 'MN', label: 'Mongolia' },
+  { value: 'LA', label: 'Laos' },
+  { value: 'KH', label: 'Cambodia' },
+  { value: 'MM', label: 'Myanmar' },
+  { value: 'MV', label: 'Maldives' },
+  { value: 'BT', label: 'Bhutan' },
+  { value: 'NP', label: 'Nepal' },
+  { value: 'LK', label: 'Sri Lanka' },
+  { value: 'BD', label: 'Bangladesh' },
+  { value: 'PK', label: 'Pakistan' },
+  { value: 'AF', label: 'Afghanistan' },
+  { value: 'KG', label: 'Kyrgyzstan' },
+  { value: 'TJ', label: 'Tajikistan' },
+  { value: 'TM', label: 'Turkmenistan' },
+  { value: 'UZ', label: 'Uzbekistan' },
+  { value: 'KZ', label: 'Kazakhstan' },
+  { value: 'EE', label: 'Estonia' },
+  { value: 'LT', label: 'Lithuania' },
+  { value: 'LV', label: 'Latvia' },
+  { value: 'BY', label: 'Belarus' },
+  { value: 'UA', label: 'Ukraine' },
+  { value: 'MD', label: 'Moldova' },
+  { value: 'XK', label: 'Kosovo' },
+  { value: 'AL', label: 'Albania' },
+  { value: 'MK', label: 'North Macedonia' },
+  { value: 'BA', label: 'Bosnia and Herzegovina' },
+  { value: 'ME', label: 'Montenegro' },
+  { value: 'RS', label: 'Serbia' },
+  { value: 'BG', label: 'Bulgaria' },
+  { value: 'RO', label: 'Romania' },
+  { value: 'CZ', label: 'Czech Republic' },
+  { value: 'SK', label: 'Slovakia' },
+  { value: 'HU', label: 'Hungary' },
+  { value: 'SI', label: 'Slovenia' },
+  { value: 'HR', label: 'Croatia' },
+  { value: 'GR', label: 'Greece' },
+  { value: 'CY', label: 'Cyprus' },
+  { value: 'MT', label: 'Malta' },
+  { value: 'VA', label: 'Vatican City' },
+  { value: 'SM', label: 'San Marino' },
+  { value: 'LI', label: 'Liechtenstein' },
+  { value: 'MC', label: 'Monaco' },
+  { value: 'AD', label: 'Andorra' },
+  { value: 'AX', label: 'Aland Islands' },
+  { value: 'SJ', label: 'Svalbard and Jan Mayen' },
+  { value: 'FO', label: 'Faroe Islands' },
+  { value: 'IS', label: 'Iceland' },
+  { value: 'GL', label: 'Greenland' },
+  { value: 'BM', label: 'Bermuda' },
+  { value: 'KY', label: 'Cayman Islands' },
+  { value: 'TC', label: 'Turks and Caicos Islands' },
+  { value: 'BS', label: 'Bahamas' },
+  { value: 'AG', label: 'Antigua and Barbuda' },
+  { value: 'KN', label: 'Saint Kitts and Nevis' },
+  { value: 'TT', label: 'Trinidad and Tobago' },
+  { value: 'GD', label: 'Grenada' },
+  { value: 'BB', label: 'Barbados' },
+  { value: 'VC', label: 'Saint Vincent and the Grenadines' },
+  { value: 'LC', label: 'Saint Lucia' },
+  { value: 'DM', label: 'Dominica' },
+  { value: 'MQ', label: 'Martinique' },
+  { value: 'GP', label: 'Guadeloupe' },
+  { value: 'MF', label: 'Saint Martin' },
+  { value: 'BL', label: 'Saint Barthelemy' },
+  { value: 'SX', label: 'Sint Maarten' },
+  { value: 'CW', label: 'Curacao' },
+  { value: 'AW', label: 'Aruba' },
+  { value: 'AI', label: 'Anguilla' },
+  { value: 'VG', label: 'British Virgin Islands' },
+  { value: 'VI', label: 'U.S. Virgin Islands' },
+  { value: 'PR', label: 'Puerto Rico' },
+  { value: 'DO', label: 'Dominican Republic' },
+  { value: 'HT', label: 'Haiti' },
+  { value: 'JM', label: 'Jamaica' },
+  { value: 'CU', label: 'Cuba' },
+  { value: 'BZ', label: 'Belize' },
+  { value: 'GT', label: 'Guatemala' },
+  { value: 'SV', label: 'El Salvador' },
+  { value: 'HN', label: 'Honduras' },
+  { value: 'NI', label: 'Nicaragua' },
+  { value: 'PA', label: 'Panama' },
+  { value: 'CR', label: 'Costa Rica' },
+  { value: 'EC', label: 'Ecuador' },
+  { value: 'BO', label: 'Bolivia' },
+  { value: 'PY', label: 'Paraguay' },
+  { value: 'UY', label: 'Uruguay' },
+  { value: 'SR', label: 'Suriname' },
+  { value: 'GF', label: 'French Guiana' },
+  { value: 'FK', label: 'Falkland Islands' },
+  { value: 'GS', label: 'South Georgia and the South Sandwich Islands' },
+  { value: 'BV', label: 'Bouvet Island' },
+  { value: 'AQ', label: 'Antarctica' },
+  { value: 'HM', label: 'Heard Island and McDonald Islands' },
+  { value: 'TF', label: 'French Southern Territories' },
+  { value: 'IO', label: 'British Indian Ocean Territory' },
+  { value: 'TA', label: 'Tristan da Cunha' },
+  { value: 'AC', label: 'Ascension Island' },
+  { value: 'SH', label: 'Saint Helena' },
+  { value: 'YT', label: 'Mayotte' },
+  { value: 'RE', label: 'Reunion' },
+  { value: 'LS', label: 'Lesotho' },
+  { value: 'SZ', label: 'Eswatini' },
+  { value: 'MW', label: 'Malawi' },
+  { value: 'BI', label: 'Burundi' },
+  { value: 'RW', label: 'Rwanda' },
+  { value: 'CD', label: 'Democratic Republic of the Congo' },
+  { value: 'CG', label: 'Republic of the Congo' },
+  { value: 'GA', label: 'Gabon' },
+  { value: 'GQ', label: 'Equatorial Guinea' },
+  { value: 'ST', label: 'Sao Tome and Principe' },
+  { value: 'KM', label: 'Comoros' },
+  { value: 'ER', label: 'Eritrea' },
+  { value: 'LY', label: 'Libya' },
+  { value: 'MR', label: 'Mauritania' },
+  { value: 'GM', label: 'Gambia' },
+  { value: 'CV', label: 'Cape Verde' },
+  { value: 'GW', label: 'Guinea-Bissau' },
+  { value: 'BJ', label: 'Benin' },
+  { value: 'TG', label: 'Togo' },
+  { value: 'LR', label: 'Liberia' },
+  { value: 'SL', label: 'Sierra Leone' },
+  { value: 'GN', label: 'Guinea' },
+  { value: 'SN', label: 'Senegal' },
+  { value: 'CI', label: 'Ivory Coast' },
+  { value: 'BF', label: 'Burkina Faso' },
+  { value: 'ML', label: 'Mali' },
+  { value: 'NE', label: 'Niger' },
+  { value: 'TD', label: 'Chad' },
+  { value: 'CF', label: 'Central African Republic' },
+  { value: 'SS', label: 'South Sudan' },
+  { value: 'SD', label: 'Sudan' },
+  { value: 'SO', label: 'Somalia' },
+  { value: 'DJ', label: 'Djibouti' },
+  { value: 'SC', label: 'Seychelles' },
+  { value: 'MU', label: 'Mauritius' },
+  { value: 'MG', label: 'Madagascar' },
+  { value: 'AO', label: 'Angola' },
+  { value: 'MZ', label: 'Mozambique' },
+  { value: 'NA', label: 'Namibia' },
+  { value: 'BW', label: 'Botswana' },
+  { value: 'ZW', label: 'Zimbabwe' },
+  { value: 'ZM', label: 'Zambia' },
+  { value: 'TZ', label: 'Tanzania' },
+  { value: 'UG', label: 'Uganda' },
+  { value: 'ET', label: 'Ethiopia' },
+  { value: 'NG', label: 'Nigeria' },
+  { value: 'EG', label: 'Egypt' },
+  { value: 'ZA', label: 'South Africa' },
+  { value: 'VE', label: 'Venezuela' },
+  { value: 'PE', label: 'Peru' },
+  { value: 'CO', label: 'Colombia' },
+  { value: 'CL', label: 'Chile' },
+  { value: 'AR', label: 'Argentina' },
+  { value: 'ID', label: 'Indonesia' },
+  { value: 'VN', label: 'Vietnam' },
+  { value: 'PH', label: 'Philippines' },
+  { value: 'MY', label: 'Malaysia' },
+  { value: 'TH', label: 'Thailand' },
+  { value: 'AE', label: 'United Arab Emirates' },
+  { value: 'SA', label: 'Saudi Arabia' },
+  { value: 'TR', label: 'Turkey' },
+  { value: 'IL', label: 'Israel' },
+  { value: 'TW', label: 'Taiwan' },
+  { value: 'HK', label: 'Hong Kong' },
+  { value: 'SG', label: 'Singapore' },
+  { value: 'NZ', label: 'New Zealand' },
+  { value: 'IE', label: 'Ireland' },
+  { value: 'PT', label: 'Portugal' },
+  { value: 'BE', label: 'Belgium' },
+  { value: 'AT', label: 'Austria' },
+  { value: 'PL', label: 'Poland' },
+  { value: 'FI', label: 'Finland' },
+  { value: 'DK', label: 'Denmark' },
+  { value: 'NO', label: 'Norway' },
+  { value: 'CH', label: 'Switzerland' },
+  { value: 'SE', label: 'Sweden' },
+  { value: 'NL', label: 'Netherlands' },
+  { value: 'KR', label: 'South Korea' },
+  { value: 'RU', label: 'Russia' },
+  { value: 'BR', label: 'Brazil' },
+  { value: 'IN', label: 'India' },
+  { value: 'CN', label: 'China' },
+  { value: 'JP', label: 'Japan' },
+  { value: 'AU', label: 'Australia' },
+  { value: 'ES', label: 'Spain' },
+  { value: 'IT', label: 'Italy' },
+  { value: 'FR', label: 'France' },
+  { value: 'DE', label: 'Germany' },
+  { value: 'GB', label: 'United Kingdom' },
+  { value: 'MX', label: 'Mexico' },
+  { value: 'CA', label: 'Canada' },
+  { value: 'US', label: 'United States' }
 ];
 
 // Mock activity data
@@ -236,6 +764,25 @@ export default function AdminSettingsPage() {
   const [showTriggersDropdown, setShowTriggersDropdown] = useState(false);
   const [showOrganizations, setShowOrganizations] = useState(false);
   
+  // Company information state
+  const [companyName, setCompanyName] = useState('');
+  const [companyType, setCompanyType] = useState('');
+  const [showCompanyTypeDropdown, setShowCompanyTypeDropdown] = useState(false);
+  const [businessAddress, setBusinessAddress] = useState('');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
+  const [showStateDropdown, setShowStateDropdown] = useState(false);
+  const [stateSearchTerm, setStateSearchTerm] = useState('');
+  const [zipCode, setZipCode] = useState('');
+  const [country, setCountry] = useState('');
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  const [countrySearchTerm, setCountrySearchTerm] = useState('');
+  const [phone, setPhone] = useState('');
+  const [website, setWebsite] = useState('');
+  const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
+  const [showIndustriesDropdown, setShowIndustriesDropdown] = useState(false);
+  const [industrySearchTerm, setIndustrySearchTerm] = useState('');
+  
   // Billing state
   const [billingPeriod, setBillingPeriod] = useState('monthly');
   
@@ -331,6 +878,10 @@ export default function AdminSettingsPage() {
   const signingCertificateDropdownRef = useRef<HTMLDivElement>(null);
   const signatureSettingsDropdownRef = useRef<HTMLDivElement>(null);
   const tokenExpirationDropdownRef = useRef<HTMLDivElement>(null);
+  const companyTypeDropdownRef = useRef<HTMLDivElement>(null);
+  const stateDropdownRef = useRef<HTMLDivElement>(null);
+  const countryDropdownRef = useRef<HTMLDivElement>(null);
+  const industriesDropdownRef = useRef<HTMLDivElement>(null);
 
   const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -376,6 +927,26 @@ export default function AdminSettingsPage() {
       if (tokenExpirationDropdownRef.current && !tokenExpirationDropdownRef.current.contains(target)) {
         setShowTokenExpirationDropdown(false);
       }
+      
+      // Close company type dropdown if click is outside
+      if (companyTypeDropdownRef.current && !companyTypeDropdownRef.current.contains(target)) {
+        setShowCompanyTypeDropdown(false);
+      }
+      
+      // Close state dropdown if click is outside
+      if (stateDropdownRef.current && !stateDropdownRef.current.contains(target)) {
+        setShowStateDropdown(false);
+      }
+      
+      // Close country dropdown if click is outside
+      if (countryDropdownRef.current && !countryDropdownRef.current.contains(target)) {
+        setShowCountryDropdown(false);
+      }
+      
+      // Close industries dropdown if click is outside
+      if (industriesDropdownRef.current && !industriesDropdownRef.current.contains(target)) {
+        setShowIndustriesDropdown(false);
+      }
     }
 
     // Use both mousedown and click events for better coverage
@@ -399,6 +970,50 @@ export default function AdminSettingsPage() {
   const getSignatureSettingsDisplayText = () => {
     if (defaultSignatureSettings.length === 0) return 'Select signature settings';
     return defaultSignatureSettings.join(', ');
+  };
+
+  // Company information handlers
+  const handleIndustryToggle = (industryValue: string) => {
+    setSelectedIndustries(prev => {
+      if (prev.includes(industryValue)) {
+        return prev.filter(i => i !== industryValue);
+      }
+      return [...prev, industryValue];
+    });
+  };
+
+  const handleStateSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setStateSearchTerm(e.target.value);
+  };
+
+  const handleCountrySearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCountrySearchTerm(e.target.value);
+  };
+
+  const handleIndustrySearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setIndustrySearchTerm(e.target.value);
+  };
+
+  const scrollToSelectedState = () => {
+    if (showStateDropdown && state) {
+      setTimeout(() => {
+        const selectedElement = document.querySelector(`[data-state-value="${state}"]`);
+        if (selectedElement) {
+          selectedElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  };
+
+  const scrollToSelectedCountry = () => {
+    if (showCountryDropdown && country) {
+      setTimeout(() => {
+        const selectedElement = document.querySelector(`[data-country-value="${country}"]`);
+        if (selectedElement) {
+          selectedElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+      }, 100);
+    }
   };
 
   return (
@@ -1511,9 +2126,296 @@ export default function AdminSettingsPage() {
           )}
 
           {activeTab === 'company' && (
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm">
-              <h2 className="text-lg font-bold mb-4 text-black dark:text-white">Organizations</h2>
-              <p className="text-gray-600 dark:text-gray-400 text-xs mb-6">Create & manage organizations</p>
+            <>
+              {/* Company Information */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm mb-6">
+                <h2 className="text-xl font-bold mb-4 text-black dark:text-white">Company Information</h2>
+                <p className="text-gray-600 dark:text-gray-400 text-xs mb-6">Update your company details and contact information.</p>
+                <form className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                      <div>
+                    <label className="block text-xs font-medium text-black dark:text-white mb-1">Company Name</label>
+                    <input 
+                      type="text" 
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs" 
+                      placeholder="Enter company name..." 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-black dark:text-white mb-1">Company Type</label>
+                    <div className="relative w-full" ref={companyTypeDropdownRef}>
+                      <input
+                        type="text"
+                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs pr-10 cursor-pointer caret-transparent"
+                        placeholder="Select company type..."
+                        value={COMPANY_TYPES.find(t => t.value === companyType)?.label || ''}
+                        readOnly
+                        onClick={() => setShowCompanyTypeDropdown(!showCompanyTypeDropdown)}
+                      />
+                      <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      {showCompanyTypeDropdown && (
+                        <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                          {COMPANY_TYPES.map(type => (
+                            <button
+                              key={type.value}
+                              className={`w-full text-left px-3 py-2 text-xs font-medium ${companyType === type.value ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                              onClick={() => {
+                                setCompanyType(type.value);
+                                setShowCompanyTypeDropdown(false);
+                              }}
+                            >
+                              {type.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-black dark:text-white mb-1">Business Address</label>
+                    <input 
+                      type="text" 
+                      value={businessAddress}
+                      onChange={(e) => setBusinessAddress(e.target.value)}
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs" 
+                      placeholder="Enter business address..." 
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                      <label className="block text-xs font-medium text-black dark:text-white mb-1">City</label>
+                      <input 
+                        type="text" 
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs" 
+                        placeholder="Enter City..." 
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-black dark:text-white mb-1">State</label>
+                      <div className="relative w-full" ref={stateDropdownRef}>
+                        <input
+                          type="text"
+                          className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs pr-10 cursor-pointer caret-transparent"
+                          placeholder="Select State..."
+                          value={stateSearchTerm || US_STATES.find(s => s.value === state)?.label || ''}
+                          onChange={handleStateSearch}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Backspace' && !stateSearchTerm) {
+                              e.preventDefault();
+                              setState('');
+                            }
+                          }}
+                          onFocus={() => {
+                            if (!showStateDropdown) {
+                              setShowStateDropdown(true);
+                            }
+                          }}
+                        />
+                        <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        {showStateDropdown && (
+                          <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                            {US_STATES
+                              .filter(stateOption => 
+                                stateOption.label.toLowerCase().includes(stateSearchTerm.toLowerCase())
+                              )
+                              .map(stateOption => (
+                              <button
+                                key={stateOption.value}
+                                data-state-value={stateOption.value}
+                                className={`w-full text-left px-3 py-2 text-xs font-medium ${state === stateOption.value ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                                onClick={() => {
+                                  setState(stateOption.value);
+                                  setShowStateDropdown(false);
+                                  setStateSearchTerm('');
+                                }}
+                              >
+                                {stateOption.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-black dark:text-white mb-1">ZIP Code</label>
+                      <input 
+                        type="text" 
+                        value={zipCode}
+                        onChange={(e) => setZipCode(e.target.value)}
+                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs" 
+                        placeholder="Enter ZIP code..." 
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-xs font-medium text-black dark:text-white mb-1">Country</label>
+                      <div className="relative w-full" ref={countryDropdownRef}>
+                        <input
+                          type="text"
+                          className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs pr-10 cursor-pointer caret-transparent"
+                          placeholder="Select Country..."
+                          value={countrySearchTerm || COUNTRIES.find(c => c.value === country)?.label || ''}
+                          onChange={handleCountrySearch}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Backspace' && !countrySearchTerm) {
+                              e.preventDefault();
+                              setCountry('');
+                            }
+                          }}
+                          onFocus={() => {
+                            if (!showCountryDropdown) {
+                              setShowCountryDropdown(true);
+                            }
+                          }}
+                        />
+                        <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        {showCountryDropdown && (
+                          <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                            {COUNTRIES
+                              .filter(countryOption => 
+                                countryOption.label.toLowerCase().includes(countrySearchTerm.toLowerCase())
+                              )
+                              .map(countryOption => (
+                              <button
+                                key={countryOption.value}
+                                data-country-value={countryOption.value}
+                                className={`w-full text-left px-3 py-2 text-xs font-medium ${country === countryOption.value ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                                onClick={() => {
+                                  setCountry(countryOption.value);
+                                  setShowCountryDropdown(false);
+                                  setCountrySearchTerm('');
+                                }}
+                              >
+                                {countryOption.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-black dark:text-white mb-1">Phone</label>
+                      <input 
+                        type="tel" 
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs" 
+                        placeholder="Enter phone number..." 
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-black dark:text-white mb-1">Website</label>
+                    <input 
+                      type="url" 
+                      value={website}
+                      onChange={(e) => setWebsite(e.target.value)}
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs" 
+                      placeholder="Enter website..." 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-black dark:text-white mb-1">Industries</label>
+                    <div className="relative w-full" ref={industriesDropdownRef}>
+                      <div 
+                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-colors text-xs min-h-[40px] flex flex-wrap items-center gap-2 cursor-pointer"
+                        onClick={() => setShowIndustriesDropdown(!showIndustriesDropdown)}
+                      >
+                        <div className="flex flex-wrap gap-2 flex-1">
+                          {selectedIndustries.map(industryValue => {
+                            const industry = INDUSTRIES.find(i => i.value === industryValue);
+                            if (!industry) return null;
+                            const IconComponent = industry.icon;
+                            return (
+                              <span 
+                                key={industryValue}
+                                className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded border border-primary text-xs font-medium"
+                              >
+                                <IconComponent className="w-3 h-3" />
+                                {industry.label}
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleIndustryToggle(industryValue);
+                                  }}
+                                  className="ml-1 hover:text-primary-dark"
+                                >
+                                  ×
+                                </button>
+                              </span>
+                            );
+                          })}
+                          {selectedIndustries.length === 0 && (
+                            <span className="text-gray-400">Select industries...</span>
+                          )}
+                        </div>
+                        <HiChevronDown className="pointer-events-none w-4 h-4 text-gray-400" />
+                      </div>
+                      {showIndustriesDropdown && (
+                        <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                          <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700">
+                            <input
+                              type="text"
+                              placeholder="Search industries..."
+                              value={industrySearchTerm}
+                              onChange={handleIndustrySearch}
+                              className="w-full px-2 py-1 text-xs border border-gray-200 dark:border-gray-600 rounded bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
+                            />
+                          </div>
+                          {INDUSTRIES
+                            .filter(industry => 
+                              industry.label.toLowerCase().includes(industrySearchTerm.toLowerCase())
+                            )
+                            .map(industry => {
+                              const IconComponent = industry.icon;
+                              return (
+                                <button
+                                  type="button"
+                                  key={industry.value}
+                                  className={`w-full text-left px-3 py-2 text-xs font-medium flex items-center gap-2 ${selectedIndustries.includes(industry.value) ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                                  onClick={() => handleIndustryToggle(industry.value)}
+                                >
+                                  <div className="w-4 h-4 border border-gray-300 rounded flex items-center justify-center">
+                                    {selectedIndustries.includes(industry.value) && (
+                                      <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                                        <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                        </svg>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <IconComponent className="w-4 h-4" />
+                                  {industry.label}
+                                </button>
+                              );
+                            })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex justify-end mt-4 pt-2">
+                    <button 
+                      type="submit" 
+                      className="flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold mb-0"
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                    >
+                      Save
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Organizations */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm">
+                <h2 className="text-lg font-bold mb-4 text-black dark:text-white">Organizations</h2>
+                <p className="text-gray-600 dark:text-gray-400 text-xs mb-6">Create & manage organizations</p>
               {!showOrganizations && (
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -1627,6 +2529,7 @@ export default function AdminSettingsPage() {
                 </div>
               )}
             </div>
+          </>
           )}
 
           {activeTab !== 'profile' && activeTab !== 'api' && activeTab !== 'webhooks' && activeTab !== 'security' && activeTab !== 'billing' && activeTab !== 'company' && (

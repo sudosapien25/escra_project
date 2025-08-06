@@ -558,7 +558,7 @@ export default function OnboardingPage() {
                   name="companyName"
                   value={formData.companyName}
                   onChange={handleChange}
-                  placeholder="Enter your company name"
+                  placeholder="Enter company name..."
                   className={`py-0.5 text-sm bg-gray-50 border-gray-200 placeholder-gray-400 ${formErrors.companyName ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
                   required
                 />
@@ -571,7 +571,7 @@ export default function OnboardingPage() {
                     <input
                       type="text"
                       className={`w-full px-3 py-2 border-2 ${formErrors.companyType ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : 'border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary'} rounded-lg text-xs font-medium text-black transition-colors pr-10 bg-white`}
-                      placeholder="Select company type"
+                      placeholder="Select company type..."
                       value={COMPANY_TYPES.find(t => t.value === formData.companyType)?.label || ''}
                       readOnly
                       onClick={() => setShowCompanyTypeDropdown(true)}
@@ -605,7 +605,7 @@ export default function OnboardingPage() {
                   name="address"
                   value={formData.address}
                   onChange={handleChange}
-                  placeholder="Enter your business address"
+                  placeholder="Enter business address..."
                   className={`py-0.5 text-sm bg-gray-50 border-gray-200 placeholder-gray-400 ${formErrors.address ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
                   required
                 />
@@ -619,7 +619,7 @@ export default function OnboardingPage() {
                     name="city"
                     value={formData.city}
                     onChange={handleChange}
-                    placeholder="City"
+                    placeholder="Enter City..."
                     className={`py-0.5 text-sm bg-gray-50 border-gray-200 placeholder-gray-400 ${formErrors.city ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
                     required
                   />
@@ -631,7 +631,7 @@ export default function OnboardingPage() {
                     <input
                       type="text"
                       className={`w-full px-3 py-2 border-2 ${formErrors.state ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : 'border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary'} rounded-lg text-xs font-medium text-black transition-colors pr-10 bg-white`}
-                      placeholder="Select State"
+                      placeholder="Select State..."
                       value={stateSearchTerm || US_STATES.find(s => s.value === formData.state)?.label || ''}
                       onChange={handleStateSearch}
                       onKeyDown={(e) => {
@@ -683,7 +683,7 @@ export default function OnboardingPage() {
                     name="zipCode"
                     value={formData.zipCode}
                     onChange={handleChange}
-                    placeholder="Enter ZIP code"
+                    placeholder="Enter ZIP code..."
                     className={`py-0.5 text-sm bg-gray-50 border-gray-200 placeholder-gray-400 ${formErrors.zipCode ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
                     required
                   />
@@ -695,7 +695,7 @@ export default function OnboardingPage() {
                     <input
                       type="text"
                       className={`w-full px-3 py-2 border-2 ${formErrors.country ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : 'border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary'} rounded-lg text-xs font-medium text-black transition-colors pr-10 bg-white`}
-                      placeholder="Select Country"
+                      placeholder="Select Country..."
                       value={countrySearchTerm || COUNTRIES.find(c => c.value === formData.country)?.label || ''}
                       onChange={handleCountrySearch}
                       onKeyDown={(e) => {
@@ -740,14 +740,14 @@ export default function OnboardingPage() {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div>
+                                <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Phone Number</label>
                   <Input
                     type="tel"
                     name="phoneNumber"
                     value={formData.phoneNumber}
                     onChange={handleChange}
-                    placeholder="Enter your phone #"
+                    placeholder="Enter phone number..."
                     className={`py-0.5 text-sm bg-gray-50 border-gray-200 placeholder-gray-400 ${formErrors.phoneNumber ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
                     required
                   />
@@ -762,7 +762,7 @@ export default function OnboardingPage() {
                   name="website"
                   value={formData.website}
                   onChange={handleChange}
-                  placeholder="Enter your website"
+                  placeholder="Enter website..."
                   className={`py-0.5 text-sm bg-gray-50 border-gray-200 placeholder-gray-400 ${formErrors.website ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
                 />
                 {formErrors.website && <p className="text-xs text-red-600 mt-1">{formErrors.website}</p>}
@@ -833,15 +833,15 @@ export default function OnboardingPage() {
             <>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Address</label>
-                <Input
-                  type="text"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  placeholder="Enter your address"
-                  className={`py-0.5 text-sm bg-gray-50 border-gray-200 placeholder-gray-400 ${formErrors.address ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
-                  required
-                />
+                                  <Input
+                    type="text"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    placeholder="Enter address..."
+                    className={`py-0.5 text-sm bg-gray-50 border-gray-200 placeholder-gray-400 ${formErrors.address ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
+                    required
+                  />
                 {formErrors.address && <p className="text-xs text-red-600 mt-1">{formErrors.address}</p>}
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -852,7 +852,7 @@ export default function OnboardingPage() {
                     name="city"
                     value={formData.city}
                     onChange={handleChange}
-                    placeholder="City"
+                    placeholder="Enter City..."
                     className={`py-0.5 text-sm bg-gray-50 border-gray-200 placeholder-gray-400 ${formErrors.city ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
                     required
                   />
@@ -864,7 +864,7 @@ export default function OnboardingPage() {
                     <input
                       type="text"
                       className={`w-full px-3 py-2 border-2 ${formErrors.state ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : 'border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary'} rounded-lg text-xs font-medium text-black transition-colors pr-10 bg-white`}
-                      placeholder="Select State"
+                      placeholder="Select State..."
                       value={stateSearchTerm || US_STATES.find(s => s.value === formData.state)?.label || ''}
                       onChange={handleStateSearch}
                       onKeyDown={(e) => {
@@ -916,7 +916,7 @@ export default function OnboardingPage() {
                     name="zipCode"
                     value={formData.zipCode}
                     onChange={handleChange}
-                    placeholder="Enter ZIP code"
+                    placeholder="Enter ZIP code..."
                     className={`py-0.5 text-sm bg-gray-50 border-gray-200 placeholder-gray-400 ${formErrors.zipCode ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
                     required
                   />
@@ -928,7 +928,7 @@ export default function OnboardingPage() {
                     <input
                       type="text"
                       className={`w-full px-3 py-2 border-2 ${formErrors.country ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : 'border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary'} rounded-lg text-xs font-medium text-black transition-colors pr-10 bg-white`}
-                      placeholder="Select country"
+                      placeholder="Select Country..."
                       value={countrySearchTerm || COUNTRIES.find(c => c.value === formData.country)?.label || ''}
                       onChange={handleCountrySearch}
                       onKeyDown={(e) => {
@@ -980,7 +980,7 @@ export default function OnboardingPage() {
                     name="phoneNumber"
                     value={formData.phoneNumber}
                     onChange={handleChange}
-                    placeholder="Enter your phone #"
+                    placeholder="Enter phone number..."
                     className={`py-0.5 text-sm bg-gray-50 border-gray-200 placeholder-gray-400 ${formErrors.phoneNumber ? 'border-red-300 focus:border-red-300 focus:ring-red-300' : ''}`}
                     required
                   />

@@ -95,7 +95,7 @@ function NotificationPageContent() {
               <div className="flex items-center gap-2">
                 <span className="font-semibold text-gray-900 dark:text-white text-sm">{n.title}</span>
                 {!n.read && (
-                  <span className="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-primary text-white">Unread</span>
+                  <span className="ml-2 px-2 py-0.5 text-xs font-semibold rounded bg-primary text-white border border-primary">Unread</span>
                 )}
               </div>
               <div className="text-gray-600 dark:text-gray-400 text-xs mt-1 mb-2">{n.message}</div>

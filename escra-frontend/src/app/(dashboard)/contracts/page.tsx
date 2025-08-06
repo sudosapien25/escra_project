@@ -3519,7 +3519,7 @@ const ContractsPage: React.FC = () => {
                       value={modalForm.city}
                       onChange={handleModalChange}
                       className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
-                      placeholder="Enter city..."
+                      placeholder="Enter City..."
                     />
                   </div>
                   <div>
@@ -3591,7 +3591,7 @@ const ContractsPage: React.FC = () => {
                       value={modalForm.zipCode}
                       onChange={handleModalChange}
                       className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
-                      placeholder="Enter zip code..."
+                      placeholder="Enter ZIP code..."
                     />
                   </div>
                   <div>
