@@ -3,15 +3,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FaUser } from 'react-icons/fa';
 import { TbCameraCog, TbActivity, TbBuildingEstate, TbShoppingBagEdit, TbWorld } from 'react-icons/tb';
-import { HiChevronDown, HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight, HiOutlineKey } from 'react-icons/hi';
-import { MdOutlineGeneratingTokens, MdWebhook, MdOutlineSportsFootball, MdOutlineMovieFilter, MdOutlineHealthAndSafety } from 'react-icons/md';
+import { HiChevronDown, HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight, HiOutlineKey, HiOutlineDuplicate, HiStatusOffline } from 'react-icons/hi';
+import { MdOutlineGeneratingTokens, MdWebhook, MdOutlineSportsFootball, MdOutlineMovieFilter, MdOutlineHealthAndSafety, MdCancelPresentation } from 'react-icons/md';
 import { HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
-import { PiEjectBold, PiPowerBold, PiLockKeyBold } from 'react-icons/pi';
+import { PiEjectBold, PiPowerBold, PiLockKeyBold, PiWalletBold, PiMinusSquareBold } from 'react-icons/pi';
 import { LuConstruction, LuBriefcaseBusiness } from 'react-icons/lu';
 import { GrMoney, GrUserWorker } from 'react-icons/gr';
 import { VscLaw } from 'react-icons/vsc';
 import { LiaToolsSolid } from 'react-icons/lia';
 import { HiOutlineChip } from 'react-icons/hi';
+import { CgAddR, CgRemoveR } from 'react-icons/cg';
+import { HiOutlineQrcode } from 'react-icons/hi';
 import { IconType } from 'react-icons';
 
 const TABS = [
@@ -764,6 +766,21 @@ export default function AdminSettingsPage() {
   const [showTriggersDropdown, setShowTriggersDropdown] = useState(false);
   const [showOrganizations, setShowOrganizations] = useState(false);
   
+  // User ID and wallet state
+  const [userId, setUserId] = useState('1234567890');
+  const [copiedUserId, setCopiedUserId] = useState<string | null>(null);
+  const [hoveredUserId, setHoveredUserId] = useState<string | null>(null);
+                  const [connectedWallets, setConnectedWallets] = useState([
+                  { id: '0', provider: 'Escra', name: 'Escra Default Wallet', address: 'ESCR1234567890ABCDEFGHIJKLMNOP', connected: true },
+                  { id: '1', provider: 'Pera Wallet', name: 'Mobile Wallet', address: 'ABCD1234EFGH5678IJKL9012MNOP3456', connected: false },
+                  { id: '2', provider: 'MyAlgo Wallet', name: 'Backup Wallet', address: 'QRST7890UVWX1234YZAB5678CDEF9012', connected: false }
+                ]);
+  const [showWallets, setShowWallets] = useState(false);
+  const [showAddWalletModal, setShowAddWalletModal] = useState(false);
+  const [selectedWalletProvider, setSelectedWalletProvider] = useState('');
+  const [showWalletProviderDropdown, setShowWalletProviderDropdown] = useState(false);
+  const [walletName, setWalletName] = useState('');
+  
   // Company information state
   const [companyName, setCompanyName] = useState('');
   const [companyType, setCompanyType] = useState('');
@@ -882,6 +899,7 @@ export default function AdminSettingsPage() {
   const stateDropdownRef = useRef<HTMLDivElement>(null);
   const countryDropdownRef = useRef<HTMLDivElement>(null);
   const industriesDropdownRef = useRef<HTMLDivElement>(null);
+  const walletProviderDropdownRef = useRef<HTMLDivElement>(null);
 
   const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -946,6 +964,11 @@ export default function AdminSettingsPage() {
       // Close industries dropdown if click is outside
       if (industriesDropdownRef.current && !industriesDropdownRef.current.contains(target)) {
         setShowIndustriesDropdown(false);
+      }
+      
+      // Close wallet provider dropdown if click is outside
+      if (walletProviderDropdownRef.current && !walletProviderDropdownRef.current.contains(target)) {
+        setShowWalletProviderDropdown(false);
       }
     }
 
@@ -1016,6 +1039,30 @@ export default function AdminSettingsPage() {
     }
   };
 
+  // Helper function to generate user hash
+  const getUserHash = (id: string) => {
+    // Generate 10-digit Algorand-style hash from string ID
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) {
+      const char = id.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    // Ensure 10 digits by padding with zeros if needed
+    const hashStr = Math.abs(hash).toString();
+    return hashStr.padStart(10, '0').slice(0, 10);
+  };
+
+  // Helper function to get wallet status badge styling (matching signatures table)
+  const getWalletStatusBadgeStyle = (wallet: any) => {
+    if (wallet.connected) {
+      // All connected wallets use the same green color scheme as signatures "Completed" status
+      return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border border-green-800 dark:border-green-800';
+    } else {
+      return 'bg-gray-100 dark:bg-gray-700/30 text-gray-800 dark:text-gray-400 border border-gray-800 dark:border-gray-500';
+    }
+  };
+
   return (
     <div className="flex h-screen">
       {/* Hidden file input for avatar upload */}
@@ -1078,16 +1125,55 @@ export default function AdminSettingsPage() {
             <h1 className="text-[30px] font-bold text-black dark:text-white mb-1">Admin Settings</h1>
             <p className="text-gray-500 dark:text-gray-400 text-[16px] mt-0">Manage your account & system preferences</p>
           </div>
+          {/* Divider Line */}
+          <hr className="my-3 sm:my-6 border-gray-300 cursor-default select-none" />
           {/* Tab Content */}
           {activeTab === 'profile' && (
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm">
               <h2 className="text-xl font-bold mb-4 text-black dark:text-white">Profile Information</h2>
               <p className="text-gray-600 dark:text-gray-400 text-xs mb-6">Update your personal details and contact information.</p>
               <form className="space-y-4">
+                {/* User ID Field */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">User ID</div>
+                    <div className="flex items-center">
+                      <span className="text-xs font-mono text-gray-900 dark:text-white truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-default select-none">
+                        {getUserHash(userId)}
+                      </span>
+                      <div className="relative">
+                        <button
+                          type="button"
+                          className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer relative group"
+                          onClick={() => {
+                            navigator.clipboard.writeText(getUserHash(userId));
+                            setCopiedUserId(userId);
+                            setTimeout(() => setCopiedUserId(null), 1500);
+                          }}
+                          aria-label="Copy user ID"
+                        >
+                          <HiOutlineDuplicate className="w-4 h-4" />
+                          {copiedUserId === userId ? (
+                            <span className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none">
+                              Copied!
+                            </span>
+                          ) : (
+                            <span className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                              Copy
+                            </span>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    {/* Empty right column for User ID row */}
+                  </div>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-xs font-medium text-black dark:text-white mb-1">First Name</label>
-                    <input type="text" className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs" placeholder="Enter your name..." />
+                    <input type="text" className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs" placeholder="Enter first name..." />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-black dark:text-white mb-1">Last Name</label>
@@ -1097,11 +1183,11 @@ export default function AdminSettingsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-xs font-medium text-black dark:text-white mb-1">Email Address</label>
-                                          <input type="email" className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs" placeholder="Enter your email address..." />
+                                          <input type="email" className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs" placeholder="Enter email address..." />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-black dark:text-white mb-1">Phone Number</label>
-                                          <input type="text" className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs" placeholder="Enter your phone number..." />
+                                          <input type="text" className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs" placeholder="Enter phone number..." />
                   </div>
                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1137,7 +1223,7 @@ export default function AdminSettingsPage() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-black dark:text-white mb-1">Job Title</label>
-                    <input type="text" className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs" placeholder="Enter your job title..." />
+                    <input type="text" className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs" placeholder="Enter job title..." />
                   </div>
                 </div>
                 <div className="flex justify-end mt-4 pt-2">
@@ -1588,8 +1674,8 @@ export default function AdminSettingsPage() {
                             <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white">{session.created}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white">
                               <div className="pl-2">
-                                <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group">
-                                  <PiEjectBold className="h-4 w-4 transition-colors" />
+                                <button className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group flex items-center justify-center">
+                                  <PiEjectBold className="text-sm sm:text-base transition-colors" />
                                   <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                     Revoke
                                   </span>
@@ -1636,6 +1722,158 @@ export default function AdminSettingsPage() {
                             <HiOutlineChevronDoubleRight className="w-3 h-3" />
                           </button>
                         </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Wallets Box */}
+          {activeTab === 'profile' && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm">
+              <h2 className="text-lg font-bold mb-4 text-black dark:text-white">Wallets</h2>
+              <p className="text-gray-600 dark:text-gray-400 text-xs mb-6">Manage your connected wallets</p>
+              {!showWallets && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center border-2 border-gray-200 dark:border-gray-600">
+                      <PiWalletBold size={20} className="text-gray-600 dark:text-gray-400" />
+                    </div>
+                                            <div>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">{connectedWallets.length} wallets configured</p>
+                          {connectedWallets.find(wallet => wallet.connected) && (
+                            <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary cursor-default select-none">
+                              {connectedWallets.find(wallet => wallet.connected)?.name}
+                            </span>
+                          )}
+                        </div>
+                  </div>
+                  <button 
+                    onClick={() => setShowWallets(!showWallets)}
+                    className="flex items-center gap-2 px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer" style={{ fontFamily: 'Avenir, sans-serif' }}
+                  >
+                    Manage Wallets
+                  </button>
+                </div>
+              )}
+              
+              {showWallets && (
+                <div className="flex justify-end mb-4">
+                  <div className="flex flex-col gap-2">
+                    <button 
+                      onClick={() => setShowWallets(!showWallets)}
+                      className="flex items-center gap-2 px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                    >
+                      Hide Wallets
+                    </button>
+                    <button 
+                      onClick={() => setShowAddWalletModal(true)}
+                      className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                    >
+                      Add Wallet
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              {showWallets && (
+                <div className="mt-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                  <div className="overflow-x-auto overflow-y-auto pr-2 h-80 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700">
+                    <table className="w-full">
+                                                    <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700">
+                                <tr>
+                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Provider</th>
+                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
+                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Address</th>
+                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider pl-14">Status</th>
+                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                                </tr>
+                              </thead>
+                      <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        {connectedWallets.map((wallet) => (
+                          <tr key={wallet.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white">
+                              <div className="flex items-center gap-2">
+                                <PiWalletBold className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                                <span>{wallet.provider}</span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white">
+                              {wallet.name}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white font-mono">
+                              <div className="flex items-center">
+                                <span className="text-xs font-mono text-gray-900 dark:text-white truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-default select-none">
+                                  {wallet.address.slice(0, 8)}...{wallet.address.slice(-8)}
+                                </span>
+                                <div className="relative">
+                                  <button
+                                    type="button"
+                                    className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer relative group"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(wallet.address);
+                                      setCopiedUserId(wallet.id);
+                                      setTimeout(() => setCopiedUserId(null), 1500);
+                                    }}
+                                    aria-label="Copy wallet address"
+                                  >
+                                    <HiOutlineDuplicate className="w-4 h-4" />
+                                    {copiedUserId === wallet.id ? (
+                                      <span className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none font-sans">
+                                        Copied!
+                                      </span>
+                                    ) : (
+                                      <span className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap font-sans">
+                                        Copy
+                                      </span>
+                                    )}
+                                  </button>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white">
+                              <span className={`inline-flex items-center justify-center w-28 h-7 px-2 font-semibold rounded-full border ${getWalletStatusBadgeStyle(wallet)}`}>
+                                {wallet.connected ? 'Connected' : 'Disconnected'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white">
+                              <div className="flex items-center space-x-1">
+                                {wallet.connected ? (
+                                  <button className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-orange-500 hover:text-orange-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-orange-500 dark:hover:text-orange-500 relative group flex items-center justify-center">
+                                    <HiStatusOffline className="text-sm sm:text-base transition-colors" />
+                                    <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                      Disconnect
+                                    </span>
+                                  </button>
+                                ) : (
+                                  <button className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-green-500 hover:text-green-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-green-500 dark:hover:text-green-500 relative group flex items-center justify-center">
+                                    <PiPowerBold className="text-sm sm:text-base transition-colors" />
+                                    <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                      Connect
+                                    </span>
+                                  </button>
+                                )}
+                                <button className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group flex items-center justify-center">
+                                  <PiMinusSquareBold className="text-sm sm:text-base transition-colors" />
+                                  <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                    Remove
+                                  </span>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="bg-gray-50 dark:bg-gray-700 px-6 py-3 border-t border-gray-200 dark:border-gray-600">
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs text-gray-700 dark:text-gray-300">
+                        Showing {connectedWallets.length} wallets.
                       </div>
                     </div>
                   </div>
@@ -2957,6 +3195,113 @@ export default function AdminSettingsPage() {
                 style={{ fontFamily: 'Avenir, sans-serif' }}
               >
                 Create
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Wallet Modal */}
+      {showAddWalletModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 cursor-default select-none">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 cursor-default select-none">
+            <div className="flex justify-between items-center mb-4 cursor-default select-none">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white cursor-default select-none">Add Wallet</h2>
+              <button
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
+                onClick={() => setShowAddWalletModal(false)}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="mb-6 cursor-default select-none">
+              <div className="text-center mb-6 cursor-default select-none">
+                <div className="bg-gray-100 dark:bg-gray-700 rounded-xl p-8 mb-4 cursor-default select-none">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 cursor-default select-none">
+                    <HiOutlineQrcode className="w-32 h-32 mx-auto text-gray-400 dark:text-gray-500 mb-4" />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 cursor-default select-none">
+                      QR code will be generated here
+                    </p>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-600 dark:text-gray-400 cursor-default select-none">
+                  Scan this QR code with your mobile wallet to connect it to your account
+                </p>
+              </div>
+              
+              <div className="mb-6 cursor-default select-none">
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">
+                  Wallet Name
+                </label>
+                <input
+                  type="text"
+                  value={walletName}
+                  onChange={(e) => setWalletName(e.target.value)}
+                  className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                  placeholder="Enter wallet name..."
+                />
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 italic cursor-default select-none">
+                  Give your wallet a meaningful name to help you identify it later
+                </p>
+              </div>
+              
+              <div className="mb-6 cursor-default select-none">
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">
+                  Provider
+                </label>
+                <div className="relative" ref={walletProviderDropdownRef}>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs pr-10 cursor-pointer caret-transparent"
+                    placeholder="Select wallet provider..."
+                    value={selectedWalletProvider}
+                    readOnly
+                    onClick={() => setShowWalletProviderDropdown(!showWalletProviderDropdown)}
+                  />
+                  <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  {showWalletProviderDropdown && (
+                    <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                      {['Pera Wallet', 'MyAlgo', 'AlgoSigner', 'WalletConnect'].map(provider => (
+                        <button
+                          key={provider}
+                          className={`w-full text-left px-3 py-2 text-xs font-medium ${selectedWalletProvider === provider ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                          onClick={() => {
+                            setSelectedWalletProvider(provider);
+                            setShowWalletProviderDropdown(false);
+                          }}
+                        >
+                          {provider}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 italic cursor-default select-none">
+                  Select your preferred wallet provider to generate the appropriate QR code
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex justify-end cursor-default select-none">
+              <button
+                onClick={() => setShowAddWalletModal(false)}
+                className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
+                style={{ fontFamily: 'Avenir, sans-serif' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  // Handle add wallet logic here
+                  setShowAddWalletModal(false);
+                }}
+                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold ml-1"
+                style={{ fontFamily: 'Avenir, sans-serif' }}
+              >
+                Add Wallet
               </button>
             </div>
           </div>
