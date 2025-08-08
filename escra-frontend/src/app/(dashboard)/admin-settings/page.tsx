@@ -1079,7 +1079,7 @@ export default function AdminSettingsPage() {
         <div>
           {/* Page Title and Subtitle */}
           <div className="mb-3 sm:mb-6">
-            <h1 className="text-[30px] font-bold text-black dark:text-white mb-1">Admin Settings</h1>
+            <h1 className="text-[30px] font-bold text-black dark:text-white mb-1">Settings</h1>
             <p className="text-gray-500 dark:text-gray-400 text-[16px] mt-0">Manage your account & system preferences</p>
           </div>
           {/* Divider Line */}
@@ -1105,16 +1105,14 @@ export default function AdminSettingsPage() {
             ))}
           </div>
           
-          <hr className="my-3 sm:my-6 border-gray-300 cursor-default select-none" />
-          
           {/* Scrollable Content Area */}
           <div className="overflow-y-auto max-h-[calc(100vh-300px)] [&::-webkit-scrollbar]:hidden">
             {activeTab === 'profile' && (
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm">
               <div className="flex justify-between items-start">
                 <div>
-                  <h2 className="text-xl font-bold text-black dark:text-white">Profile Information</h2>
-                  <p className="text-gray-600 dark:text-gray-400 text-xs mt-1 mb-1">Update your personal details and contact information.</p>
+                  <h2 className="text-xl font-bold mb-4 text-black dark:text-white">Profile Information</h2>
+                  <p className="text-gray-600 dark:text-gray-400 text-xs mb-6">Update your personal details and contact information.</p>
                 </div>
                 <div className="relative w-28 h-28">
                   <div className="w-28 h-28 rounded-lg bg-gray-200 dark:bg-gray-600 flex items-center justify-center overflow-hidden">
@@ -1555,44 +1553,6 @@ export default function AdminSettingsPage() {
                         ))}
                       </tbody>
                     </table>
-                  </div>
-                  <div className="bg-gray-50 dark:bg-gray-700 px-6 py-3 border-t border-gray-200 dark:border-gray-600">
-                    <div className="flex items-center justify-between">
-                      <div className="text-xs text-gray-700 dark:text-gray-300">
-                        Showing {recentActivityData.length} results.
-                      </div>
-                      <div className="flex items-center space-x-4">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-xs text-gray-700 dark:text-gray-300">Rows per page</span>
-                          <div className="relative">
-                            <select className="text-xs border border-gray-300 dark:border-gray-600 rounded px-2 py-1 pr-6 bg-white dark:bg-gray-800 text-gray-900 dark:text-white appearance-none">
-                              <option>10</option>
-                              <option>20</option>
-                            </select>
-                            <div className="absolute inset-y-0 right-1 flex items-center pointer-events-none">
-                              <HiChevronDown className="w-3 h-3 text-gray-400" />
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-xs text-gray-700 dark:text-gray-300">
-                          Page 1 of 1
-                        </div>
-                        <div className="flex space-x-1">
-                          <button className="p-1 text-gray-400 cursor-not-allowed">
-                            <HiOutlineChevronDoubleLeft className="w-3 h-3" />
-                          </button>
-                          <button className="p-1 text-gray-400 cursor-not-allowed">
-                            <HiOutlineChevronDoubleLeft className="w-3 h-3 rotate-180" />
-                          </button>
-                          <button className="p-1 text-gray-400 cursor-not-allowed">
-                            <HiOutlineChevronDoubleRight className="w-3 h-3 rotate-180" />
-                          </button>
-                          <button className="p-1 text-gray-400 cursor-not-allowed">
-                            <HiOutlineChevronDoubleRight className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 </div>
               )}

@@ -79,6 +79,60 @@ input:focus, select:focus, textarea:focus {
   box-shadow: none !important;
 }
 
+/* Fix autofill styles for dark mode */
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark input:-webkit-autofill:active,
+.dark input:-webkit-autofill::first-line {
+  -webkit-box-shadow: 0 0 0 30px rgb(17 24 39) inset !important;
+  -webkit-text-fill-color: rgb(243 244 246) !important;
+  font-family: 'Avenir', 'Avenir Next', 'Helvetica Neue', sans-serif !important;
+  font-size: 0.75rem !important;
+  font-weight: normal !important;
+  line-height: 1.5 !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Light mode autofill styles */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+input:-webkit-autofill::first-line {
+  -webkit-box-shadow: 0 0 0 30px rgb(255 255 255) inset !important;
+  -webkit-text-fill-color: rgb(17 24 39) !important;
+  font-family: 'Avenir', 'Avenir Next', 'Helvetica Neue', sans-serif !important;
+  font-size: 0.75rem !important;
+  font-weight: normal !important;
+  line-height: 1.5 !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Additional autofill selectors for better browser compatibility */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-appearance: none !important;
+  -webkit-text-fill-color: inherit !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+}
+
+/* Force autofill font styling with animation */
+@keyframes autofill {
+  to {
+    color: inherit;
+    background: transparent;
+  }
+}
+
+input:-webkit-autofill {
+  animation-name: autofill;
+  animation-fill-mode: both;
+}
+
 .contract-autocomplete-input::placeholder {
   color: #000 !important;
   opacity: 1;
