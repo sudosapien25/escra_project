@@ -402,7 +402,6 @@ export default function GlobalNavigation() {
               </div>
             )}
           </div>
-          <Link href="/pricing" className="text-gray-600 hover:text-black transition-colors text-sm font-bold">Pricing</Link>
           <div 
             className="relative flex items-center"
             onMouseEnter={() => setShowCompanyDropdown(true)}
@@ -503,6 +502,7 @@ export default function GlobalNavigation() {
               </div>
             )}
           </div>
+          <Link href="/pricing" className="text-gray-600 hover:text-black transition-colors text-sm font-bold">Pricing</Link>
         </div>
         
         <div className="flex items-center space-x-1">
