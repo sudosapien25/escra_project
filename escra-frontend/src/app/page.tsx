@@ -6,6 +6,7 @@ import DecryptedText from '@/components/DecryptedText';
 import { HiMiniChevronRight } from 'react-icons/hi2';
 import { HiOutlineDuplicate } from 'react-icons/hi';
 import VantaBackground from '@/components/VantaBackground';
+import GlobalNavigation from '@/components/layout/GlobalNavigation';
 
 // Vanta.js configuration (preserved for future use):
 // {
@@ -27,37 +28,7 @@ export default function LandingPage() {
   return (
     <>
       <VantaBackground />
-      <nav className="container mx-auto px-6 py-6">
-        <div className="flex items-center justify-between">
-          <div className="text-xl font-medium tracking-tight">
-            <Link href="/" key={Date.now()}>
-              <Image
-                src="/primary escra (color) copy.png"
-                alt="ESCRA Logo"
-                width={160}
-                height={53}
-                className="h-10 w-auto"
-              />
-            </Link>
-          </div>
-          
-          <div className="hidden md:flex items-center space-x-8">
-            <a href="#" className="text-gray-600 hover:text-black transition-colors text-sm">Platform</a>
-            <a href="#" className="text-gray-600 hover:text-black transition-colors text-sm">Solutions</a>
-            <a href="#" className="text-gray-600 hover:text-black transition-colors text-sm">Resources</a>
-            <Link href="/pricing" className="text-gray-600 hover:text-black transition-colors text-sm">Pricing</Link>
-          </div>
-          
-          <div className="flex items-center space-x-1">
-            <Link href="/login?tab=register" className="px-4 py-2 text-sm bg-black text-white font-medium rounded-lg hover:bg-primary hover:italic transition-all">
-              Sign up
-            </Link>
-            <Link href="/login" className="px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-primary hover:text-white hover:italic transition-all font-medium">
-              Sign in
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <GlobalNavigation />
 
       <div className="container mx-auto px-6 pt-16 pb-24 md:pt-28 md:pb-40">
         <div className="flex flex-col items-center justify-center">
