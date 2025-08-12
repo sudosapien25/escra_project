@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbContract, TbRouteSquare, TbUsersGroup, TbMessageQuestion, TbBrandDiscord, TbBrandYoutube, TbInfoSquare } from 'react-icons/tb';
+import { HiOutlineDuplicate } from 'react-icons/hi';
 import { MdOutlineSportsFootball, MdOutlineMovieFilter, MdOutlineHealthAndSafety, MdOutlineGeneratingTokens } from 'react-icons/md';
 import { LuConstruction, LuBriefcaseBusiness, LuClipboardCheck, LuBrainCircuit, LuCircuitBoard, LuListEnd, LuVideo, LuBookOpenText, LuNewspaper, LuLinkedin, LuMic, LuContact, LuBuilding2 } from 'react-icons/lu';
 import { GrMoney, GrUserWorker, GrStatusInfo } from 'react-icons/gr';
@@ -44,6 +45,19 @@ export default function GlobalNavigation() {
   const [showResourcesDropdown, setShowResourcesDropdown] = useState(false);
   const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
   const [showSocialMedia, setShowSocialMedia] = useState(false);
+  const [showContactEmail, setShowContactEmail] = useState(false);
+  const [copiedEmail, setCopiedEmail] = useState(false);
+  const [hoveredEmail, setHoveredEmail] = useState(false);
+
+  const copyEmailToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText('info@escra.io');
+      setCopiedEmail(true);
+      setTimeout(() => setCopiedEmail(false), 1500);
+    } catch (err) {
+      console.error('Failed to copy email: ', err);
+    }
+  };
 
   return (
     <nav className="container mx-auto px-6 py-8">
@@ -66,7 +80,7 @@ export default function GlobalNavigation() {
             onMouseEnter={() => setShowPlatformDropdown(true)}
             onMouseLeave={() => setShowPlatformDropdown(false)}
           >
-            <a href="#" className="text-gray-600 hover:text-black transition-colors text-sm cursor-pointer">
+            <a href="#" className="text-gray-600 hover:text-black transition-colors text-sm cursor-pointer font-bold">
               Platform
             </a>
             {showPlatformDropdown && (
@@ -88,7 +102,7 @@ export default function GlobalNavigation() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="text-xs font-medium text-gray-900 group-hover:text-primary">Unified Contract Management</div>
-                            <div className="text-xs text-gray-500 mt-1 leading-relaxed">Centralized creation, preparation & lifecycle management</div>
+                            <div className="text-xs text-gray-500 mt-1 leading-relaxed">Streamlined creation, preparation & lifecycle management</div>
                           </div>
                         </a>
                         <a href="#" className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors group" style={{ minHeight: '60px' }}>
@@ -97,7 +111,7 @@ export default function GlobalNavigation() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="text-xs font-medium text-gray-900 group-hover:text-primary">Blockchain Contract Execution</div>
-                            <div className="text-xs text-gray-500 mt-1 leading-relaxed">Secure smart contract automation</div>
+                            <div className="text-xs text-gray-500 mt-1 leading-relaxed">Secure smart contract automation & digital records</div>
                           </div>
                         </a>
                         <a href="#" className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors group" style={{ minHeight: '60px' }}>
@@ -182,7 +196,7 @@ export default function GlobalNavigation() {
             onMouseEnter={() => setShowIndustriesDropdown(true)}
             onMouseLeave={() => setShowIndustriesDropdown(false)}
           >
-            <a href="#" className="text-gray-600 hover:text-black transition-colors text-sm cursor-pointer">
+            <a href="#" className="text-gray-600 hover:text-black transition-colors text-sm cursor-pointer font-bold">
               Solutions
             </a>
             {showIndustriesDropdown && (
@@ -193,7 +207,7 @@ export default function GlobalNavigation() {
               >
                 <div className="bg-white rounded-xl shadow-lg border border-gray-200 py-6">
                 <div className="container mx-auto px-6">
-                  <div className="grid grid-cols-3 gap-6">
+                  <div className="grid grid-cols-[0.5fr_0.6fr_0.4fr] gap-6">
                     {/* Column 1 */}
                     <div className="border-r border-gray-200 pr-6">
                       <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Key Sectors</h3>
@@ -281,7 +295,7 @@ export default function GlobalNavigation() {
             onMouseEnter={() => setShowResourcesDropdown(true)}
             onMouseLeave={() => setShowResourcesDropdown(false)}
           >
-            <a href="#" className="text-gray-600 hover:text-black transition-colors text-sm cursor-pointer">
+            <a href="#" className="text-gray-600 hover:text-black transition-colors text-sm cursor-pointer font-bold">
               Resources
             </a>
             {showResourcesDropdown && (
@@ -292,7 +306,7 @@ export default function GlobalNavigation() {
               >
                 <div className="bg-white rounded-xl shadow-lg border border-gray-200 py-6">
                   <div className="container mx-auto px-6">
-                    <div className="grid grid-cols-2 gap-6">
+                    <div className="grid grid-cols-[1fr_0.7fr] gap-6">
                       {/* Column 1 */}
                       <div className="border-r border-gray-200 pr-6">
                         <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Explore</h3>
@@ -388,13 +402,13 @@ export default function GlobalNavigation() {
               </div>
             )}
           </div>
-          <Link href="/pricing" className="text-gray-600 hover:text-black transition-colors text-sm">Pricing</Link>
+          <Link href="/pricing" className="text-gray-600 hover:text-black transition-colors text-sm font-bold">Pricing</Link>
           <div 
             className="relative flex items-center"
             onMouseEnter={() => setShowCompanyDropdown(true)}
             onMouseLeave={() => setShowCompanyDropdown(false)}
           >
-            <a href="#" className="text-gray-600 hover:text-black transition-colors text-sm cursor-pointer">
+            <a href="#" className="text-gray-600 hover:text-black transition-colors text-sm cursor-pointer font-bold">
               Company
             </a>
             {showCompanyDropdown && (
@@ -405,7 +419,7 @@ export default function GlobalNavigation() {
               >
                 <div className="bg-white rounded-xl shadow-lg border border-gray-200 py-6">
                   <div className="container mx-auto px-6">
-                    <div className="grid grid-cols-2 gap-6">
+                    <div className="grid grid-cols-[1fr_0.6fr] gap-6">
                       {/* Column 1 */}
                       <div className="border-r border-gray-200 pr-6">
                         <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">About</h3>
@@ -434,7 +448,15 @@ export default function GlobalNavigation() {
                       {/* Column 2 */}
                       <div>
                         <div className="space-y-4" style={{ marginTop: '2rem' }}>
-                          <a href="#" className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors group" style={{ minHeight: '60px' }}>
+                          <a 
+                            href="#" 
+                            className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors group" 
+                            style={{ minHeight: '60px' }}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setShowContactEmail(!showContactEmail);
+                            }}
+                          >
                             <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-primary/10 transition-colors">
                               <LuContact className="w-4 h-4 text-gray-600 group-hover:text-primary" />
                             </div>
@@ -443,6 +465,36 @@ export default function GlobalNavigation() {
                               <div className="text-xs text-gray-500 mt-1 leading-relaxed">Get in touch with our team</div>
                             </div>
                           </a>
+                          
+                          {/* Contact Email */}
+                          {showContactEmail && (
+                            <div className="text-center pt-2">
+                              <div className="flex items-center justify-center space-x-2">
+                                <div className="text-xs text-gray-600 font-bold">info@escra.io</div>
+                                <div className="relative">
+                                  <button
+                                    onClick={copyEmailToClipboard}
+                                    className="text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
+                                    onMouseEnter={() => setHoveredEmail(true)}
+                                    onMouseLeave={() => setHoveredEmail(false)}
+                                    aria-label="Copy email address"
+                                  >
+                                    <HiOutlineDuplicate className="w-[14px] h-[14px]" />
+                                  </button>
+                                  {copiedEmail && (
+                                    <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none">
+                                      Copied!
+                                    </div>
+                                  )}
+                                  {hoveredEmail && !copiedEmail && (
+                                    <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none">
+                                      Copy
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

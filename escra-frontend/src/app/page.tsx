@@ -63,7 +63,7 @@ export default function LandingPage() {
             <a href="#" className="px-4 py-2 text-sm bg-black text-white font-medium rounded-lg hover:bg-primary hover:italic transition-all button-glow">
               Get started
             </a>
-            <a href="#" className="px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-primary hover:text-white hover:italic transition-all flex items-center font-medium">
+            <a href="#" className="px-4 py-2 text-sm border border-black rounded-lg hover:bg-primary hover:text-white hover:border-transparent hover:italic transition-all flex items-center font-medium">
               Learn more <HiMiniChevronRight className="w-4 h-4 ml-2" />
             </a>
           </div>

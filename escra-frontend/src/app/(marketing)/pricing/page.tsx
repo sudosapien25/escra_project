@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { FaCheck } from 'react-icons/fa';
 import { HiMiniChevronDown, HiMiniChevronUp } from 'react-icons/hi2';
-import { LuDollarSign } from 'react-icons/lu';
+import { TbCreditCard } from 'react-icons/tb';
 import { PiBankBold } from 'react-icons/pi';
 import { TbBrandPaypal, TbCurrencyBitcoin, TbCurrencyEthereum, TbCurrencySolana } from 'react-icons/tb';
 import { SiAlgorand, SiLitecoin } from 'react-icons/si';
@@ -20,6 +20,7 @@ declare global {
 export default function PricingPage() {
   const [selectedPlan, setSelectedPlan] = useState('Pro');
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+  const [hoveredPaymentIcon, setHoveredPaymentIcon] = useState<string | null>(null);
 
   useEffect(() => {
     // Load Vanta.js scripts
@@ -167,24 +168,24 @@ export default function PricingPage() {
             <h1 className="text-xl md:text-2xl font-medium tracking-tight leading-[1.2] mb-2 text-center font-['Avenir']">
               Simple, transparent pricing
             </h1>
-            <p className="text-gray-600 text-base max-w-2xl mx-auto mb-12 text-center font-['Avenir']">
+            <p className="text-gray-600 text-base max-w-2xl mx-auto mb-2 text-center font-['Avenir']">
               Choose the plan that's right for you
             </p>
           </div>
 
           {/* Pricing Cards */}
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 w-full max-w-[85rem]">
+          <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 w-full max-w-[85rem]">
             {plans.map((plan) => (
               <div
                 key={plan.name}
                 onClick={() => setSelectedPlan(plan.name)}
-                className={`relative rounded-2xl border border-black cursor-pointer transition-all group flex flex-col min-h-[600px] ${
+                className={`relative rounded-2xl border border-gray-200 cursor-pointer transition-all group flex flex-col min-h-[600px] ${
                   selectedPlan === plan.name
-                    ? 'border-black bg-white/50'
+                    ? 'shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] bg-white'
                     : plan.popular
-                    ? 'border-primary bg-white/50'
-                    : 'bg-white/30'
-                } p-8 font-['Avenir'] hover:border-black hover:-translate-y-1`}
+                    ? 'shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] bg-white'
+                    : 'shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] bg-white'
+                } p-8 font-['Avenir'] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] hover:-translate-y-1`}
               >
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2">
@@ -249,13 +250,13 @@ export default function PricingPage() {
           </div>
 
           {/* FAQ Section */}
-          <div className="mt-24 max-w-4xl w-full">
+          <div className="mt-16 max-w-4xl w-full">
             <h2 className="text-lg font-medium text-black text-center mb-12 font-['Avenir']">
               Frequently Asked Questions
             </h2>
             <div className="flex flex-col gap-4 max-w-2xl mx-auto">
               {faqs.map((faq, index) => (
-                <div key={faq.question} className="bg-white/30 rounded-lg border border-black font-['Avenir'] overflow-hidden">
+                <div key={faq.question} className="bg-white rounded-lg border border-gray-200 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] font-['Avenir'] overflow-hidden">
                   <button
                     onClick={() => setExpandedFaq(expandedFaq === index ? null : index)}
                     className="w-full p-6 text-left flex items-center justify-between hover:bg-white/10 transition-colors"
@@ -270,33 +271,121 @@ export default function PricingPage() {
                   {expandedFaq === index && (
                     <>
                       <hr className="border-gray-200 dark:border-gray-700 mx-6" />
-                      <div className="px-6 pb-6 pt-6">
+                      <div className="px-6 pb-8 pt-6">
                         <p className="text-xs text-gray-600">{faq.answer}</p>
                         {index === 0 && (
                           <div className="flex space-x-1 mt-4">
-                            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                              <LuDollarSign className="w-4 h-4 text-gray-600" />
+                            <div className="relative">
+                              <div 
+                                className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center cursor-pointer"
+                                onMouseEnter={() => setHoveredPaymentIcon('credit-card')}
+                                onMouseLeave={() => setHoveredPaymentIcon(null)}
+                              >
+                                <TbCreditCard className="w-4 h-4 text-gray-600" />
+                              </div>
+                              {hoveredPaymentIcon === 'credit-card' && (
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none z-10 whitespace-nowrap">
+                                  Credit card
+                                </div>
+                              )}
                             </div>
-                            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                              <PiBankBold className="w-4 h-4 text-gray-600" />
+                            <div className="relative">
+                              <div 
+                                className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center cursor-pointer"
+                                onMouseEnter={() => setHoveredPaymentIcon('wires')}
+                                onMouseLeave={() => setHoveredPaymentIcon(null)}
+                              >
+                                <PiBankBold className="w-4 h-4 text-gray-600" />
+                              </div>
+                              {hoveredPaymentIcon === 'wires' && (
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none z-10">
+                                  Wire
+                                </div>
+                              )}
                             </div>
-                            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                              <TbBrandPaypal className="w-4 h-4 text-gray-600" />
+                            <div className="relative">
+                              <div 
+                                className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center cursor-pointer"
+                                onMouseEnter={() => setHoveredPaymentIcon('paypal')}
+                                onMouseLeave={() => setHoveredPaymentIcon(null)}
+                              >
+                                <TbBrandPaypal className="w-4 h-4 text-gray-600" />
+                              </div>
+                              {hoveredPaymentIcon === 'paypal' && (
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none z-10">
+                                  PayPal
+                                </div>
+                              )}
                             </div>
-                            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                              <TbCurrencyBitcoin className="w-4 h-4 text-gray-600" />
+                            <div className="relative">
+                              <div 
+                                className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center cursor-pointer"
+                                onMouseEnter={() => setHoveredPaymentIcon('bitcoin')}
+                                onMouseLeave={() => setHoveredPaymentIcon(null)}
+                              >
+                                <TbCurrencyBitcoin className="w-4 h-4 text-gray-600" />
+                              </div>
+                              {hoveredPaymentIcon === 'bitcoin' && (
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none z-10">
+                                  Bitcoin
+                                </div>
+                              )}
                             </div>
-                            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                              <TbCurrencyEthereum className="w-4 h-4 text-gray-600" />
+                            <div className="relative">
+                              <div 
+                                className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center cursor-pointer"
+                                onMouseEnter={() => setHoveredPaymentIcon('ethereum')}
+                                onMouseLeave={() => setHoveredPaymentIcon(null)}
+                              >
+                                <TbCurrencyEthereum className="w-4 h-4 text-gray-600" />
+                              </div>
+                              {hoveredPaymentIcon === 'ethereum' && (
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none z-10">
+                                  Ethereum
+                                </div>
+                              )}
                             </div>
-                            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                              <SiAlgorand className="w-4 h-4 text-gray-600" />
+                            <div className="relative">
+                              <div 
+                                className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center cursor-pointer"
+                                onMouseEnter={() => setHoveredPaymentIcon('algorand')}
+                                onMouseLeave={() => setHoveredPaymentIcon(null)}
+                              >
+                                <SiAlgorand className="w-[12px] h-[12px] text-gray-600" />
+                              </div>
+                              {hoveredPaymentIcon === 'algorand' && (
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none z-10">
+                                  Algorand
+                                </div>
+                              )}
                             </div>
-                            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                              <TbCurrencySolana className="w-4 h-4 text-gray-600" />
+                            <div className="relative">
+                              <div 
+                                className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center cursor-pointer"
+                                onMouseEnter={() => setHoveredPaymentIcon('solana')}
+                                onMouseLeave={() => setHoveredPaymentIcon(null)}
+                              >
+                                <TbCurrencySolana className="w-4 h-4 text-gray-600" />
+                              </div>
+                              {hoveredPaymentIcon === 'solana' && (
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none z-10">
+                                  Solana
+                                </div>
+                              )}
                             </div>
-                            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                              <SiLitecoin className="w-4 h-4 text-gray-600" />
+                            <div className="relative">
+                              <div 
+                                className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center cursor-pointer"
+                                onMouseEnter={() => setHoveredPaymentIcon('litecoin')}
+                                onMouseLeave={() => setHoveredPaymentIcon(null)}
+                              >
+                                <SiLitecoin className="w-4 h-4 text-gray-600" />
+                              </div>
+                              {hoveredPaymentIcon === 'litecoin' && (
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none z-10">
+                                  Litecoin
+                                </div>
+                              )}
                             </div>
                           </div>
                         )}
