@@ -1,0 +1,48 @@
+.scroll-stack-scroller {
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scroll-stack-inner {
+  position: relative;
+  min-height: 100%;
+}
+
+.scroll-stack-card {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  transition: transform 0.1s ease-out, filter 0.1s ease-out;
+}
+
+.scroll-stack-end {
+  height: 100vh;
+  width: 100%;
+}
+
+/* Custom scrollbar styling */
+.scroll-stack-scroller::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scroll-stack-scroller::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scroll-stack-scroller::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.scroll-stack-scroller::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Firefox scrollbar */
+.scroll-stack-scroller {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}

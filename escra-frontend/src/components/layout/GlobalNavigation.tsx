@@ -28,7 +28,7 @@ const INDUSTRIES: IndustryOption[] = [
   { value: 'real_estate', label: 'Real Estate', icon: TbBuildingEstate, description: 'Property sale & lease agreements' },
   { value: 'corporate', label: 'Corporate', icon: LuBriefcaseBusiness, description: 'Enterprise, employment & vendor agreements' },
   { value: 'finance', label: 'Finance', icon: GrMoney, description: 'Advisory, Lending, M&A agreements' },
-  { value: 'legal', label: 'Legal', icon: VscLaw, description: 'Legal services & compliance agreements' },
+  { value: 'legal', label: 'Legal', icon: VscLaw, description: 'Wills, trusts, deeds & compliance agreements' },
   { value: 'supply_chain', label: 'Logistics', icon: TbWorld, description: 'Transportation, supply-chain & warehousing agreements' },
   { value: 'labor', label: 'Labor', icon: GrUserWorker, description: 'Dispute resolution, collective-bargaining & union agreements' },
   { value: 'entertainment', label: 'Entertainment', icon: MdOutlineMovieFilter, description: 'Media, artist & performance agreements' },
