@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { FaUser } from 'react-icons/fa';
-import { TbCameraCog, TbActivity, TbBuildingEstate, TbShoppingBagEdit, TbWorld } from 'react-icons/tb';
+import { TbCameraCog, TbActivity, TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbBuildingCommunity, TbBallAmericanFootball, TbTool } from 'react-icons/tb';
 import { HiChevronDown, HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight, HiOutlineKey, HiOutlineDuplicate, HiStatusOffline } from 'react-icons/hi';
 import { MdOutlineGeneratingTokens, MdWebhook, MdOutlineSportsFootball, MdOutlineMovieFilter, MdOutlineHealthAndSafety, MdCancelPresentation } from 'react-icons/md';
 import { HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
@@ -58,15 +58,15 @@ const COMPANY_TYPES = [
 ];
 
 const INDUSTRIES: IndustryOption[] = [
-  { value: 'real_estate', label: 'Real Estate', icon: TbBuildingEstate },
-  { value: 'athletics', label: 'Athletics', icon: MdOutlineSportsFootball },
+      { value: 'real_estate', label: 'Real Estate', icon: TbBuildingCommunity },
+      { value: 'athletics', label: 'Athletics', icon: TbBallAmericanFootball },
   { value: 'construction', label: 'Construction', icon: LuConstruction },
   { value: 'entertainment', label: 'Entertainment', icon: MdOutlineMovieFilter },
   { value: 'finance', label: 'Finance', icon: GrMoney },
   { value: 'healthcare', label: 'Healthcare', icon: MdOutlineHealthAndSafety },
   { value: 'labor', label: 'Labor', icon: GrUserWorker },
   { value: 'legal', label: 'Legal', icon: VscLaw },
-  { value: 'manufacturing', label: 'Manufacturing', icon: LiaToolsSolid },
+      { value: 'manufacturing', label: 'Manufacturing', icon: TbTool },
   { value: 'retail', label: 'Retail', icon: TbShoppingBagEdit },
   { value: 'supply_chain', label: 'Logistics', icon: TbWorld },
   { value: 'technology', label: 'Technology', icon: HiOutlineChip },

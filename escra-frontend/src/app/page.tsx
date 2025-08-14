@@ -6,7 +6,7 @@ import Image from 'next/image';
 import DecryptedText from '@/components/DecryptedText';
 import { HiMiniChevronRight } from 'react-icons/hi2';
 import { HiOutlineIdentification, HiOutlineKey, HiOutlineCube, HiOutlineCog, HiOutlineDocumentText, HiOutlineClipboardCheck, HiOutlineServer, HiOutlineFingerPrint, HiOutlineLockClosed, HiOutlineChip, HiOutlineChevronLeft, HiOutlineChevronRight, HiOutlineDuplicate } from 'react-icons/hi';
-import { TbBuildingEstate, TbWorld, TbSettingsAutomation, TbServerSpark, TbAdjustmentsAlt, TbAtom, TbBolt, TbAbacus, TbWindow, TbEyeSearch, TbShieldSearch, TbShield, TbLock, TbShieldCheck, TbServer, TbNetwork, TbShieldStar, TbEngine, TbScale } from 'react-icons/tb';
+import { TbBuildingEstate, TbWorld, TbSettingsAutomation, TbServerSpark, TbAdjustmentsAlt, TbAtom, TbBolt, TbAbacus, TbWindow, TbEyeSearch, TbShieldSearch, TbShield, TbLock, TbShieldCheck, TbServer, TbNetwork, TbShieldStar, TbEngine, TbScale, TbWall, TbShieldLock, TbClipboardSearch, TbBuildingCommunity, TbBallAmericanFootball, TbManualGearbox, TbTool, TbGitBranch } from 'react-icons/tb';
 import { LuBriefcaseBusiness, LuConstruction, LuTrello, LuBlocks, LuIdCard, LuCpu, LuAtom, LuLayers3 } from 'react-icons/lu';
 import { GrMoney, GrUserWorker } from 'react-icons/gr';
 import { VscLaw } from 'react-icons/vsc';
@@ -16,7 +16,7 @@ import { HiOutlineChip as HiOutlineChipAlt } from 'react-icons/hi';
 import { FaDochub } from 'react-icons/fa';
 import { SiAdobe } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
-import { PiGoogleDriveLogoBold, PiMicrosoftTeamsLogoBold, PiListMagnifyingGlassBold, PiLockKeyBold } from 'react-icons/pi';
+import { PiGoogleDriveLogoBold, PiMicrosoftTeamsLogoBold, PiListMagnifyingGlassBold, PiLockKeyBold, PiNetworkBold } from 'react-icons/pi';
 import { FaSlack, FaTimeline } from 'react-icons/fa6';
 import { RxNotionLogo } from 'react-icons/rx';
 import { TbBrandOnedrive, TbBrandAirtable, TbBrandAsana } from 'react-icons/tb';
@@ -94,7 +94,7 @@ export default function LandingPage() {
   const industries = [
     {
       name: 'Real Estate',
-      icon: TbBuildingEstate,
+      icon: TbBuildingCommunity,
       description: 'Property sale & lease agreements with blockchain-backed ownership verification and automated escrow processes'
     },
     {
@@ -129,7 +129,7 @@ export default function LandingPage() {
     },
     {
       name: 'Athletics',
-      icon: MdOutlineSportsFootball,
+      icon: TbBallAmericanFootball,
       description: 'Front-offices, leagues, player contracts & endorsements with performance-based automation and endorsement tracking'
     },
     {
@@ -144,7 +144,7 @@ export default function LandingPage() {
     },
     {
       name: 'Manufacturing',
-      icon: LiaToolsSolid,
+      icon: TbTool,
       description: 'Production, supply & equipment agreements with quality control automation and supply chain transparency'
     },
     {
@@ -434,7 +434,7 @@ export default function LandingPage() {
             {/* Smart Contract Automation */}
             <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200 hover:shadow-xl transition-shadow">
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                <HiOutlineChip className="w-6 h-6 text-primary" />
+                <TbGitBranch className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Smart Contract Automation</h3>
               <p className="text-gray-600 text-sm leading-relaxed">
@@ -445,7 +445,7 @@ export default function LandingPage() {
             {/* Immutable Audit Trail */}
             <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200 hover:shadow-xl transition-shadow">
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                <PiListMagnifyingGlassBold className="w-6 h-6 text-primary" />
+                <TbShieldSearch className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Immutable Audit Trail</h3>
               <p className="text-gray-600 text-sm leading-relaxed">
@@ -580,7 +580,7 @@ export default function LandingPage() {
                   <div className="bg-primary/5 rounded-xl p-6 border-l-4 border-primary shadow-sm">
                     <div className="flex items-start space-x-3">
                       <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <TbAdjustmentsAlt className="w-6 h-6 text-primary" />
+                        <TbManualGearbox className="w-6 h-6 text-primary" />
                       </div>
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900 mb-2">Persistent Identity Chain</h3>
@@ -610,7 +610,7 @@ export default function LandingPage() {
             <h2 className="text-xl md:text-2xl font-semibold text-gray-900 mb-4">
               Trustless Technology
             </h2>
-            <p className="text-gray-600 text-base max-w-2xl mx-auto">
+            <p className="text-gray-600 text-sm max-w-2xl mx-auto">
               Identity verification, authenticated digital signatures & non-fungible execution, every step is secured by blockchain technology
             </p>
           </div>
@@ -972,7 +972,7 @@ export default function LandingPage() {
             {/* Quantum-Resistant Cryptography */}
             <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200 hover:shadow-xl transition-shadow">
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                <PiLockKeyBold className="w-6 h-6 text-primary" />
+                <TbShieldLock className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Quantum-Resistant Cryptography</h3>
               <p className="text-gray-600 text-sm leading-relaxed mb-4">
@@ -994,7 +994,7 @@ export default function LandingPage() {
             {/* Regulatory Compliance Engine */}
             <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200 hover:shadow-xl transition-shadow">
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                <TbShieldStar className="w-6 h-6 text-primary" />
+                <TbClipboardSearch className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Regulatory Compliance Engine</h3>
               <p className="text-gray-600 text-sm leading-relaxed mb-4">
@@ -1173,15 +1173,15 @@ export default function LandingPage() {
                           <div>
                             <h4 className="text-lg font-semibold text-gray-900 mb-4">Key Features</h4>
                             <ul className="space-y-3">
-                              <li className="text-base text-gray-700 flex items-start">
+                              <li className="text-gray-600 text-sm leading-relaxed flex items-start">
                                 <span className="w-2 h-2 bg-primary rounded-full mt-2 mr-4 flex-shrink-0"></span>
                                 Basic Contract Workflows
                               </li>
-                              <li className="text-base text-gray-700 flex items-start">
+                              <li className="text-gray-600 text-sm leading-relaxed flex items-start">
                                 <span className="w-2 h-2 bg-primary rounded-full mt-2 mr-4 flex-shrink-0"></span>
                                 Smart Contract Automation Engine
                               </li>
-                              <li className="text-base text-gray-700 flex items-start">
+                              <li className="text-gray-600 text-sm leading-relaxed flex items-start">
                                 <span className="w-2 h-2 bg-primary rounded-full mt-2 mr-4 flex-shrink-0"></span>
                                 Basic UI/UX
                               </li>
@@ -1190,11 +1190,11 @@ export default function LandingPage() {
                           <div>
                             <h4 className="text-lg font-semibold text-gray-900 mb-4">Integrations</h4>
                             <ul className="space-y-3">
-                              <li className="text-base text-gray-600 flex items-start">
+                              <li className="text-gray-600 text-sm leading-relaxed flex items-start">
                                 <span className="w-2 h-2 bg-gray-400 rounded-full mt-2 mr-4 flex-shrink-0"></span>
                                 DocuSign Integration
                               </li>
-                              <li className="text-base text-gray-600 flex items-start">
+                              <li className="text-gray-600 text-sm leading-relaxed flex items-start">
                                 <span className="w-2 h-2 bg-gray-400 rounded-full mt-2 mr-4 flex-shrink-0"></span>
                                 Algorand Integration
                               </li>
@@ -1223,15 +1223,15 @@ export default function LandingPage() {
                           <div>
                             <h4 className="text-lg font-semibold text-gray-900 mb-4">Key Features</h4>
                             <ul className="space-y-3">
-                              <li className="text-base text-gray-700 flex items-start">
+                              <li className="text-gray-600 text-sm leading-relaxed flex items-start">
                                 <span className="w-2 h-2 bg-primary rounded-full mt-2 mr-4 flex-shrink-0"></span>
                                 Advanced Contract Workflows
                               </li>
-                              <li className="text-base text-gray-700 flex items-start">
+                              <li className="text-gray-600 text-sm leading-relaxed flex items-start">
                                 <span className="w-2 h-2 bg-primary rounded-full mt-2 mr-4 flex-shrink-0"></span>
                                 Extended 3rd Party Integrations
                               </li>
-                              <li className="text-base text-gray-700 flex items-start">
+                              <li className="text-gray-600 text-sm leading-relaxed flex items-start">
                                 <span className="w-2 h-2 bg-primary rounded-full mt-2 mr-4 flex-shrink-0"></span>
                                 Dashboarding & Analytics
                               </li>
@@ -1240,11 +1240,11 @@ export default function LandingPage() {
                           <div>
                             <h4 className="text-lg font-semibold text-gray-900 mb-4">Integrations</h4>
                             <ul className="space-y-3">
-                              <li className="text-base text-gray-600 flex items-start">
+                              <li className="text-gray-600 text-sm leading-relaxed flex items-start">
                                 <span className="w-2 h-2 bg-gray-400 rounded-full mt-2 mr-4 flex-shrink-0"></span>
                                 Early Adopter Program Opens
                               </li>
-                              <li className="text-base text-gray-600 flex items-start">
+                              <li className="text-gray-600 text-sm leading-relaxed flex items-start">
                                 <span className="w-2 h-2 bg-gray-400 rounded-full mt-2 mr-4 flex-shrink-0"></span>
                                 KYC & User Identification
                               </li>
@@ -1273,15 +1273,15 @@ export default function LandingPage() {
                           <div>
                             <h4 className="text-lg font-semibold text-gray-900 mb-4">Key Features</h4>
                             <ul className="space-y-3">
-                              <li className="text-base text-gray-700 flex items-start">
+                              <li className="text-gray-600 text-sm leading-relaxed flex items-start">
                                 <span className="w-2 h-2 bg-primary rounded-full mt-2 mr-4 flex-shrink-0"></span>
                                 Production UAT
                               </li>
-                              <li className="text-base text-gray-700 flex items-start">
+                              <li className="text-gray-600 text-sm leading-relaxed flex items-start">
                                 <span className="w-2 h-2 bg-primary rounded-full mt-2 mr-4 flex-shrink-0"></span>
                                 Property Records On Chain
                               </li>
-                              <li className="text-base text-gray-700 flex items-start">
+                              <li className="text-gray-600 text-sm leading-relaxed flex items-start">
                                 <span className="w-2 h-2 bg-primary rounded-full mt-2 mr-4 flex-shrink-0"></span>
                                 Web3 Property Search
                               </li>
@@ -1290,11 +1290,11 @@ export default function LandingPage() {
                           <div>
                             <h4 className="text-lg font-semibold text-gray-900 mb-4">Integrations</h4>
                             <ul className="space-y-3">
-                              <li className="text-base text-gray-600 flex items-start">
+                              <li className="text-gray-600 text-sm leading-relaxed flex items-start">
                                 <span className="w-2 h-2 bg-gray-400 rounded-full mt-2 mr-4 flex-shrink-0"></span>
                                 AI-Driven Fraud Detection
                               </li>
-                              <li className="text-base text-gray-600 flex items-start">
+                              <li className="text-gray-600 text-sm leading-relaxed flex items-start">
                                 <span className="w-2 h-2 bg-gray-400 rounded-full mt-2 mr-4 flex-shrink-0"></span>
                                 Cryptographic Key Signature Engine
                               </li>
@@ -1323,11 +1323,11 @@ export default function LandingPage() {
                           <div>
                             <h4 className="text-lg font-semibold text-gray-900 mb-4">Key Features</h4>
                             <ul className="space-y-3">
-                              <li className="text-base text-gray-700 flex items-start">
+                              <li className="text-gray-600 text-sm leading-relaxed flex items-start">
                                 <span className="w-2 h-2 bg-primary rounded-full mt-2 mr-4 flex-shrink-0"></span>
                                 AI Doc Parsing & Contract Builder
                               </li>
-                              <li className="text-base text-gray-700 flex items-start">
+                              <li className="text-gray-600 text-sm leading-relaxed flex items-start">
                                 <span className="w-2 h-2 bg-primary rounded-full mt-2 mr-4 flex-shrink-0"></span>
                                 Claim On Demand Title Tokenization
                               </li>
@@ -1336,7 +1336,7 @@ export default function LandingPage() {
                           <div>
                             <h4 className="text-lg font-semibold text-gray-900 mb-4">Integrations</h4>
                             <ul className="space-y-3">
-                              <li className="text-base text-gray-600 flex items-start">
+                              <li className="text-gray-600 text-sm leading-relaxed flex items-start">
                                 <span className="w-2 h-2 bg-gray-400 rounded-full mt-2 mr-4 flex-shrink-0"></span>
                                 Advanced AI Integration
                               </li>
@@ -1365,11 +1365,11 @@ export default function LandingPage() {
                           <div>
                             <h4 className="text-lg font-semibold text-gray-900 mb-4">Key Features</h4>
                             <ul className="space-y-3">
-                              <li className="text-base text-gray-700 flex items-start">
+                              <li className="text-gray-600 text-sm leading-relaxed flex items-start">
                                 <span className="w-2 h-2 bg-primary rounded-full mt-2 mr-4 flex-shrink-0"></span>
                                 Escra Passport
                               </li>
-                              <li className="text-base text-gray-700 flex items-start">
+                              <li className="text-gray-600 text-sm leading-relaxed flex items-start">
                                 <span className="w-2 h-2 bg-primary rounded-full mt-2 mr-4 flex-shrink-0"></span>
                                 Title Abstractor Engine
                               </li>
@@ -1378,7 +1378,7 @@ export default function LandingPage() {
                           <div>
                             <h4 className="text-lg font-semibold text-gray-900 mb-4">Integrations</h4>
                             <ul className="space-y-3">
-                              <li className="text-base text-gray-600 flex items-start">
+                              <li className="text-gray-600 text-sm leading-relaxed flex items-start">
                                 <span className="w-2 h-2 bg-gray-400 rounded-full mt-2 mr-4 flex-shrink-0"></span>
                                 V1 Companion App
                               </li>
@@ -1407,11 +1407,11 @@ export default function LandingPage() {
                           <div>
                             <h4 className="text-lg font-semibold text-gray-900 mb-4">Key Features</h4>
                             <ul className="space-y-3">
-                              <li className="text-base text-gray-700 flex items-start">
+                              <li className="text-gray-600 text-sm leading-relaxed flex items-start">
                                 <span className="w-2 h-2 bg-primary rounded-full mt-2 mr-4 flex-shrink-0"></span>
                                 Custodial & Escrow Partner Integrations
                               </li>
-                              <li className="text-base text-gray-700 flex items-start">
+                              <li className="text-gray-600 text-sm leading-relaxed flex items-start">
                                 <span className="w-2 h-2 bg-primary rounded-full mt-2 mr-4 flex-shrink-0"></span>
                                 Chainlink Oracle Deployment
                               </li>
@@ -1420,11 +1420,11 @@ export default function LandingPage() {
                           <div>
                             <h4 className="text-lg font-semibold text-gray-900 mb-4">Integrations</h4>
                             <ul className="space-y-3">
-                              <li className="text-base text-gray-600 flex items-start">
+                              <li className="text-gray-600 text-sm leading-relaxed flex items-start">
                                 <span className="w-2 h-2 bg-gray-400 rounded-full mt-2 mr-4 flex-shrink-0"></span>
                                 MSB Readiness
                               </li>
-                              <li className="text-base text-gray-600 flex items-start">
+                              <li className="text-gray-600 text-sm leading-relaxed flex items-start">
                                 <span className="w-2 h-2 bg-gray-400 rounded-full mt-2 mr-4 flex-shrink-0"></span>
                                 SOC I & SOC II Readiness
                               </li>
@@ -1453,11 +1453,11 @@ export default function LandingPage() {
                           <div>
                             <h4 className="text-lg font-semibold text-gray-900 mb-4">Key Features</h4>
                             <ul className="space-y-3">
-                              <li className="text-base text-gray-700 flex items-start">
+                              <li className="text-gray-600 text-sm leading-relaxed flex items-start">
                                 <span className="w-2 h-2 bg-primary rounded-full mt-2 mr-4 flex-shrink-0"></span>
                                 Contract Triggered Settlement
                               </li>
-                              <li className="text-base text-gray-700 flex items-start">
+                              <li className="text-gray-600 text-sm leading-relaxed flex items-start">
                                 <span className="w-2 h-2 bg-primary rounded-full mt-2 mr-4 flex-shrink-0"></span>
                                 Jurisdiction Expansion
                               </li>
@@ -1466,11 +1466,11 @@ export default function LandingPage() {
                           <div>
                             <h4 className="text-lg font-semibold text-gray-900 mb-4">Integrations</h4>
                             <ul className="space-y-3">
-                              <li className="text-base text-gray-600 flex items-start">
+                              <li className="text-gray-600 text-sm leading-relaxed flex items-start">
                                 <span className="w-2 h-2 bg-gray-400 rounded-full mt-2 mr-4 flex-shrink-0"></span>
                                 Cross Chain Settlement
                               </li>
-                              <li className="text-base text-gray-600 flex items-start">
+                              <li className="text-gray-600 text-sm leading-relaxed flex items-start">
                                 <span className="w-2 h-2 bg-gray-400 rounded-full mt-2 mr-4 flex-shrink-0"></span>
                                 API & White Label
                               </li>

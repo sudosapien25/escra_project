@@ -7,7 +7,7 @@ import { Select, SelectOption } from '@/components/common/Select';
 import { Logo } from '@/components/common/Logo';
 import { HiChevronDown } from 'react-icons/hi2';
 import { FaCheck } from 'react-icons/fa';
-import { TbBuildingEstate, TbShoppingBagEdit, TbWorld } from 'react-icons/tb';
+import { TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbBuildingCommunity, TbBallAmericanFootball, TbTool } from 'react-icons/tb';
 import { MdOutlineSportsFootball, MdOutlineMovieFilter, MdOutlineHealthAndSafety } from 'react-icons/md';
 import { LuConstruction, LuBriefcaseBusiness } from 'react-icons/lu';
 import { GrMoney, GrUserWorker } from 'react-icons/gr';
@@ -29,15 +29,15 @@ const COMPANY_TYPES: SelectOption[] = [
 ];
 
 const INDUSTRIES: IndustryOption[] = [
-  { value: 'real_estate', label: 'Real Estate', icon: TbBuildingEstate },
-  { value: 'athletics', label: 'Athletics', icon: MdOutlineSportsFootball },
+      { value: 'real_estate', label: 'Real Estate', icon: TbBuildingCommunity },
+      { value: 'athletics', label: 'Athletics', icon: TbBallAmericanFootball },
   { value: 'construction', label: 'Construction', icon: LuConstruction },
   { value: 'entertainment', label: 'Entertainment', icon: MdOutlineMovieFilter },
   { value: 'finance', label: 'Finance', icon: GrMoney },
   { value: 'healthcare', label: 'Healthcare', icon: MdOutlineHealthAndSafety },
   { value: 'labor', label: 'Labor', icon: GrUserWorker },
   { value: 'legal', label: 'Legal', icon: VscLaw },
-  { value: 'manufacturing', label: 'Manufacturing', icon: LiaToolsSolid },
+      { value: 'manufacturing', label: 'Manufacturing', icon: TbTool },
   { value: 'retail', label: 'Retail', icon: TbShoppingBagEdit },
   { value: 'supply_chain', label: 'Logistics', icon: TbWorld },
   { value: 'technology', label: 'Technology', icon: HiOutlineChip },

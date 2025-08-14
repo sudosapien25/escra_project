@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbContract, TbRouteSquare, TbUsersGroup, TbMessageQuestion, TbBrandDiscord, TbBrandYoutube, TbInfoSquare } from 'react-icons/tb';
+import { TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbContract, TbRouteSquare, TbUsersGroup, TbMessageQuestion, TbBrandDiscord, TbBrandYoutube, TbInfoSquare, TbBuildingCommunity, TbBallAmericanFootball, TbTool } from 'react-icons/tb';
 import { HiOutlineDuplicate } from 'react-icons/hi';
 import { MdOutlineSportsFootball, MdOutlineMovieFilter, MdOutlineHealthAndSafety, MdOutlineGeneratingTokens } from 'react-icons/md';
 import { LuConstruction, LuBriefcaseBusiness, LuClipboardCheck, LuBrainCircuit, LuCircuitBoard, LuListEnd, LuVideo, LuBookOpenText, LuNewspaper, LuLinkedin, LuMic, LuContact, LuBuilding2 } from 'react-icons/lu';
@@ -25,17 +25,17 @@ interface IndustryOption {
 }
 
 const INDUSTRIES: IndustryOption[] = [
-  { value: 'real_estate', label: 'Real Estate', icon: TbBuildingEstate, description: 'Property sale & lease agreements' },
+      { value: 'real_estate', label: 'Real Estate', icon: TbBuildingCommunity, description: 'Property sale & lease agreements' },
   { value: 'corporate', label: 'Corporate', icon: LuBriefcaseBusiness, description: 'Enterprise, employment & vendor agreements' },
   { value: 'finance', label: 'Finance', icon: GrMoney, description: 'Advisory, Lending, M&A agreements' },
   { value: 'legal', label: 'Legal', icon: VscLaw, description: 'Wills, trusts, deeds & compliance agreements' },
   { value: 'supply_chain', label: 'Logistics', icon: TbWorld, description: 'Transportation, supply-chain & warehousing agreements' },
   { value: 'labor', label: 'Labor', icon: GrUserWorker, description: 'Dispute resolution, collective-bargaining & union agreements' },
   { value: 'entertainment', label: 'Entertainment', icon: MdOutlineMovieFilter, description: 'Media, artist & performance agreements' },
-  { value: 'athletics', label: 'Athletics', icon: MdOutlineSportsFootball, description: 'Front-offices, leagues, player contracts & endorsements' },
+      { value: 'athletics', label: 'Athletics', icon: TbBallAmericanFootball, description: 'Front-offices, leagues, player contracts & endorsements' },
   { value: 'construction', label: 'Construction', icon: LuConstruction, description: 'Building, project & subcontractor agreements' },
   { value: 'healthcare', label: 'Healthcare', icon: MdOutlineHealthAndSafety, description: 'Medical provider & health service agreements' },
-  { value: 'manufacturing', label: 'Manufacturing', icon: LiaToolsSolid, description: 'Production, supply & equipment agreements' },
+      { value: 'manufacturing', label: 'Manufacturing', icon: TbTool, description: 'Production, supply & equipment agreements' },
   { value: 'technology', label: 'Technology', icon: HiOutlineChip, description: 'IT service, vendor & software licensing agreements' }
 ];
 
@@ -421,7 +421,7 @@ export default function GlobalNavigation() {
                     <div className="grid grid-cols-[1fr_0.6fr] gap-6">
                       {/* Column 1 */}
                       <div className="border-r border-gray-200 pr-6">
-                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">About</h3>
+                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Our Company</h3>
                         <div className="space-y-4">
                           <a href="#" className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors group" style={{ minHeight: '60px' }}>
                             <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-primary/10 transition-colors">

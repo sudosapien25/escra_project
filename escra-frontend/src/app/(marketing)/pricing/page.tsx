@@ -21,6 +21,13 @@ export default function PricingPage() {
   const [selectedPlan, setSelectedPlan] = useState('Pro');
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
   const [hoveredPaymentIcon, setHoveredPaymentIcon] = useState<string | null>(null);
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+    setBillingPeriod('yearly');
+  }, []);
 
   useEffect(() => {
     // Load Vanta.js scripts
@@ -73,8 +80,8 @@ export default function PricingPage() {
     {
       name: 'Essential',
       description: 'Tamper-proof essential signing tools',
-      monthlyPrice: 9,
-      yearlyPrice: 90,
+      monthlyPrice: 12,
+      yearlyPrice: 9,
       features: [
         '5 contracts per month',
         '20 GB document storage',
@@ -88,8 +95,8 @@ export default function PricingPage() {
     {
       name: 'Pro',
       description: 'Enhanced contract capacity, advanced security & granular auditability',
-      monthlyPrice: 29,
-      yearlyPrice: 290,
+      monthlyPrice: 115,
+      yearlyPrice: 99,
       features: [
         '50 contracts per month',
         '5 custom templates',
@@ -105,8 +112,8 @@ export default function PricingPage() {
     {
       name: 'Growth',
       description: 'A shared workspace for your team',
-      monthlyPrice: 99,
-      yearlyPrice: 990,
+      monthlyPrice: 350,
+      yearlyPrice: 299,
       features: [
         '500 contracts per month',
         'Up to 10 custom templates',
@@ -173,8 +180,34 @@ export default function PricingPage() {
             </p>
           </div>
 
+          {/* Monthly/Yearly Billing Toggle */}
+          <div className="flex justify-center mt-8 mb-8">
+            <div className="flex bg-gray-100 rounded-lg p-1 border-2 border-gray-200">
+              <button
+                onClick={() => setBillingPeriod('monthly')}
+                className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                  billingPeriod === 'monthly' 
+                    ? 'bg-gray-500 text-white' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setBillingPeriod('yearly')}
+                className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                  billingPeriod === 'yearly' 
+                    ? 'bg-gray-500 text-white' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Yearly
+              </button>
+            </div>
+          </div>
+
           {/* Pricing Cards */}
-          <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 w-full max-w-[85rem]">
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 w-full max-w-[85rem]">
             {plans.map((plan) => (
               <div
                 key={plan.name}
@@ -206,9 +239,11 @@ export default function PricingPage() {
                     {plan.monthlyPrice !== null ? (
                       <>
                         <span className="text-2xl font-bold text-black">
-                          ${plan.monthlyPrice}
+                          ${billingPeriod === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice}
                         </span>
-                        <span className="text-xs text-gray-600">/month</span>
+                        <span className="text-xs text-gray-600">
+                          /{billingPeriod === 'monthly' ? 'month' : 'year'}
+                        </span>
                       </>
                     ) : (
                       <span className="text-xl font-bold text-black">Custom</span>
