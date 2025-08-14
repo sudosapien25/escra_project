@@ -8,6 +8,8 @@ import os
 import time
 from dotenv import load_dotenv
 from routes.mongo_routes import router as mongo_router
+from routes.contracts import router as contracts_router
+from routes.auth import router as auth_router
 from db.mongodb import MongoDB
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -39,6 +41,8 @@ origins = [
     "http://localhost:3001",
     "https://localhost:3000",
     "https://localhost:3001",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
 ]
 
 app.add_middleware(
@@ -89,8 +93,10 @@ async def internal_error_handler(request: Request, exc):
         content={"detail": "Internal server error"}
     )
 
-# Include MongoDB routes
+# Include routers
 app.include_router(mongo_router)
+app.include_router(contracts_router)
+app.include_router(auth_router)
 
 @app.get("/")
 async def root():

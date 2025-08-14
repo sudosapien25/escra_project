@@ -10,7 +10,7 @@ import { LuCalendarFold, LuPen } from 'react-icons/lu';
 import { BiDotsHorizontal, BiCommentAdd } from 'react-icons/bi';
 import { TbWorldDollar, TbEdit, TbClockUp, TbCubeSend, TbClockPin } from 'react-icons/tb';
 import { Logo } from '@/components/common/Logo';
-import { mockContracts } from '@/data/mockContracts';
+import { ContractServiceAPI } from '@/services/contractServiceAPI';
 import { useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -349,7 +349,9 @@ const ContractsPage: React.FC = () => {
   const [uploadedDocumentIds, setUploadedDocumentIds] = useState<string[]>([]);
   const [documentName, setDocumentName] = useState('');
   const [documentNameError, setDocumentNameError] = useState(false);
-  const [contracts, setContracts] = useState<Contract[]>(mockContracts);
+  const [contracts, setContracts] = useState<Contract[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [totalContracts, setTotalContracts] = useState(0);
 
   // State for expanded parties rows
   const [expandedPartiesRows, setExpandedPartiesRows] = useState<Set<string>>(new Set());
@@ -1193,19 +1195,14 @@ const ContractsPage: React.FC = () => {
         documentIds: uploadedDocumentIds, // Store document IDs
       };
 
-      // Save the new contract to the mockContracts.ts file
+      // Save the new contract to the backend
       try {
-        const response = await fetch('/api/contracts', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(newContract),
-        });
-
-        if (!response.ok) {
-          console.error('Failed to save contract to file');
-        } else {
+        const createdContract = await ContractServiceAPI.createContract(newContract);
+        
+        if (createdContract) {
+          // Update local state with the created contract
+          setContracts(prevContracts => [createdContract, ...prevContracts]);
+          setTotalContracts(prev => prev + 1);
           // Create documents with proper IDs and associate them with the new contract
           const finalDocumentIds: string[] = [];
           
@@ -1254,9 +1251,6 @@ const ContractsPage: React.FC = () => {
       } catch (error) {
         console.error('Error saving contract:', error);
       }
-
-      // Add new contract to the contracts array
-      setContracts(prev => [newContract, ...prev]);
       
       // Close modal and reset form
       setShowNewContractForm(false);
@@ -1969,31 +1963,29 @@ const ContractsPage: React.FC = () => {
     }
   }, [selectedContract]);
 
-  // Load enhanced contracts (updates + additional) on component mount
+  // Load contracts from backend API on mount
   useEffect(() => {
-    const loadEnhancedContracts = async () => {
+    const loadContracts = async () => {
+      setLoading(true);
       try {
-        const response = await fetch('/api/contracts');
-        if (response.ok) {
-          const data = await response.json();
-          // Only update if we got valid data that's different from initial mockContracts
-          if (data.contracts && data.contracts.length > 0) {
-            setContracts(data.contracts);
-          }
-        } else {
-          console.error('Failed to load enhanced contracts');
-          // Keep the initial mockContracts that are already loaded
+        const response = await ContractServiceAPI.getContracts();
+        if (response.contracts) {
+          setContracts(response.contracts);
+          setTotalContracts(response.pagination?.total || response.contracts.length);
         }
       } catch (error) {
-        console.error('Error loading enhanced contracts:', error);
-        // Keep the initial mockContracts that are already loaded
+        console.error('Failed to load contracts:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load contracts from server",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
       }
     };
 
-    // Small delay to let the initial render complete, then enhance with API data
-    const timeoutId = setTimeout(loadEnhancedContracts, 100);
-    
-    return () => clearTimeout(timeoutId);
+    loadContracts();
   }, []);
 
   // Function to download a stored document
@@ -2087,17 +2079,8 @@ const ContractsPage: React.FC = () => {
       });
 
       // Delete the contract from the backend
-      const response = await fetch('/api/contracts', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ contractId }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete contract from backend');
-      }
+      await ContractServiceAPI.deleteContract(contractId);
+      setTotalContracts(prev => Math.max(0, prev - 1));
 
       // Remove the contract from the contracts array
       setContracts(prev => prev.filter(contract => contract.id !== contractId));
@@ -2126,30 +2109,20 @@ const ContractsPage: React.FC = () => {
   // Function to update contract field and persist to backend
   const updateContractField = async (contractId: string, field: string, value: string) => {
     try {
-      const response = await fetch('/api/contracts', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ contractId, field, value }),
-      });
-
-      if (response.ok) {
-        // Update the contract in local state
-        setContracts(prev => 
-          prev.map(contract => 
-            contract.id === contractId 
-              ? { ...contract, [field]: value }
-              : contract
-          )
-        );
-        
-        // Update the selected contract if it's the one being edited
-        if (selectedContract && selectedContract.id === contractId) {
-          setSelectedContract({ ...selectedContract, [field]: value });
-        }
-      } else {
-        console.error('Failed to update contract');
+      await ContractServiceAPI.updateContractField(contractId, field, value);
+      
+      // If successful, update the local state
+      setContracts(prev => 
+        prev.map(contract => 
+          contract.id === contractId 
+            ? { ...contract, [field]: value }
+            : contract
+        )
+      );
+      
+      // Update the selected contract if it's the one being edited
+      if (selectedContract && selectedContract.id === contractId) {
+        setSelectedContract({ ...selectedContract, [field]: value });
       }
     } catch (error) {
       console.error('Error updating contract:', error);
@@ -4223,7 +4196,7 @@ const ContractsPage: React.FC = () => {
               </div>
               <div className="flex flex-col items-start h-full cursor-default select-none">
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contracts</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{mockContracts.length}</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{loading ? '...' : totalContracts}</p>
                 <p className="text-xs invisible cursor-default select-none">placeholder</p>
               </div>
             </div>
@@ -4234,7 +4207,7 @@ const ContractsPage: React.FC = () => {
               </div>
               <div className="flex flex-col items-start h-full cursor-default select-none">
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Pending Signatures</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{mockContracts.filter(contract => contract.status === 'Signatures').length}</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{loading ? '...' : contracts.filter(contract => contract.status === 'Signatures').length}</p>
                 <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">Requires action</p>
               </div>
             </div>
@@ -4245,7 +4218,7 @@ const ContractsPage: React.FC = () => {
               </div>
               <div className="flex flex-col items-start h-full cursor-default select-none">
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Awaiting Wire Details</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{mockContracts.filter(contract => contract.status === 'Wire Details').length}</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{loading ? '...' : contracts.filter(contract => contract.status === 'Wire Details').length}</p>
                 <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">Needs attention</p>
               </div>
             </div>
@@ -4418,7 +4391,7 @@ const ContractsPage: React.FC = () => {
                         </div>
                         All
                       </button>
-                      {mockContracts
+                      {contracts
                         .filter(contract => 
                           contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
                           contract.title.toLowerCase().includes(contractSearch.toLowerCase())
@@ -4724,7 +4697,7 @@ const ContractsPage: React.FC = () => {
                         </div>
                         All
                       </button>
-                      {mockContracts
+                      {contracts
                         .filter(contract => 
                           contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
                           contract.title.toLowerCase().includes(contractSearch.toLowerCase())

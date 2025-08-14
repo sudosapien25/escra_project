@@ -3,11 +3,17 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
+import axios from 'axios';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 interface User {
   id: string;
   email: string;
   name: string;
+  firstName: string;
+  lastName: string;
+  role: string;
 }
 
 interface AuthContextType {
@@ -27,84 +33,116 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Check for existing auth token and validate it
-    const token = Cookies.get('auth_token');
-    if (token) {
-      // TODO: Validate token with your backend
-      // For now, we'll just set a mock user
-      setUser({
-        id: '1',
-        email: 'user@example.com',
-        name: 'John Doe'
-      });
-    }
-    setIsLoading(false);
+    const validateToken = async () => {
+      const token = Cookies.get('auth_token');
+      if (token) {
+        try {
+          const response = await axios.get(`${API_URL}/auth/me`, {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+          
+          const userData = response.data;
+          setUser({
+            id: userData.id,
+            email: userData.email,
+            name: `${userData.firstName} ${userData.lastName}`,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            role: userData.role
+          });
+        } catch (error) {
+          console.error('Token validation failed:', error);
+          Cookies.remove('auth_token');
+        }
+      }
+      setIsLoading(false);
+    };
+    
+    validateToken();
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
-      // TODO: Replace with actual API call
-      // Mock successful login
-      const mockToken = 'mock-jwt-token';
-      Cookies.set('auth_token', mockToken, { expires: 7 }); // Expires in 7 days
-      
-      setUser({
-        id: '1',
+      const response = await axios.post(`${API_URL}/auth/login`, {
         email,
-        name: 'John Doe'
+        password
+      });
+
+      const { access_token, user: userData } = response.data;
+      
+      // Store the token
+      Cookies.set('auth_token', access_token, { expires: 7 }); // Expires in 7 days
+      
+      // Set user data
+      setUser({
+        id: userData.id,
+        email: userData.email,
+        name: `${userData.firstName} ${userData.lastName}`,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        role: userData.role
       });
 
       router.push('/dashboard');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login failed:', error);
-      throw error;
+      throw new Error(error.response?.data?.detail || 'Login failed');
     }
   };
 
   const register = async (email: string, password: string, firstName: string, lastName: string) => {
     try {
-      // TODO: Replace with actual API call
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          firstName,
-          lastName,
-        }),
+      const response = await axios.post(`${API_URL}/auth/register`, {
+        email,
+        password,
+        firstName,
+        lastName,
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Registration failed');
-      }
-
-      const data = await response.json();
+      const { access_token, user: userData } = response.data;
       
       // Store the token
-      Cookies.set('auth_token', data.token, { expires: 7 }); // Expires in 7 days
+      Cookies.set('auth_token', access_token, { expires: 7 }); // Expires in 7 days
       
       // Set user data
       setUser({
-        id: data.user.id,
-        email: data.user.email,
-        name: `${data.user.firstName} ${data.user.lastName}`,
+        id: userData.id,
+        email: userData.email,
+        name: `${userData.firstName} ${userData.lastName}`,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        role: userData.role
       });
 
-      // Redirect to onboarding
-      router.push('/onboarding');
-    } catch (error) {
+      // Redirect to dashboard (or onboarding if you have that page)
+      router.push('/dashboard');
+    } catch (error: any) {
       console.error('Registration failed:', error);
-      throw error;
+      throw new Error(error.response?.data?.detail || 'Registration failed');
     }
   };
 
-  const logout = () => {
-    Cookies.remove('auth_token');
-    setUser(null);
-    router.push('/login');
+  const logout = async () => {
+    try {
+      const token = Cookies.get('auth_token');
+      if (token) {
+        // Call logout endpoint (optional, since JWT logout is mainly client-side)
+        await axios.post(`${API_URL}/auth/logout`, {}, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Always remove token and redirect
+      Cookies.remove('auth_token');
+      setUser(null);
+      router.push('/login');
+    }
   };
 
   return (
