@@ -21,12 +21,11 @@ export default function PricingPage() {
   const [selectedPlan, setSelectedPlan] = useState('Pro');
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
   const [hoveredPaymentIcon, setHoveredPaymentIcon] = useState<string | null>(null);
-  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('yearly');
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
     setIsHydrated(true);
-    setBillingPeriod('yearly');
   }, []);
 
   useEffect(() => {

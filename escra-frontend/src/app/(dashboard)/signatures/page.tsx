@@ -12,7 +12,7 @@ import { BsPerson } from 'react-icons/bs';
 import { PiWarningDiamondBold } from 'react-icons/pi';
 import clsx from 'clsx';
 import { IconBaseProps } from 'react-icons';
-import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbClockPin, TbPencilShare, TbPencilPlus, TbClockEdit } from 'react-icons/tb';
+import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbClockPin, TbPencilShare, TbPencilPlus, TbClockEdit, TbStatusChange } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
 import { TiUserAddOutline } from 'react-icons/ti';
@@ -2031,7 +2031,7 @@ export default function SignaturesPage() {
           className="flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold mb-0"
           style={{ fontFamily: 'Avenir, sans-serif' }}
         >
-          <TbPencilPlus className="mr-2 text-lg" />
+          <TbPencilPlus className="mr-2 text-xl" />
           <span className="whitespace-nowrap">Request Signature</span>
         </button>
       </div>
@@ -2178,7 +2178,7 @@ export default function SignaturesPage() {
                   }
                 }}
               >
-                <span className="flex items-center"><HiOutlineViewBoards className="text-gray-400 text-base mr-2" />Status</span>
+                <span className="flex items-center"><TbStatusChange className="text-gray-400 text-base mr-2" />Status</span>
                 <HiMiniChevronDown className="text-gray-400" size={16} />
               </button>
               {showStatusDropdown && (
@@ -2538,7 +2538,7 @@ export default function SignaturesPage() {
             }
           }}
         >
-                <HiOutlineViewBoards className="text-gray-400 w-4 h-4" />
+                                  <TbStatusChange className="text-gray-400 w-4 h-4" />
                 <span>Status</span>
                 <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
               </button>
@@ -3651,8 +3651,8 @@ export default function SignaturesPage() {
               </div>
               <div className="text-sm sm:text-lg font-semibold mb-1 text-gray-900 dark:text-white">Adobe Sign</div>
               <div className="text-xs text-gray-500 dark:text-gray-400 mb-2 text-center">
-                Professional<br />
-                PDF Signing Solution
+                Professional PDF<br />
+                signing solution
               </div>
               <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 sm:px-3 py-1 rounded-full font-semibold">External</span>
             </button>
@@ -3667,7 +3667,10 @@ export default function SignaturesPage() {
             {/* Sticky Header */}
             <div className="sticky top-0 z-40 bg-gray-50 dark:bg-gray-900 px-6 py-4">
               <div className="flex items-start justify-between">
-                  <h2 className="text-lg font-bold text-gray-900 dark:text-white" style={{ fontFamily: 'Avenir, sans-serif' }}>Request Signature</h2>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white leading-tight" style={{ fontFamily: 'Avenir, sans-serif' }}>Request Signature</h2>
+                  <p className="text-gray-500 text-xs leading-tight cursor-default select-none">Fill in the request details to get started</p>
+                </div>
                 <button
                     className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-full ml-4 mt-1"
                     onClick={() => { 
@@ -4053,7 +4056,7 @@ export default function SignaturesPage() {
                           </div>
                         ) : (
                           <div className="flex flex-col items-center justify-center py-8 text-gray-500 dark:text-gray-400">
-                            <HiOutlineDocumentText size={32} className="mb-2" />
+                            <HiOutlineDocumentText size={26} className="mb-2" />
                             <p className="text-sm">No documents selected</p>
                             <p className="text-xs">Select or upload documents from the left panel</p>
                           </div>
@@ -4233,7 +4236,7 @@ export default function SignaturesPage() {
                               {/* Clear and Delete buttons */}
                               <div className="flex items-center gap-1">
                                 <button 
-                                  className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1" 
+                                  className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1 relative group" 
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
@@ -4241,9 +4244,12 @@ export default function SignaturesPage() {
                                   }}
                                 >
                                   <LuEraser className="w-4 h-4" />
+                                  <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                    Erase
+                                  </span>
                                 </button>
                                 <button 
-                                  className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1" 
+                                  className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1 relative group" 
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
@@ -4252,6 +4258,9 @@ export default function SignaturesPage() {
                                   disabled={recipients.length === 1}
                                 >
                                     <HiOutlineTrash className="w-4 h-4" />
+                                    <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                      Delete
+                                    </span>
                                   </button>
                                 </div>
                             </div>
@@ -4497,11 +4506,14 @@ export default function SignaturesPage() {
             {/* Sticky Header */}
             <div className="sticky top-0 z-40 bg-gray-50 dark:bg-gray-900 px-6 py-4">
               <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
-                    <FaDochub className="w-5 h-5 text-blue-500 dark:text-blue-400 transform translate-x-[1px]" />
-    </div>
-                  <h2 className="text-lg font-bold text-gray-900 dark:text-white" style={{ fontFamily: 'Avenir, sans-serif' }}>Request Signature via DocuSign</h2>
+                <div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+                      <FaDochub className="w-5 h-5 text-blue-500 dark:text-blue-400 transform translate-x-[1px]" />
+                    </div>
+                    <h2 className="text-lg font-bold text-gray-900 dark:text-white leading-tight" style={{ fontFamily: 'Avenir, sans-serif' }}>Request Signature via DocuSign</h2>
+                  </div>
+                  <p className="text-gray-500 text-xs leading-tight cursor-default select-none ml-11">Fill in the request details to get started</p>
                 </div>
                                   <button
                     className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-full ml-4 mt-1"
@@ -4895,7 +4907,7 @@ export default function SignaturesPage() {
                           </div>
                         ) : (
                           <div className="flex flex-col items-center justify-center py-8 text-gray-500 dark:text-gray-400">
-                            <HiOutlineDocumentText size={32} className="mb-2" />
+                            <HiOutlineDocumentText size={26} className="mb-2" />
                             <p className="text-sm">No documents selected</p>
                             <p className="text-xs">Select or upload documents from the left panel</p>
                           </div>
@@ -5059,7 +5071,7 @@ export default function SignaturesPage() {
                               {/* Clear and Delete buttons */}
                               <div className="flex items-center gap-1">
                                 <button 
-                                  className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1" 
+                                  className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1 relative group" 
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
@@ -5067,9 +5079,12 @@ export default function SignaturesPage() {
                                   }}
                                 >
                                   <LuEraser className="w-4 h-4" />
+                                  <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                    Erase
+                                  </span>
                                 </button>
                                 <button 
-                                  className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1" 
+                                  className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1 relative group" 
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
@@ -5078,6 +5093,9 @@ export default function SignaturesPage() {
                                   disabled={docuSignRecipients.length === 1}
                                 >
                                   <HiOutlineTrash className="w-4 h-4" />
+                                  <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                    Delete
+                                  </span>
                                 </button>
                               </div>
                             </div>
