@@ -4,11 +4,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaSearch, FaClock, FaSort, FaPlus, FaDollarSign, FaTimes, FaChevronDown, FaChevronUp, FaRegClock, FaCheck } from 'react-icons/fa';
 import { FaArrowUpRightFromSquare } from 'react-icons/fa6';
-import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutlineEye, HiOutlineEyeOff, HiOutlineClipboardList, HiOutlineExclamation, HiChevronDown, HiOutlineDocumentSearch, HiOutlineDocumentAdd, HiOutlineUpload, HiOutlineTrash, HiOutlineX, HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight } from 'react-icons/hi';
+import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutlineEye, HiOutlineEyeOff, HiOutlineClipboardList, HiOutlineExclamation, HiChevronDown, HiOutlineDocumentSearch, HiOutlineDocumentAdd, HiOutlineUpload, HiOutlineTrash, HiOutlineX, HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight, HiOutlinePencil } from 'react-icons/hi';
 import { HiOutlineViewBoards } from 'react-icons/hi';
 import { LuCalendarFold, LuPen } from 'react-icons/lu';
 import { BiDotsHorizontal, BiCommentAdd } from 'react-icons/bi';
-import { TbWorldDollar, TbEdit, TbClockUp, TbCubeSend, TbClockPin } from 'react-icons/tb';
+import { TbWorldDollar, TbEdit, TbClockUp, TbCubeSend, TbClockPin, TbScriptPlus, TbScript } from 'react-icons/tb';
 import { Logo } from '@/components/common/Logo';
 import { mockContracts } from '@/data/mockContracts';
 import { useEditor } from '@tiptap/react';
@@ -33,7 +33,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { useAuth } from '@/context/AuthContext';
 import { useDocumentStore } from '@/data/documentNameStore';
 import { PiMoneyWavyBold, PiBankBold, PiSignatureBold, PiCaretUpDownBold } from 'react-icons/pi';
-import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbChevronsDownRight, TbMailPlus, TbLibraryPlus, TbStatusChange } from 'react-icons/tb';
+import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbChevronsDownRight, TbMailPlus, TbLibraryPlus, TbStatusChange, TbDragDrop, TbHistory } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
 import { FaCheckCircle } from 'react-icons/fa';
@@ -315,6 +315,19 @@ const ContractsPage: React.FC = () => {
   const [selectedNewDocumentFileSource, setSelectedNewDocumentFileSource] = useState('');
   const [showNewDocumentAssigneeDropdown, setShowNewDocumentAssigneeDropdown] = useState(false);
   const [showNewDocumentContractDropdown, setShowNewDocumentContractDropdown] = useState(false);
+  const [showNewDocumentUploadDropdown, setShowNewDocumentUploadDropdown] = useState(false);
+  const [newDocumentName, setNewDocumentName] = useState('');
+  const [newDocumentType, setNewDocumentType] = useState('');
+  const [newDocumentAssignee, setNewDocumentAssignee] = useState('');
+  const [newDocumentDocuments, setNewDocumentDocuments] = useState<Array<{file: File, name: string, type: string, assignee: string, contract: string}>>([]);
+  const [editingNewDocumentIndex, setEditingNewDocumentIndex] = useState<number | null>(null);
+  const [inlineEditingNewDocumentName, setInlineEditingNewDocumentName] = useState('');
+  const [inlineEditingNewDocumentType, setInlineEditingNewDocumentType] = useState('');
+  const [inlineEditingNewDocumentAssignee, setInlineEditingNewDocumentAssignee] = useState('');
+  const [inlineEditingNewDocumentContract, setInlineEditingNewDocumentContract] = useState('');
+  const [showInlineEditingNewDocumentAssigneeDropdown, setShowInlineEditingNewDocumentAssigneeDropdown] = useState(false);
+  const [showInlineEditingNewDocumentContractDropdown, setShowInlineEditingNewDocumentContractDropdown] = useState(false);
+  const [inlineEditingNewDocumentContractSearch, setInlineEditingNewDocumentContractSearch] = useState('');
   const [newDocumentContractSearch, setNewDocumentContractSearch] = useState('');
   const [modalStep, setModalStep] = useState(1);
   const [lastUpdatedSort, setLastUpdatedSort] = useState<'asc' | 'desc'>('desc');
@@ -365,13 +378,15 @@ const ContractsPage: React.FC = () => {
   });
   const [documentFormErrors, setDocumentFormErrors] = useState<Record<string, boolean>>({});
   const [documentUploadErrors, setDocumentUploadErrors] = useState<{
-    fileSource: boolean;
     files: boolean;
   }>({
-    fileSource: false,
     files: false
   });
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [documentModalUploadedFiles, setDocumentModalUploadedFiles] = useState<File[]>([]);
+  // Separate state for new document form
+  const [newDocumentFormUploadedFiles, setNewDocumentFormUploadedFiles] = useState<File[]>([]);
+  const [selectedNewDocumentFormFileSource, setSelectedNewDocumentFormFileSource] = useState('');
   const [uploadedDocumentIds, setUploadedDocumentIds] = useState<string[]>([]);
   const [documentName, setDocumentName] = useState('');
   const [documentNameError, setDocumentNameError] = useState(false);
@@ -476,6 +491,9 @@ const ContractsPage: React.FC = () => {
     setUploadedFiles([]);
     setUploadedDocumentIds([]);
     setStep4Documents([]);
+    setStep4DocumentName('');
+    setStep4DocumentType('');
+    setStep4DocumentAssignee('');
     setDocumentName('');
     setDocumentNameError(false);
   };
@@ -1743,13 +1761,16 @@ const ContractsPage: React.FC = () => {
 
   const newDocumentFileSourceDropdownRef = useRef<HTMLDivElement>(null);
   const newDocumentAssigneeDropdownRef = useRef<HTMLDivElement>(null);
+  const inlineEditingNewDocumentAssigneeDropdownRef = useRef<HTMLDivElement>(null);
+  const inlineEditingNewDocumentContractDropdownRef = useRef<HTMLDivElement>(null);
   const newDocumentContractDropdownRef = useRef<HTMLDivElement>(null);
+  const newDocumentUploadDropdownRef = useRef<HTMLDivElement>(null);
   
   // Selected files state for step 4 documents
   const [step4SelectedFiles, setStep4SelectedFiles] = useState<File[]>([]);
   
   // Document data for step 4 (with custom names)
-  const [step4Documents, setStep4Documents] = useState<Array<{file: File, name: string, assignee: string}>>([]);
+  const [step4Documents, setStep4Documents] = useState<Array<{file: File, name: string, type: string, assignee: string}>>([]);
   const newContractDesktopFileInputRef = useRef<HTMLInputElement>(null);
   
   // State for step 4 document name editing
@@ -1761,11 +1782,22 @@ const ContractsPage: React.FC = () => {
   // State for step 4 direct document upload fields
   const [step4FileSource, setStep4FileSource] = useState('');
   const [step4DocumentName, setStep4DocumentName] = useState('');
+  const [step4DocumentType, setStep4DocumentType] = useState('');
   const [step4DocumentAssignee, setStep4DocumentAssignee] = useState('');
   const [showStep4FileSourceDropdown, setShowStep4FileSourceDropdown] = useState(false);
   const [showStep4AssigneeDropdown, setShowStep4AssigneeDropdown] = useState(false);
+  const [showStep4UploadDropdown, setShowStep4UploadDropdown] = useState(false);
   const step4FileSourceDropdownRef = useRef<HTMLDivElement>(null);
   const step4AssigneeDropdownRef = useRef<HTMLDivElement>(null);
+  const step4UploadDropdownRef = useRef<HTMLDivElement>(null);
+  
+  // State for inline editing of step 4 documents
+  const [editingStep4DocumentIndex, setEditingStep4DocumentIndex] = useState<number | null>(null);
+  const [inlineEditingStep4DocumentName, setInlineEditingStep4DocumentName] = useState('');
+  const [inlineEditingStep4DocumentType, setInlineEditingStep4DocumentType] = useState('');
+  const [inlineEditingStep4DocumentAssignee, setInlineEditingStep4DocumentAssignee] = useState('');
+  const [showStep4DocumentAssigneeDropdown, setShowStep4DocumentAssigneeDropdown] = useState(false);
+  const step4DocumentAssigneeDropdownRef = useRef<HTMLDivElement>(null);
   
   // State for rows per page
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -1813,6 +1845,44 @@ const ContractsPage: React.FC = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showContractTypeDropdown, showMilestoneDropdown, showPropertyTypeDropdown, showStateDropdown]);
+
+  // Click outside handler for new document assignee dropdown
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      const newDocumentAssigneeDropdown = newDocumentAssigneeDropdownRef.current;
+      
+      if (newDocumentAssigneeDropdown && !newDocumentAssigneeDropdown.contains(target)) {
+        setShowNewDocumentAssigneeDropdown(false);
+      }
+    }
+
+    if (showNewDocumentAssigneeDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showNewDocumentAssigneeDropdown]);
+
+  // Click outside handler for inline editing new document assignee dropdown
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      const inlineEditingNewDocumentAssigneeDropdown = inlineEditingNewDocumentAssigneeDropdownRef.current;
+      
+      if (inlineEditingNewDocumentAssigneeDropdown && !inlineEditingNewDocumentAssigneeDropdown.contains(target)) {
+        setShowInlineEditingNewDocumentAssigneeDropdown(false);
+      }
+    }
+
+    if (showInlineEditingNewDocumentAssigneeDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showInlineEditingNewDocumentAssigneeDropdown]);
 
   // Separate click outside handler for country dropdown
   React.useEffect(() => {
@@ -2565,28 +2635,138 @@ const ContractsPage: React.FC = () => {
 
   // Function to handle adding documents directly from step 4
   const handleAddStep4Document = () => {
-    if (step4DocumentName.trim() && step4DocumentAssignee.trim() && step4SelectedFiles.length > 0) {
+    if (step4DocumentName.trim() && step4DocumentType.trim() && step4DocumentAssignee.trim() && step4SelectedFiles.length > 0) {
       const newDocument = {
         file: step4SelectedFiles[0],
         name: step4DocumentName.trim(),
+        type: step4DocumentType.trim(),
         assignee: step4DocumentAssignee.trim()
       };
       setStep4Documents(prev => [...prev, newDocument]);
       
       // Reset form
       setStep4DocumentName('');
+      setStep4DocumentType('');
       setStep4DocumentAssignee('');
       setStep4FileSource('');
       setStep4SelectedFiles([]);
     }
   };
 
+  const handleAddNewDocument = () => {
+    if (newDocumentName.trim() && documentModalForm.contract.trim() && newDocumentAssignee.trim() && newDocumentFormUploadedFiles.length > 0) {
+      // Create a document for each uploaded file
+      const newDocuments = newDocumentFormUploadedFiles.map(file => ({
+        file: file,
+        name: newDocumentName.trim(),
+        type: newDocumentType.trim(),
+        assignee: newDocumentAssignee.trim(),
+        contract: documentModalForm.contract.trim()
+      }));
+      
+      setNewDocumentDocuments(prev => [...prev, ...newDocuments]);
+      
+      // Reset form
+      setNewDocumentName('');
+      setNewDocumentType('');
+      setNewDocumentAssignee('');
+      setNewDocumentFormUploadedFiles([]);
+    }
+  };
+
+  const handleStartInlineEditNewDocument = (index: number) => {
+    const doc = newDocumentDocuments[index];
+    setEditingNewDocumentIndex(index);
+    setInlineEditingNewDocumentName(doc.name);
+    setInlineEditingNewDocumentType(doc.type);
+    setInlineEditingNewDocumentAssignee(doc.assignee);
+    setInlineEditingNewDocumentContract(doc.contract || '');
+    setShowInlineEditingNewDocumentAssigneeDropdown(false);
+    setShowInlineEditingNewDocumentContractDropdown(false);
+  };
+
+  const handleSaveInlineEditNewDocument = (index: number) => {
+    // Validate that contract is a valid selection from the contracts list
+    const isValidContract = contracts.some(contract => 
+      `${contract.id} - ${contract.title}` === inlineEditingNewDocumentContract.trim()
+    );
+    
+    // Validate that assignee is a valid selection from the assignees list
+    const isValidAssignee = allAssignees.includes(inlineEditingNewDocumentAssignee.trim());
+    
+    if (inlineEditingNewDocumentName.trim() && 
+        inlineEditingNewDocumentType.trim() && 
+        inlineEditingNewDocumentAssignee.trim() && 
+        inlineEditingNewDocumentContract.trim() &&
+        isValidContract &&
+        isValidAssignee) {
+      setNewDocumentDocuments(prev => prev.map((doc, i) => 
+        i === index 
+          ? { ...doc, name: inlineEditingNewDocumentName.trim(), type: inlineEditingNewDocumentType.trim(), assignee: inlineEditingNewDocumentAssignee.trim(), contract: inlineEditingNewDocumentContract.trim() }
+          : doc
+      ));
+      setEditingNewDocumentIndex(null);
+      setInlineEditingNewDocumentName('');
+      setInlineEditingNewDocumentType('');
+      setInlineEditingNewDocumentAssignee('');
+      setInlineEditingNewDocumentContract('');
+      setShowInlineEditingNewDocumentAssigneeDropdown(false);
+      setShowInlineEditingNewDocumentContractDropdown(false);
+    }
+  };
+
+  const handleCancelInlineEditNewDocument = () => {
+    setEditingNewDocumentIndex(null);
+    setInlineEditingNewDocumentName('');
+    setInlineEditingNewDocumentType('');
+    setInlineEditingNewDocumentAssignee('');
+    setInlineEditingNewDocumentContract('');
+    setShowInlineEditingNewDocumentAssigneeDropdown(false);
+    setShowInlineEditingNewDocumentContractDropdown(false);
+  };
+
   // Function to handle editing existing step 4 document
   const handleEditStep4Document = (index: number) => {
     const doc = step4Documents[index];
     setStep4DocumentName(doc.name);
+    setStep4DocumentType(doc.type || '');
     setStep4DocumentAssignee(doc.assignee);
     setEditingStep4Document(index);
+  };
+
+  // Function to start inline editing of a step 4 document
+  const handleStartInlineEditStep4Document = (index: number) => {
+    const doc = step4Documents[index];
+    setEditingStep4DocumentIndex(index);
+    setInlineEditingStep4DocumentName(doc.name);
+    setInlineEditingStep4DocumentType(doc.type || '');
+    setInlineEditingStep4DocumentAssignee(doc.assignee);
+    setShowStep4DocumentAssigneeDropdown(false);
+  };
+
+  // Function to save inline edits of a step 4 document
+  const handleSaveInlineEditStep4Document = (index: number) => {
+    if (inlineEditingStep4DocumentName.trim() && inlineEditingStep4DocumentType.trim() && inlineEditingStep4DocumentAssignee.trim()) {
+      setStep4Documents(prev => prev.map((doc, i) => 
+        i === index 
+          ? { ...doc, name: inlineEditingStep4DocumentName.trim(), type: inlineEditingStep4DocumentType.trim(), assignee: inlineEditingStep4DocumentAssignee.trim() }
+          : doc
+      ));
+      setEditingStep4DocumentIndex(null);
+      setInlineEditingStep4DocumentName('');
+      setInlineEditingStep4DocumentType('');
+      setInlineEditingStep4DocumentAssignee('');
+      setShowStep4DocumentAssigneeDropdown(false);
+    }
+  };
+
+  // Function to cancel inline editing of a step 4 document
+  const handleCancelInlineEditStep4Document = () => {
+    setEditingStep4DocumentIndex(null);
+    setInlineEditingStep4DocumentName('');
+    setInlineEditingStep4DocumentType('');
+    setInlineEditingStep4DocumentAssignee('');
+    setShowStep4DocumentAssigneeDropdown(false);
   };
 
   // Add commentEditor setup
@@ -3033,6 +3213,29 @@ const ContractsPage: React.FC = () => {
     };
   }, [openRecentlyUpdatedDropdown]);
 
+  // Add click-outside handler for new document upload dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+      const dropdown = newDocumentUploadDropdownRef.current;
+      
+      // Only check if dropdown is open
+      if (showNewDocumentUploadDropdown) {
+        // Check if clicking inside the dropdown
+        const isInsideDropdown = dropdown?.contains(target);
+        
+        // If clicking outside the dropdown, close it
+        if (!isInsideDropdown) {
+          setShowNewDocumentUploadDropdown(false);
+        }
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showNewDocumentUploadDropdown]);
+
   // Click-off behavior for each recipient role dropdown
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -3227,6 +3430,62 @@ const ContractsPage: React.FC = () => {
     };
   }, [showStep4AssigneeDropdown]);
 
+  // Click outside handler for step 4 upload dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (showStep4UploadDropdown && !step4UploadDropdownRef.current?.contains(event.target as Node)) {
+        setShowStep4UploadDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showStep4UploadDropdown]);
+
+  // Click outside handler for step 4 document inline editing assignee dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (showStep4DocumentAssigneeDropdown && !step4DocumentAssigneeDropdownRef.current?.contains(event.target as Node)) {
+        setShowStep4DocumentAssigneeDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showStep4DocumentAssigneeDropdown]);
+
+  // Click outside handler for inline editing new document assignee dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (showInlineEditingNewDocumentAssigneeDropdown && !inlineEditingNewDocumentAssigneeDropdownRef.current?.contains(event.target as Node)) {
+        setShowInlineEditingNewDocumentAssigneeDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showInlineEditingNewDocumentAssigneeDropdown]);
+
+  // Click outside handler for inline editing new document contract dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (showInlineEditingNewDocumentContractDropdown && !inlineEditingNewDocumentContractDropdownRef.current?.contains(event.target as Node)) {
+        setShowInlineEditingNewDocumentContractDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showInlineEditingNewDocumentContractDropdown]);
+
   return (
     <>
       <div className="space-y-4 select-none cursor-default">
@@ -3243,6 +3502,24 @@ const ContractsPage: React.FC = () => {
               onClick={() => {
                 setShowNewDocumentModal(true);
                 setShowNewContractForm(false);
+                setDocumentModalStep(2);
+                setCountrySearchTerm('');
+                setStateSearchTerm('');
+                setRecipientErrors({});
+                resetForm();
+                // Reset new document form state
+                setNewDocumentFormUploadedFiles([]);
+                setSelectedNewDocumentFormFileSource('');
+                setShowNewDocumentUploadDropdown(false);
+                setNewDocumentName('');
+                setNewDocumentType('');
+                setNewDocumentAssignee('');
+                setNewDocumentDocuments([]);
+                setEditingNewDocumentIndex(null);
+                setInlineEditingNewDocumentName('');
+                setInlineEditingNewDocumentType('');
+                setInlineEditingNewDocumentAssignee('');
+                setShowInlineEditingNewDocumentAssigneeDropdown(false);
               }}
               className="flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold w-full sm:w-auto cursor-pointer"
             >
@@ -3253,10 +3530,13 @@ const ContractsPage: React.FC = () => {
               onClick={() => {
                 setShowNewContractForm(true);
                 setShowNewDocumentModal(false);
+                setNewDocumentFormUploadedFiles([]);
+                setSelectedNewDocumentFormFileSource('');
+                setShowNewDocumentUploadDropdown(false);
               }}
               className="flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold w-full sm:w-auto cursor-pointer ml-1"
             >
-              <HiOutlineDocumentAdd className="mr-2 text-xl" />
+              <TbScriptPlus className="mr-2 text-[22px]" />
               New Contract
             </button>
           </div>
@@ -3271,9 +3551,9 @@ const ContractsPage: React.FC = () => {
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-300 dark:border-gray-700 px-6 py-4 mb-6 select-none">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
-              <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-primary/10">
-                <HiOutlineDocumentText className="text-primary text-2xl" />
-              </span>
+              <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800">
+                <TbScriptPlus size={20} className="text-teal-500 dark:text-teal-400" />
+              </div>
               <div>
                 <h2 className="text-lg font-bold text-black dark:text-white leading-tight">Create New Contract</h2>
                 <p className="text-gray-500 text-xs leading-tight cursor-default select-none">Fill in the contract details to get started</p>
@@ -4273,93 +4553,13 @@ const ContractsPage: React.FC = () => {
                   <div>
                     
                     {/* Direct Document Upload Fields */}
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                       
-                      {/* File Source */}
-                      <div className="flex gap-4">
-                        <div className="flex-1 w-0">
-                          <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">File Source</div>
-                          <div className="relative" ref={step4FileSourceDropdownRef}>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setShowStep4FileSourceDropdown(!showStep4FileSourceDropdown);
-                              }}
-                              className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs focus:ring-0 focus:ring-primary focus:border-primary transition-colors flex items-center justify-end relative cursor-pointer"
-                              style={{ fontFamily: 'Avenir, sans-serif' }}
-                            >
-                              {step4FileSource ? (
-                                <span className="flex items-center gap-2 absolute left-4 cursor-default select-none">
-                                  {step4FileSource === 'Desktop' && <TbDeviceDesktopPlus className="text-base text-primary" />}
-                                  {step4FileSource === 'Box' && <SiBox className="text-base text-primary" />}
-                                  {step4FileSource === 'Dropbox' && <SlSocialDropbox className="text-base text-primary" />}
-                                  {step4FileSource === 'Google Drive' && <TbBrandGoogleDrive className="text-base text-primary" />}
-                                  {step4FileSource === 'OneDrive' && <TbBrandOnedrive className="text-base text-primary" />}
-                                  <span className="text-xs text-gray-900 dark:text-white cursor-default select-none">{step4FileSource}</span>
-                                </span>
-                              ) : (
-                                <span className="absolute left-4 text-xs text-gray-400 cursor-default select-none">Choose a source...</span>
-                              )}
-                              <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                            </button>
-                            {showStep4FileSourceDropdown && (
-                              <div className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 cursor-default select-none">
-                                <div className="py-2">
-                                  <label htmlFor="step4-desktop-file-upload" className="block px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer select-none">
-                                    <div className="flex items-center gap-2">
-                                      <TbDeviceDesktopPlus className="text-base text-primary" />
-                                      <span className="text-xs cursor-default select-none">Desktop</span>
-                                    </div>
-                                  </label>
-                                  <input
-                                    id="step4-desktop-file-upload"
-                                    name="step4-desktop-file-upload"
-                                    type="file"
-                                    accept=".pdf,.doc,.docx,.jpg,.jpeg"
-                                    className="hidden"
-                                    onChange={(e) => {
-                                      setStep4FileSource('Desktop');
-                                      setShowStep4FileSourceDropdown(false);
-                                      if (e.target.files) {
-                                        const newFiles = Array.from(e.target.files);
-                                        setStep4SelectedFiles(prev => [...prev, ...newFiles]);
-                                        // Pre-populate document name with first file name (without extension)
-                                        if (newFiles.length > 0) {
-                                          const fileName = newFiles[0].name;
-                                          const nameWithoutExtension = fileName.replace(/\.[^/.]+$/, "");
-                                          setStep4DocumentName(nameWithoutExtension);
-                                        }
-                                      }
-                                    }}
-                                  />
-                                  <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setStep4FileSource('Box'); setShowStep4FileSourceDropdown(false); }}>
-                                    <SiBox className="text-base text-primary" />
-                                    <span className="text-xs cursor-default select-none">Box</span>
-                                  </button>
-                                  <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setStep4FileSource('Dropbox'); setShowStep4FileSourceDropdown(false); }}>
-                                    <SlSocialDropbox className="text-base text-primary" />
-                                    <span className="text-xs cursor-default select-none">Dropbox</span>
-                                  </button>
-                                  <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setStep4FileSource('Google Drive'); setShowStep4FileSourceDropdown(false); }}>
-                                    <TbBrandGoogleDrive className="text-base text-primary" />
-                                    <span className="text-xs cursor-default select-none">Google Drive</span>
-                                  </button>
-                                  <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setStep4FileSource('OneDrive'); setShowStep4FileSourceDropdown(false); }}>
-                                    <TbBrandOnedrive className="text-base text-primary" />
-                                    <span className="text-xs cursor-default select-none">OneDrive</span>
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex-1 w-0" />
-                      </div>
+
 
                       {/* Document Name and Assignee - Side by Side */}
-                      <div className="flex gap-4">
-                        <div className="flex-1 w-0">
+                      <div className="grid grid-cols-2 gap-6">
+                        <div>
                           <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Document Name <span className="text-red-500">*</span></label>
                           <input
                             type="text"
@@ -4369,8 +4569,21 @@ const ContractsPage: React.FC = () => {
                             onChange={(e) => setStep4DocumentName(e.target.value)}
                             style={{ fontFamily: 'Avenir, sans-serif' }}
                           />
+                          
+                          {/* Document Type - Added under Document Name in left column */}
+                          <div className="mt-6">
+                            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Document Type</label>
+                            <input
+                              type="text"
+                              placeholder="Enter document type..."
+                              className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs transition-colors cursor-text focus:ring-2 focus:ring-primary focus:border-primary"
+                              value={step4DocumentType}
+                              onChange={(e) => setStep4DocumentType(e.target.value)}
+                              style={{ fontFamily: 'Avenir, sans-serif' }}
+                            />
+                          </div>
                         </div>
-                        <div className="flex-1 w-0">
+                        <div>
                           <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Assignee <span className="text-red-500">*</span></label>
                           <div className="relative" ref={step4AssigneeDropdownRef}>
                             <input
@@ -4439,13 +4652,13 @@ const ContractsPage: React.FC = () => {
                     </div>
 
                                          {/* Direct File Upload Option */}
-                     <div className="mt-6 mb-8">
+                     <div className="mt-6">
   
-                       <div className="relative">
+                       <div className="relative" ref={step4UploadDropdownRef}>
                          <div 
                            className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 py-8 px-4 text-center transition hover:border-primary cursor-pointer"
                            onClick={() => {
-                             document.getElementById('step4-direct-file-upload')?.click();
+                             setShowStep4UploadDropdown(!showStep4UploadDropdown);
                            }}
                            onDragOver={(e) => {
                              e.preventDefault();
@@ -4463,38 +4676,72 @@ const ContractsPage: React.FC = () => {
                                // Add files to selected files
                                setStep4SelectedFiles(prev => [...prev, ...files]);
                                
-                               // Pre-populate document name with first file name (without extension)
-                               const fileName = files[0].name;
-                               const nameWithoutExtension = fileName.replace(/\.[^/.]+$/, "");
-                               setStep4DocumentName(nameWithoutExtension);
-                             }
-                           }}
-                         >
-                           <HiOutlineUpload className="text-2xl text-gray-400 mb-2" />
-                           <div className="text-gray-700 dark:text-gray-300 font-medium cursor-default select-none">Click to upload or drag and drop</div>
-                           <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 cursor-default select-none">PDF, DOC, DOCX, or JPG (max. 10MB each)</div>
-                         </div>
-                         
-                         {/* Hidden file input for direct upload */}
-                         <input
-                           id="step4-direct-file-upload"
-                           name="step4-direct-file-upload"
-                           type="file"
-                           accept=".pdf,.doc,.docx,.jpg,.jpeg"
-                           className="hidden"
-                           onChange={(e) => {
-                             if (e.target.files) {
-                               const newFiles = Array.from(e.target.files);
-                               setStep4SelectedFiles(prev => [...prev, ...newFiles]);
-                               // Pre-populate document name with first file name (without extension)
-                               if (newFiles.length > 0) {
-                                 const fileName = newFiles[0].name;
+                               // Pre-populate document name with first file name (without extension) only if field is empty
+                               if (!step4DocumentName.trim()) {
+                                 const fileName = files[0].name;
                                  const nameWithoutExtension = fileName.replace(/\.[^/.]+$/, "");
                                  setStep4DocumentName(nameWithoutExtension);
                                }
                              }
                            }}
-                         />
+                         >
+                           <TbDragDrop className="text-3xl text-gray-400 mb-2" />
+                           <div className="text-xs text-gray-700 dark:text-gray-300 font-medium cursor-default select-none">Click to upload or drag and drop</div>
+                           <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 cursor-default select-none">PDF, DOC, DOCX, or JPG (max. 10MB each)</div>
+                         </div>
+                         
+                         {/* Upload Source Dropdown */}
+                         {showStep4UploadDropdown && (
+                           <div className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 cursor-default select-none">
+                             <div className="py-2">
+                               <label htmlFor="step4-upload-desktop-file-upload" className="block px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+                                 <div className="flex items-center gap-2">
+                                   <TbDeviceDesktopPlus className="text-base text-primary" />
+                                   <span className="text-xs cursor-default select-none">Desktop</span>
+                                 </div>
+                               </label>
+                               <input
+                                 id="step4-upload-desktop-file-upload"
+                                 name="step4-upload-desktop-file-upload"
+                                 type="file"
+                                 accept=".pdf,.doc,.docx,.jpg,.jpeg"
+                                 className="hidden"
+                                 multiple
+                                 onChange={(e) => {
+                                   setStep4FileSource('Desktop');
+                                   setShowStep4UploadDropdown(false);
+                                   if (e.target.files) {
+                                     const newFiles = Array.from(e.target.files);
+                                     setStep4SelectedFiles(prev => [...prev, ...newFiles]);
+                                     // Pre-populate document name with first file name (without extension) only if field is empty
+                                     if (newFiles.length > 0 && !step4DocumentName.trim()) {
+                                       const fileName = newFiles[0].name;
+                                       const nameWithoutExtension = fileName.replace(/\.[^/.]+$/, "");
+                                       setStep4DocumentName(nameWithoutExtension);
+                                     }
+                                   }
+                                 }}
+                               />
+                               <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setStep4FileSource('Box'); setShowStep4UploadDropdown(false); }}>
+                                 <SiBox className="text-base text-primary" />
+                                 <span className="text-xs cursor-default select-none">Box</span>
+                               </button>
+                               <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setStep4FileSource('Dropbox'); setShowStep4UploadDropdown(false); }}>
+                                 <SlSocialDropbox className="text-base text-primary" />
+                                 <span className="text-xs cursor-default select-none">Dropbox</span>
+                               </button>
+                               <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setStep4FileSource('Google Drive'); setShowStep4UploadDropdown(false); }}>
+                                 <TbBrandGoogleDrive className="text-base text-primary" />
+                                 <span className="text-xs cursor-default select-none">Google Drive</span>
+                               </button>
+                               <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setStep4FileSource('OneDrive'); setShowStep4UploadDropdown(false); }}>
+                                 <TbBrandOnedrive className="text-base text-primary" />
+                                 <span className="text-xs cursor-default select-none">OneDrive</span>
+                               </button>
+                             </div>
+                           </div>
+                         )}
+
                        </div>
                      </div>
 
@@ -4506,26 +4753,137 @@ const ContractsPage: React.FC = () => {
                            {step4Documents.map((doc, idx) => (
                              <div 
                                key={idx} 
-                               className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600 cursor-pointer transition-colors"
-                               onClick={() => handleEditStep4Document(idx)}
+                               className="bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600 transition-colors"
                              >
-                               <div className="flex-1 min-w-0 pl-3">
-                                 <div className="font-semibold text-xs text-black dark:text-white flex-1 min-w-0 truncate">
-                                   {doc.name}
+                               {editingStep4DocumentIndex === idx ? (
+                                 // Inline editing mode
+                                 <div className="space-y-3">
+                                   <div className="flex items-center justify-between">
+                                     <div className="flex-1 min-w-0">
+                                       <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Document Name</label>
+                                       <input
+                                         type="text"
+                                         value={inlineEditingStep4DocumentName}
+                                         onChange={(e) => setInlineEditingStep4DocumentName(e.target.value)}
+                                         className="w-full h-[28px] px-3 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-xs focus:ring-1 focus:ring-primary focus:border-primary"
+                                         style={{ fontFamily: 'Avenir, sans-serif' }}
+                                       />
+                                     </div>
+                                     <div className="flex-1 min-w-0 ml-3">
+                                       <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Document Type</label>
+                                       <input
+                                         type="text"
+                                         value={inlineEditingStep4DocumentType}
+                                         onChange={(e) => setInlineEditingStep4DocumentType(e.target.value)}
+                                         className="w-full h-[28px] px-3 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-xs focus:ring-1 focus:ring-primary focus:border-primary"
+                                         style={{ fontFamily: 'Avenir, sans-serif' }}
+                                       />
+                                     </div>
+                                     <div className="flex-1 min-w-0 ml-3">
+                                       <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Assignee</label>
+                                       <div className="relative" ref={step4DocumentAssigneeDropdownRef}>
+                                         <input
+                                           type="text"
+                                           value={inlineEditingStep4DocumentAssignee}
+                                           onChange={(e) => {
+                                             setInlineEditingStep4DocumentAssignee(e.target.value);
+                                             if (e.target.value === '') {
+                                               setShowStep4DocumentAssigneeDropdown(false);
+                                             } else if (!showStep4DocumentAssigneeDropdown) {
+                                               setShowStep4DocumentAssigneeDropdown(true);
+                                             }
+                                           }}
+                                           onFocus={() => setShowStep4DocumentAssigneeDropdown(true)}
+                                           className="w-full h-[28px] px-3 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-xs focus:ring-1 focus:ring-primary focus:border-primary pr-8"
+                                           style={{ fontFamily: 'Avenir, sans-serif' }}
+                                           autoComplete="off"
+                                         />
+                                         <HiMiniChevronDown className="pointer-events-none absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                         
+                                         {showStep4DocumentAssigneeDropdown && (
+                                           <div className="fixed inset-0 z-[9999] pointer-events-none">
+                                             <div className="absolute bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 max-h-96 overflow-y-auto pointer-events-auto" 
+                                                  style={{
+                                                    left: step4DocumentAssigneeDropdownRef.current?.getBoundingClientRect().left || 0,
+                                                    top: (step4DocumentAssigneeDropdownRef.current?.getBoundingClientRect().bottom || 0) + 4,
+                                                    width: step4DocumentAssigneeDropdownRef.current?.getBoundingClientRect().width || 'auto',
+                                                    minWidth: '200px'
+                                                  }}>
+                                               {allAssignees
+                                                 .filter(assignee => assignee.toLowerCase().includes(inlineEditingStep4DocumentAssignee.toLowerCase()))
+                                                 .map((assignee: string) => (
+                                                   <div
+                                                     key={assignee}
+                                                     className={`px-3 py-2 text-xs cursor-pointer ${inlineEditingStep4DocumentAssignee === assignee ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                                                     onClick={() => {
+                                                       setInlineEditingStep4DocumentAssignee(assignee);
+                                                       setShowStep4DocumentAssigneeDropdown(false);
+                                                     }}
+                                                   >
+                                                     {assignee}
+                                                   </div>
+                                                 ))}
+                                             </div>
+                                           </div>
+                                         )}
+                                       </div>
+                                     </div>
+                                   </div>
+                                   
+                                   <div className="flex items-center justify-between">
+                                     <div className="text-xs text-gray-500 cursor-default select-none">
+                                       {formatDateYYYYMMDD(new Date())} &bull; {doc.file.name.split('.').pop()?.toUpperCase() || 'Unknown'} &bull; {(doc.file.size / 1024 / 1024).toFixed(2)} MB
+                                     </div>
+                                     <div className="flex">
+                                       <button
+                                         type="button"
+                                         onClick={() => handleSaveInlineEditStep4Document(idx)}
+                                         disabled={!inlineEditingStep4DocumentName.trim() || !inlineEditingStep4DocumentType.trim() || !inlineEditingStep4DocumentAssignee.trim()}
+                                         className="px-2.5 py-1 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                       >
+                                         Save
+                                       </button>
+                                       <button
+                                         type="button"
+                                         onClick={handleCancelInlineEditStep4Document}
+                                         className="px-2.5 py-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ml-1"
+                                       >
+                                         Cancel
+                                       </button>
+                                     </div>
+                                   </div>
                                  </div>
-                                 <div className="text-xs text-gray-500 cursor-default select-none">
-                                   {formatDateYYYYMMDD(new Date())} &bull; {doc.file.name.split('.').pop()?.toUpperCase() || 'Unknown'} &bull; {(doc.file.size / 1024 / 1024).toFixed(2)} MB &bull; {doc.assignee}
+                               ) : (
+                                 // Display mode
+                                 <div className="flex items-center justify-between">
+                                   <div className="flex-1 min-w-0 pl-3">
+                                     <div className="font-semibold text-xs text-black dark:text-white flex-1 min-w-0 truncate">
+                                       {doc.name}
+                                     </div>
+                                     <div className="text-xs text-gray-500 cursor-default select-none">
+                                       {formatDateYYYYMMDD(new Date())} &bull; {doc.type || 'Unknown Type'} &bull; {doc.file.name.split('.').pop()?.toUpperCase() || 'Unknown'} &bull; {(doc.file.size / 1024 / 1024).toFixed(2)} MB &bull; {doc.assignee}
+                                     </div>
+                                   </div>
+                                   <div className="flex items-center gap-1">
+                                     <button 
+                                       type="button"
+                                       onClick={() => handleStartInlineEditStep4Document(idx)}
+                                       className="text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors p-1"
+                                     >
+                                       <HiOutlinePencil className="h-4 w-4" />
+                                     </button>
+                                     <button 
+                                       className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1 pr-3"
+                                       onClick={(e) => {
+                                         e.stopPropagation();
+                                         setStep4Documents(prev => prev.filter((_, i) => i !== idx));
+                                       }}
+                                     >
+                                       <HiOutlineTrash className="h-4 w-4" />
+                                     </button>
+                                   </div>
                                  </div>
-                               </div>
-                               <button 
-                                 className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1 pr-3"
-                                 onClick={(e) => {
-                                   e.stopPropagation();
-                                   setStep4Documents(prev => prev.filter((_, i) => i !== idx));
-                                 }}
-                               >
-                                 <HiOutlineTrash className="h-4 w-4" />
-                               </button>
+                               )}
                              </div>
                            ))}
                          </div>
@@ -4534,17 +4892,17 @@ const ContractsPage: React.FC = () => {
                   </div>
                   <div className="flex justify-between mt-12">
                     <button type="button" onClick={() => setModalStep(3)} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm cursor-default select-none">Previous</button>
-                    <div className="flex gap-1">
+                    <div className="flex">
                       <button
                         type="button"
                         onClick={handleAddStep4Document}
-                        disabled={!step4DocumentName.trim() || !step4DocumentAssignee.trim() || step4SelectedFiles.length === 0}
+                        disabled={!step4DocumentName.trim() || !step4DocumentType.trim() || !step4DocumentAssignee.trim() || step4SelectedFiles.length === 0}
                         className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       >
                         Add Document
                       </button>
-                      <button type="submit" className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm">Create Contract</button>
+                      <button type="submit" className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm ml-1">Create Contract</button>
                     </div>
                   </div>
                 </div>
@@ -4556,9 +4914,9 @@ const ContractsPage: React.FC = () => {
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-300 dark:border-gray-700 px-6 py-4 mb-6 select-none">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
-              <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-primary/10">
-                <HiOutlineDocumentAdd className="text-primary text-2xl" />
-              </span>
+              <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800">
+                <TbLibraryPlus size={20} className="text-teal-500 dark:text-teal-400" />
+              </div>
               <div>
                 <h2 className="text-lg font-bold text-black dark:text-white leading-tight">Create New Document</h2>
                 <p className="text-gray-500 text-xs leading-tight cursor-default select-none">Fill in the document details to get started</p>
@@ -4567,13 +4925,15 @@ const ContractsPage: React.FC = () => {
             <button
               onClick={() => { 
                 setShowNewDocumentModal(false); 
-                setDocumentModalStep(1); 
+                setDocumentModalStep(2); 
                 setDocumentModalForm({ name: '', type: '', description: '', assignee: '', contract: '' }); 
                 setDocumentFormErrors({});
                 setDocumentUploadErrors({
-                  fileSource: false,
                   files: false
                 });
+                setNewDocumentFormUploadedFiles([]);
+                setSelectedNewDocumentFormFileSource('');
+                setShowNewDocumentUploadDropdown(false);
               }} 
               className="text-gray-400 hover:text-gray-600 p-2 rounded-full"
             >
@@ -4583,266 +4943,10 @@ const ContractsPage: React.FC = () => {
             </button>
           </div>
 
-          {/* Stepper */}
-          <div className="w-full overflow-x-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
-            <div className="flex items-center justify-between mb-6 min-w-[340px] sm:min-w-0">
-              <div className="flex items-center space-x-2 w-full flex-nowrap">
-                {[1, 2].map((step, idx) => (
-                  <React.Fragment key={step}>
-                    <button
-                      type="button"
-                      onClick={() => setDocumentModalStep(step)}
-                      className={`flex items-center gap-2 rounded-xl font-semibold border transition-all duration-300 text-sm px-4 py-2 whitespace-nowrap
-                        ${documentModalStep === step
-                          ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 ring-1 ring-inset ring-gray-200 dark:ring-gray-600 shadow-sm'
-                          : 'text-gray-500 dark:text-gray-400 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700'
-                        }`}
-                    >
-                      <span className={`inline-block transition-all duration-300 ${documentModalStep === step ? 'opacity-100 mr-2' : 'opacity-0 w-0 mr-0'}`} style={{width: documentModalStep === step ? 18 : 0}}>
-                        {documentModalStep === step && <Logo width={18} height={18} className="pointer-events-none" />}
-                      </span>
-                      {step === 1 && 'Step 1: Details'}
-                      {step === 2 && 'Step 2: Upload'}
-                    </button>
-                    {idx < 1 && <div className="flex-1 h-0.5 bg-gray-200 dark:bg-gray-600 mx-2 min-w-[20px]" />}
-                  </React.Fragment>
-                ))}
-              </div>
-            </div>
-          </div>
+
 
           {/* Form Content */}
           <div className="space-y-6 pt-4">
-            {documentModalStep === 1 && (
-              <>
-                <div className="space-y-6">
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <label htmlFor="documentName" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Document Name <span className="text-red-500">*</span></label>
-                      <input
-                        type="text"
-                        id="documentName"
-                        name="name"
-                        required
-                        value={documentModalForm.name}
-                        onChange={(e) => {
-                          setDocumentModalForm(prev => ({ ...prev, name: e.target.value }));
-                          if (documentFormErrors.name) {
-                            setDocumentFormErrors(prev => ({ ...prev, name: false }));
-                          }
-                        }}
-                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
-                        placeholder="Enter document name..."
-                      />
-                      {documentFormErrors.name && (
-                        <p className="mt-1 text-xs text-red-600 font-medium cursor-default select-none">Document name is required</p>
-                      )}
-                    </div>
-                    <div>
-                      <label htmlFor="documentType" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Document Type</label>
-                      <input
-                        type="text"
-                        id="documentType"
-                        name="type"
-                        value={documentModalForm.type}
-                        onChange={(e) => setDocumentModalForm(prev => ({ ...prev, type: e.target.value }))}
-                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
-                        placeholder="Enter document type..."
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="documentAssignee" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Assignee <span className="text-red-500">*</span></label>
-                      <div className="relative" ref={newDocumentAssigneeDropdownRef}>
-                        <input
-                          type="text"
-                          id="documentAssignee"
-                          name="assignee"
-                          required
-                          className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs transition-colors cursor-text focus:ring-2 focus:ring-primary focus:border-primary pr-10"
-                          placeholder="Choose an assignee..."
-                          value={documentModalForm.assignee}
-                          onChange={(e) => {
-                            setDocumentModalForm(prev => ({ ...prev, assignee: e.target.value }));
-                            if (documentFormErrors.assignee) {
-                              setDocumentFormErrors(prev => ({ ...prev, assignee: false }));
-                            }
-                            if (e.target.value === '') {
-                              setShowNewDocumentAssigneeDropdown(false);
-                            } else if (!showNewDocumentAssigneeDropdown) {
-                              setShowNewDocumentAssigneeDropdown(true);
-                            }
-                          }}
-                          onFocus={() => setShowNewDocumentAssigneeDropdown(true)}
-                          onClick={() => setShowNewDocumentAssigneeDropdown(true)}
-                          style={{ fontFamily: 'Avenir, sans-serif' }}
-                          autoComplete="off"
-                        />
-                        <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        {showNewDocumentAssigneeDropdown && (
-                          <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                            {allAssignees.length > 0 ? (
-                              <>
-                                {allAssignees.map((assignee: string) => (
-                                  <div
-                                    key={assignee}
-                                    className={`px-4 py-2 text-xs cursor-pointer ${documentModalForm.assignee === assignee ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'} select-none`}
-                                    onClick={() => {
-                                      setDocumentModalForm(prev => ({ ...prev, assignee }));
-                                      setShowNewDocumentAssigneeDropdown(false);
-                                    }}
-                                  >
-                                    {assignee}
-                                  </div>
-                                ))}
-                                <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
-                                <div
-                                  className="px-4 py-2 text-xs cursor-pointer text-primary hover:bg-primary/10 select-none flex items-center gap-2"
-                                  onClick={() => {
-                                    // TODO: Add logic to create new assignee
-                                    setShowNewDocumentAssigneeDropdown(false);
-                                  }}
-                                >
-                                  <FaPlus className="text-xs" />
-                                  Add new assignee
-                                </div>
-                              </>
-                            ) : (
-                              <>
-                                <div className="px-4 py-2 text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">No assignees found</div>
-                                <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
-                                <div
-                                  className="px-4 py-2 text-xs cursor-pointer text-primary hover:bg-primary/10 select-none flex items-center gap-2"
-                                  onClick={() => {
-                                    // TODO: Add logic to create new assignee
-                                    setShowNewDocumentAssigneeDropdown(false);
-                                  }}
-                                >
-                                  <FaPlus className="text-xs" />
-                                  Add new assignee
-                                </div>
-                              </>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      {documentFormErrors.assignee && (
-                        <p className="mt-1 text-xs text-red-600 font-medium cursor-default select-none">Assignee selection is required</p>
-                      )}
-                    </div>
-                    <div>
-                      <label htmlFor="documentContract" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Contract <span className="text-red-500">*</span></label>
-                      <div className="relative" ref={newDocumentContractDropdownRef}>
-                        <input
-                          type="text"
-                          id="documentContract"
-                          name="contract"
-                          required
-                          className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs transition-colors cursor-text focus:ring-2 focus:ring-primary focus:border-primary pr-10"
-                          placeholder="Choose a contract..."
-                          value={documentModalForm.contract}
-                          onChange={(e) => {
-                            setDocumentModalForm(prev => ({ ...prev, contract: e.target.value }));
-                            if (documentFormErrors.contract) {
-                              setDocumentFormErrors(prev => ({ ...prev, contract: false }));
-                            }
-                            if (e.target.value === '') {
-                              setShowNewDocumentContractDropdown(false);
-                            } else if (!showNewDocumentContractDropdown) {
-                              setShowNewDocumentContractDropdown(true);
-                            }
-                          }}
-                          onFocus={() => setShowNewDocumentContractDropdown(true)}
-                          onClick={() => setShowNewDocumentContractDropdown(true)}
-                          style={{ fontFamily: 'Avenir, sans-serif' }}
-                          autoComplete="off"
-                        />
-                        <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        {showNewDocumentContractDropdown && (
-                          <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                            {/* Search Bar */}
-                            <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
-                              <div className="relative">
-                                <input
-                                  type="text"
-                                  placeholder="Search contracts..."
-                                  value={newDocumentContractSearch}
-                                  onChange={(e) => setNewDocumentContractSearch(e.target.value)}
-                                  className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-700 dark:text-white bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                                  style={{ fontFamily: 'Avenir, sans-serif' }}
-                                />
-                                <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                              </div>
-                            </div>
-                            {contracts
-                              .filter(contract => 
-                                contract.id.toLowerCase().includes(newDocumentContractSearch.toLowerCase()) ||
-                                contract.title.toLowerCase().includes(newDocumentContractSearch.toLowerCase())
-                              )
-                              .sort((a, b) => Number(a.id) - Number(b.id))
-                              .map(contract => (
-                                <div
-                                  key={contract.id}
-                                  className={`px-4 py-2 text-xs cursor-pointer ${documentModalForm.contract === `${contract.id} - ${contract.title}` ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'} select-none`}
-                                  onClick={() => {
-                                    setDocumentModalForm(prev => ({ ...prev, contract: `${contract.id} - ${contract.title}` }));
-                                    setShowNewDocumentContractDropdown(false);
-                                  }}
-                                >
-                                  {contract.id} - {contract.title}
-                                </div>
-                              ))}
-                          </div>
-                        )}
-                      </div>
-                      {documentFormErrors.contract && (
-                        <p className="mt-1 text-xs text-red-600 font-medium cursor-default select-none">Contract selection is required</p>
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <label htmlFor="documentDescription" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Description</label>
-                    <textarea
-                      id="documentDescription"
-                      name="description"
-                      value={documentModalForm.description}
-                      onChange={(e) => setDocumentModalForm(prev => ({ ...prev, description: e.target.value }))}
-                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
-                      placeholder="Enter document description..."
-                      rows={3}
-                    />
-                  </div>
-                </div>
-                <div className="flex justify-end mt-6">
-                  <button 
-                    onClick={() => {
-                      const newErrors: Record<string, boolean> = {};
-                      
-                      if (!documentModalForm.name.trim()) {
-                        newErrors.name = true;
-                      }
-                      if (!documentModalForm.assignee.trim()) {
-                        newErrors.assignee = true;
-                      }
-                      if (!documentModalForm.contract.trim()) {
-                        newErrors.contract = true;
-                      }
-                      
-                      if (Object.keys(newErrors).length > 0) {
-                        setDocumentFormErrors(newErrors);
-                        return;
-                      }
-                      
-                      setDocumentFormErrors({});
-                      setDocumentModalStep(2);
-                    }}
-                    className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm"
-                    style={{ fontFamily: 'Avenir, sans-serif' }}
-                  >
-                    Continue
-                  </button>
-                </div>
-              </>
-            )}
             {documentModalStep === 2 && (
               <div className="space-y-6">
                 <div>
@@ -4854,118 +4958,307 @@ const ContractsPage: React.FC = () => {
                         {step4Documents.map((doc, idx) => (
                           <div 
                             key={idx} 
-                            className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600 cursor-pointer transition-colors"
-                            onClick={() => handleEditStep4Document(idx)}
+                            className="bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600 transition-colors"
                           >
-                            <div className="flex-1 min-w-0 pl-3">
-                              <div className="font-semibold text-xs text-black dark:text-white flex-1 min-w-0 truncate">
-                                {doc.name}
+                            {editingStep4DocumentIndex === idx ? (
+                              // Inline editing mode
+                              <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1 min-w-0">
+                                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Document Name</label>
+                                    <input
+                                      type="text"
+                                      value={inlineEditingStep4DocumentName}
+                                      onChange={(e) => setInlineEditingStep4DocumentName(e.target.value)}
+                                      className="w-full h-[28px] px-3 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-xs focus:ring-1 focus:ring-primary focus:border-primary"
+                                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                                    />
+                                  </div>
+                                  <div className="flex-1 min-w-0 ml-3">
+                                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Document Type</label>
+                                    <input
+                                      type="text"
+                                      value={inlineEditingStep4DocumentType}
+                                      onChange={(e) => setInlineEditingStep4DocumentType(e.target.value)}
+                                      className="w-full h-[28px] px-3 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-xs focus:ring-1 focus:ring-primary focus:border-primary"
+                                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                                    />
+                                  </div>
+                                  <div className="flex-1 min-w-0 ml-3">
+                                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Assignee</label>
+                                    <div className="relative" ref={step4DocumentAssigneeDropdownRef}>
+                                      <input
+                                        type="text"
+                                        value={inlineEditingStep4DocumentAssignee}
+                                        onChange={(e) => {
+                                          setInlineEditingStep4DocumentAssignee(e.target.value);
+                                          if (e.target.value === '') {
+                                            setShowStep4DocumentAssigneeDropdown(false);
+                                          } else if (!showStep4DocumentAssigneeDropdown) {
+                                            setShowStep4DocumentAssigneeDropdown(true);
+                                          }
+                                        }}
+                                        onFocus={() => setShowStep4DocumentAssigneeDropdown(true)}
+                                        className="w-full h-[28px] px-3 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-xs focus:ring-1 focus:ring-primary focus:border-primary pr-8"
+                                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                                        autoComplete="off"
+                                      />
+                                      <HiMiniChevronDown className="pointer-events-none absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                      
+                                                                             {showStep4DocumentAssigneeDropdown && (
+                                         <div className="fixed inset-0 z-[9999] pointer-events-none">
+                                           <div className="absolute bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 max-h-96 overflow-y-auto pointer-events-auto" 
+                                                style={{
+                                                  left: step4DocumentAssigneeDropdownRef.current?.getBoundingClientRect().left || 0,
+                                                  top: (step4DocumentAssigneeDropdownRef.current?.getBoundingClientRect().bottom || 0) + 4,
+                                                  width: step4DocumentAssigneeDropdownRef.current?.getBoundingClientRect().width || 'auto',
+                                                  minWidth: '200px'
+                                                }}>
+                                             {allAssignees
+                                               .filter(assignee => assignee.toLowerCase().includes(inlineEditingStep4DocumentAssignee.toLowerCase()))
+                                               .map((assignee: string) => (
+                                                 <div
+                                                   key={assignee}
+                                                   className={`px-3 py-2 text-xs cursor-pointer ${inlineEditingStep4DocumentAssignee === assignee ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                                                   onClick={() => {
+                                                     setInlineEditingStep4DocumentAssignee(assignee);
+                                                     setShowStep4DocumentAssigneeDropdown(false);
+                                                   }}
+                                                 >
+                                                   {assignee}
+                                                 </div>
+                                               ))}
+                                           </div>
+                                         </div>
+                                       )}
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex items-center justify-between">
+                                  <div className="text-xs text-gray-500 cursor-default select-none">
+                                    {formatDateYYYYMMDD(new Date())} &bull; {doc.file.name.split('.').pop()?.toUpperCase() || 'Unknown'} &bull; {(doc.file.size / 1024 / 1024).toFixed(2)} MB
+                                  </div>
+                                  <div className="flex">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleSaveInlineEditStep4Document(idx)}
+                                      disabled={!inlineEditingStep4DocumentName.trim() || !inlineEditingStep4DocumentType.trim() || !inlineEditingStep4DocumentAssignee.trim()}
+                                      className="px-2.5 py-1 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                      Save
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={handleCancelInlineEditStep4Document}
+                                      className="px-2.5 py-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ml-1"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </div>
                               </div>
-                              <div className="text-xs text-gray-500 cursor-default select-none">
-                                {formatDateYYYYMMDD(new Date())} &bull; {doc.file.name.split('.').pop()?.toUpperCase() || 'Unknown'} &bull; {(doc.file.size / 1024 / 1024).toFixed(2)} MB &bull; {doc.assignee}
+                            ) : (
+                              // Display mode
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1 min-w-0 pl-3">
+                                  <div className="font-semibold text-xs text-black dark:text-white flex-1 min-w-0 truncate">
+                                    {doc.name}
+                                  </div>
+                                  <div className="text-xs text-gray-500 cursor-default select-none">
+                                    {formatDateYYYYMMDD(new Date())} &bull; {doc.type || 'Unknown Type'} &bull; {doc.file.name.split('.').pop()?.toUpperCase() || 'Unknown'} &bull; {(doc.file.size / 1024 / 1024).toFixed(2)} MB &bull; {doc.assignee}
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <button 
+                                    type="button"
+                                    onClick={() => handleStartInlineEditStep4Document(idx)}
+                                    className="text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors p-1"
+                                  >
+                                    <HiOutlinePencil className="h-4 w-4" />
+                                  </button>
+                                  <button 
+                                    className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1 pr-3"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setStep4Documents(prev => prev.filter((_, i) => i !== idx));
+                                    }}
+                                  >
+                                    <HiOutlineTrash className="h-4 w-4" />
+                                  </button>
+                                </div>
                               </div>
-                            </div>
-                            <button 
-                              className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1 pr-3"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setStep4Documents(prev => prev.filter((_, i) => i !== idx));
-                              }}
-                            >
-                              <HiOutlineTrash className="h-4 w-4" />
-                            </button>
+                            )}
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
                   
-                  <div className="flex gap-4 mb-4">
-                    <div className="flex-1 w-0">
-                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">File Source</div>
-                      <div className="relative" ref={newDocumentFileSourceDropdownRef}>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowNewDocumentFileSourceDropdown(!showNewDocumentFileSourceDropdown);
-                          }}
-                          className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs focus:ring-0 focus:ring-primary focus:border-primary transition-colors flex items-center justify-end relative cursor-pointer"
-                          style={{ fontFamily: 'Avenir, sans-serif' }}
-                        >
-                          {selectedNewDocumentFileSource ? (
-                            <span className="flex items-center gap-2 absolute left-4 cursor-default select-none">
-                              {selectedNewDocumentFileSource === 'Desktop' && <TbDeviceDesktopPlus className="text-base text-primary" />}
-                              {selectedNewDocumentFileSource === 'Box' && <SiBox className="text-base text-primary" />}
-                              {selectedNewDocumentFileSource === 'Dropbox' && <SlSocialDropbox className="text-base text-primary" />}
-                              {selectedNewDocumentFileSource === 'Google Drive' && <TbBrandGoogleDrive className="text-base text-primary" />}
-                              {selectedNewDocumentFileSource === 'OneDrive' && <TbBrandOnedrive className="text-base text-primary" />}
-                              <span className="text-xs text-gray-900 dark:text-white cursor-default select-none">{selectedNewDocumentFileSource}</span>
-                            </span>
-                          ) : (
-                            <span className="absolute left-4 text-xs text-gray-400 cursor-default select-none">Choose a source...</span>
-                          )}
-                          <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        </button>
-                        {showNewDocumentFileSourceDropdown && (
-                          <div className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 cursor-default select-none">
-                            <div className="py-2">
-                              <label htmlFor="new-document-desktop-file-upload" className="block px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer select-none">
-                                <div className="flex items-center gap-2">
-                                  <TbDeviceDesktopPlus className="text-base text-primary" />
-                                  <span className="text-xs cursor-default select-none">Desktop</span>
-                                </div>
-                              </label>
-                              <input
-                                id="new-document-desktop-file-upload"
-                                name="new-document-desktop-file-upload"
-                                type="file"
-                                accept=".pdf,.doc,.docx,.jpg,.jpeg"
-                                className="hidden"
-                                multiple
-                                onChange={(e) => {
-                                  setSelectedNewDocumentFileSource('Desktop');
-                                  setShowNewDocumentFileSourceDropdown(false);
-                                  if (e.target.files) {
-                                    const newFiles = Array.from(e.target.files);
-                                    setUploadedFiles(prev => [...prev, ...newFiles]);
-                                  }
-                                  handleFileChange(e);
-                                }}
-                              />
-                              <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setSelectedNewDocumentFileSource('Box'); setShowNewDocumentFileSourceDropdown(false); }}>
-                                <SiBox className="text-base text-primary" />
-                                <span className="text-xs cursor-default select-none">Box</span>
-                              </button>
-                              <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setSelectedNewDocumentFileSource('Dropbox'); setShowNewDocumentFileSourceDropdown(false); }}>
-                                <SlSocialDropbox className="text-base text-primary" />
-                                <span className="text-xs cursor-default select-none">Dropbox</span>
-                              </button>
-                              <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setSelectedNewDocumentFileSource('Google Drive'); setShowNewDocumentFileSourceDropdown(false); }}>
-                                <TbBrandGoogleDrive className="text-base text-primary" />
-                                <span className="text-xs cursor-default select-none">Google Drive</span>
-                              </button>
-                              <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setSelectedNewDocumentFileSource('OneDrive'); setShowNewDocumentFileSourceDropdown(false); }}>
-                                <TbBrandOnedrive className="text-base text-primary" />
-                                <span className="text-xs cursor-default select-none">OneDrive</span>
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      {documentUploadErrors.fileSource && (
-                        <p className="mt-1 text-xs text-red-600 font-medium cursor-default select-none">File source is required</p>
-                      )}
-                    </div>
-                    <div className="flex-1 w-0" />
-                  </div>
+
                   
 
-                  <div className="relative mb-8 mt-6">
+                                    {/* Direct Document Upload Fields */}
+                  <div className="space-y-6">
+                    {/* Document Name and Assignee - Side by Side */}
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Document Name <span className="text-red-500">*</span></label>
+                        <input
+                          type="text"
+                          placeholder="Enter document name..."
+                          className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs transition-colors cursor-text focus:ring-2 focus:ring-primary focus:border-primary"
+                          value={newDocumentName}
+                          onChange={(e) => setNewDocumentName(e.target.value)}
+                          style={{ fontFamily: 'Avenir, sans-serif' }}
+                        />
+                        
+                        {/* Contract - Added under Document Name in left column */}
+                        <div className="mt-6">
+                          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Contract <span className="text-red-500">*</span></label>
+                          <div className="relative" ref={newDocumentContractDropdownRef}>
+                            <input
+                              type="text"
+                              className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs transition-colors cursor-text focus:ring-2 focus:ring-primary focus:border-primary pr-10"
+                              placeholder="Choose a contract..."
+                              value={documentModalForm.contract}
+                              onChange={(e) => {
+                                setDocumentModalForm(prev => ({ ...prev, contract: e.target.value }));
+                                if (e.target.value === '') {
+                                  setShowNewDocumentContractDropdown(false);
+                                } else if (!showNewDocumentContractDropdown) {
+                                  setShowNewDocumentContractDropdown(true);
+                                }
+                              }}
+                              onFocus={() => setShowNewDocumentContractDropdown(true)}
+                              onClick={() => setShowNewDocumentContractDropdown(true)}
+                              style={{ fontFamily: 'Avenir, sans-serif' }}
+                              autoComplete="off"
+                            />
+                            <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            {showNewDocumentContractDropdown && (
+                              <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                {/* Search Bar */}
+                                <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+                                  <div className="relative">
+                                    <input
+                                      type="text"
+                                      placeholder="Search contracts..."
+                                      value={newDocumentContractSearch}
+                                      onChange={(e) => setNewDocumentContractSearch(e.target.value)}
+                                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-700 dark:text-white bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                                    />
+                                    <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                                  </div>
+                                </div>
+                                {contracts
+                                  .filter(contract => 
+                                    contract.id.toLowerCase().includes(newDocumentContractSearch.toLowerCase()) ||
+                                    contract.title.toLowerCase().includes(newDocumentContractSearch.toLowerCase())
+                                  )
+                                  .sort((a, b) => Number(a.id) - Number(b.id))
+                                  .map(contract => (
+                                    <div
+                                      key={contract.id}
+                                      className={`px-4 py-2 text-xs cursor-pointer ${documentModalForm.contract === `${contract.id} - ${contract.title}` ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'} select-none`}
+                                      onClick={() => {
+                                        setDocumentModalForm(prev => ({ ...prev, contract: `${contract.id} - ${contract.title}` }));
+                                        setShowNewDocumentContractDropdown(false);
+                                      }}
+                                    >
+                                      {contract.id} - {contract.title}
+                                    </div>
+                                  ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Document Type</label>
+                        <input
+                          type="text"
+                          placeholder="Enter document type..."
+                          className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs transition-colors cursor-text focus:ring-2 focus:ring-primary focus:border-primary"
+                          value={newDocumentType}
+                          onChange={(e) => setNewDocumentType(e.target.value)}
+                          style={{ fontFamily: 'Avenir, sans-serif' }}
+                        />
+                        
+                        {/* Assignee - Added under Document Type in right column */}
+                        <div className="mt-6">
+                          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Assignee <span className="text-red-500">*</span></label>
+                          <div className="relative" ref={newDocumentAssigneeDropdownRef}>
+                            <input
+                              type="text"
+                              className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs transition-colors cursor-text focus:ring-2 focus:ring-primary focus:border-primary pr-10"
+                              placeholder="Choose an assignee..."
+                              value={newDocumentAssignee}
+                              onChange={(e) => setNewDocumentAssignee(e.target.value)}
+                              onFocus={() => setShowNewDocumentAssigneeDropdown(true)}
+                              style={{ fontFamily: 'Avenir, sans-serif' }}
+                              autoComplete="off"
+                            />
+                            <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            
+                            {showNewDocumentAssigneeDropdown && (
+                              <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                {allAssignees.length > 0 ? (
+                                  <>
+                                    {allAssignees.map((assignee: string) => (
+                                      <div
+                                        key={assignee}
+                                        className={`px-4 py-2 text-xs cursor-pointer ${newDocumentAssignee === assignee ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'} select-none`}
+                                        onClick={() => {
+                                          setNewDocumentAssignee(assignee);
+                                          setShowNewDocumentAssigneeDropdown(false);
+                                        }}
+                                      >
+                                        {assignee}
+                                      </div>
+                                    ))}
+                                    <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                                    <div
+                                      className="px-4 py-2 text-xs cursor-pointer text-primary hover:bg-primary/10 select-none flex items-center gap-2"
+                                      onClick={() => {
+                                        // TODO: Add logic to create new assignee
+                                        setShowNewDocumentAssigneeDropdown(false);
+                                      }}
+                                    >
+                                      <FaPlus className="text-xs" />
+                                      Add new assignee
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <div className="px-4 py-2 text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">No assignees found</div>
+                                    <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                                    <div
+                                      className="px-4 py-2 text-xs cursor-pointer text-primary hover:bg-primary/10 select-none flex items-center gap-2"
+                                      onClick={() => {
+                                        // TODO: Add logic to create new assignee
+                                        setShowNewDocumentAssigneeDropdown(false);
+                                      }}
+                                    >
+                                      <FaPlus className="text-xs" />
+                                      Add new assignee
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="relative mb-1 mt-6" ref={newDocumentUploadDropdownRef}>
                     <div 
                       className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 py-8 px-4 text-center transition hover:border-primary cursor-pointer"
                       onClick={() => {
-                        document.getElementById('file-upload')?.click();
+                        setShowNewDocumentUploadDropdown(!showNewDocumentUploadDropdown);
                       }}
                       onDragOver={(e) => {
                         e.preventDefault();
@@ -4978,135 +5271,478 @@ const ContractsPage: React.FC = () => {
                         const files = Array.from(e.dataTransfer.files);
                         if (files.length > 0) {
                           // Set file source to Desktop
-                          setSelectedNewDocumentFileSource('Desktop');
+                          setSelectedNewDocumentFormFileSource('Desktop');
                           
                           // Add files to uploaded files
-                          setUploadedFiles(prev => [...prev, ...files]);
+                          setNewDocumentFormUploadedFiles(prev => [...prev, ...files]);
                           
-                          // Handle file change (same as the onChange handler)
-                          handleFileChange({ target: { files: e.dataTransfer.files } } as any);
+                          // Pre-populate document name with first file name (without extension) only if field is empty
+                          if (!newDocumentName.trim()) {
+                            const fileName = files[0].name;
+                            const nameWithoutExtension = fileName.replace(/\.[^/.]+$/, "");
+                            setNewDocumentName(nameWithoutExtension);
+                          }
                         }
                       }}
                     >
-                      <HiOutlineUpload className="text-2xl text-gray-400 mb-2" />
-                      <div className="text-gray-700 dark:text-gray-300 font-medium cursor-default select-none">Click to upload or drag and drop</div>
+                      <TbDragDrop className="text-3xl text-gray-400 mb-2" />
+                      <div className="text-xs text-gray-700 dark:text-gray-300 font-medium cursor-default select-none">Click to upload or drag and drop</div>
                       <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 cursor-default select-none">PDF, DOC, DOCX, or JPG (max. 10MB each)</div>
                     </div>
                     
-                    {/* Hidden file input for desktop uploads */}
-                    <input
-                      id="file-upload"
-                      name="file-upload"
-                      type="file"
-                      accept=".pdf,.doc,.docx,.jpg,.jpeg"
-                      className="hidden"
-                      multiple
-                      onChange={handleFileChange}
-                    />
-                    
-                    {/* Separate file input for Desktop option in dropdown */}
-                    <input
-                      id="desktop-file-upload"
-                      name="desktop-file-upload"
-                      type="file"
-                      accept=".pdf,.doc,.docx,.jpg,.jpeg"
-                      className="hidden"
-                      multiple
-                      onChange={handleFileChange}
-                    />
-
-                    {/* Hidden file input for document upload modal */}
-                    <input
-                      id="document-upload-file"
-                      name="document-upload-file"
-                      type="file"
-                      accept=".pdf,.doc,.docx,.jpg,.jpeg"
-                      className="hidden"
-                      onChange={handleDocumentUploadFileChange}
-                    />
+                    {/* Upload Source Dropdown */}
+                    {showNewDocumentUploadDropdown && (
+                      <div className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 cursor-default select-none">
+                        <div className="py-2">
+                          <label htmlFor="new-document-upload-desktop-file-upload" className="block px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+                            <div className="flex items-center gap-2">
+                              <TbDeviceDesktopPlus className="text-base text-primary" />
+                              <span className="text-xs cursor-default select-none">Desktop</span>
+                            </div>
+                          </label>
+                          <input
+                            id="new-document-upload-desktop-file-upload"
+                            name="new-document-upload-desktop-file-upload"
+                            type="file"
+                            accept=".pdf,.doc,.docx,.jpg,.jpeg"
+                            className="hidden"
+                            multiple
+                            onChange={(e) => {
+                              setSelectedNewDocumentFormFileSource('Desktop');
+                              setShowNewDocumentUploadDropdown(false);
+                              if (e.target.files) {
+                                const newFiles = Array.from(e.target.files);
+                                setNewDocumentFormUploadedFiles(prev => [...prev, ...newFiles]);
+                                
+                                // Pre-populate document name with first file name (without extension) only if field is empty
+                                if (!newDocumentName.trim()) {
+                                  const fileName = newFiles[0].name;
+                                  const nameWithoutExtension = fileName.replace(/\.[^/.]+$/, "");
+                                  setNewDocumentName(nameWithoutExtension);
+                                }
+                              }
+                            }}
+                          />
+                          <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setSelectedNewDocumentFormFileSource('Box'); setShowNewDocumentUploadDropdown(false); }}>
+                            <SiBox className="text-base text-primary" />
+                            <span className="text-xs cursor-default select-none">Box</span>
+                          </button>
+                          <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setSelectedNewDocumentFormFileSource('Dropbox'); setShowNewDocumentUploadDropdown(false); }}>
+                            <SlSocialDropbox className="text-base text-primary" />
+                            <span className="text-xs cursor-default select-none">Dropbox</span>
+                          </button>
+                          <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setSelectedNewDocumentFormFileSource('Google Drive'); setShowNewDocumentUploadDropdown(false); }}>
+                            <TbBrandGoogleDrive className="text-base text-primary" />
+                            <span className="text-xs cursor-default select-none">Google Drive</span>
+                          </button>
+                          <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setSelectedNewDocumentFormFileSource('OneDrive'); setShowNewDocumentUploadDropdown(false); }}>
+                            <TbBrandOnedrive className="text-base text-primary" />
+                            <span className="text-xs cursor-default select-none">OneDrive</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
+                  
+
+                  
                   {documentUploadErrors.files && (
                     <p className="mt-1 text-xs text-red-600 font-medium cursor-default select-none">Please select one file</p>
                   )}
                   {/* Uploaded Documents Display - Below the upload box */}
-                  {uploadedFiles.length > 0 && (
+                  {newDocumentDocuments.length > 0 && (
                     <div className="mt-4">
                       <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-3 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Uploaded Documents</h4>
                       <div className="flex flex-col gap-2 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
-                        {uploadedFiles.map((file, idx) => (
+                        {/* Show added documents with inline editing */}
+                        {newDocumentDocuments.map((doc, idx) => (
                           <div 
-                            key={idx} 
-                            className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600 cursor-pointer transition-colors"
+                            key={`doc-${idx}`} 
+                            className="bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600 transition-colors"
                           >
-                            <div className="flex-1 min-w-0 pl-3">
-                              <div className="font-semibold text-xs text-black dark:text-white flex-1 min-w-0 truncate">
-                                {file.name}
+                            {editingNewDocumentIndex === idx ? (
+                              // Inline editing form
+                              <div className="space-y-3">
+                                <div className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    placeholder="Document name..."
+                                    className="flex-1 h-[28px] px-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-xs text-gray-900 dark:text-white focus:ring-1 focus:ring-primary focus:border-primary"
+                                    value={inlineEditingNewDocumentName}
+                                    onChange={(e) => setInlineEditingNewDocumentName(e.target.value)}
+                                  />
+                                  <input
+                                    type="text"
+                                    placeholder="Document type..."
+                                    className="flex-1 h-[28px] px-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-xs text-gray-900 dark:text-white focus:ring-1 focus:ring-primary focus:border-primary"
+                                    value={inlineEditingNewDocumentType}
+                                    onChange={(e) => setInlineEditingNewDocumentType(e.target.value)}
+                                  />
+                                  <div className="flex-1 relative" ref={inlineEditingNewDocumentAssigneeDropdownRef}>
+                                    <input
+                                      type="text"
+                                      placeholder="Assignee..."
+                                      className="w-full h-[28px] px-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-xs text-gray-900 dark:text-white focus:ring-1 focus:ring-primary focus:border-primary pr-8"
+                                      value={inlineEditingNewDocumentAssignee}
+                                      onChange={(e) => {
+                                        setInlineEditingNewDocumentAssignee(e.target.value);
+                                        if (e.target.value === '') {
+                                          setShowInlineEditingNewDocumentAssigneeDropdown(false);
+                                        } else if (!showInlineEditingNewDocumentAssigneeDropdown) {
+                                          setShowInlineEditingNewDocumentAssigneeDropdown(true);
+                                        }
+                                      }}
+                                      onFocus={() => setShowInlineEditingNewDocumentAssigneeDropdown(true)}
+                                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                                      autoComplete="off"
+                                    />
+                                    <HiMiniChevronDown className="pointer-events-none absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    
+                                    {showInlineEditingNewDocumentAssigneeDropdown && (
+                                      <div className="fixed inset-0 z-[9999] pointer-events-none">
+                                        <div className="absolute bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 max-h-96 overflow-y-auto pointer-events-auto" 
+                                             style={{
+                                               left: inlineEditingNewDocumentAssigneeDropdownRef.current?.getBoundingClientRect().left || 0,
+                                               top: (inlineEditingNewDocumentAssigneeDropdownRef.current?.getBoundingClientRect().bottom || 0) + 4,
+                                               width: inlineEditingNewDocumentAssigneeDropdownRef.current?.getBoundingClientRect().width || 'auto',
+                                               minWidth: '200px'
+                                             }}>
+                                          {allAssignees
+                                            .filter(assignee => assignee.toLowerCase().includes(inlineEditingNewDocumentAssignee.toLowerCase()))
+                                            .map((assignee: string) => (
+                                              <div
+                                                key={assignee}
+                                                className={`px-3 py-2 text-xs cursor-pointer ${inlineEditingNewDocumentAssignee === assignee ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                                                onClick={() => {
+                                                  setInlineEditingNewDocumentAssignee(assignee);
+                                                  setShowInlineEditingNewDocumentAssigneeDropdown(false);
+                                                }}
+                                              >
+                                                {assignee}
+                                              </div>
+                                            ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex-1 relative" ref={inlineEditingNewDocumentContractDropdownRef}>
+                                    <input
+                                      type="text"
+                                      placeholder="Contract..."
+                                      className="w-full h-[28px] px-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-xs text-gray-900 dark:text-white focus:ring-1 focus:ring-primary focus:border-primary pr-8"
+                                      value={inlineEditingNewDocumentContract}
+                                      onChange={(e) => {
+                                        setInlineEditingNewDocumentContract(e.target.value);
+                                        if (e.target.value === '') {
+                                          setShowInlineEditingNewDocumentContractDropdown(false);
+                                        } else if (!showInlineEditingNewDocumentContractDropdown) {
+                                          setShowInlineEditingNewDocumentContractDropdown(true);
+                                        }
+                                      }}
+                                      onFocus={() => setShowInlineEditingNewDocumentContractDropdown(true)}
+                                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                                      autoComplete="off"
+                                    />
+                                    <HiMiniChevronDown className="pointer-events-none absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    
+                                    {showInlineEditingNewDocumentContractDropdown && (
+                                      <div className="fixed inset-0 z-[9999] pointer-events-none">
+                                        <div className="absolute bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 max-h-96 overflow-y-auto pointer-events-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" 
+                                             style={{
+                                               left: inlineEditingNewDocumentContractDropdownRef.current?.getBoundingClientRect().left || 0,
+                                               top: (inlineEditingNewDocumentContractDropdownRef.current?.getBoundingClientRect().bottom || 0) + 4,
+                                               width: inlineEditingNewDocumentContractDropdownRef.current?.getBoundingClientRect().width || 'auto',
+                                               minWidth: '200px'
+                                             }}>
+                                          {/* Search Bar */}
+                                          <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700">
+                                            <div className="relative">
+                                              <input
+                                                type="text"
+                                                placeholder="Search contracts..."
+                                                value={inlineEditingNewDocumentContractSearch}
+                                                onChange={(e) => setInlineEditingNewDocumentContractSearch(e.target.value)}
+                                                className="w-full px-2 py-1 border border-gray-200 dark:border-gray-700 rounded text-xs font-medium text-gray-700 dark:text-white bg-white dark:bg-gray-900 focus:ring-1 focus:ring-primary focus:border-primary transition-colors"
+                                                style={{ fontFamily: 'Avenir, sans-serif' }}
+                                              />
+                                              <FaSearch className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                                            </div>
+                                          </div>
+                                          {contracts
+                                            .filter(contract => 
+                                              contract.id.toLowerCase().includes(inlineEditingNewDocumentContractSearch.toLowerCase()) ||
+                                              contract.title.toLowerCase().includes(inlineEditingNewDocumentContractSearch.toLowerCase())
+                                            )
+                                            .sort((a, b) => Number(a.id) - Number(b.id))
+                                            .map(contract => (
+                                              <div
+                                                key={contract.id}
+                                                className={`px-3 py-2 text-xs cursor-pointer ${inlineEditingNewDocumentContract === `${contract.id} - ${contract.title}` ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                                                onClick={() => {
+                                                  setInlineEditingNewDocumentContract(`${contract.id} - ${contract.title}`);
+                                                  setShowInlineEditingNewDocumentContractDropdown(false);
+                                                }}
+                                              >
+                                                {contract.id} - {contract.title}
+                                              </div>
+                                            ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex justify-end">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSaveInlineEditNewDocument(idx)}
+                                    disabled={!inlineEditingNewDocumentName.trim() || 
+                                             !inlineEditingNewDocumentType.trim() || 
+                                             !inlineEditingNewDocumentAssignee.trim() || 
+                                             !inlineEditingNewDocumentContract.trim() ||
+                                             !contracts.some(contract => `${contract.id} - ${contract.title}` === inlineEditingNewDocumentContract.trim()) ||
+                                             !allAssignees.includes(inlineEditingNewDocumentAssignee.trim())}
+                                    className="px-2.5 py-1 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                    Save
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={handleCancelInlineEditNewDocument}
+                                    className="px-2.5 py-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ml-1"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
                               </div>
-                              <div className="text-xs text-gray-500 cursor-default select-none">
-                                {formatDateYYYYMMDD(new Date())} &bull; {file.name.split('.').pop()?.toUpperCase() || 'Unknown'} &bull; {(file.size / 1024 / 1024).toFixed(2)} MB
+                            ) : (
+                              // Display mode
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-semibold text-xs text-black dark:text-white flex-1 min-w-0 truncate">
+                                    {doc.name}
+                                  </div>
+                                  <div className="text-xs text-gray-500 cursor-default select-none">
+                                    {formatDateYYYYMMDD(new Date())} &bull; {doc.type || 'Unknown Type'} &bull; {doc.file.name.split('.').pop()?.toUpperCase() || 'Unknown'} &bull; {(doc.file.size / 1024 / 1024).toFixed(2)} MB &bull; {doc.assignee} &bull; {doc.contract || 'No Contract'}
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <button 
+                                    type="button"
+                                    onClick={() => handleStartInlineEditNewDocument(idx)}
+                                    className="text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors p-1"
+                                  >
+                                    <HiOutlinePencil className="h-4 w-4" />
+                                  </button>
+                                  <button 
+                                    className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1 pr-3"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setNewDocumentDocuments(prev => prev.filter((_, i) => i !== idx));
+                                    }}
+                                  >
+                                    <HiOutlineTrash className="h-4 w-4" />
+                                  </button>
+                                </div>
                               </div>
-                            </div>
-                            <button 
-                              className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1 pr-3"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setUploadedFiles(prev => prev.filter((_, i) => i !== idx));
-                              }}
-                            >
-                              <HiOutlineTrash className="h-4 w-4" />
-                            </button>
+                            )}
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
                 </div>
-                <div className="flex justify-between mt-12">
-                  <button 
-                    onClick={() => setDocumentModalStep(1)}
-                    className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold" 
-                    style={{ fontFamily: 'Avenir, sans-serif' }}
-                  >
-                    Previous
-                  </button>
-                  <button 
-                    onClick={() => {
-                      // Reset upload errors first
-                      setDocumentUploadErrors({
-                        fileSource: false,
-                        files: false
-                      });
-                      
-                      // Check for upload validation errors
-                      const uploadErrors = {
-                        fileSource: !selectedNewDocumentFileSource,
-                        files: uploadedFiles.length === 0
-                      };
-                      
-                      // Set upload errors
-                      setDocumentUploadErrors(uploadErrors);
-                      
-                      // If there are upload errors, don't proceed
-                      if (Object.values(uploadErrors).some(error => error)) {
-                        return;
-                      }
-                      
-                      // Handle document creation
-                      console.log('Creating document:', documentModalForm);
-                      setShowNewDocumentModal(false);
-                      setDocumentModalStep(1);
-                      setDocumentModalForm({ name: '', type: '', description: '', assignee: '', contract: '' });
-                      setDocumentFormErrors({});
-                      setDocumentUploadErrors({
-                        fileSource: false,
-                        files: false
-                      });
-                    }}
-                    className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm"
-                    style={{ fontFamily: 'Avenir, sans-serif' }}
-                  >
-                    Create Document
-                  </button>
+                <div className="flex justify-end mt-12">
+                  <div className="flex">
+                    <button
+                      type="button"
+                      onClick={handleAddNewDocument}
+                      disabled={!newDocumentName.trim() || !documentModalForm.contract.trim() || !newDocumentAssignee.trim() || newDocumentFormUploadedFiles.length === 0}
+                      className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                    >
+                      Add Document
+                    </button>
+                    <button 
+                      disabled={newDocumentDocuments.length === 0 && newDocumentFormUploadedFiles.length === 0}
+                      onClick={async () => {
+                        // Reset upload errors first
+                        setDocumentUploadErrors({
+                          files: false
+                        });
+                        
+                        // Check for upload validation errors
+                        const uploadErrors = {
+                          files: newDocumentFormUploadedFiles.length === 0 && newDocumentDocuments.length === 0
+                        };
+                        
+                        // Check if contract is selected
+                        if (!documentModalForm.contract.trim()) {
+                          toast({
+                            title: "Contract required",
+                            description: "Please select a contract for the document.",
+                            duration: 5000,
+                          });
+                          return;
+                        }
+                        
+                        // Validation logic depends on whether we're creating from form fields or added documents
+                        if (newDocumentDocuments.length > 0) {
+                          // Creating from added documents - validate that each document has required fields
+                          for (const docInfo of newDocumentDocuments) {
+                            if (!docInfo.name.trim()) {
+                              toast({
+                                title: "Document name required",
+                                description: "Please provide a name for all documents.",
+                                duration: 5000,
+                              });
+                              return;
+                            }
+                            if (!docInfo.assignee.trim()) {
+                              toast({
+                                title: "Assignee required",
+                                description: "Please provide an assignee for all documents.",
+                                duration: 5000,
+                              });
+                              return;
+                            }
+                            if (!docInfo.contract.trim()) {
+                              toast({
+                                title: "Contract required",
+                                description: "Please provide a contract for all documents.",
+                                duration: 5000,
+                              });
+                              return;
+                            }
+                          }
+                        } else if (newDocumentFormUploadedFiles.length > 0) {
+                          // Creating from uploaded files - validate form fields
+                          if (!documentModalForm.assignee.trim()) {
+                            toast({
+                              title: "Assignee required",
+                              description: "Please select an assignee for the document.",
+                              duration: 5000,
+                            });
+                            return;
+                          }
+                          
+                          if (!documentModalForm.name.trim()) {
+                            toast({
+                              title: "Document name required",
+                              description: "Please provide a name for the document.",
+                              duration: 5000,
+                            });
+                            return;
+                          }
+                          
+                          if (!documentModalForm.type.trim()) {
+                            toast({
+                              title: "Document type required",
+                              description: "Please provide a type for the document.",
+                              duration: 5000,
+                            });
+                            return;
+                          }
+                        }
+                        
+                        // Set upload errors
+                        setDocumentUploadErrors(uploadErrors);
+                        
+                        // If there are upload errors, don't proceed
+                        if (Object.values(uploadErrors).some(error => error)) {
+                          return;
+                        }
+                        
+                        // Handle document creation
+                        console.log('Creating document:', documentModalForm);
+                        
+                        // Create documents with proper IDs and associate them with the contract
+                        const finalDocumentIds: string[] = [];
+                        
+                        try {
+                          // Process newDocumentDocuments (documents added during document creation)
+                          if (newDocumentDocuments.length > 0) {
+                            for (const docInfo of newDocumentDocuments) {
+                              // Extract contract ID from the contract field (format: "ID - Title")
+                              const contractId = docInfo.contract.includes(' - ') ? docInfo.contract.split(' - ')[0] : docInfo.contract;
+                              const contractTitle = docInfo.contract.includes(' - ') ? docInfo.contract.split(' - ')[1] : docInfo.contract;
+                              
+                              // Create document with proper ID and contract association
+                              const documentId = await addDocument(docInfo.file, contractId, contractTitle, currentUserName);
+                              
+                              // Update the document name and assignee
+                              const { updateDocumentName } = useDocumentStore.getState();
+                              updateDocumentName(documentId, docInfo.name);
+
+                              // Set the assignee in the assignee store
+                              const { setAssignee } = useAssigneeStore.getState();
+                              setAssignee(documentId, docInfo.assignee);
+                              
+                              finalDocumentIds.push(documentId);
+                            }
+                          }
+                          
+                          // Process any previously uploaded files (from newDocumentFormUploadedFiles)
+                          if (newDocumentFormUploadedFiles.length > 0) {
+                            for (const file of newDocumentFormUploadedFiles) {
+                              // Extract contract ID from the contract field (format: "ID - Title")
+                              const contractId = documentModalForm.contract.includes(' - ') ? documentModalForm.contract.split(' - ')[0] : documentModalForm.contract;
+                              const contractTitle = documentModalForm.contract.includes(' - ') ? documentModalForm.contract.split(' - ')[1] : documentModalForm.contract;
+                              
+                              // Create document with proper ID and contract association
+                              const documentId = await addDocument(file, contractId, contractTitle, currentUserName);
+                            
+                              // Set the assignee in the assignee store (using current user as default)
+                              const { setAssignee } = useAssigneeStore.getState();
+                              setAssignee(documentId, documentModalForm.assignee || currentUserName);
+                              finalDocumentIds.push(documentId);
+                            }
+                          }
+                          
+                          // Check if any documents were actually created
+                          if (finalDocumentIds.length === 0) {
+                            toast({
+                              title: "No documents to create",
+                              description: "Please add documents or upload files before creating.",
+                              duration: 5000,
+                            });
+                            return;
+                          }
+                          
+                          // Show success feedback
+                          toast({
+                            title: "Document created successfully",
+                            description: `${finalDocumentIds.length > 1 ? 'Documents' : 'Document'} created with ID${finalDocumentIds.length > 1 ? 's' : ''} ${finalDocumentIds.join(', ')}`,
+                            duration: 5000,
+                          });
+                          
+                        } catch (error) {
+                          console.error('Error creating documents:', error);
+                          toast({
+                            title: "Error creating document",
+                            description: "Failed to create document. Please try again.",
+                            duration: 5000,
+                          });
+                        }
+                        
+                        // Close modal and reset form
+                        setShowNewDocumentModal(false);
+                        setDocumentModalStep(1);
+                        setDocumentModalForm({ name: '', type: '', description: '', assignee: '', contract: '' });
+                        setDocumentFormErrors({});
+                        setDocumentUploadErrors({
+                          files: false
+                        });
+                        setNewDocumentFormUploadedFiles([]);
+                        setNewDocumentDocuments([]);
+                        setSelectedNewDocumentFormFileSource('');
+                        setShowNewDocumentUploadDropdown(false);
+                      }}
+                      className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm ml-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                    >
+                      {newDocumentDocuments.length > 1 ? 'Create Documents' : 'Create Document'}
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -5230,14 +5866,14 @@ const ContractsPage: React.FC = () => {
                     setOpenAssigneeDropdown(false);
                   }}
                 >
-                  <span className="flex items-center"><TbStatusChange className="text-gray-400 text-base mr-2" />Status</span>
+                                      <span className="flex items-center"><TbHistory className="text-gray-400 text-base mr-2" />Status</span>
                   <HiMiniChevronDown className="text-gray-400" size={16} />
                 </button>
                 {showStatusDropdown && (
                   <div 
                     ref={mobileStatusDropdownRef}
-                    className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 status-filter-dropdown" 
-                    style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                    className="absolute top-full right-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 status-filter-dropdown" 
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
                   >
                     <button
                       className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedStatuses.includes('All') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
@@ -5302,12 +5938,9 @@ const ContractsPage: React.FC = () => {
                   {openContractDropdown && (
                     <div 
                       ref={mobileContractDropdownRef}
-                      className="absolute top-full left-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[300px] max-w-[90vw] contract-dropdown" 
+                      className="absolute top-full right-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 contract-dropdown" 
                       style={{ 
-                        fontFamily: 'Avenir, sans-serif',
-                        maxWidth: 'calc(100vw - 2rem)',
-                        right: '0',
-                        transform: 'translateX(0)'
+                        fontFamily: 'Avenir, sans-serif'
                       }}
                     >
                       {/* Search Bar */}
@@ -5383,8 +6016,8 @@ const ContractsPage: React.FC = () => {
                   {openAssigneeDropdown && (
                     <div 
                       ref={mobileAssigneeDropdownRef}
-                      className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 assignee-dropdown" 
-                      style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                      className="absolute top-full right-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 assignee-dropdown" 
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
                     >
                       <button
                         className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedAssignees.length === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
@@ -5477,8 +6110,8 @@ const ContractsPage: React.FC = () => {
               {openRecentlyUpdatedDropdown && (
                 <div 
                   ref={mobileRecentlyUpdatedDropdownRef}
-                  className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" 
-                  style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                  className="absolute top-full right-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" 
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
                 >
                   {availableRecentlyUpdatedOptions.map((option) => (
                     <button
@@ -5537,15 +6170,15 @@ const ContractsPage: React.FC = () => {
                     }
                   }}
                 >
-                  <TbStatusChange className="text-gray-400 w-4 h-4" />
-                  <span>Status</span>
+                                      <TbHistory className="text-gray-400 w-4 h-4" />
+                    <span>Status</span>
                   <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
                 </button>
                 {showStatusDropdown && (
                   <div 
                     ref={statusDropdownRef}
-                    className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 status-filter-dropdown" 
-                    style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                    className="absolute top-full right-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 status-filter-dropdown w-40" 
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
                   >
                     <button
                       className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedStatuses.includes('All') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
@@ -5611,7 +6244,7 @@ const ContractsPage: React.FC = () => {
                   {openContractDropdown && (
                     <div 
                       ref={contractDropdownRef}
-                      className="absolute left-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[400px] w-96 contract-dropdown" 
+                      className="absolute right-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[320px] w-72 contract-dropdown" 
                       style={{ fontFamily: 'Avenir, sans-serif' }}
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -5690,8 +6323,8 @@ const ContractsPage: React.FC = () => {
                   {openAssigneeDropdown && (
                     <div 
                       ref={assigneeDropdownRef}
-                      className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 assignee-dropdown" 
-                      style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                      className="absolute top-full right-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 assignee-dropdown w-44" 
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
                     >
                       <button
                         className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedAssignees.length === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
@@ -5785,8 +6418,8 @@ const ContractsPage: React.FC = () => {
               {openRecentlyUpdatedDropdown && (
                 <div 
                   ref={recentlyUpdatedDropdownRef}
-                  className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" 
-                  style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                  className="absolute top-full right-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 w-[160px]" 
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
                 >
                   {availableRecentlyUpdatedOptions.map((option) => (
                     <button
@@ -7694,7 +8327,7 @@ const ContractsPage: React.FC = () => {
                   }
                 }}
               >
-                <HiOutlineUpload className="h-4 w-4 text-gray-400 mb-2 select-none" />
+                                  <TbDragDrop className="h-5 w-5 text-gray-400 mb-2 select-none" />
                 <div className="text-xs text-gray-700 dark:text-gray-300 font-semibold select-none">Click to upload or drag and drop</div>
                 <div className="text-[10px] text-gray-400 dark:text-gray-500 mt-1 select-none">PDF, DOC, DOCX, or JPG (max. 10MB each)</div>
                 <input

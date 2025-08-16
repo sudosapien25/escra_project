@@ -19,7 +19,7 @@ import { MdCancelPresentation, MdOutlineLibraryAddCheck } from 'react-icons/md';
 import { MdOutlineLightMode, MdOutlineDarkMode } from 'react-icons/md';
 import { RiUserSearchLine, RiKanbanView2 } from 'react-icons/ri';
 import { HiOutlineDocumentSearch } from 'react-icons/hi';
-import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbLibraryPlus, TbEdit, TbStatusChange } from 'react-icons/tb';
+import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbLibraryPlus, TbEdit, TbStatusChange, TbHistory, TbCategoryPlus } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
 
@@ -808,7 +808,7 @@ export default function WorkflowsPage() {
           onClick={() => setShowNewTaskModal(true)}
           className="flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
         >
-          <TbLibraryPlus className="mr-2 text-xl" />
+          <TbCategoryPlus className="mr-2 text-[22px]" />
           New Task
         </button>
       </div>
@@ -823,9 +823,9 @@ export default function WorkflowsPage() {
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-300 dark:border-gray-700 px-6 py-4 mb-6 select-none">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-4">
-                <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-primary/10">
-                  <LuListPlus className="text-primary text-2xl" />
-                </span>
+                <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800">
+                  <TbCategoryPlus size={20} className="text-teal-500 dark:text-teal-400" />
+                </div>
                 <div>
                   <h2 className="text-lg font-bold text-black dark:text-white leading-tight">Create New Task</h2>
                   <p className="text-gray-500 text-xs leading-tight cursor-default select-none">Fill in the task details to get started</p>
@@ -1754,11 +1754,8 @@ export default function WorkflowsPage() {
                 <HiMiniChevronDown className="text-gray-400" size={16} />
               </button>
               {openContractDropdown && (
-                <div ref={mobileContractDropdownRef} className="absolute top-full left-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[300px] max-w-[90vw] contract-dropdown" style={{ 
-                  fontFamily: 'Avenir, sans-serif',
-                  maxWidth: 'calc(100vw - 2rem)',
-                  right: '0',
-                  transform: 'translateX(0)'
+                <div ref={mobileContractDropdownRef} className="absolute top-full right-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 contract-dropdown" style={{ 
+                  fontFamily: 'Avenir, sans-serif'
                 }}>
                   {/* Search Bar */}
                   <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
@@ -1848,7 +1845,7 @@ export default function WorkflowsPage() {
                 <HiMiniChevronDown className="text-gray-400" size={16} />
               </button>
               {openAssigneeDropdown && (
-                <div ref={mobileAssigneeDropdownRef} className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 assignee-dropdown" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
+                <div ref={mobileAssigneeDropdownRef} className="absolute top-full right-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 assignee-dropdown" style={{ fontFamily: 'Avenir, sans-serif' }}>
                   <button
                     className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedAssignees.length === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                     onClick={(e: React.MouseEvent) => {
@@ -1937,11 +1934,11 @@ export default function WorkflowsPage() {
                   }
                 }}
               >
-                <span className="flex items-center"><TbStatusChange className="text-gray-400 text-base mr-2" />Status</span>
+                                    <span className="flex items-center"><TbHistory className="text-gray-400 text-base mr-2" />Status</span>
                 <HiMiniChevronDown className="text-gray-400" size={16} />
               </button>
               {showStatusDropdown && (
-                <div ref={mobileStatusDropdownRef} className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 status-filter-dropdown" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
+                <div ref={mobileStatusDropdownRef} className="absolute top-full right-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 status-filter-dropdown" style={{ fontFamily: 'Avenir, sans-serif' }}>
                   <button
                     className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedStatuses.includes('All') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                     onClick={(e) => {
@@ -2056,7 +2053,7 @@ export default function WorkflowsPage() {
               {openContractDropdown && (
                 <div 
                   ref={contractDropdownRef}
-                  className="absolute left-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[400px] w-96 contract-dropdown" 
+                  className="absolute right-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[320px] w-72 contract-dropdown" 
                   style={{ fontFamily: 'Avenir, sans-serif' }}
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -2143,8 +2140,8 @@ export default function WorkflowsPage() {
               {openAssigneeDropdown && (
                 <div 
                   ref={assigneeDropdownRef}
-                  className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 assignee-dropdown" 
-                  style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                  className="absolute top-full right-0 mt-2 w-44 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 assignee-dropdown" 
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
                 >
                   <button
                     className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedAssignees.length === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
@@ -2223,15 +2220,15 @@ export default function WorkflowsPage() {
                 style={{ fontFamily: 'Avenir, sans-serif' }}
                 onClick={() => { setShowStatusDropdown(v => !v); setOpenAssigneeDropdown(false); setOpenContractDropdown(false); }}
               >
-                <TbStatusChange className="text-gray-400 w-4 h-4" />
-                <span>Status</span>
+                                    <TbHistory className="text-gray-400 w-4 h-4" />
+                    <span>Status</span>
                 <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
               </button>
               {showStatusDropdown && (
                 <div 
                   ref={statusDropdownRef}
-                  className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 status-filter-dropdown" 
-                  style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                  className="absolute top-full right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 status-filter-dropdown" 
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
                 >
                   <button
                     className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedStatuses.includes('All') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
@@ -2895,7 +2892,7 @@ export default function WorkflowsPage() {
                           />
                           <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                           {showModalStatusDropdown && (
-                            <div ref={modalStatusDropdownRef} className="absolute left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 status-dropdown" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
+                            <div ref={modalStatusDropdownRef} className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 status-dropdown" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
                               {statusOptions.map(status => (
                                 <button
                                   key={status.key}

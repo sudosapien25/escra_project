@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { HiOutlineDocumentText, HiOutlineBell, HiOutlineCog } from 'react-icons/hi';
 import { RiLayoutColumnLine, RiDashboardLine, RiBox3Line } from 'react-icons/ri';
 import { FaSignature } from 'react-icons/fa';
-import { TbSubtask, TbCubeSpark, TbLayoutDashboard } from 'react-icons/tb';
+import { TbSubtask, TbCubeSpark, TbLayoutDashboard, TbScript, TbLayoutBoard, TbWritingSign } from 'react-icons/tb';
 import { IconBaseProps } from 'react-icons';
 import clsx from 'clsx';
 import { HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight } from 'react-icons/hi';
@@ -70,10 +70,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
   const isSignaturesPage = pathname === '/signatures' || pathname.startsWith('/signatures/');
 
   const navItems: NavItem[] = [
-    { name: 'Dashboard', href: '/dashboard', icon: TbLayoutDashboard },
-    { name: 'Contracts', href: '/contracts', icon: HiOutlineDocumentText },
+    { name: 'Dashboard', href: '/dashboard', icon: TbLayoutBoard },
+    { name: 'Contracts', href: '/contracts', icon: TbScript },
     { name: 'Tasks', href: '/workflows', icon: TbSubtask },
-    { name: 'Signatures', href: '/signatures', icon: FaSignature },
+    { name: 'Signatures', href: '/signatures', icon: TbWritingSign },
     { name: 'Blockchain', href: '/blockchain', icon: TbCubeSpark },
   ];
 
@@ -129,7 +129,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
                       isCollapsed && pathname === item.href ? 'px-4' : ''
                     )}
                   >
-                    <IconWrapper icon={item.icon} className={clsx('w-5 h-5 flex-shrink-0', !isCollapsed && 'mr-2')} />
+                    <IconWrapper icon={item.icon} className={clsx(
+                      item.name === 'Dashboard' || item.name === 'Tasks' || item.name === 'Signatures' 
+                        ? 'w-[21px] h-[21px]' 
+                        : 'w-5 h-5', 
+                      'flex-shrink-0', 
+                      !isCollapsed && 'mr-2'
+                    )} />
                     {!isCollapsed && <span className="text-sm font-medium">{item.name}</span>}
                     {isCollapsed && (
                       <span className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">

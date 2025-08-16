@@ -12,7 +12,7 @@ import { BsPerson } from 'react-icons/bs';
 import { PiWarningDiamondBold } from 'react-icons/pi';
 import clsx from 'clsx';
 import { IconBaseProps } from 'react-icons';
-import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbClockPin, TbPencilShare, TbPencilPlus, TbClockEdit, TbStatusChange } from 'react-icons/tb';
+import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbClockPin, TbPencilShare, TbPencilPlus, TbClockEdit, TbStatusChange, TbHistory } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
 import { TiUserAddOutline } from 'react-icons/ti';
@@ -2178,11 +2178,11 @@ export default function SignaturesPage() {
                   }
                 }}
               >
-                <span className="flex items-center"><TbStatusChange className="text-gray-400 text-base mr-2" />Status</span>
+                                    <span className="flex items-center"><TbHistory className="text-gray-400 text-base mr-2" />Status</span>
                 <HiMiniChevronDown className="text-gray-400" size={16} />
               </button>
               {showStatusDropdown && (
-                <div ref={mobileStatusDropdownRef} className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
+                <div ref={mobileStatusDropdownRef} className="absolute top-full right-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" style={{ fontFamily: 'Avenir, sans-serif' }}>
                   {availableStatuses.map((status) => (
                     <button
                       key={status}
@@ -2242,12 +2242,9 @@ export default function SignaturesPage() {
               {openContractDropdown && (
                 <div 
                   ref={mobileContractDropdownRef}
-                  className="absolute top-full left-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[300px] max-w-[90vw] contract-dropdown" 
+                  className="absolute top-full right-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 contract-dropdown" 
                   style={{ 
-                    fontFamily: 'Avenir, sans-serif',
-                    maxWidth: 'calc(100vw - 2rem)',
-                    right: '0',
-                    transform: 'translateX(0)'
+                    fontFamily: 'Avenir, sans-serif'
                   }}
                 >
                   {/* Search Bar */}
@@ -2338,7 +2335,7 @@ export default function SignaturesPage() {
               {showSenderDropdown && (
                 <div 
                   ref={mobileSenderDropdownRef}
-                  className="absolute top-full left-0 mt-2 min-w-[180px] w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 sender-dropdown" 
+                  className="absolute top-full right-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 sender-dropdown" 
                   style={{ fontFamily: 'Avenir, sans-serif' }}
                 >
                   {availableSenders.map((option) => (
@@ -2385,7 +2382,7 @@ export default function SignaturesPage() {
                 <HiMiniChevronDown className="text-gray-400" size={16} />
               </button>
               {showAssigneeDropdown && (
-                <div ref={mobileAssigneeDropdownRef} className="absolute top-full left-0 mt-2 min-w-[180px] w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                <div ref={mobileAssigneeDropdownRef} className="absolute top-full right-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" style={{ fontFamily: 'Avenir, sans-serif' }}>
                   <button
                     className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedAssignees.length === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                     onClick={(e) => {
@@ -2476,8 +2473,8 @@ export default function SignaturesPage() {
               {openRecentlyUpdatedDropdown && (
                 <div 
                   ref={mobileRecentlyUpdatedDropdownRef}
-                  className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" 
-                  style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                  className="absolute top-full right-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" 
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
                 >
                   {availableRecentlyUpdatedOptions.map((option) => (
                     <button
@@ -2538,12 +2535,12 @@ export default function SignaturesPage() {
             }
           }}
         >
-                                  <TbStatusChange className="text-gray-400 w-4 h-4" />
-                <span>Status</span>
+                                                      <TbHistory className="text-gray-400 w-4 h-4" />
+                    <span>Status</span>
                 <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
               </button>
               {showStatusDropdown && (
-                <div ref={statusDropdownRef} className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
+                <div ref={statusDropdownRef} className="absolute top-full right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" style={{ fontFamily: 'Avenir, sans-serif' }}>
                   {availableStatuses.map((status) => (
                     <button
                       key={status}
@@ -2603,7 +2600,7 @@ export default function SignaturesPage() {
                         {openContractDropdown && (
             <div 
               ref={contractDropdownRef}
-              className="absolute top-full left-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[400px] w-96 contract-dropdown" 
+              className="absolute top-full right-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[320px] w-72 contract-dropdown" 
               style={{ fontFamily: 'Avenir, sans-serif' }}
             >
                   {/* Search Bar */}
@@ -2694,7 +2691,7 @@ export default function SignaturesPage() {
                         {showSenderDropdown && (
             <div 
               ref={senderDropdownRef}
-              className="absolute top-full left-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[200px] sender-dropdown" 
+              className="absolute top-full right-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 w-44 sender-dropdown" 
               style={{ fontFamily: 'Avenir, sans-serif' }}
             >
                   {availableSenders.map((option) => (
@@ -2741,7 +2738,7 @@ export default function SignaturesPage() {
                 <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
               </button>
                         {showAssigneeDropdown && (
-            <div ref={assigneeDropdownRef} className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
+            <div ref={assigneeDropdownRef} className="absolute top-full right-0 mt-2 w-44 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" style={{ fontFamily: 'Avenir, sans-serif' }}>
                   <button
                     className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedAssignees.length === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                     onClick={(e) => {
@@ -2831,8 +2828,8 @@ export default function SignaturesPage() {
               {openRecentlyUpdatedDropdown && (
                 <div 
                   ref={recentlyUpdatedDropdownRef}
-                  className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" 
-                  style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                  className="absolute top-full right-0 mt-2 w-[160px] bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" 
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
                 >
                   {availableRecentlyUpdatedOptions.map((option) => (
                     <button
@@ -3667,9 +3664,14 @@ export default function SignaturesPage() {
             {/* Sticky Header */}
             <div className="sticky top-0 z-40 bg-gray-50 dark:bg-gray-900 px-6 py-4">
               <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900 dark:text-white leading-tight" style={{ fontFamily: 'Avenir, sans-serif' }}>Request Signature</h2>
-                  <p className="text-gray-500 text-xs leading-tight cursor-default select-none">Fill in the request details to get started</p>
+                <div className="flex items-center gap-4">
+                  <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800">
+                    <TbPencilPlus size={20} className="text-teal-500 dark:text-teal-400" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900 dark:text-white leading-tight" style={{ fontFamily: 'Avenir, sans-serif' }}>Request Signature</h2>
+                    <p className="text-gray-500 text-xs leading-tight cursor-default select-none">Fill in the request details to get started</p>
+                  </div>
                 </div>
                 <button
                     className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-full ml-4 mt-1"

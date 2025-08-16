@@ -15,7 +15,7 @@ import { MdOutlineAddToPhotos, MdOutlineUpdate } from 'react-icons/md';
 import { mockContracts } from '@/data/mockContracts';
 import Image from 'next/image';
 import { LuSquareArrowOutUpRight, LuFileTerminal, LuBookText } from 'react-icons/lu';
-import { TbClockPin, TbShieldLock, TbDropletFilled, TbReportSearch, TbHistory, TbHistoryOff } from 'react-icons/tb';
+import { TbClockPin, TbShieldLock, TbDropletFilled, TbReportSearch, TbHistory, TbHistoryOff, TbClockEdit, TbTopologyBus } from 'react-icons/tb';
 import { CgTerminal } from 'react-icons/cg';
 import { AiOutlineNodeExpand } from 'react-icons/ai';
 import { PiHandCoins } from 'react-icons/pi';
@@ -513,14 +513,14 @@ export default function BlockchainPage() {
                       }
                     }}
                   >
-                    <span className="flex items-center"><HiOutlineViewBoards className="text-gray-400 text-base mr-2" />Status</span>
+                    <span className="flex items-center"><TbHistory className="text-gray-400 text-base mr-2" />Status</span>
                     <HiMiniChevronDown className="text-gray-400" size={16} />
                   </button>
                   {showStatusDropdown && (
                     <div 
                       ref={statusDropdownContainerRef}
-                      className="absolute top-full left-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 status-filter-dropdown" 
-                      style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                      className="absolute top-full right-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 status-filter-dropdown" 
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
                     >
                       <button
                         className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedStatuses.includes('All') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
@@ -585,12 +585,9 @@ export default function BlockchainPage() {
                   {openContractDropdown && (
                     <div 
                       ref={contractDropdownContainerRef}
-                      className="absolute top-full left-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[300px] max-w-[90vw] contract-dropdown" 
+                      className="absolute top-full right-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 contract-dropdown" 
                       style={{ 
-                        fontFamily: 'Avenir, sans-serif',
-                        maxWidth: 'calc(100vw - 2rem)',
-                        right: '0',
-                        transform: 'translateX(0)'
+                        fontFamily: 'Avenir, sans-serif'
                       }}
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -690,15 +687,15 @@ export default function BlockchainPage() {
                       }
                     }}
                   >
-                    <HiOutlineViewBoards className="text-gray-400 w-4 h-4" />
+                    <TbHistory className="text-gray-400 w-4 h-4" />
                     <span>Status</span>
                     <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
                   </button>
                   {showStatusDropdown && (
                     <div 
                       ref={statusDropdownDesktopRef}
-                      className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 status-filter-dropdown" 
-                      style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                      className="absolute top-full right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 status-filter-dropdown" 
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
                     >
                       <button
                         className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedStatuses.includes('All') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
@@ -765,12 +762,9 @@ export default function BlockchainPage() {
                   {openContractDropdown && (
                     <div 
                       ref={contractDropdownDesktopRef}
-                      className="absolute right-0 mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[300px] max-w-[90vw] w-80 contract-dropdown" 
+                      className="absolute top-full right-0 mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[300px] w-64 contract-dropdown" 
                       style={{ 
-                        fontFamily: 'Avenir, sans-serif',
-                        maxWidth: 'calc(100vw - 2rem)',
-                        right: '0',
-                        transform: 'translateX(0)'
+                        fontFamily: 'Avenir, sans-serif'
                       }}
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -905,8 +899,8 @@ export default function BlockchainPage() {
                 </div>
                 <p className="text-[12px] text-gray-400 mb-3 truncate italic" style={{ fontFamily: 'Avenir, sans-serif' }} title={contract.description}>{contract.description}</p>
                 <div className="flex items-center text-[11px] text-black dark:text-white mb-2" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                  <span className="mr-4 flex items-center truncate"><MdOutlineUpdate className="mr-1 text-gray-400 flex-shrink-0 text-base" />Last Updated: {contract.deployed}</span>
-                  <span className="flex items-center truncate"><FaTimeline className="mr-1 text-gray-400 flex-shrink-0 text-base" />{contract.transactions} Transactions</span>
+                  <span className="mr-4 flex items-center truncate"><TbClockEdit className="mr-1 text-gray-400 flex-shrink-0 text-base" />Last Updated: {contract.deployed}</span>
+                  <span className="flex items-center truncate"><TbTopologyBus className="mr-1 text-gray-400 flex-shrink-0 text-base" />{contract.transactions} Transactions</span>
                 </div>
                 <div className="flex justify-between items-center pt-4 border-t border-gray-100 mt-4">
                   <button className="text-gray-700 hover:text-teal-600 flex items-center text-[10px] font-medium" style={{ fontFamily: 'Avenir, sans-serif' }}><span className="mr-1">&gt;_</span>Functions</button>
@@ -956,8 +950,8 @@ export default function BlockchainPage() {
                   {showActivityTypeDropdown && (
                     <div 
                       ref={activityTypeDropdownContainerRef}
-                      className="absolute top-full left-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 activity-type-dropdown" 
-                      style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                      className="absolute top-full right-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 activity-type-dropdown" 
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
                     >
                       <button
                         className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedActivityTypes.includes('All') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
@@ -1022,12 +1016,9 @@ export default function BlockchainPage() {
                   {openActivityContractDropdown && (
                     <div 
                       ref={activityContractDropdownContainerRef}
-                      className="absolute top-full left-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[300px] max-w-[90vw] activity-contract-dropdown" 
+                      className="absolute top-full right-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 activity-contract-dropdown" 
                       style={{ 
-                        fontFamily: 'Avenir, sans-serif',
-                        maxWidth: 'calc(100vw - 2rem)',
-                        right: '0',
-                        transform: 'translateX(0)'
+                        fontFamily: 'Avenir, sans-serif'
                       }}
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -1132,8 +1123,8 @@ export default function BlockchainPage() {
                   {showActivityTypeDropdown && (
                     <div
                       ref={activityTypeDropdownDesktopRef}
-                      className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 activity-type-dropdown"
-                      style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}
+                      className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 activity-type-dropdown"
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
                     >
                       <button
                         className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedActivityTypes.includes('All') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
@@ -1200,12 +1191,9 @@ export default function BlockchainPage() {
                   {openActivityContractDropdown && (
                     <div
                       ref={activityContractDropdownDesktopRef}
-                      className="absolute right-0 mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[300px] max-w-[90vw] w-80 activity-contract-dropdown"
+                      className="absolute top-full right-0 mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[300px] w-64 activity-contract-dropdown"
                       style={{
-                        fontFamily: 'Avenir, sans-serif',
-                        maxWidth: 'calc(100vw - 2rem)',
-                        right: '0',
-                        transform: 'translateX(0)'
+                        fontFamily: 'Avenir, sans-serif'
                       }}
                       onClick={(e) => e.stopPropagation()}
                     >
