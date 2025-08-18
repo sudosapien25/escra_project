@@ -5,7 +5,7 @@ import { mockContracts } from '@/data/mockContracts';
 import { Task } from '@/types/task';
 
 // Icons
-import { HiOutlineDocumentText, HiOutlineViewBoards, HiOutlineUpload, HiOutlineEye, HiOutlineDownload, HiOutlineTrash, HiPlus, HiChevronDown, HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight } from 'react-icons/hi';
+import { HiOutlineDocumentText, HiOutlineViewBoards, HiOutlineUpload, HiOutlineEye, HiOutlineDownload, HiOutlineTrash, HiPlus, HiChevronDown, HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight, HiOutlinePencil } from 'react-icons/hi';
 import { HiMiniChevronDown } from 'react-icons/hi2';
 import { CgPlayPauseR, CgPlayStopR } from 'react-icons/cg';
 import { BsPerson } from 'react-icons/bs';
@@ -19,7 +19,7 @@ import { MdCancelPresentation, MdOutlineLibraryAddCheck } from 'react-icons/md';
 import { MdOutlineLightMode, MdOutlineDarkMode } from 'react-icons/md';
 import { RiUserSearchLine, RiKanbanView2 } from 'react-icons/ri';
 import { HiOutlineDocumentSearch } from 'react-icons/hi';
-import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbLibraryPlus, TbEdit, TbStatusChange, TbHistory, TbCategoryPlus } from 'react-icons/tb';
+import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbLibraryPlus, TbEdit, TbStatusChange, TbHistory, TbCategoryPlus, TbDragDrop, TbPencil } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
 
@@ -171,6 +171,22 @@ export default function WorkflowsPage() {
   const [selectedNewTaskFileSource, setSelectedNewTaskFileSource] = useState<string | null>(null);
   const [showNewTaskFileSourceDropdown, setShowNewTaskFileSourceDropdown] = useState(false);
   const newTaskFileSourceDropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Document fields for Step 3
+  const [newTaskDocumentName, setNewTaskDocumentName] = useState('');
+  
+  // Inline editing state for uploaded files
+  const [editingTaskFileIndex, setEditingTaskFileIndex] = useState<number | null>(null);
+  const [inlineEditingTaskFileName, setInlineEditingTaskFileName] = useState('');
+  
+  // Inline editing state for subtasks
+  const [editingSubtaskIndex, setEditingSubtaskIndex] = useState<number | null>(null);
+  const [inlineEditingSubtaskTitle, setInlineEditingSubtaskTitle] = useState('');
+  const [inlineEditingSubtaskAssignee, setInlineEditingSubtaskAssignee] = useState('');
+  const [inlineEditingSubtaskDueDate, setInlineEditingSubtaskDueDate] = useState('');
+  const [inlineEditingSubtaskDescription, setInlineEditingSubtaskDescription] = useState('');
+  const [showInlineSubtaskAssigneeDropdown, setShowInlineSubtaskAssigneeDropdown] = useState(false);
+  const inlineSubtaskAssigneeDropdownRef = useRef<HTMLDivElement>(null);
   
   // Subtasks state
   const [newTaskSubtasks, setNewTaskSubtasks] = useState<Array<{id: string, title: string, assignee: string, status: string, dueDate: string, description: string, completed: boolean}>>([]);
@@ -772,6 +788,109 @@ export default function WorkflowsPage() {
     };
   }, [showNewTaskStatusDropdown]);
 
+
+
+  // Add click-outside handler for new task file source dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+      const dropdown = newTaskFileSourceDropdownRef.current;
+      
+      if (showNewTaskFileSourceDropdown && dropdown && !dropdown.contains(target)) {
+        setShowNewTaskFileSourceDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showNewTaskFileSourceDropdown]);
+
+  // Add click-outside handler for inline subtask assignee dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+      const dropdown = inlineSubtaskAssigneeDropdownRef.current;
+      
+      if (showInlineSubtaskAssigneeDropdown && dropdown && !dropdown.contains(target)) {
+        setShowInlineSubtaskAssigneeDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showInlineSubtaskAssigneeDropdown]);
+
+  // Inline editing functions for uploaded files
+  const handleStartInlineEditTaskFile = (index: number) => {
+    const file = newTaskUploadedFiles[index];
+    setEditingTaskFileIndex(index);
+    setInlineEditingTaskFileName(file.name.replace(/\.[^/.]+$/, "")); // Remove extension
+  };
+
+  const handleSaveInlineEditTaskFile = (index: number) => {
+    if (inlineEditingTaskFileName.trim()) {
+      const updatedFiles = [...newTaskUploadedFiles];
+      const originalFile = updatedFiles[index];
+      
+      // Create a new File object with the updated name
+      const newFileName = `${inlineEditingTaskFileName.trim()}.${originalFile.name.split('.').pop()}`;
+      const newFile = new File([originalFile], newFileName, { type: originalFile.type });
+      
+      updatedFiles[index] = newFile;
+      setNewTaskUploadedFiles(updatedFiles);
+    }
+    setEditingTaskFileIndex(null);
+    setInlineEditingTaskFileName('');
+  };
+
+  const handleCancelInlineEditTaskFile = () => {
+    setEditingTaskFileIndex(null);
+    setInlineEditingTaskFileName('');
+  };
+
+  // Inline editing functions for subtasks
+  const handleStartInlineEditSubtask = (index: number) => {
+    const subtask = newTaskSubtasks[index];
+    setEditingSubtaskIndex(index);
+    setInlineEditingSubtaskTitle(subtask.title);
+    setInlineEditingSubtaskAssignee(subtask.assignee);
+    setInlineEditingSubtaskDueDate(subtask.dueDate);
+    setInlineEditingSubtaskDescription(subtask.description);
+  };
+
+  const handleSaveInlineEditSubtask = (index: number) => {
+    if (inlineEditingSubtaskTitle.trim()) {
+      const updatedSubtasks = [...newTaskSubtasks];
+      updatedSubtasks[index] = {
+        ...updatedSubtasks[index],
+        title: inlineEditingSubtaskTitle.trim(),
+        assignee: inlineEditingSubtaskAssignee,
+        dueDate: inlineEditingSubtaskDueDate,
+        description: inlineEditingSubtaskDescription
+      };
+      setNewTaskSubtasks(updatedSubtasks);
+    }
+    setEditingSubtaskIndex(null);
+    setInlineEditingSubtaskTitle('');
+    setInlineEditingSubtaskAssignee('');
+    setInlineEditingSubtaskDueDate('');
+    setInlineEditingSubtaskDescription('');
+    setShowInlineSubtaskAssigneeDropdown(false);
+  };
+
+  const handleCancelInlineEditSubtask = () => {
+    setEditingSubtaskIndex(null);
+    setInlineEditingSubtaskTitle('');
+    setInlineEditingSubtaskAssignee('');
+    setInlineEditingSubtaskDueDate('');
+    setInlineEditingSubtaskDescription('');
+    setShowInlineSubtaskAssigneeDropdown(false);
+  };
+
   // Horizontal scroll on wheel
   const handleKanbanWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     if (kanbanBoardRef.current) {
@@ -1032,7 +1151,7 @@ export default function WorkflowsPage() {
                       </div>
                     </div>
                     <div>
-                      <label htmlFor="taskDueDate" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Due Date</label>
+                      <label htmlFor="taskDueDate" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Due Date <span className="text-red-500">*</span></label>
                       <div className="relative">
                         <input
                           type="date"
@@ -1067,7 +1186,7 @@ export default function WorkflowsPage() {
                       )}
                     </div>
                     <div>
-                      <label htmlFor="taskContract" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Contract</label>
+                      <label htmlFor="taskContract" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Contract <span className="text-red-500">*</span></label>
                       <div className="relative" ref={newTaskContractDropdownRef}>
                         <input
                           type="text"
@@ -1374,7 +1493,7 @@ export default function WorkflowsPage() {
                         name="subtaskDescription"
                         value={newSubtaskDescription}
                         onChange={(e) => setNewSubtaskDescription(e.target.value)}
-                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white resize-none"
+                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white resize-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500"
                         rows={3}
                         placeholder="Enter subtask description..."
                         style={{ fontFamily: 'Avenir, sans-serif' }}
@@ -1386,24 +1505,175 @@ export default function WorkflowsPage() {
                   <div className="mt-6">
                     <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Subtasks</h4>
                     <div className="space-y-2 cursor-default select-none">
-                      {newTaskSubtasks.map((subtask) => (
-                        <div key={subtask.id} className="flex items-center gap-3 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                          <div className="flex-1 flex items-center gap-4">
-                            <span className="text-xs font-medium text-gray-900 dark:text-white">{subtask.title}</span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">{subtask.dueDate ? formatDatePretty(subtask.dueDate) : 'No due date'}</span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">{subtask.assignee || 'Unassigned'}</span>
-                          </div>
-                          <button
-                            onClick={() => {
-                              setNewTaskSubtasks(prev => prev.filter(st => st.id !== subtask.id));
-                            }}
-                            className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1 relative group"
-                          >
-                            <HiOutlineTrash className="w-4 h-4" />
-                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                              Delete
-                            </span>
-                          </button>
+                      {newTaskSubtasks.map((subtask, idx) => (
+                        <div key={subtask.id} className="bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 transition-colors">
+                          {editingSubtaskIndex === idx ? (
+                            // Inline editing form
+                            <div className="p-4 space-y-4">
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Task Name</label>
+                                  <input
+                                    type="text"
+                                    placeholder="Enter subtask name..."
+                                    className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                                    value={inlineEditingSubtaskTitle}
+                                    onChange={(e) => setInlineEditingSubtaskTitle(e.target.value)}
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Assignee</label>
+                                  <div className="relative" ref={inlineSubtaskAssigneeDropdownRef}>
+                                    <input
+                                      type="text"
+                                      className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors cursor-text pr-10"
+                                      placeholder="Choose an assignee..."
+                                      value={inlineEditingSubtaskAssignee}
+                                      onChange={(e) => {
+                                        setInlineEditingSubtaskAssignee(e.target.value);
+                                        if (e.target.value === '') {
+                                          setShowInlineSubtaskAssigneeDropdown(false);
+                                        } else if (!showInlineSubtaskAssigneeDropdown) {
+                                          setShowInlineSubtaskAssigneeDropdown(true);
+                                        }
+                                      }}
+                                      onFocus={() => setShowInlineSubtaskAssigneeDropdown(true)}
+                                      onClick={() => setShowInlineSubtaskAssigneeDropdown(true)}
+                                      autoComplete="off"
+                                    />
+                                    <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    {showInlineSubtaskAssigneeDropdown && (
+                                      <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none">
+                                        {uniqueAssignees.length > 0 ? (
+                                          <>
+                                            {uniqueAssignees.map((assignee: string) => (
+                                              <div
+                                                key={assignee}
+                                                className={`px-4 py-2 text-xs cursor-pointer ${inlineEditingSubtaskAssignee === assignee ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'} select-none`}
+                                                onClick={() => {
+                                                  setInlineEditingSubtaskAssignee(assignee);
+                                                  setShowInlineSubtaskAssigneeDropdown(false);
+                                                }}
+                                              >
+                                                {assignee}
+                                              </div>
+                                            ))}
+                                            <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                                            <div
+                                              className="px-4 py-2 text-xs cursor-pointer text-primary hover:bg-primary/10 select-none flex items-center gap-2"
+                                              onClick={() => {
+                                                setShowInlineSubtaskAssigneeDropdown(false);
+                                              }}
+                                            >
+                                              <FaPlus className="text-xs" />
+                                              Add new assignee
+                                            </div>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <div className="px-4 py-2 text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">No assignees found</div>
+                                            <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                                            <div
+                                              className="px-4 py-2 text-xs cursor-pointer text-primary hover:bg-primary/10 select-none flex items-center gap-2"
+                                              onClick={() => {
+                                                setShowInlineSubtaskAssigneeDropdown(false);
+                                              }}
+                                            >
+                                              <FaPlus className="text-xs" />
+                                              Add new assignee
+                                            </div>
+                                          </>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                                                 <div>
+                                   <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Due Date</label>
+                                   <div className="relative">
+                                     <input
+                                       type="date"
+                                       id={`inline-subtask-due-date-${idx}`}
+                                       className="w-full px-3 py-2 pr-10 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors [&::-webkit-calendar-picker-indicator]:hidden"
+                                       value={inlineEditingSubtaskDueDate}
+                                       onChange={(e) => setInlineEditingSubtaskDueDate(e.target.value)}
+                                       onKeyDown={(e) => {
+                                         if (e.key === 'Backspace') {
+                                           e.preventDefault();
+                                           setInlineEditingSubtaskDueDate('');
+                                         }
+                                       }}
+                                     />
+                                     <button
+                                       type="button"
+                                       onClick={() => {
+                                         const dateInput = document.getElementById(`inline-subtask-due-date-${idx}`) as HTMLInputElement;
+                                         if (dateInput) dateInput.showPicker();
+                                       }}
+                                       className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 flex items-center justify-center"
+                                     >
+                                       <LuCalendarFold className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                                     </button>
+                                   </div>
+                                 </div>
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Description</label>
+                                                                 <textarea
+                                   className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors resize-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500"
+                                   rows={3}
+                                   placeholder="Enter subtask description..."
+                                   value={inlineEditingSubtaskDescription}
+                                   onChange={(e) => setInlineEditingSubtaskDescription(e.target.value)}
+                                 />
+                              </div>
+                              <div className="flex justify-end">
+                                <button
+                                  type="button"
+                                  onClick={() => handleSaveInlineEditSubtask(idx)}
+                                  disabled={!inlineEditingSubtaskTitle.trim()}
+                                  className="px-2.5 py-1 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={handleCancelInlineEditSubtask}
+                                  className="px-2.5 py-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ml-1"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            // Display mode
+                            <div className="flex items-center gap-3 p-3">
+                              <div className="flex-1 flex items-center gap-4">
+                                <span className="text-xs font-medium text-gray-900 dark:text-white">{subtask.title}</span>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">{subtask.dueDate ? formatDatePretty(subtask.dueDate) : 'No due date'}</span>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">{subtask.assignee || 'Unassigned'}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => handleStartInlineEditSubtask(idx)}
+                                  className="text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors p-1"
+                                >
+                                  <TbPencil className="h-4 w-4" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setNewTaskSubtasks(prev => prev.filter(st => st.id !== subtask.id));
+                                  }}
+                                  className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1 relative group"
+                                >
+                                  <HiOutlineTrash className="w-4 h-4" />
+                                  <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                    Delete
+                                  </span>
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ))}
                       {newTaskSubtasks.length === 0 && (
@@ -1422,7 +1692,7 @@ export default function WorkflowsPage() {
                     >
                       Previous
                     </button>
-                    <div className="flex gap-2">
+                    <div className="flex">
                       <button
                         onClick={() => {
                           if (newSubtaskTitle.trim()) {
@@ -1450,7 +1720,7 @@ export default function WorkflowsPage() {
                       </button>
                       <button 
                         onClick={() => setNewTaskModalStep(3)}
-                        className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm"
+                        className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm ml-1"
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       >
                         Continue
@@ -1461,121 +1731,191 @@ export default function WorkflowsPage() {
               )}
 
               {newTaskModalStep === 3 && (
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex gap-4 mb-4">
-                      <div className="flex-1 w-0">
-                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">File Source</div>
-                        <div className="relative" ref={newTaskFileSourceDropdownRef}>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setShowNewTaskFileSourceDropdown(!showNewTaskFileSourceDropdown);
-                            }}
-                            className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs focus:ring-0 focus:ring-primary focus:border-primary transition-colors flex items-center justify-end relative cursor-pointer"
-                            style={{ fontFamily: 'Avenir, sans-serif' }}
-                          >
-                            {selectedNewTaskFileSource ? (
-                              <span className="flex items-center gap-2 absolute left-4 cursor-default select-none">
-                                {selectedNewTaskFileSource === 'Desktop' && <TbDeviceDesktopPlus className="text-base text-primary" />}
-                                {selectedNewTaskFileSource === 'Box' && <SiBox className="text-base text-primary" />}
-                                {selectedNewTaskFileSource === 'Dropbox' && <SlSocialDropbox className="text-base text-primary" />}
-                                {selectedNewTaskFileSource === 'Google Drive' && <TbBrandGoogleDrive className="text-base text-primary" />}
-                                {selectedNewTaskFileSource === 'OneDrive' && <TbBrandOnedrive className="text-base text-primary" />}
-                                <span className="text-xs text-gray-900 dark:text-white cursor-default select-none">{selectedNewTaskFileSource}</span>
-                              </span>
-                            ) : (
-                              <span className="absolute left-4 text-xs text-gray-400 cursor-default select-none">Choose a source...</span>
-                            )}
-                            <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                          </button>
-                          {showNewTaskFileSourceDropdown && (
-                            <div className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 cursor-default select-none">
-                              <div className="py-2">
-                                <label htmlFor="new-task-desktop-file-upload" className="block px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer select-none">
-                                  <div className="flex items-center gap-2">
-                                    <TbDeviceDesktopPlus className="text-base text-primary" />
-                                    <span className="text-xs cursor-default select-none">Desktop</span>
-                                  </div>
-                                </label>
-                                <input
-                                  id="new-task-desktop-file-upload"
-                                  name="new-task-desktop-file-upload"
-                                  type="file"
-                                  accept=".pdf,.doc,.docx,.jpg,.jpeg"
-                                  className="hidden"
-                                  multiple
-                                  onChange={(e) => {
-                                    setSelectedNewTaskFileSource('Desktop');
-                                    setShowNewTaskFileSourceDropdown(false);
-                                    if (e.target.files) {
-                                      const newFiles = Array.from(e.target.files);
-                                      setNewTaskUploadedFiles(prev => [...prev, ...newFiles]);
-                                    }
-                                  }}
-                                />
-                                <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setSelectedNewTaskFileSource('Box'); setShowNewTaskFileSourceDropdown(false); }}>
-                                  <SiBox className="text-base text-primary" />
-                                  <span className="text-xs cursor-default select-none">Box</span>
-                                </button>
-                                <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setSelectedNewTaskFileSource('Dropbox'); setShowNewTaskFileSourceDropdown(false); }}>
-                                  <SlSocialDropbox className="text-base text-primary" />
-                                  <span className="text-xs cursor-default select-none">Dropbox</span>
-                                </button>
-                                <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setSelectedNewTaskFileSource('Google Drive'); setShowNewTaskFileSourceDropdown(false); }}>
-                                  <TbBrandGoogleDrive className="text-base text-primary" />
-                                  <span className="text-xs cursor-default select-none">Google Drive</span>
-                                </button>
-                                <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setSelectedNewTaskFileSource('OneDrive'); setShowNewTaskFileSourceDropdown(false); }}>
-                                  <TbBrandOnedrive className="text-base text-primary" />
-                                  <span className="text-xs cursor-default select-none">OneDrive</span>
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex-1 w-0" />
-                    </div>
-                    
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 cursor-default select-none">Upload Files (Optional)</label>
-                    <div className="relative mb-8">
-                      <div 
-                        className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 py-8 px-4 text-center transition hover:border-primary cursor-pointer"
-                        onClick={() => {
-                          document.getElementById('new-task-file-upload')?.click();
-                        }}
-                      >
-                        <HiOutlineUpload className="text-2xl text-gray-400 mb-2" />
-                        <div className="text-gray-700 dark:text-gray-300 font-medium cursor-default select-none">Click to upload or drag and drop</div>
-                        <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 cursor-default select-none">PDF, DOC, DOCX, or JPG (max. 10MB each)</div>
-                      </div>
-                      
+                <div className="space-y-6">
+                  {/* Document Name Field */}
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Document Name</label>
                       <input
-                        id="new-task-file-upload"
-                        name="new-task-file-upload"
-                        type="file"
-                        accept=".pdf,.doc,.docx,.jpg,.jpeg"
-                        className="hidden"
-                        multiple
-                        onChange={(e) => {
-                          if (e.target.files) {
-                            const newFiles = Array.from(e.target.files);
-                            setNewTaskUploadedFiles(prev => [...prev, ...newFiles]);
-                          }
-                        }}
+                        type="text"
+                        placeholder="Enter document name..."
+                        className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs transition-colors cursor-text focus:ring-2 focus:ring-primary focus:border-primary"
+                        value={newTaskDocumentName}
+                        onChange={(e) => setNewTaskDocumentName(e.target.value)}
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
                       />
                     </div>
-                    {newTaskUploadedFiles.length > 0 && (
-                      <ul className="mt-3 text-sm text-gray-600 dark:text-gray-400 cursor-default select-none">
-                        {newTaskUploadedFiles.map((file, idx) => (
-                          <li key={idx} className="truncate">{file.name}</li>
-                        ))}
-                      </ul>
+                    <div>
+                      {/* Empty right column to maintain layout consistency */}
+                    </div>
+                  </div>
+
+                  {/* Upload Area with Integrated File Source */}
+                  <div className="relative mb-1" ref={newTaskFileSourceDropdownRef}>
+                    <div 
+                      className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 py-8 px-4 text-center transition hover:border-primary cursor-pointer"
+                      onClick={() => {
+                        setShowNewTaskFileSourceDropdown(!showNewTaskFileSourceDropdown);
+                      }}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        const files = Array.from(e.dataTransfer.files);
+                        if (files.length > 0) {
+                          // Set file source to Desktop
+                          setSelectedNewTaskFileSource('Desktop');
+                          
+                          // Add files to uploaded files
+                          setNewTaskUploadedFiles(prev => [...prev, ...files]);
+                          
+                          // Pre-populate document name with first file name (without extension) only if field is empty
+                          if (!newTaskDocumentName.trim()) {
+                            const fileName = files[0].name;
+                            const nameWithoutExtension = fileName.replace(/\.[^/.]+$/, "");
+                            setNewTaskDocumentName(nameWithoutExtension);
+                          }
+                        }
+                      }}
+                    >
+                      <TbDragDrop className="text-3xl text-gray-400 mb-2" />
+                      <div className="text-xs text-gray-700 dark:text-gray-300 font-medium cursor-default select-none">Click to upload or drag and drop</div>
+                      <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 cursor-default select-none">PDF, DOC, DOCX, or JPG (max. 10MB each)</div>
+                    </div>
+                    
+                    {/* Upload Source Dropdown */}
+                    {showNewTaskFileSourceDropdown && (
+                      <div className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 cursor-default select-none">
+                        <div className="py-2">
+                          <label htmlFor="new-task-desktop-file-upload" className="block px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+                            <div className="flex items-center gap-2">
+                              <TbDeviceDesktopPlus className="text-base text-primary" />
+                              <span className="text-xs cursor-default select-none">Desktop</span>
+                            </div>
+                          </label>
+                          <input
+                            id="new-task-desktop-file-upload"
+                            name="new-task-desktop-file-upload"
+                            type="file"
+                            accept=".pdf,.doc,.docx,.jpg,.jpeg"
+                            className="hidden"
+                            multiple
+                            onChange={(e) => {
+                              setSelectedNewTaskFileSource('Desktop');
+                              setShowNewTaskFileSourceDropdown(false);
+                              if (e.target.files) {
+                                const newFiles = Array.from(e.target.files);
+                                setNewTaskUploadedFiles(prev => [...prev, ...newFiles]);
+                                
+                                // Pre-populate document name with first file name (without extension) only if field is empty
+                                if (!newTaskDocumentName.trim()) {
+                                  const fileName = newFiles[0].name;
+                                  const nameWithoutExtension = fileName.replace(/\.[^/.]+$/, "");
+                                  setNewTaskDocumentName(nameWithoutExtension);
+                                }
+                              }
+                            }}
+                          />
+                          <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setSelectedNewTaskFileSource('Box'); setShowNewTaskFileSourceDropdown(false); }}>
+                            <SiBox className="text-base text-primary" />
+                            <span className="text-xs cursor-default select-none">Box</span>
+                          </button>
+                          <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setSelectedNewTaskFileSource('Dropbox'); setShowNewTaskFileSourceDropdown(false); }}>
+                            <SlSocialDropbox className="text-base text-primary" />
+                            <span className="text-xs cursor-default select-none">Dropbox</span>
+                          </button>
+                          <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setSelectedNewTaskFileSource('Google Drive'); setShowNewTaskFileSourceDropdown(false); }}>
+                            <TbBrandGoogleDrive className="text-base text-primary" />
+                            <span className="text-xs cursor-default select-none">Google Drive</span>
+                          </button>
+                          <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setSelectedNewTaskFileSource('OneDrive'); setShowNewTaskFileSourceDropdown(false); }}>
+                            <TbBrandOnedrive className="text-base text-primary" />
+                            <span className="text-xs cursor-default select-none">OneDrive</span>
+                          </button>
+                        </div>
+                      </div>
                     )}
                   </div>
-                  <div className="flex justify-between mt-12">
+
+                  {/* Uploaded Files Display */}
+                  {newTaskUploadedFiles.length > 0 && (
+                    <div className="mt-4">
+                      <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-3 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Uploaded Files</h4>
+                      <div className="flex flex-col gap-2 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
+                        {newTaskUploadedFiles.map((file, idx) => (
+                          <div key={idx} className="bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600 transition-colors">
+                            {editingTaskFileIndex === idx ? (
+                              // Inline editing form
+                              <div className="space-y-3">
+                                <div className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    placeholder="Document name..."
+                                    className="flex-1 h-[28px] px-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-xs text-gray-900 dark:text-white focus:ring-1 focus:ring-primary focus:border-primary"
+                                    value={inlineEditingTaskFileName}
+                                    onChange={(e) => setInlineEditingTaskFileName(e.target.value)}
+                                  />
+                                </div>
+                                <div className="flex justify-end">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSaveInlineEditTaskFile(idx)}
+                                    disabled={!inlineEditingTaskFileName.trim()}
+                                    className="px-2.5 py-1 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                    Save
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={handleCancelInlineEditTaskFile}
+                                    className="px-2.5 py-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ml-1"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              // Display mode
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-semibold text-xs text-black dark:text-white flex-1 min-w-0 truncate">
+                                    {file.name}
+                                  </div>
+                                  <div className="text-xs text-gray-500 cursor-default select-none">
+                                    {file.name.split('.').pop()?.toUpperCase() || 'Unknown'} &bull; {(file.size / 1024 / 1024).toFixed(2)} MB
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <button 
+                                    type="button"
+                                    onClick={() => handleStartInlineEditTaskFile(idx)}
+                                    className="text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors p-1"
+                                  >
+                                    <HiOutlinePencil className="h-4 w-4" />
+                                  </button>
+                                  <button 
+                                    className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setNewTaskUploadedFiles(prev => prev.filter((_, index) => index !== idx));
+                                    }}
+                                  >
+                                    <HiOutlineTrash className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between mt-6">
                     <button 
                       onClick={() => setNewTaskModalStep(2)}
                       className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold" 
@@ -1583,30 +1923,42 @@ export default function WorkflowsPage() {
                     >
                       Previous
                     </button>
-                    <button 
-                      onClick={() => {
-                        // Handle task creation
-                        console.log('Creating task:', newTaskModalForm);
-                        console.log('Subtasks:', newTaskSubtasks);
-                        setShowNewTaskModal(false);
-                        setNewTaskModalStep(1);
-                        setNewTaskModalForm({ title: '', assignee: '', status: 'To Do' as TaskStatus, dueDate: '', description: '', contract: '' });
-                        setNewTaskFormErrors({});
-                        setNewTaskUploadedFiles([]);
-                        setNewTaskSubtasks([]);
-                        setNewSubtaskTitle('');
-                        setNewSubtaskAssignee('');
-                        setNewSubtaskStatus('To Do');
-                        setNewSubtaskDueDate('');
-                        setNewSubtaskDescription('');
-                        setShowNewSubtaskAssigneeDropdown(false);
-                        setShowNewSubtaskStatusDropdown(false);
-                      }}
-                      className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm"
-                      style={{ fontFamily: 'Avenir, sans-serif' }}
-                    >
-                      Create Task
-                    </button>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => {
+                          // Handle task creation
+                          console.log('Creating task:', newTaskModalForm);
+                          console.log('Subtasks:', newTaskSubtasks);
+                          console.log('Documents:', newTaskUploadedFiles);
+                          setShowNewTaskModal(false);
+                          setNewTaskModalStep(1);
+                          setNewTaskModalForm({ title: '', assignee: '', status: 'To Do' as TaskStatus, dueDate: '', description: '', contract: '' });
+                          setNewTaskFormErrors({});
+                          setNewTaskUploadedFiles([]);
+                          setNewTaskSubtasks([]);
+                          setNewSubtaskTitle('');
+                          setNewSubtaskAssignee('');
+                          setNewSubtaskStatus('To Do');
+                          setNewSubtaskDueDate('');
+                          setNewSubtaskDescription('');
+                          setShowNewSubtaskAssigneeDropdown(false);
+                          setShowNewSubtaskStatusDropdown(false);
+                          setNewTaskDocumentName('');
+                        setEditingTaskFileIndex(null);
+                        setInlineEditingTaskFileName('');
+                        setEditingSubtaskIndex(null);
+                        setInlineEditingSubtaskTitle('');
+                        setInlineEditingSubtaskAssignee('');
+                        setInlineEditingSubtaskDueDate('');
+                        setInlineEditingSubtaskDescription('');
+                        setShowInlineSubtaskAssigneeDropdown(false);
+                        }}
+                        className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm"
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                      >
+                        Create Task
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
