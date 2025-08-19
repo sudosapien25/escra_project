@@ -1,1 +1,18 @@
-{} 
+{
+  "6453": {
+    "loanTerm": "",
+    "inspectionPeriod": "",
+    "titleCompany": "",
+    "contingencies": "",
+    "insuranceCompany": ""
+  },
+  "6891": {
+    "propertyAddress": ""
+  },
+  "7234": {
+    "inspectionPeriod": ""
+  },
+  "9145": {
+    "value": "$2,500,000"
+  }
+}

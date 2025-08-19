@@ -19,7 +19,7 @@ import { MdCancelPresentation, MdOutlineLibraryAddCheck } from 'react-icons/md';
 import { MdOutlineLightMode, MdOutlineDarkMode } from 'react-icons/md';
 import { RiUserSearchLine, RiKanbanView2 } from 'react-icons/ri';
 import { HiOutlineDocumentSearch } from 'react-icons/hi';
-import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbLibraryPlus, TbEdit, TbStatusChange, TbHistory, TbCategoryPlus, TbDragDrop, TbPencil } from 'react-icons/tb';
+import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbLibraryPlus, TbEdit, TbStatusChange, TbHistory, TbCategoryPlus, TbDragDrop, TbPencil, TbSubtask } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
 
@@ -143,6 +143,40 @@ export default function WorkflowsPage() {
   const uploadModalAssigneeDropdownRef = useRef<HTMLDivElement>(null);
   const uploadModalAssigneeInputRef = useRef<HTMLInputElement>(null);
   
+  // Add state for task files
+  const [taskFiles, setTaskFiles] = useState<Record<string, any>>({});
+  
+  // Add state for new subtask modal
+  const [showNewSubtaskModal, setShowNewSubtaskModal] = useState(false);
+  const [newSubtaskForm, setNewSubtaskForm] = useState({
+    title: '',
+    assignee: '',
+    status: 'To Do' as TaskStatus,
+    dueDate: '',
+    description: ''
+  });
+  const [newSubtaskFormErrors, setNewSubtaskFormErrors] = useState<Record<string, boolean>>({});
+  const [showNewSubtaskModalAssigneeDropdown, setShowNewSubtaskModalAssigneeDropdown] = useState(false);
+  const [showNewSubtaskModalStatusDropdown, setShowNewSubtaskModalStatusDropdown] = useState(false);
+  const newSubtaskModalAssigneeDropdownRef = useRef<HTMLDivElement>(null);
+  const newSubtaskModalStatusDropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Add state for edit subtask modal
+  const [showEditSubtaskModal, setShowEditSubtaskModal] = useState(false);
+  const [editingSubtask, setEditingSubtask] = useState<any>(null);
+  const [editSubtaskForm, setEditSubtaskForm] = useState({
+    title: '',
+    assignee: '',
+    status: 'To Do' as TaskStatus,
+    dueDate: '',
+    description: ''
+  });
+  const [editSubtaskFormErrors, setEditSubtaskFormErrors] = useState<Record<string, boolean>>({});
+  const [showEditSubtaskModalAssigneeDropdown, setShowEditSubtaskModalAssigneeDropdown] = useState(false);
+  const [showEditSubtaskModalStatusDropdown, setShowEditSubtaskModalStatusDropdown] = useState(false);
+  const editSubtaskModalAssigneeDropdownRef = useRef<HTMLDivElement>(null);
+  const editSubtaskModalStatusDropdownRef = useRef<HTMLDivElement>(null);
+  
   // View toggle state (Kanban vs Table)
   const [viewMode, setViewMode] = useState<'kanban' | 'table'>('kanban');
 
@@ -215,6 +249,20 @@ export default function WorkflowsPage() {
       console.log('Initialized tasks:', tasks);
     }
   }, []); // Remove initializeTasks from dependencies to prevent infinite loop
+
+  // Load task files from localStorage
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedTaskFiles = localStorage.getItem('taskFiles');
+      if (savedTaskFiles) {
+        try {
+          setTaskFiles(JSON.parse(savedTaskFiles));
+        } catch (error) {
+          console.error('Error parsing task files:', error);
+        }
+      }
+    }
+  }, []);
 
   // Function to add a new contract to the contracts list
   const addNewContract = (newContract: any) => {
@@ -824,6 +872,74 @@ export default function WorkflowsPage() {
     };
   }, [showInlineSubtaskAssigneeDropdown]);
 
+  // Add click-outside handler for new subtask modal assignee dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+      const dropdown = newSubtaskModalAssigneeDropdownRef.current;
+      
+      if (showNewSubtaskModalAssigneeDropdown && dropdown && !dropdown.contains(target)) {
+        setShowNewSubtaskModalAssigneeDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showNewSubtaskModalAssigneeDropdown]);
+
+  // Add click-outside handler for new subtask modal status dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+      const dropdown = newSubtaskModalStatusDropdownRef.current;
+      
+      if (showNewSubtaskModalStatusDropdown && dropdown && !dropdown.contains(target)) {
+        setShowNewSubtaskModalStatusDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showNewSubtaskModalStatusDropdown]);
+
+  // Add click-outside handler for edit subtask modal assignee dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+      const dropdown = editSubtaskModalAssigneeDropdownRef.current;
+      
+      if (showEditSubtaskModalAssigneeDropdown && dropdown && !dropdown.contains(target)) {
+        setShowEditSubtaskModalAssigneeDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showEditSubtaskModalAssigneeDropdown]);
+
+  // Add click-outside handler for edit subtask modal status dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+      const dropdown = editSubtaskModalStatusDropdownRef.current;
+      
+      if (showEditSubtaskModalStatusDropdown && dropdown && !dropdown.contains(target)) {
+        setShowEditSubtaskModalStatusDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showEditSubtaskModalStatusDropdown]);
+
   // Inline editing functions for uploaded files
   const handleStartInlineEditTaskFile = (index: number) => {
     const file = newTaskUploadedFiles[index];
@@ -1265,7 +1381,11 @@ export default function WorkflowsPage() {
                             setNewTaskFormErrors(prev => ({ ...prev, description: false }));
                           }
                         }}
-                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
+                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-track]:dark:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500"
+                        style={{ 
+                          fontFamily: 'Avenir, sans-serif',
+                          resize: 'none'
+                        }}
                         placeholder="Enter task description..."
                         rows={3}
                       />
@@ -1317,7 +1437,7 @@ export default function WorkflowsPage() {
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-6">
                       <div>
-                        <label htmlFor="subtaskTitle" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Task Name</label>
+                        <label htmlFor="subtaskTitle" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Subtask Name</label>
                         <input
                           type="text"
                           id="subtaskTitle"
@@ -1493,7 +1613,7 @@ export default function WorkflowsPage() {
                         name="subtaskDescription"
                         value={newSubtaskDescription}
                         onChange={(e) => setNewSubtaskDescription(e.target.value)}
-                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white resize-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500"
+                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white resize-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-track]:dark:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500"
                         rows={3}
                         placeholder="Enter subtask description..."
                         style={{ fontFamily: 'Avenir, sans-serif' }}
@@ -1930,6 +2050,81 @@ export default function WorkflowsPage() {
                           console.log('Creating task:', newTaskModalForm);
                           console.log('Subtasks:', newTaskSubtasks);
                           console.log('Documents:', newTaskUploadedFiles);
+                          
+                          // Generate unique task ID and code
+                          const newTaskId = Date.now().toString();
+                          const newTaskNumber = Math.max(...tasks.map(t => t.taskNumber), 0) + 1;
+                          const newTaskCode = `TSK-${String(newTaskNumber).padStart(3, '0')}`;
+                          
+                          // Parse contract ID from the contract string (format: "ID - Title")
+                          const contractId = newTaskModalForm.contract.split(' - ')[0];
+                          
+                          // Generate assignee initials and color
+                          const assigneeWords = newTaskModalForm.assignee.split(' ');
+                          const assigneeInitials = assigneeWords.length >= 2 
+                            ? `${assigneeWords[0][0]}${assigneeWords[1][0]}`.toUpperCase()
+                            : newTaskModalForm.assignee.substring(0, 2).toUpperCase();
+                          
+                          const assigneeColors = [
+                            'bg-purple-200 text-purple-700',
+                            'bg-pink-200 text-pink-700', 
+                            'bg-blue-200 text-blue-700',
+                            'bg-green-200 text-green-700',
+                            'bg-yellow-200 text-yellow-700',
+                            'bg-red-200 text-red-700',
+                            'bg-indigo-200 text-indigo-700'
+                          ];
+                          const assigneeColor = assigneeColors[Math.floor(Math.random() * assigneeColors.length)];
+                          
+                          // Convert form subtasks to the correct format
+                          const formattedSubtasks = newTaskSubtasks.map((subtask, index) => ({
+                            id: `sub-${newTaskId}-${index + 1}`,
+                            title: subtask.title,
+                            completed: subtask.completed || false
+                          }));
+                          
+                          // Create the new task object
+                          const newTask: Task = {
+                            id: newTaskId,
+                            code: newTaskCode,
+                            title: newTaskModalForm.title,
+                            contractId: contractId,
+                            type: 'Task',
+                            due: newTaskModalForm.dueDate,
+                            progress: `${formattedSubtasks.filter(st => st.completed).length} of ${formattedSubtasks.length}`,
+                            assignee: newTaskModalForm.assignee,
+                            assigneeInitials: assigneeInitials,
+                            assigneeColor: assigneeColor,
+                            taskNumber: newTaskNumber,
+                            description: newTaskModalForm.description,
+                            status: newTaskModalForm.status,
+                            subtasks: formattedSubtasks
+                          };
+                          
+                          // Add the task to the store
+                          addTask(newTask);
+                          
+                          // Store uploaded files with the task (you might want to implement file storage logic)
+                          if (newTaskUploadedFiles.length > 0) {
+                            // Store files in localStorage for now (in a real app, you'd upload to server)
+                            const taskFilesData = {
+                              taskId: newTaskId,
+                              files: newTaskUploadedFiles.map(file => ({
+                                name: file.name,
+                                size: file.size,
+                                type: file.type,
+                                lastModified: file.lastModified
+                              }))
+                            };
+                            const existingFiles = JSON.parse(localStorage.getItem('taskFiles') || '{}');
+                            existingFiles[newTaskId] = taskFilesData;
+                            localStorage.setItem('taskFiles', JSON.stringify(existingFiles));
+                            
+                            // Update state
+                            setTaskFiles(existingFiles);
+                          }
+                          
+                          // Reset form
                           setShowNewTaskModal(false);
                           setNewTaskModalStep(1);
                           setNewTaskModalForm({ title: '', assignee: '', status: 'To Do' as TaskStatus, dueDate: '', description: '', contract: '' });
@@ -1944,14 +2139,14 @@ export default function WorkflowsPage() {
                           setShowNewSubtaskAssigneeDropdown(false);
                           setShowNewSubtaskStatusDropdown(false);
                           setNewTaskDocumentName('');
-                        setEditingTaskFileIndex(null);
-                        setInlineEditingTaskFileName('');
-                        setEditingSubtaskIndex(null);
-                        setInlineEditingSubtaskTitle('');
-                        setInlineEditingSubtaskAssignee('');
-                        setInlineEditingSubtaskDueDate('');
-                        setInlineEditingSubtaskDescription('');
-                        setShowInlineSubtaskAssigneeDropdown(false);
+                          setEditingTaskFileIndex(null);
+                          setInlineEditingTaskFileName('');
+                          setEditingSubtaskIndex(null);
+                          setInlineEditingSubtaskTitle('');
+                          setInlineEditingSubtaskAssignee('');
+                          setInlineEditingSubtaskDueDate('');
+                          setInlineEditingSubtaskDescription('');
+                          setShowInlineSubtaskAssigneeDropdown(false);
                         }}
                         className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm"
                         style={{ fontFamily: 'Avenir, sans-serif' }}
@@ -3325,7 +3520,7 @@ export default function WorkflowsPage() {
                     <div className="mb-4 cursor-default select-none">
                       <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Description</div>
                       <textarea
-                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors resize-none bg-white dark:bg-gray-900"
+                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors resize-none bg-white dark:bg-gray-900 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-track]:dark:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500"
                         rows={3}
                         placeholder="Enter task description..."
                         style={{ fontFamily: 'Avenir, sans-serif' }}
@@ -3337,30 +3532,54 @@ export default function WorkflowsPage() {
                   <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 min-h-[336px] cursor-default select-none">
                     <div className="flex items-center justify-between mb-4 cursor-default select-none">
                       <span className="text-sm font-semibold text-gray-900 dark:text-white cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Subtasks</span>
-                      <button className="flex items-center gap-2 px-2 py-1 rounded-lg border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-primary text-gray-700 dark:text-white font-semibold text-xs hover:bg-gray-200 dark:hover:bg-primary-dark transition-colors cursor-pointer" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                      <button 
+                        onClick={() => setShowNewSubtaskModal(true)}
+                        className="flex items-center gap-2 px-2 py-1 rounded-lg border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-primary text-gray-700 dark:text-white font-semibold text-xs hover:bg-gray-200 dark:hover:bg-primary-dark transition-colors cursor-pointer" 
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                      >
                         <span className="text-base font-bold text-primary dark:text-white">+</span> New Subtask
                       </button>
                     </div>
                     <div className="space-y-2 cursor-default select-none">
                       {selectedTask?.subtasks?.map((subtask) => (
-                        <div key={subtask.id} className="flex items-center gap-3 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                        <div 
+                          key={subtask.id} 
+                          className="flex items-center gap-3 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                          onClick={() => {
+                            // Open edit subtask modal
+                            setEditingSubtask(subtask);
+                            setEditSubtaskForm({
+                              title: subtask.title || '',
+                              assignee: subtask.assignee || '',
+                              status: subtask.status || 'To Do',
+                              dueDate: subtask.dueDate || '',
+                              description: subtask.description || ''
+                            });
+                            setEditSubtaskFormErrors({});
+                            setShowEditSubtaskModal(true);
+                          }}
+                        >
                           <div className="flex-1">
                             <span className="text-xs font-medium text-gray-900 dark:text-white">{subtask.title}</span>
                           </div>
-                          <div className="w-5 h-5 border border-gray-300 rounded flex items-center justify-center cursor-pointer" onClick={() => {
-                            const fullTask = tasks.find(t => t.code === selectedTask.code);
-                            if (fullTask) {
-                              const updatedSubtasks = fullTask.subtasks.map(st =>
-                                st.id === subtask.id ? { ...st, completed: !st.completed } : st
-                              );
-                              updateTask(fullTask.code, { subtasks: updatedSubtasks });
-                              // After updating, get the latest task from the store and set it as selected
-                              setTimeout(() => {
-                                const refreshedTask = useTaskStore.getState().tasks.find(t => t.code === fullTask.code);
-                                setSelectedTask(refreshedTask || { ...fullTask, subtasks: updatedSubtasks });
-                              }, 0);
-                            }
-                          }}>
+                          <div 
+                            className="w-5 h-5 border border-gray-300 rounded flex items-center justify-center cursor-pointer" 
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent opening edit modal when clicking checkbox
+                              const fullTask = tasks.find(t => t.code === selectedTask.code);
+                              if (fullTask) {
+                                const updatedSubtasks = fullTask.subtasks.map(st =>
+                                  st.id === subtask.id ? { ...st, completed: !st.completed } : st
+                                );
+                                updateTask(fullTask.code, { subtasks: updatedSubtasks });
+                                // After updating, get the latest task from the store and set it as selected
+                                setTimeout(() => {
+                                  const refreshedTask = useTaskStore.getState().tasks.find(t => t.code === fullTask.code);
+                                  setSelectedTask(refreshedTask || { ...fullTask, subtasks: updatedSubtasks });
+                                }, 0);
+                              }
+                            }}
+                          >
                             {subtask.completed && (
                               <div className="w-4 h-4 bg-primary rounded-sm flex items-center justify-center">
                                 <FaCheck className="text-white" size={10} />
@@ -3392,151 +3611,45 @@ export default function WorkflowsPage() {
                       </button>
                     </div>
                     <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
-                      <div className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600 cursor-default select-none">
-                        <div className="flex items-center gap-3 cursor-default select-none">
-                          <HiOutlineDocumentText className="w-5 h-5 text-primary" />
-                          <div>
-                            <div className="font-semibold text-xs text-gray-900 dark:text-white cursor-pointer hover:underline">Contract Agreement</div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">2025-05-15 &bull; PDF &bull; 2.4 MB</div>
+                      {selectedTask && taskFiles[selectedTask.id]?.files ? (
+                        taskFiles[selectedTask.id].files.map((file: any, index: number) => (
+                          <div key={index} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600 cursor-default select-none">
+                            <div className="flex items-center gap-3 cursor-default select-none">
+                              <HiOutlineDocumentText className="w-5 h-5 text-primary" />
+                              <div>
+                                <div className="font-semibold text-xs text-gray-900 dark:text-white cursor-pointer hover:underline">{file.name}</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                  {new Date(file.lastModified).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })} &bull; {file.type.split('/')[1]?.toUpperCase() || 'Unknown'} &bull; {(file.size / 1024 / 1024).toFixed(2)} MB
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-center space-x-1 cursor-default select-none">
+                              <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer">
+                                <HiOutlineEye className="h-4 w-4 transition-colors" />
+                                <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                  View
+                                </span>
+                              </button>
+                              <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer">
+                                <HiOutlineDownload className="h-4 w-4 transition-colors" />
+                                <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                  Download
+                                </span>
+                              </button>
+                              <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group cursor-pointer">
+                                <HiOutlineTrash className="h-4 w-4 transition-colors" />
+                                <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                  Delete
+                                </span>
+                              </button>
+                            </div>
                           </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-sm cursor-default select-none">
+                          No documents uploaded yet. Click "Upload" to add documents.
                         </div>
-                        <div className="flex items-center justify-center space-x-1 cursor-default select-none">
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer">
-                            <HiOutlineEye className="h-4 w-4 transition-colors" />
-                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                              View
-                            </span>
-                          </button>
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer">
-                            <HiOutlineDownload className="h-4 w-4 transition-colors" />
-                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                              Download
-                            </span>
-                          </button>
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group cursor-pointer">
-                            <HiOutlineTrash className="h-4 w-4 transition-colors" />
-                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                              Delete
-                            </span>
-                          </button>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600 cursor-default select-none">
-                        <div className="flex items-center gap-3 cursor-default select-none">
-                          <HiOutlineDocumentText className="w-5 h-5 text-primary" />
-                          <div>
-                            <div className="font-semibold text-xs text-gray-900 dark:text-white cursor-pointer hover:underline">Payment Schedule</div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">2025-05-16 &bull; XLSX &bull; 1.8 MB</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-center space-x-1 cursor-default select-none">
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer">
-                            <HiOutlineEye className="h-4 w-4 transition-colors" />
-                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                              View
-                            </span>
-                          </button>
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer">
-                            <HiOutlineDownload className="h-4 w-4 transition-colors" />
-                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                              Download
-                            </span>
-                          </button>
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group cursor-pointer">
-                            <HiOutlineTrash className="h-4 w-4 transition-colors" />
-                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                              Delete
-                            </span>
-                          </button>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600 cursor-default select-none">
-                        <div className="flex items-center gap-3 cursor-default select-none">
-                          <HiOutlineDocumentText className="w-5 h-5 text-primary" />
-                          <div>
-                            <div className="font-semibold text-xs text-gray-900 dark:text-white cursor-pointer hover:underline">Terms and Conditions</div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">2025-05-17 &bull; DOCX &bull; 1.2 MB</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-center space-x-1 cursor-default select-none">
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer">
-                            <HiOutlineEye className="h-4 w-4 transition-colors" />
-                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                              View
-                            </span>
-                          </button>
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer">
-                            <HiOutlineDownload className="h-4 w-4 transition-colors" />
-                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                              Download
-                            </span>
-                          </button>
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group cursor-pointer">
-                            <HiOutlineTrash className="h-4 w-4 transition-colors" />
-                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                              Delete
-                            </span>
-                          </button>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600 cursor-default select-none">
-                        <div className="flex items-center gap-3 cursor-default select-none">
-                          <HiOutlineDocumentText className="w-5 h-5 text-primary" />
-                          <div>
-                            <div className="font-semibold text-xs text-gray-900 dark:text-white cursor-pointer hover:underline">Meeting Notes</div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">2025-05-18 &bull; DOCX &bull; 0.8 MB</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-center space-x-1 cursor-default select-none">
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer">
-                            <HiOutlineEye className="h-4 w-4 transition-colors" />
-                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                              View
-                            </span>
-                          </button>
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer">
-                            <HiOutlineDownload className="h-4 w-4 transition-colors" />
-                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                              Download
-                            </span>
-                          </button>
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group cursor-pointer">
-                            <HiOutlineTrash className="h-4 w-4 transition-colors" />
-                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                              Delete
-                            </span>
-                          </button>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600 cursor-default select-none">
-                        <div className="flex items-center gap-3 cursor-default select-none">
-                          <HiOutlineDocumentText className="w-5 h-5 text-primary" />
-                          <div>
-                            <div className="font-semibold text-xs text-gray-900 dark:text-white cursor-pointer hover:underline">Project Timeline</div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">2025-05-19 &bull; XLSX &bull; 1.5 MB</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-center space-x-1 cursor-default select-none">
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer">
-                            <HiOutlineEye className="h-4 w-4 transition-colors" />
-                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                              View
-                            </span>
-                          </button>
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer">
-                            <HiOutlineDownload className="h-4 w-4 transition-colors" />
-                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                              Download
-                            </span>
-                          </button>
-                          <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group cursor-pointer">
-                            <HiOutlineTrash className="h-4 w-4 transition-colors" />
-                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                              Delete
-                            </span>
-                          </button>
-                        </div>
-                      </div>
+                      )}
                     </div>
                   </div>
 
@@ -3921,6 +4034,564 @@ export default function WorkflowsPage() {
                   className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
                 >
                   Upload
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* New Subtask Modal */}
+      {showNewSubtaskModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 cursor-default select-none">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Create New Subtask</h2>
+              <button
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                onClick={() => { 
+                  setShowNewSubtaskModal(false); 
+                  setNewSubtaskForm({ title: '', assignee: '', status: 'To Do' as TaskStatus, dueDate: '', description: '' }); 
+                  setNewSubtaskFormErrors({}); 
+                }}
+                aria-label="Close"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="mb-4 text-xs text-gray-500 dark:text-gray-400">
+              <span>
+                For Task: <span className="font-semibold text-primary">#{selectedTask?.taskNumber}</span>
+              </span>
+            </div>
+            <form
+              className="p-0"
+              onSubmit={e => {
+                e.preventDefault();
+                // Handle form submission
+              }}
+            >
+                             <div className="flex flex-col gap-4 mb-4">
+                 {/* Subtask Name */}
+                 <div>
+                   <label htmlFor="newSubtaskTitle" className="block text-xs text-gray-500 dark:text-gray-400 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Subtask Name <span className="text-red-500">*</span></label>
+                   <input
+                     type="text"
+                     id="newSubtaskTitle"
+                     name="title"
+                     required
+                     value={newSubtaskForm.title}
+                     onChange={(e) => {
+                       setNewSubtaskForm(prev => ({ ...prev, title: e.target.value }));
+                       if (newSubtaskFormErrors.title) {
+                         setNewSubtaskFormErrors(prev => ({ ...prev, title: false }));
+                       }
+                     }}
+                     className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs focus:ring-2 focus:ring-primary focus:border-primary transition-colors cursor-text"
+                     placeholder="Enter subtask name..."
+                     style={{ fontFamily: 'Avenir, sans-serif' }}
+                   />
+                   {newSubtaskFormErrors.title && (
+                     <p className="mt-1 text-xs text-red-600 font-medium">Subtask name is required</p>
+                   )}
+                 </div>
+
+                 {/* Assignee and Status - Side by Side */}
+                 <div className="flex gap-4">
+                   <div className="flex-1 w-0">
+                     <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Assignee</label>
+                     <div className="relative" ref={newSubtaskModalAssigneeDropdownRef}>
+                       <input
+                         type="text"
+                         id="newSubtaskAssignee"
+                         name="assignee"
+                         className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs focus:ring-2 focus:ring-primary focus:border-primary transition-colors cursor-text pr-10"
+                         placeholder="Choose an assignee..."
+                         value={newSubtaskForm.assignee}
+                         onChange={(e) => {
+                           setNewSubtaskForm(prev => ({ ...prev, assignee: e.target.value }));
+                           if (e.target.value === '') {
+                             setShowNewSubtaskModalAssigneeDropdown(false);
+                           } else if (!showNewSubtaskModalAssigneeDropdown) {
+                             setShowNewSubtaskModalAssigneeDropdown(true);
+                           }
+                         }}
+                         onFocus={() => setShowNewSubtaskModalAssigneeDropdown(true)}
+                         onClick={() => setShowNewSubtaskModalAssigneeDropdown(true)}
+                         style={{ fontFamily: 'Avenir, sans-serif' }}
+                         autoComplete="off"
+                       />
+                       <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                       {showNewSubtaskModalAssigneeDropdown && (
+                         <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                           {uniqueAssignees.length > 0 ? (
+                             <>
+                               {uniqueAssignees.map((assignee: string) => (
+                                 <div
+                                   key={assignee}
+                                   className={`px-4 py-2 text-xs cursor-pointer ${newSubtaskForm.assignee === assignee ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'} select-none`}
+                                   onClick={() => {
+                                     setNewSubtaskForm(prev => ({ ...prev, assignee }));
+                                     setShowNewSubtaskModalAssigneeDropdown(false);
+                                   }}
+                                 >
+                                   {assignee}
+                                 </div>
+                               ))}
+                               <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                               <div
+                                 className="px-4 py-2 text-xs cursor-pointer text-primary hover:bg-primary/10 select-none flex items-center gap-2"
+                                 onClick={() => {
+                                   // TODO: Add logic to create new assignee
+                                   setShowNewSubtaskModalAssigneeDropdown(false);
+                                 }}
+                               >
+                                 <FaPlus className="text-xs" />
+                                 Add new assignee
+                               </div>
+                             </>
+                           ) : (
+                             <>
+                               <div className="px-4 py-2 text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">No assignees found</div>
+                               <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                               <div
+                                 className="px-4 py-2 text-xs cursor-pointer text-primary hover:bg-primary/10 select-none flex items-center gap-2"
+                                 onClick={() => {
+                                   // TODO: Add logic to create new assignee
+                                   setShowNewSubtaskModalAssigneeDropdown(false);
+                                 }}
+                               >
+                                 <FaPlus className="text-xs" />
+                                 Add new assignee
+                               </div>
+                             </>
+                           )}
+                         </div>
+                       )}
+                     </div>
+                   </div>
+                   <div className="flex-1 w-0">
+                     <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Status</label>
+                     <div className="relative" ref={newSubtaskModalStatusDropdownRef}>
+                       <input
+                         type="text"
+                         id="newSubtaskStatus"
+                         name="status"
+                         className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs focus:ring-2 focus:ring-primary focus:border-primary transition-colors cursor-text pr-10"
+                         placeholder="Choose status..."
+                         value={newSubtaskForm.status}
+                         onChange={(e) => {
+                           setNewSubtaskForm(prev => ({ ...prev, status: e.target.value as TaskStatus }));
+                           if (e.target.value === '') {
+                             setShowNewSubtaskModalStatusDropdown(false);
+                           } else if (!showNewSubtaskModalStatusDropdown) {
+                             setShowNewSubtaskModalStatusDropdown(true);
+                           }
+                         }}
+                         onFocus={() => setShowNewSubtaskModalStatusDropdown(true)}
+                         onClick={() => setShowNewSubtaskModalStatusDropdown(true)}
+                         style={{ fontFamily: 'Avenir, sans-serif' }}
+                         autoComplete="off"
+                       />
+                       <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                       {showNewSubtaskModalStatusDropdown && (
+                         <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                           {statusOptions.map(status => (
+                             <div
+                               key={status.key}
+                               className={`px-4 py-2 text-xs cursor-pointer ${newSubtaskForm.status === status.key ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'} select-none`}
+                               onClick={() => {
+                                 setNewSubtaskForm(prev => ({ ...prev, status: status.key }));
+                                 setShowNewSubtaskModalStatusDropdown(false);
+                               }}
+                             >
+                               {status.title}
+                             </div>
+                           ))}
+                         </div>
+                       )}
+                     </div>
+                   </div>
+                 </div>
+
+                 {/* Due Date */}
+                 <div>
+                   <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Due Date</label>
+                   <div className="relative">
+                     <input
+                       type="date"
+                       id="newSubtaskDueDate"
+                       name="dueDate"
+                       value={newSubtaskForm.dueDate}
+                       onChange={(e) => {
+                         setNewSubtaskForm(prev => ({ ...prev, dueDate: e.target.value }));
+                       }}
+                       className="w-full h-[34px] px-4 pr-10 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs focus:ring-2 focus:ring-primary focus:border-primary transition-colors cursor-text [&::-webkit-calendar-picker-indicator]:hidden"
+                       style={{ fontFamily: 'Avenir, sans-serif' }}
+                     />
+                     <button
+                       type="button"
+                       onClick={() => (document.getElementById('newSubtaskDueDate') as HTMLInputElement)?.showPicker()}
+                       className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 flex items-center justify-center"
+                     >
+                       <LuCalendarFold className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                     </button>
+                   </div>
+                 </div>
+
+                 {/* Description */}
+                 <div>
+                   <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Description</label>
+                   <textarea
+                     id="newSubtaskDescription"
+                     name="description"
+                     value={newSubtaskForm.description}
+                     onChange={(e) => {
+                       setNewSubtaskForm(prev => ({ ...prev, description: e.target.value }));
+                     }}
+                     className="w-full px-4 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs focus:ring-2 focus:ring-primary focus:border-primary transition-colors cursor-text resize-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-track]:dark:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500"
+                     placeholder="Enter subtask description..."
+                     rows={3}
+                     style={{ fontFamily: 'Avenir, sans-serif' }}
+                   />
+                 </div>
+               </div>
+               <div className="flex gap-1 mt-6">
+                 <button
+                   type="button"
+                   onClick={() => { 
+                     setShowNewSubtaskModal(false); 
+                     setNewSubtaskForm({ title: '', assignee: '', status: 'To Do' as TaskStatus, dueDate: '', description: '' }); 
+                     setNewSubtaskFormErrors({}); 
+                   }}
+                   className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
+                 >
+                   Cancel
+                 </button>
+                 <button
+                   type="button"
+                   onClick={() => {
+                     const newErrors: Record<string, boolean> = {};
+                     
+                     if (!newSubtaskForm.title.trim()) {
+                       newErrors.title = true;
+                     }
+                     
+                     if (Object.keys(newErrors).length > 0) {
+                       setNewSubtaskFormErrors(newErrors);
+                       return;
+                     }
+                     
+                     // Create new subtask
+                     if (selectedTask) {
+                       const newSubtaskId = Date.now().toString();
+                       const newSubtask = {
+                         id: newSubtaskId,
+                         title: newSubtaskForm.title.trim(),
+                         completed: false
+                       };
+                       
+                       // Update the task with the new subtask
+                       const updatedSubtasks = [...(selectedTask.subtasks || []), newSubtask];
+                       updateTask(selectedTask.code, { subtasks: updatedSubtasks });
+                       
+                       // Update the selected task in the modal
+                       setSelectedTask({ ...selectedTask, subtasks: updatedSubtasks });
+                     }
+                     
+                     // Reset form and close modal
+                     setShowNewSubtaskModal(false);
+                     setNewSubtaskForm({ title: '', assignee: '', status: 'To Do' as TaskStatus, dueDate: '', description: '' });
+                     setNewSubtaskFormErrors({});
+                   }}
+                   className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+                 >
+                   Create Subtask
+                 </button>
+               </div>
+             </form>
+           </div>
+                 </div>
+      )}
+
+      {/* Edit Subtask Modal */}
+      {showEditSubtaskModal && editingSubtask && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 cursor-default select-none">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Edit Subtask</h2>
+              <button
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                onClick={() => {
+                  setShowEditSubtaskModal(false);
+                  setEditingSubtask(null);
+                  setEditSubtaskForm({ title: '', assignee: '', status: 'To Do' as TaskStatus, dueDate: '', description: '' });
+                  setEditSubtaskFormErrors({});
+                }}
+                aria-label="Close"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="mb-4 text-xs text-gray-500 dark:text-gray-400">
+              <span>
+                For Task: <span className="font-semibold text-primary">#{selectedTask?.taskNumber}</span>
+              </span>
+            </div>
+            <form
+              className="p-0"
+              onSubmit={e => {
+                e.preventDefault();
+                // Handle form submission
+              }}
+            >
+              <div className="flex flex-col gap-4 mb-4">
+                {/* Subtask Name */}
+                <div>
+                  <label htmlFor="editSubtaskTitle" className="block text-xs text-gray-500 dark:text-gray-400 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Subtask Name <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    id="editSubtaskTitle"
+                    name="title"
+                    required
+                    value={editSubtaskForm.title}
+                    onChange={(e) => {
+                      setEditSubtaskForm(prev => ({ ...prev, title: e.target.value }));
+                      if (editSubtaskFormErrors.title) {
+                        setEditSubtaskFormErrors(prev => ({ ...prev, title: false }));
+                      }
+                    }}
+                    className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs focus:ring-2 focus:ring-primary focus:border-primary transition-colors cursor-text"
+                    placeholder="Enter subtask name..."
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                  />
+                  {editSubtaskFormErrors.title && (
+                    <p className="mt-1 text-xs text-red-600 font-medium">Subtask name is required</p>
+                  )}
+                </div>
+
+                {/* Assignee and Status - Side by Side */}
+                <div className="flex gap-4">
+                  <div className="flex-1 w-0">
+                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Assignee</label>
+                    <div className="relative" ref={editSubtaskModalAssigneeDropdownRef}>
+                      <input
+                        type="text"
+                        id="editSubtaskAssignee"
+                        name="assignee"
+                        className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs focus:ring-2 focus:ring-primary focus:border-primary transition-colors cursor-text pr-10"
+                        placeholder="Choose an assignee..."
+                        value={editSubtaskForm.assignee}
+                        onChange={(e) => {
+                          setEditSubtaskForm(prev => ({ ...prev, assignee: e.target.value }));
+                          if (e.target.value === '') {
+                            setShowEditSubtaskModalAssigneeDropdown(false);
+                          } else if (!showEditSubtaskModalAssigneeDropdown) {
+                            setShowEditSubtaskModalAssigneeDropdown(true);
+                          }
+                        }}
+                        onFocus={() => setShowEditSubtaskModalAssigneeDropdown(true)}
+                        onClick={() => setShowEditSubtaskModalAssigneeDropdown(true)}
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                        autoComplete="off"
+                      />
+                      <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      {showEditSubtaskModalAssigneeDropdown && (
+                        <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                          {uniqueAssignees.length > 0 ? (
+                            <>
+                              {uniqueAssignees.map((assignee: string) => (
+                                <div
+                                  key={assignee}
+                                  className={`px-4 py-2 text-xs cursor-pointer ${editSubtaskForm.assignee === assignee ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'} select-none`}
+                                  onClick={() => {
+                                    setEditSubtaskForm(prev => ({ ...prev, assignee }));
+                                    setShowEditSubtaskModalAssigneeDropdown(false);
+                                  }}
+                                >
+                                  {assignee}
+                                </div>
+                              ))}
+                              <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                              <div
+                                className="px-4 py-2 text-xs cursor-pointer text-primary hover:bg-primary/10 select-none flex items-center gap-2"
+                                onClick={() => {
+                                  // TODO: Add logic to create new assignee
+                                  setShowEditSubtaskModalAssigneeDropdown(false);
+                                }}
+                              >
+                                <FaPlus className="text-xs" />
+                                Add new assignee
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="px-4 py-2 text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">No assignees found</div>
+                              <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                              <div
+                                className="px-4 py-2 text-xs cursor-pointer text-primary hover:bg-primary/10 select-none flex items-center gap-2"
+                                onClick={() => {
+                                  // TODO: Add logic to create new assignee
+                                  setShowEditSubtaskModalAssigneeDropdown(false);
+                                }}
+                              >
+                                <FaPlus className="text-xs" />
+                                Add new assignee
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex-1 w-0">
+                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Status</label>
+                    <div className="relative" ref={editSubtaskModalStatusDropdownRef}>
+                      <input
+                        type="text"
+                        id="editSubtaskStatus"
+                        name="status"
+                        className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs focus:ring-2 focus:ring-primary focus:border-primary transition-colors cursor-text pr-10"
+                        placeholder="Choose status..."
+                        value={editSubtaskForm.status}
+                        onChange={(e) => {
+                          setEditSubtaskForm(prev => ({ ...prev, status: e.target.value as TaskStatus }));
+                          if (e.target.value === '') {
+                            setShowEditSubtaskModalStatusDropdown(false);
+                          } else if (!showEditSubtaskModalStatusDropdown) {
+                            setShowEditSubtaskModalStatusDropdown(true);
+                          }
+                        }}
+                        onFocus={() => setShowEditSubtaskModalStatusDropdown(true)}
+                        onClick={() => setShowEditSubtaskModalStatusDropdown(true)}
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                        autoComplete="off"
+                      />
+                      <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      {showEditSubtaskModalStatusDropdown && (
+                        <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                          {statusOptions.map(status => (
+                            <div
+                              key={status.key}
+                              className={`px-4 py-2 text-xs cursor-pointer ${editSubtaskForm.status === status.key ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'} select-none`}
+                              onClick={() => {
+                                setEditSubtaskForm(prev => ({ ...prev, status: status.key }));
+                                setShowEditSubtaskModalStatusDropdown(false);
+                              }}
+                            >
+                              {status.title}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Due Date */}
+                <div>
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Due Date</label>
+                  <div className="relative">
+                    <input
+                      type="date"
+                      id="editSubtaskDueDate"
+                      name="dueDate"
+                      value={editSubtaskForm.dueDate}
+                      onChange={(e) => {
+                        setEditSubtaskForm(prev => ({ ...prev, dueDate: e.target.value }));
+                      }}
+                      className="w-full h-[34px] px-4 pr-10 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs focus:ring-2 focus:ring-primary focus:border-primary transition-colors cursor-text [&::-webkit-calendar-picker-indicator]:hidden"
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => (document.getElementById('editSubtaskDueDate') as HTMLInputElement)?.showPicker()}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 flex items-center justify-center"
+                    >
+                      <LuCalendarFold className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Description</label>
+                  <textarea
+                    id="editSubtaskDescription"
+                    name="description"
+                    value={editSubtaskForm.description}
+                    onChange={(e) => {
+                      setEditSubtaskForm(prev => ({ ...prev, description: e.target.value }));
+                    }}
+                    className="w-full px-4 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs focus:ring-2 focus:ring-primary focus:border-primary transition-colors cursor-text resize-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-track]:dark:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500"
+                    placeholder="Enter subtask description..."
+                    rows={3}
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                  />
+                </div>
+              </div>
+              <div className="flex gap-1 mt-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditSubtaskModal(false);
+                    setEditingSubtask(null);
+                    setEditSubtaskForm({ title: '', assignee: '', status: 'To Do' as TaskStatus, dueDate: '', description: '' });
+                    setEditSubtaskFormErrors({});
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newErrors: Record<string, boolean> = {};
+                    
+                    if (!editSubtaskForm.title.trim()) {
+                      newErrors.title = true;
+                    }
+                    
+                    if (Object.keys(newErrors).length > 0) {
+                      setEditSubtaskFormErrors(newErrors);
+                      return;
+                    }
+                    
+                    // Update the subtask
+                    if (selectedTask && editingSubtask) {
+                      const updatedSubtasks = selectedTask.subtasks.map(st =>
+                        st.id === editingSubtask.id
+                          ? {
+                              ...st,
+                              title: editSubtaskForm.title.trim(),
+                              assignee: editSubtaskForm.assignee,
+                              status: editSubtaskForm.status,
+                              dueDate: editSubtaskForm.dueDate,
+                              description: editSubtaskForm.description
+                            }
+                          : st
+                      );
+                      
+                      // Update the task with the modified subtask
+                      updateTask(selectedTask.code, { subtasks: updatedSubtasks });
+                      
+                      // Update the selected task in the modal
+                      setSelectedTask({ ...selectedTask, subtasks: updatedSubtasks });
+                    }
+                    
+                    // Reset form and close modal
+                    setShowEditSubtaskModal(false);
+                    setEditingSubtask(null);
+                    setEditSubtaskForm({ title: '', assignee: '', status: 'To Do' as TaskStatus, dueDate: '', description: '' });
+                    setEditSubtaskFormErrors({});
+                  }}
+                  className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+                >
+                  Save Changes
                 </button>
               </div>
             </form>

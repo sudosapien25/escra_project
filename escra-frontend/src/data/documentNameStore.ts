@@ -9,6 +9,8 @@ interface StoredDocument {
   uploadedDate: string;
   contractId?: string;
   contractName?: string;
+  assignee?: string;
+  documentType?: string; // Custom document type field
 }
 
 interface DocumentStore {
@@ -19,7 +21,7 @@ interface DocumentStore {
   
   // New document storage with full file content
   documents: Record<string, StoredDocument>;
-  addDocument: (file: File, contractId?: string, contractName?: string, uploadedBy?: string) => Promise<string>; // Returns document ID
+  addDocument: (file: File, contractId?: string, contractName?: string, uploadedBy?: string, assignee?: string, documentType?: string) => Promise<string>; // Returns document ID
   getDocument: (documentId: string) => StoredDocument | undefined;
   getDocumentsByContract: (contractId: string) => StoredDocument[];
   updateDocumentName: (documentId: string, newName: string) => void;
@@ -116,7 +118,7 @@ export const useDocumentStore = create<DocumentStore>((set, get) => {
     // New document storage
     documents: migratedDocuments,
 
-    addDocument: async (file: File, contractId?: string, contractName?: string, uploadedBy?: string): Promise<string> => {
+    addDocument: async (file: File, contractId?: string, contractName?: string, uploadedBy?: string, assignee?: string, documentType?: string): Promise<string> => {
       try {
         const content = await fileToBase64(file);
         const documentId = generateDocumentId();
@@ -129,7 +131,9 @@ export const useDocumentStore = create<DocumentStore>((set, get) => {
           content,
           uploadedDate: new Date().toISOString(),
           contractId,
-          contractName
+          contractName,
+          assignee,
+          documentType
         };
 
         const newDocuments = { ...get().documents, [documentId]: storedDocument };

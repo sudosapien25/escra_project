@@ -19,4 +19,8 @@ export interface Subtask {
   id: string;
   title: string;
   completed: boolean;
+  assignee?: string;
+  status?: 'To Do' | 'Blocked' | 'On Hold' | 'In Progress' | 'In Review' | 'Done' | 'Canceled';
+  dueDate?: string;
+  description?: string;
 } 

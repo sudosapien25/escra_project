@@ -836,7 +836,7 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
                           <div className="mb-4">
                             <input
                               type="text"
-                              className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-xs font-medium bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                              className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-xs font-medium bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                               placeholder="Enter subject..."
                               value={subject}
                               onChange={(e) => setSubject(e.target.value)}
@@ -846,7 +846,7 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
                           
                           {/* Message Textarea */}
                                                                                 <textarea
-                            className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-xs font-medium bg-white dark:bg-gray-900 text-gray-900 dark:text-white resize-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-track]:rounded-r-lg [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500"
+                            className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-xs font-medium bg-white dark:bg-gray-900 text-gray-900 dark:text-white resize-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-track]:dark:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500"
                             rows={6}
                             placeholder="Enter your message..."
                             value={message}
