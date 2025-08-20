@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { FaSearch, FaClock, FaSort, FaPlus, FaDollarSign, FaTimes, FaChevronDown, FaChevronUp, FaRegClock, FaCheck } from 'react-icons/fa';
 import { FaArrowUpRightFromSquare } from 'react-icons/fa6';
 import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutlineEye, HiOutlineEyeOff, HiOutlineClipboardList, HiOutlineExclamation, HiChevronDown, HiOutlineDocumentSearch, HiOutlineDocumentAdd, HiOutlineUpload, HiOutlineTrash, HiOutlineX } from 'react-icons/hi';
@@ -284,6 +285,8 @@ const sampleDocuments: Document[] = [
 ];
 
 const ContractsPage: React.FC = () => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const currentUserName = user?.name || '';
   const { toast } = useToast();
@@ -695,12 +698,10 @@ const ContractsPage: React.FC = () => {
   };
 
   const CONTRACT_TYPES = [
-    'Standard Agreement',
-    'Residential – Cash',
-    'Residential – Financed',
-    'Commercial – Cash or Financed',
-    'Assignment / Wholesale',
-    'Installment / Lease-to-Own',
+    'Property Sale',
+    'Commercial Lease',
+    'Construction Escrow',
+    'Investment Property',
   ];
   const MILESTONE_TEMPLATES = [
     'Standard (6 milestones)',
@@ -1148,18 +1149,66 @@ const ContractsPage: React.FC = () => {
       }));
 
       
+      // Helper function to parse currency string to number
+      const parseCurrency = (value: string | number): number | null => {
+        if (!value) return null;
+        if (typeof value === 'number') return value;
+        // Remove $, commas, and spaces, then parse
+        const cleaned = value.replace(/[$,\s]/g, '');
+        const parsed = parseFloat(cleaned);
+        return isNaN(parsed) ? null : parsed;
+      };
+
+      // Create contract data for API (matching backend model)
+      const apiContractData = {
+        title: modalForm.title,
+        type: modalForm.type,
+        status: 'Initiation',
+        buyer: buyerRecipient?.name || '',
+        buyerEmail: buyerRecipient?.email || '',
+        seller: sellerRecipient?.name || '',
+        sellerEmail: sellerRecipient?.email || '',
+        agent: recipients[2]?.name || null, // Third party as agent if exists
+        agentEmail: recipients[2]?.email || null,
+        propertyAddress: modalForm.propertyAddress || null,
+        propertyType: modalForm.propertyType || null,
+        escrowNumber: modalForm.escrowNumber || null,
+        value: parseCurrency(modalForm.value),
+        earnestMoney: parseCurrency(modalForm.earnestMoney),
+        downPayment: parseCurrency(modalForm.downPayment),
+        loanAmount: parseCurrency(modalForm.loanAmount),
+        interestRate: modalForm.interestRate ? parseFloat(modalForm.interestRate) : null,
+        loanTerm: modalForm.loanTerm ? parseInt(modalForm.loanTerm) : null,
+        lenderName: modalForm.lenderName || null,
+        sellerFinancialInstitution: modalForm.sellerFinancialInstitution || null,
+        buyerFinancialInstitution: modalForm.buyerFinancialInstitution || null,
+        buyerAccountNumber: modalForm.buyerAccountNumber || null,
+        sellerAccountNumber: modalForm.sellerAccountNumber || null,
+        buyerFinancialInstitutionRoutingNumber: modalForm.buyerFinancialInstitutionRoutingNumber || null,
+        sellerFinancialInstitutionRoutingNumber: modalForm.sellerFinancialInstitutionRoutingNumber || null,
+        titleCompany: modalForm.titleCompany || null,
+        insuranceCompany: modalForm.insuranceCompany || null,
+        inspectionPeriod: modalForm.inspectionPeriod || null,
+        contingencies: modalForm.contingencies || null,
+        milestone: modalForm.milestone || null,
+        notes: modalForm.notes || null,
+        closingDate: modalForm.closingDate || null,
+        dueDate: modalForm.dueDate || null,
+      };
+
+      // Create local contract object for UI (with formatted values)
       const newContract: Contract = {
         id: newContractId,
         title: modalForm.title,
         parties: partiesString,
         status: 'Initiation',
         updated: 'Just now',
-        value: formatCurrency(modalForm.value), // Format value as currency
+        value: formatCurrency(modalForm.value), // Format value as currency for display
         documents: uploadedFiles.length, // Count uploaded files
         type: modalForm.type,
         buyer: buyerRecipient?.name || '',
         seller: sellerRecipient?.name || '',
-        // Include all form data
+        // Include all form data for local display
         milestone: modalForm.milestone,
         notes: modalForm.notes,
         closingDate: modalForm.closingDate,
@@ -1197,7 +1246,7 @@ const ContractsPage: React.FC = () => {
 
       // Save the new contract to the backend
       try {
-        const createdContract = await ContractServiceAPI.createContract(newContract);
+        const createdContract = await ContractServiceAPI.createContract(apiContractData);
         
         if (createdContract) {
           // Update local state with the created contract
@@ -1987,6 +2036,19 @@ const ContractsPage: React.FC = () => {
 
     loadContracts();
   }, []);
+
+  // Check for edit parameter in URL
+  useEffect(() => {
+    const editId = searchParams.get('edit');
+    if (editId && contracts.length > 0) {
+      const contractToEdit = contracts.find(c => c.id === editId);
+      if (contractToEdit) {
+        setSelectedContract(contractToEdit);
+        // Clear the edit parameter from URL
+        router.replace('/contracts');
+      }
+    }
+  }, [searchParams, contracts, router]);
 
   // Function to download a stored document
   const downloadDocument = (documentId: string) => {
@@ -4974,10 +5036,10 @@ const ContractsPage: React.FC = () => {
                   <tr
                     key={contract.id}
                     className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer select-none"
-                    onClick={() => setSelectedContract(contract)}
+                    onClick={() => router.push(`/contracts/${contract.id}`)}
                   >
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
-                      <span className="text-primary underline font-semibold cursor-pointer" onClick={e => { e.stopPropagation(); setSelectedContract(contract); }}>{contract.id}</span>
+                      <span className="text-primary underline font-semibold cursor-pointer" onClick={e => { e.stopPropagation(); router.push(`/contracts/${contract.id}`); }}>{contract.id}</span>
                     </td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-sm">
                       <div className="text-xs font-bold text-gray-900 dark:text-white">{contract.title}</div>
@@ -5034,7 +5096,10 @@ const ContractsPage: React.FC = () => {
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs text-primary">{formatCurrency(contract.value || '0')}</td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs font-medium">
                       <div className="flex items-center justify-center space-x-1">
-                        <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
+                        <button 
+                          className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group"
+                          onClick={e => { e.stopPropagation(); setSelectedContract(contract); }}
+                        >
                           <TbEdit className="h-4 w-4 transition-colors" />
                           <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                             Edit

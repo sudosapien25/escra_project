@@ -120,7 +120,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       router.push('/dashboard');
     } catch (error: any) {
       console.error('Registration failed:', error);
-      throw new Error(error.response?.data?.detail || 'Registration failed');
+      
+      // Handle validation errors
+      if (error.response?.status === 422 && error.response?.data?.detail) {
+        const details = error.response.data.detail;
+        if (Array.isArray(details)) {
+          // Pydantic validation errors come as an array
+          const messages = details.map((err: any) => {
+            const field = err.loc[err.loc.length - 1];
+            return `${field}: ${err.msg}`;
+          });
+          throw new Error(messages.join(', '));
+        }
+      }
+      
+      // Handle other error formats
+      const errorMessage = error.response?.data?.detail || error.response?.data?.message || 'Registration failed';
+      throw new Error(errorMessage);
     }
   };
 

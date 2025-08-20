@@ -6,6 +6,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import os
 from dotenv import load_dotenv
+from db.mongodb import MongoDB
 
 load_dotenv()
 
@@ -74,3 +75,44 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
             detail="Invalid authentication credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+async def is_admin(current_user: dict = Depends(get_current_user)) -> bool:
+    """Check if the current user is an admin."""
+    db = MongoDB.get_database()
+    users_collection = db.users
+    
+    user = await users_collection.find_one({"id": current_user["user_id"]})
+    return user and user.get("role") == "admin"
+
+async def get_current_user_with_role(current_user: dict = Depends(get_current_user)) -> dict:
+    """Get the current user with their role."""
+    db = MongoDB.get_database()
+    users_collection = db.users
+    
+    user = await users_collection.find_one({"id": current_user["user_id"]})
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found"
+        )
+    
+    return {
+        "user_id": current_user["user_id"],
+        "email": current_user["email"],
+        "role": user.get("role", "viewer"),
+        "is_admin": user.get("role") == "admin"
+    }
+
+async def require_admin(current_user: dict = Depends(get_current_user)) -> dict:
+    """Require the current user to be an admin."""
+    db = MongoDB.get_database()
+    users_collection = db.users
+    
+    user = await users_collection.find_one({"id": current_user["user_id"]})
+    if not user or user.get("role") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required"
+        )
+    
+    return current_user

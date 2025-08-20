@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card } from '@/components/common/Card';
 import { FaFileContract, FaMoneyBillAlt, FaClock, FaPlus, FaArrowUp, FaDollarSign, FaCheckCircle, FaBox, FaChartLine } from 'react-icons/fa';
 import { IconBaseProps } from 'react-icons';
@@ -9,6 +10,7 @@ import NewContractModal from '@/components/common/NewContractModal';
 import { ContractServiceAPI } from '@/services/contractServiceAPI';
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [showNewContractModal, setShowNewContractModal] = React.useState(false);
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState({
@@ -239,7 +241,9 @@ export default function DashboardPage() {
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-4 md:gap-0">
         <h3 className="text-lg font-semibold text-primary dark:text-primary">Active Contracts</h3>
         {/* View All Contracts Button */}
-        <button className="text-teal-600 dark:text-teal-400 hover:underline flex items-center text-sm px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md whitespace-nowrap">
+        <button 
+          onClick={() => router.push('/contracts')}
+          className="text-teal-600 dark:text-teal-400 hover:underline flex items-center text-sm px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md whitespace-nowrap">
           View All Contracts
           {/* Placeholder for arrow icon */}
           <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
@@ -267,7 +271,9 @@ export default function DashboardPage() {
               </div>
               <div className="flex justify-between items-end mt-4">
                 <div className="">
-                  <button className="text-teal-600 dark:text-teal-400 hover:underline flex items-center text-sm px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md">
+                  <button 
+                    onClick={() => router.push(`/contracts/${contract.id}`)}
+                    className="text-teal-600 dark:text-teal-400 hover:underline flex items-center text-sm px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md">
                     View
                     <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                   </button>

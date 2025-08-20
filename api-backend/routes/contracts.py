@@ -3,6 +3,7 @@ from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field, EmailStr, validator
 from datetime import datetime, date, timedelta
 from db.mongodb import MongoDB
+from utils.auth import get_current_user, get_current_user_with_role
 import json
 from bson import ObjectId
 
@@ -158,6 +159,10 @@ class Contract(ContractBase):
     createdAt: datetime = Field(default_factory=datetime.utcnow)
     updatedAt: datetime = Field(default_factory=datetime.utcnow)
     
+    # User association
+    created_by: Optional[str] = None  # User ID who created the contract
+    shared_with: List[str] = []  # List of user IDs who can access this contract
+    
     # Related Data
     tasks: List[ContractTask] = []
     documentsList: List[ContractDocument] = []
@@ -213,25 +218,55 @@ async def get_contracts(
     type: Optional[str] = None,
     search: Optional[str] = None,
     sortBy: str = "updatedAt",
-    sortOrder: str = "desc"
+    sortOrder: str = "desc",
+    current_user: dict = Depends(get_current_user_with_role)
 ):
-    """Get list of contracts with pagination and filtering"""
+    """Get list of contracts with pagination and filtering - admins see all, others see only their contracts"""
     db = MongoDB.get_database()
     contracts_collection = db.contracts
     
-    # Build query
-    query = {}
+    # Build query - admins see all, others see filtered
+    if current_user["is_admin"]:
+        query = {}
+    else:
+        query = {
+            "$or": [
+                {"created_by": current_user["user_id"]},
+                {"shared_with": current_user["user_id"]}
+            ]
+        }
+    
+    # Add additional filters
     if status:
         query["status"] = status
     if type:
         query["type"] = type
     if search:
-        query["$or"] = [
-            {"title": {"$regex": search, "$options": "i"}},
-            {"buyer": {"$regex": search, "$options": "i"}},
-            {"seller": {"$regex": search, "$options": "i"}},
-            {"agent": {"$regex": search, "$options": "i"}}
-        ]
+        search_filter = {
+            "$or": [
+                {"title": {"$regex": search, "$options": "i"}},
+                {"buyer": {"$regex": search, "$options": "i"}},
+                {"seller": {"$regex": search, "$options": "i"}},
+                {"agent": {"$regex": search, "$options": "i"}}
+            ]
+        }
+        
+        if current_user["is_admin"]:
+            query.update(search_filter)
+        else:
+            # Combine user filter with search filter
+            user_filter = query.get("$or", [])
+            query = {
+                "$and": [
+                    {"$or": user_filter},
+                    search_filter
+                ]
+            }
+        
+        if status and not current_user["is_admin"]:
+            query["status"] = status
+        if type and not current_user["is_admin"]:
+            query["type"] = type
     
     # Get total count
     total = await contracts_collection.count_documents(query)
@@ -294,12 +329,22 @@ async def get_contracts(
     )
 
 @router.get("/{contract_id}")
-async def get_contract(contract_id: str):
-    """Get contract details by ID"""
+async def get_contract(contract_id: str, current_user: dict = Depends(get_current_user_with_role)):
+    """Get contract details by ID - admins can see all, others need access"""
     db = MongoDB.get_database()
     contracts_collection = db.contracts
     
-    contract = await contracts_collection.find_one({"id": contract_id})
+    # Find contract - admins can see all, others need access
+    if current_user["is_admin"]:
+        contract = await contracts_collection.find_one({"id": contract_id})
+    else:
+        contract = await contracts_collection.find_one({
+            "id": contract_id,
+            "$or": [
+                {"created_by": current_user["user_id"]},
+                {"shared_with": current_user["user_id"]}
+            ]
+        })
     if not contract:
         raise HTTPException(status_code=404, detail="Contract not found")
     
@@ -323,13 +368,14 @@ async def get_contract(contract_id: str):
     return contract
 
 @router.post("", response_model=Contract)
-async def create_contract(contract_data: ContractCreateRequest):
+async def create_contract(contract_data: ContractCreateRequest, current_user: dict = Depends(get_current_user)):
     """Create a new contract"""
     db = MongoDB.get_database()
     contracts_collection = db.contracts
     
-    # Create contract with generated ID
+    # Create contract with generated ID and user association
     contract = Contract(**contract_data.dict())
+    contract.created_by = current_user["user_id"]
     
     # Add initial activity log entry
     contract.activityLog.append(
@@ -359,13 +405,22 @@ async def create_contract(contract_data: ContractCreateRequest):
     return contract_dict
 
 @router.put("/{contract_id}")
-async def update_contract(contract_id: str, updates: ContractUpdateRequest):
-    """Update a contract"""
+async def update_contract(contract_id: str, updates: ContractUpdateRequest, current_user: dict = Depends(get_current_user_with_role)):
+    """Update a contract - admins can update all, others need access"""
     db = MongoDB.get_database()
     contracts_collection = db.contracts
     
-    # Get existing contract
-    existing = await contracts_collection.find_one({"id": contract_id})
+    # Get existing contract - admins can update all, others need access
+    if current_user["is_admin"]:
+        existing = await contracts_collection.find_one({"id": contract_id})
+    else:
+        existing = await contracts_collection.find_one({
+            "id": contract_id,
+            "$or": [
+                {"created_by": current_user["user_id"]},
+                {"shared_with": current_user["user_id"]}
+            ]
+        })
     if not existing:
         raise HTTPException(status_code=404, detail="Contract not found")
     
@@ -408,13 +463,19 @@ async def update_contract(contract_id: str, updates: ContractUpdateRequest):
     return updated
 
 @router.patch("/{contract_id}")
-async def update_contract_field(contract_id: str, update: ContractFieldUpdateRequest):
-    """Update a single field of a contract"""
+async def update_contract_field(contract_id: str, update: ContractFieldUpdateRequest, current_user: dict = Depends(get_current_user)):
+    """Update a single field of a contract - only if user has access"""
     db = MongoDB.get_database()
     contracts_collection = db.contracts
     
-    # Check if contract exists
-    existing = await contracts_collection.find_one({"id": contract_id})
+    # Check if contract exists and user has access
+    existing = await contracts_collection.find_one({
+        "id": contract_id,
+        "$or": [
+            {"created_by": current_user["user_id"]},
+            {"shared_with": current_user["user_id"]}
+        ]
+    })
     if not existing:
         raise HTTPException(status_code=404, detail="Contract not found")
     
@@ -442,12 +503,19 @@ async def update_contract_field(contract_id: str, update: ContractFieldUpdateReq
     }
 
 @router.delete("/{contract_id}")
-async def delete_contract(contract_id: str):
-    """Delete a contract"""
+async def delete_contract(contract_id: str, current_user: dict = Depends(get_current_user_with_role)):
+    """Delete a contract - admins can delete any, others only their own"""
     db = MongoDB.get_database()
     contracts_collection = db.contracts
     
-    result = await contracts_collection.delete_one({"id": contract_id})
+    # Admins can delete any contract, others only their own
+    if current_user["is_admin"]:
+        result = await contracts_collection.delete_one({"id": contract_id})
+    else:
+        result = await contracts_collection.delete_one({
+            "id": contract_id,
+            "created_by": current_user["user_id"]
+        })
     
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Contract not found")
@@ -458,13 +526,19 @@ async def delete_contract(contract_id: str):
     }
 
 @router.put("/{contract_id}/status")
-async def update_contract_status(contract_id: str, status_update: StatusUpdateRequest):
-    """Update contract status with validation"""
+async def update_contract_status(contract_id: str, status_update: StatusUpdateRequest, current_user: dict = Depends(get_current_user)):
+    """Update contract status with validation - only if user has access"""
     db = MongoDB.get_database()
     contracts_collection = db.contracts
     
-    # Get existing contract
-    existing = await contracts_collection.find_one({"id": contract_id})
+    # Get existing contract and check user access
+    existing = await contracts_collection.find_one({
+        "id": contract_id,
+        "$or": [
+            {"created_by": current_user["user_id"]},
+            {"shared_with": current_user["user_id"]}
+        ]
+    })
     if not existing:
         raise HTTPException(status_code=404, detail="Contract not found")
     
@@ -525,13 +599,19 @@ async def update_contract_status(contract_id: str, status_update: StatusUpdateRe
     }
 
 @router.post("/{contract_id}/comments")
-async def add_contract_comment(contract_id: str, content: str):
-    """Add a comment to a contract"""
+async def add_contract_comment(contract_id: str, content: str, current_user: dict = Depends(get_current_user)):
+    """Add a comment to a contract - only if user has access"""
     db = MongoDB.get_database()
     contracts_collection = db.contracts
     
-    # Check if contract exists
-    existing = await contracts_collection.find_one({"id": contract_id})
+    # Check if contract exists and user has access
+    existing = await contracts_collection.find_one({
+        "id": contract_id,
+        "$or": [
+            {"created_by": current_user["user_id"]},
+            {"shared_with": current_user["user_id"]}
+        ]
+    })
     if not existing:
         raise HTTPException(status_code=404, detail="Contract not found")
     
@@ -558,12 +638,19 @@ async def add_contract_comment(contract_id: str, content: str):
     return comment.dict()
 
 @router.get("/{contract_id}/tasks")
-async def get_contract_tasks(contract_id: str):
-    """Get tasks for a contract"""
+async def get_contract_tasks(contract_id: str, current_user: dict = Depends(get_current_user)):
+    """Get tasks for a contract - only if user has access"""
     db = MongoDB.get_database()
     contracts_collection = db.contracts
     
-    contract = await contracts_collection.find_one({"id": contract_id})
+    # Check access
+    contract = await contracts_collection.find_one({
+        "id": contract_id,
+        "$or": [
+            {"created_by": current_user["user_id"]},
+            {"shared_with": current_user["user_id"]}
+        ]
+    })
     if not contract:
         raise HTTPException(status_code=404, detail="Contract not found")
     
@@ -574,14 +661,21 @@ async def get_contract_tasks(contract_id: str):
 @router.post("/{contract_id}/documents")
 async def upload_contract_document(
     contract_id: str,
-    file: UploadFile = File(...)
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
 ):
-    """Upload a document for a contract"""
+    """Upload a document for a contract - only if user has access"""
     db = MongoDB.get_database()
     contracts_collection = db.contracts
     
-    # Check if contract exists
-    existing = await contracts_collection.find_one({"id": contract_id})
+    # Check if contract exists and user has access
+    existing = await contracts_collection.find_one({
+        "id": contract_id,
+        "$or": [
+            {"created_by": current_user["user_id"]},
+            {"shared_with": current_user["user_id"]}
+        ]
+    })
     if not existing:
         raise HTTPException(status_code=404, detail="Contract not found")
     

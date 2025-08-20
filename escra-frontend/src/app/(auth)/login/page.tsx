@@ -348,8 +348,9 @@ function AuthPageContent() {
         await register(regEmail, regPassword, regName, regSurname);
         toast.success('Account created successfully!');
         // The register function will handle the redirect to /onboarding
-      } catch (error) {
-        toast.error('Failed to create account. Please try again.');
+      } catch (error: any) {
+        const errorMessage = error.message || 'Failed to create account. Please try again.';
+        toast.error(errorMessage);
         console.error('Registration error:', error);
       } finally {
         setIsLoading(false);
