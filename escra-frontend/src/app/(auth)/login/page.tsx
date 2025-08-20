@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FaUser } from 'react-icons/fa';
 import { IoMailOutline } from 'react-icons/io5';
@@ -217,7 +217,7 @@ const COUNTRIES: SelectOption[] = [
   { value: 'ZW', label: 'Zimbabwe' }
 ];
 
-export default function AuthPage() {
+function AuthPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();
@@ -519,5 +519,13 @@ export default function AuthPage() {
         </div>
       </div>
     </>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <AuthPageContent />
+    </Suspense>
   );
 } 
