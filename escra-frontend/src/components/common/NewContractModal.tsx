@@ -1,13 +1,67 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { HiOutlineDocumentText, HiChevronDown, HiOutlineUpload, HiOutlineTrash, HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
+import { HiOutlineDocumentText, HiChevronDown, HiOutlineUpload, HiOutlineTrash, HiOutlineEye, HiOutlineEyeOff, HiOutlinePencil } from 'react-icons/hi';
 import { HiMiniChevronDown } from 'react-icons/hi2';
 import { Logo } from '@/components/common/Logo';
 import { FaCheck, FaPlus, FaSearch } from 'react-icons/fa';
 import { LuPen, LuCalendarFold } from 'react-icons/lu';
-import { TbMailPlus, TbEdit } from 'react-icons/tb';
+import { TbMailPlus, TbEdit, TbFilePlus, TbDragDrop, TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive } from 'react-icons/tb';
+import { SiBox } from 'react-icons/si';
+import { SlSocialDropbox } from 'react-icons/sl';
 import { TiUserAddOutline } from 'react-icons/ti';
+import { useAssigneeStore } from '@/data/assigneeStore';
+import { useDocumentStore } from '@/data/documentNameStore';
+import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/components/ui/use-toast';
+
+interface Contract {
+  id: string;
+  title: string;
+  parties: string;
+  status: string;
+  updated: string;
+  value?: string;
+  documents?: number;
+  type: string;
+  buyer?: string;
+  seller?: string;
+  agent?: string;
+  milestone?: string;
+  notes?: string;
+  closingDate?: string;
+  dueDate?: string;
+  propertyAddress?: string;
+  propertyType?: string;
+  escrowNumber?: string;
+  buyerEmail?: string;
+  sellerEmail?: string;
+  agentEmail?: string;
+  earnestMoney?: string;
+  downPayment?: string;
+  loanAmount?: string;
+  interestRate?: string;
+  loanTerm?: string;
+  lenderName?: string;
+  sellerFinancialInstitution?: string;
+  buyerFinancialInstitution?: string;
+  buyerAccountNumber?: string;
+  sellerAccountNumber?: string;
+  buyerFinancialInstitutionRoutingNumber?: string;
+  sellerFinancialInstitutionRoutingNumber?: string;
+  titleCompany?: string;
+  insuranceCompany?: string;
+  inspectionPeriod?: string;
+  contingencies?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  country?: string;
+  additionalParties?: { name: string; email: string; role: string }[];
+  party1Role?: string;
+  party2Role?: string;
+  documentIds?: string[];
+}
 
 interface NewContractModalProps {
   isOpen: boolean;
@@ -92,7 +146,183 @@ const US_STATES = [
   { value: 'WY', label: 'Wyoming' },
 ];
 
+const COUNTRIES = [
+  // Most commonly used countries first
+  { value: 'US', label: 'United States' },
+  { value: 'CA', label: 'Canada' },
+  { value: 'MX', label: 'Mexico' },
+  { value: 'GB', label: 'United Kingdom' },
+  { value: 'DE', label: 'Germany' },
+  { value: 'FR', label: 'France' },
+  { value: 'IT', label: 'Italy' },
+  { value: 'ES', label: 'Spain' },
+  { value: 'NL', label: 'Netherlands' },
+  { value: 'BE', label: 'Belgium' },
+  { value: 'CH', label: 'Switzerland' },
+  { value: 'AT', label: 'Austria' },
+  { value: 'SE', label: 'Sweden' },
+  { value: 'NO', label: 'Norway' },
+  { value: 'DK', label: 'Denmark' },
+  { value: 'FI', label: 'Finland' },
+  { value: 'PL', label: 'Poland' },
+  { value: 'CZ', label: 'Czech Republic' },
+  { value: 'HU', label: 'Hungary' },
+  { value: 'RO', label: 'Romania' },
+  { value: 'BG', label: 'Bulgaria' },
+  { value: 'HR', label: 'Croatia' },
+  { value: 'SI', label: 'Slovenia' },
+  { value: 'SK', label: 'Slovakia' },
+  { value: 'LT', label: 'Lithuania' },
+  { value: 'LV', label: 'Latvia' },
+  { value: 'EE', label: 'Estonia' },
+  { value: 'IE', label: 'Ireland' },
+  { value: 'PT', label: 'Portugal' },
+  { value: 'GR', label: 'Greece' },
+  { value: 'CY', label: 'Cyprus' },
+  { value: 'MT', label: 'Malta' },
+  { value: 'LU', label: 'Luxembourg' },
+  { value: 'IS', label: 'Iceland' },
+  { value: 'AU', label: 'Australia' },
+  { value: 'NZ', label: 'New Zealand' },
+  { value: 'JP', label: 'Japan' },
+  { value: 'KR', label: 'South Korea' },
+  { value: 'CN', label: 'China' },
+  { value: 'IN', label: 'India' },
+  { value: 'BR', label: 'Brazil' },
+  { value: 'AR', label: 'Argentina' },
+  { value: 'CL', label: 'Chile' },
+  { value: 'CO', label: 'Colombia' },
+  { value: 'PE', label: 'Peru' },
+  { value: 'VE', label: 'Venezuela' },
+  { value: 'EC', label: 'Ecuador' },
+  { value: 'UY', label: 'Uruguay' },
+  { value: 'PY', label: 'Paraguay' },
+  { value: 'BO', label: 'Bolivia' },
+  { value: 'GY', label: 'Guyana' },
+  { value: 'SR', label: 'Suriname' },
+  { value: 'FK', label: 'Falkland Islands' },
+  { value: 'GF', label: 'French Guiana' },
+  // All other countries alphabetically
+  { value: 'AF', label: 'Afghanistan' },
+  { value: 'AL', label: 'Albania' },
+  { value: 'DZ', label: 'Algeria' },
+  { value: 'AD', label: 'Andorra' },
+  { value: 'AO', label: 'Angola' },
+  { value: 'AG', label: 'Antigua and Barbuda' },
+  { value: 'AM', label: 'Armenia' },
+  { value: 'AZ', label: 'Azerbaijan' },
+  { value: 'BS', label: 'Bahamas' },
+  { value: 'BH', label: 'Bahrain' },
+  { value: 'BD', label: 'Bangladesh' },
+  { value: 'BB', label: 'Barbados' },
+  { value: 'BY', label: 'Belarus' },
+  { value: 'BZ', label: 'Belize' },
+  { value: 'BJ', label: 'Benin' },
+  { value: 'BT', label: 'Bhutan' },
+  { value: 'BA', label: 'Bosnia and Herzegovina' },
+  { value: 'BW', label: 'Botswana' },
+  { value: 'BN', label: 'Brunei' },
+  { value: 'BF', label: 'Burkina Faso' },
+  { value: 'BI', label: 'Burundi' },
+  { value: 'KH', label: 'Cambodia' },
+  { value: 'CM', label: 'Cameroon' },
+  { value: 'CV', label: 'Cape Verde' },
+  { value: 'CF', label: 'Central African Republic' },
+  { value: 'TD', label: 'Chad' },
+  { value: 'KM', label: 'Comoros' },
+  { value: 'CG', label: 'Congo' },
+  { value: 'CR', label: 'Costa Rica' },
+  { value: 'CU', label: 'Cuba' },
+  { value: 'DJ', label: 'Djibouti' },
+  { value: 'DM', label: 'Dominica' },
+  { value: 'DO', label: 'Dominican Republic' },
+  { value: 'EG', label: 'Egypt' },
+  { value: 'SV', label: 'El Salvador' },
+  { value: 'GQ', label: 'Equatorial Guinea' },
+  { value: 'ER', label: 'Eritrea' },
+  { value: 'ET', label: 'Ethiopia' },
+  { value: 'FJ', label: 'Fiji' },
+  { value: 'GA', label: 'Gabon' },
+  { value: 'GM', label: 'Gambia' },
+  { value: 'GE', label: 'Georgia' },
+  { value: 'GH', label: 'Ghana' },
+  { value: 'GN', label: 'Guinea' },
+  { value: 'GW', label: 'Guinea-Bissau' },
+  { value: 'HT', label: 'Haiti' },
+  { value: 'HN', label: 'Honduras' },
+  { value: 'HK', label: 'Hong Kong' },
+  { value: 'ID', label: 'Indonesia' },
+  { value: 'IR', label: 'Iran' },
+  { value: 'IQ', label: 'Iraq' },
+  { value: 'IL', label: 'Israel' },
+  { value: 'CI', label: 'Ivory Coast' },
+  { value: 'JM', label: 'Jamaica' },
+  { value: 'JO', label: 'Jordan' },
+  { value: 'KZ', label: 'Kazakhstan' },
+  { value: 'KE', label: 'Kenya' },
+  { value: 'KW', label: 'Kuwait' },
+  { value: 'KG', label: 'Kyrgyzstan' },
+  { value: 'LA', label: 'Laos' },
+  { value: 'LB', label: 'Lebanon' },
+  { value: 'LS', label: 'Lesotho' },
+  { value: 'LR', label: 'Liberia' },
+  { value: 'LY', label: 'Libya' },
+  { value: 'MG', label: 'Madagascar' },
+  { value: 'MW', label: 'Malawi' },
+  { value: 'MY', label: 'Malaysia' },
+  { value: 'ML', label: 'Mali' },
+  { value: 'MR', label: 'Mauritania' },
+  { value: 'MU', label: 'Mauritius' },
+  { value: 'MN', label: 'Mongolia' },
+  { value: 'MA', label: 'Morocco' },
+  { value: 'MZ', label: 'Mozambique' },
+  { value: 'MM', label: 'Myanmar' },
+  { value: 'NA', label: 'Namibia' },
+  { value: 'NP', label: 'Nepal' },
+  { value: 'NI', label: 'Nicaragua' },
+  { value: 'NG', label: 'Nigeria' },
+  { value: 'OM', label: 'Oman' },
+  { value: 'PK', label: 'Pakistan' },
+  { value: 'PA', label: 'Panama' },
+  { value: 'PG', label: 'Papua New Guinea' },
+  { value: 'PH', label: 'Philippines' },
+  { value: 'QA', label: 'Qatar' },
+  { value: 'RU', label: 'Russia' },
+  { value: 'RW', label: 'Rwanda' },
+  { value: 'SA', label: 'Saudi Arabia' },
+  { value: 'SN', label: 'Senegal' },
+  { value: 'SL', label: 'Sierra Leone' },
+  { value: 'SG', label: 'Singapore' },
+  { value: 'SO', label: 'Somalia' },
+  { value: 'ZA', label: 'South Africa' },
+  { value: 'LK', label: 'Sri Lanka' },
+  { value: 'SD', label: 'Sudan' },
+  { value: 'SY', label: 'Syria' },
+  { value: 'TW', label: 'Taiwan' },
+  { value: 'TZ', label: 'Tanzania' },
+  { value: 'TH', label: 'Thailand' },
+  { value: 'TG', label: 'Togo' },
+  { value: 'TO', label: 'Tonga' },
+  { value: 'TN', label: 'Tunisia' },
+  { value: 'TR', label: 'Turkey' },
+  { value: 'TM', label: 'Turkmenistan' },
+  { value: 'UG', label: 'Uganda' },
+  { value: 'UA', label: 'Ukraine' },
+  { value: 'AE', label: 'United Arab Emirates' },
+  { value: 'VN', label: 'Vietnam' },
+  { value: 'YE', label: 'Yemen' },
+  { value: 'ZM', label: 'Zambia' },
+  { value: 'ZW', label: 'Zimbabwe' },
+];
+
 // Utility functions from contracts page
+function formatDateYYYYMMDD(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function formatCurrency(value: string | number): string {
   const numValue = typeof value === 'string' ? parseFloat(value) || 0 : value;
   return new Intl.NumberFormat('en-US', {
@@ -132,6 +362,7 @@ type Recipient = {
 };
 
 const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) => {
+  const { allAssignees } = useAssigneeStore();
   const [modalStep, setModalStep] = useState(1);
   const [showContractTypeDropdown, setShowContractTypeDropdown] = useState(false);
   const [showPropertyTypeDropdown, setShowPropertyTypeDropdown] = useState(false);
@@ -196,7 +427,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
 
   const [recipientErrors, setRecipientErrors] = useState<Record<string, boolean>>({});
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const [step4Documents, setStep4Documents] = useState<Array<{ name: string; file: File; assignee: string }>>([]);
+  const [step4Documents, setStep4Documents] = useState<Array<{ name: string; file: File; type: string; assignee: string }>>([]);
   const [stateSearchTerm, setStateSearchTerm] = useState('');
   const [countrySearchTerm, setCountrySearchTerm] = useState('');
   
@@ -207,12 +438,48 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
   const [sellerAccountDisplay, setSellerAccountDisplay] = useState('');
   const [buyerAccountVisible, setBuyerAccountVisible] = useState(false);
   const [sellerAccountVisible, setSellerAccountVisible] = useState(false);
+
+  // Step 4 Document state variables
+  const [step4DocumentName, setStep4DocumentName] = useState('');
+  const [step4DocumentType, setStep4DocumentType] = useState('');
+  const [step4DocumentAssignee, setStep4DocumentAssignee] = useState('');
+  const [step4SelectedFiles, setStep4SelectedFiles] = useState<File[]>([]);
+  const [step4FileSource, setStep4FileSource] = useState('');
+  const [showStep4UploadDropdown, setShowStep4UploadDropdown] = useState(false);
+  const [showStep4AssigneeDropdown, setShowStep4AssigneeDropdown] = useState(false);
+  const [editingStep4DocumentIndex, setEditingStep4DocumentIndex] = useState<number | null>(null);
+  const [inlineEditingStep4DocumentName, setInlineEditingStep4DocumentName] = useState('');
+  const [inlineEditingStep4DocumentType, setInlineEditingStep4DocumentType] = useState('');
+  const [inlineEditingStep4DocumentAssignee, setInlineEditingStep4DocumentAssignee] = useState('');
+  const [showStep4DocumentAssigneeDropdown, setShowStep4DocumentAssigneeDropdown] = useState(false);
+  const step4UploadDropdownRef = useRef<HTMLDivElement>(null);
+  const step4AssigneeDropdownRef = useRef<HTMLDivElement>(null);
+  const step4DocumentAssigneeDropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Hooks for contract creation
+  const { addDocument } = useDocumentStore();
+  const { user } = useAuth();
+  const { toast } = useToast();
   
   // Timeout refs for masking
   const buyerRoutingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const sellerRoutingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const buyerAccountTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const sellerAccountTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Debug useEffect to monitor propertyType changes
+  useEffect(() => {
+    console.log('PropertyType changed to:', modalForm.propertyType);
+    console.log('Modal opened from page:', window.location.pathname);
+  }, [modalForm.propertyType]);
+
+  // Debug useEffect to monitor modal open
+  useEffect(() => {
+    if (isOpen) {
+      console.log('Modal opened on page:', window.location.pathname);
+      console.log('Initial propertyType value:', modalForm.propertyType);
+    }
+  }, [isOpen, modalForm.propertyType]);
 
   const handleModalChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -258,6 +525,78 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
   const getRecipientCardBorderColor = (index: number) => {
     const colors = ['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444'];
     return colors[index % colors.length];
+  };
+
+  // Generate unique contract ID with Algorand Smart Contract Chain ID format
+  const generateContractId = (): string => {
+    const random = Math.floor(Math.random() * 9000) + 1000; // 1000-9999
+    return random.toString();
+  };
+
+  // Create parties string from form data
+  const createPartiesString = (): string => {
+    const parties = recipients
+      .filter(recipient => recipient.name && recipient.name.trim() !== '')
+      .map(recipient => recipient.name.trim());
+    return parties.join(' & ');
+  };
+
+  // Reset form to initial state
+  const resetForm = () => {
+    setModalForm({
+      title: '',
+      escrowNumber: '',
+      type: '',
+      propertyType: '',
+      milestone: '',
+      value: '',
+      dueDate: '',
+      propertyAddress: '',
+      city: '',
+      state: '',
+      zipCode: '',
+      country: '',
+      closingDate: '',
+      earnestMoney: '',
+      downPayment: '',
+      loanAmount: '',
+      interestRate: '',
+      loanTerm: '',
+      lenderName: '',
+      titleCompany: '',
+      insuranceCompany: '',
+      inspectionPeriod: '',
+      contingencies: '',
+      notes: '',
+      buyerFinancialInstitution: '',
+      buyerFinancialInstitutionRoutingNumber: '',
+      buyerAccountNumber: '',
+      sellerFinancialInstitution: '',
+      sellerFinancialInstitutionRoutingNumber: '',
+      sellerAccountNumber: '',
+    });
+    setModalStep(1);
+    setFormErrors({});
+    setRecipientErrors({});
+    setRecipients([{
+      name: '',
+      email: '',
+      signerRole: '',
+      contractRole: '',
+      showSignerRoleDropdown: false,
+      showContractRoleDropdown: false,
+      signerRoleButtonRef: React.createRef<HTMLButtonElement>(),
+      signerRoleDropdownRef: React.createRef<HTMLDivElement>(),
+      contractRoleButtonRef: React.createRef<HTMLButtonElement>(),
+      contractRoleDropdownRef: React.createRef<HTMLDivElement>(),
+    }]);
+    setUploadedFiles([]);
+    setStep4Documents([]);
+    setStep4DocumentName('');
+    setStep4DocumentType('');
+    setStep4DocumentAssignee('');
+    setStateSearchTerm('');
+    setCountrySearchTerm('');
   };
 
   const handleAddRecipient = () => {
@@ -491,6 +830,76 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [recipients]);
 
+  // Step 4 dropdown click outside handlers
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showStep4AssigneeDropdown && !step4AssigneeDropdownRef.current?.contains(event.target as Node)) {
+        setShowStep4AssigneeDropdown(false);
+      }
+      if (showStep4DocumentAssigneeDropdown && !step4DocumentAssigneeDropdownRef.current?.contains(event.target as Node)) {
+        setShowStep4DocumentAssigneeDropdown(false);
+      }
+      if (showStep4UploadDropdown && !step4UploadDropdownRef.current?.contains(event.target as Node)) {
+        setShowStep4UploadDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showStep4AssigneeDropdown, showStep4DocumentAssigneeDropdown, showStep4UploadDropdown]);
+
+  // Step 4 Document functions
+  const handleAddStep4Document = () => {
+    if (step4DocumentName.trim() && step4DocumentType.trim() && step4DocumentAssignee.trim() && step4SelectedFiles.length > 0) {
+      const newDocument = {
+        file: step4SelectedFiles[0],
+        name: step4DocumentName.trim(),
+        type: step4DocumentType.trim(),
+        assignee: step4DocumentAssignee.trim()
+      };
+      setStep4Documents(prev => [...prev, newDocument]);
+      
+      // Clear form fields
+      setStep4DocumentName('');
+      setStep4DocumentType('');
+      setStep4DocumentAssignee('');
+      setStep4SelectedFiles([]);
+    }
+  };
+
+  const handleStartInlineEditStep4Document = (index: number) => {
+    const doc = step4Documents[index];
+    setEditingStep4DocumentIndex(index);
+    setInlineEditingStep4DocumentName(doc.name);
+    setInlineEditingStep4DocumentType(doc.type || '');
+    setInlineEditingStep4DocumentAssignee(doc.assignee);
+    setShowStep4DocumentAssigneeDropdown(false);
+  };
+
+  const handleSaveInlineEditStep4Document = (index: number) => {
+    if (inlineEditingStep4DocumentName.trim() && inlineEditingStep4DocumentType.trim() && inlineEditingStep4DocumentAssignee.trim()) {
+      setStep4Documents(prev => prev.map((doc, i) =>
+        i === index
+          ? { ...doc, name: inlineEditingStep4DocumentName.trim(), type: inlineEditingStep4DocumentType.trim(), assignee: inlineEditingStep4DocumentAssignee.trim() }
+          : doc
+      ));
+      
+      setEditingStep4DocumentIndex(null);
+      setInlineEditingStep4DocumentName('');
+      setInlineEditingStep4DocumentType('');
+      setInlineEditingStep4DocumentAssignee('');
+      setShowStep4DocumentAssigneeDropdown(false);
+    }
+  };
+
+  const handleCancelInlineEditStep4Document = () => {
+    setEditingStep4DocumentIndex(null);
+    setInlineEditingStep4DocumentName('');
+    setInlineEditingStep4DocumentType('');
+    setInlineEditingStep4DocumentAssignee('');
+    setShowStep4DocumentAssigneeDropdown(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -565,72 +974,196 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
         return;
       }
 
-      // Create new contract logic would go here
-      console.log('Creating contract:', modalForm, recipients, uploadedFiles);
-        onClose();
-        setModalStep(1);
-              setModalForm({
-          title: '',
-          escrowNumber: '',
-          type: '',
-          propertyType: '',
-          milestone: '',
-          value: '',
-          dueDate: '',
-          propertyAddress: '',
-          city: '',
-          state: '',
-          zipCode: '',
-          country: '',
-          closingDate: '',
-          earnestMoney: '',
-          downPayment: '',
-          loanAmount: '',
-          interestRate: '',
-          loanTerm: '',
-          lenderName: '',
-          titleCompany: '',
-          insuranceCompany: '',
-          inspectionPeriod: '',
-          contingencies: '',
-          notes: '',
-          buyerFinancialInstitution: '',
-          buyerFinancialInstitutionRoutingNumber: '',
-          buyerAccountNumber: '',
-          sellerFinancialInstitution: '',
-          sellerFinancialInstitutionRoutingNumber: '',
-          sellerAccountNumber: '',
+      // Create new contract
+      const newContractId = generateContractId();
+      const partiesString = createPartiesString();
+      const currentUserName = user?.name || 'Unknown User';
+      
+      // Map recipients by position: first = buyer, second = seller
+      const buyerRecipient = recipients[0];
+      const sellerRecipient = recipients[1];
+      
+      // Store party roles for the contract details modal
+      const party1ContractRole = buyerRecipient?.contractRole || 'Buyer';
+      const party2ContractRole = sellerRecipient?.contractRole || 'Seller';
+      
+      // Capture additional parties (Party 3 and beyond) with their emails
+      const additionalPartiesData = recipients.slice(2).map(r => ({
+        name: r.name,
+        email: r.email,
+        role: r.contractRole || 'Standard',
+      }));
+
+      // Debug logging to check form values
+      console.log('Modal Form Values:', {
+        value: modalForm.value,
+        propertyType: modalForm.propertyType,
+        state: modalForm.state,
+        country: modalForm.country,
+        earnestMoney: modalForm.earnestMoney,
+        downPayment: modalForm.downPayment,
+        loanAmount: modalForm.loanAmount
+      });
+      
+      // Debug: Check if propertyType is actually in modalForm
+      console.log('Full modalForm object:', modalForm);
+      console.log('PropertyType at submission time:', modalForm.propertyType);
+      console.log('PropertyType type at submission time:', typeof modalForm.propertyType);
+      
+      // Additional debugging for property type specifically
+      console.log('Property Type Debug:', {
+        propertyType: modalForm.propertyType,
+        propertyTypeType: typeof modalForm.propertyType,
+        propertyTypeLength: modalForm.propertyType?.length,
+        propertyTypeTruthy: !!modalForm.propertyType
+      });
+
+      // Debug: Check if propertyType is actually in modalForm
+      console.log('Full modalForm object:', modalForm);
+
+      const newContract = {
+        id: newContractId,
+        title: modalForm.title,
+        parties: partiesString,
+        status: 'Initiation',
+        updated: 'Just now',
+        value: modalForm.value,
+        documents: step4Documents.length + uploadedFiles.length, // Count all uploaded files
+        type: modalForm.type,
+        buyer: buyerRecipient?.name || '',
+        seller: sellerRecipient?.name || '',
+        milestone: modalForm.milestone,
+        notes: modalForm.notes,
+        closingDate: modalForm.closingDate,
+        dueDate: modalForm.dueDate,
+        propertyAddress: modalForm.propertyAddress,
+        propertyType: modalForm.propertyType,
+        escrowNumber: modalForm.escrowNumber,
+        buyerEmail: buyerRecipient?.email || '',
+        sellerEmail: sellerRecipient?.email || '',
+        earnestMoney: modalForm.earnestMoney,
+        downPayment: modalForm.downPayment,
+        loanAmount: modalForm.loanAmount,
+        interestRate: modalForm.interestRate,
+        loanTerm: modalForm.loanTerm,
+        lenderName: modalForm.lenderName,
+        sellerFinancialInstitution: modalForm.sellerFinancialInstitution,
+        buyerFinancialInstitution: modalForm.buyerFinancialInstitution,
+        buyerAccountNumber: modalForm.buyerAccountNumber,
+        sellerAccountNumber: modalForm.sellerAccountNumber,
+        buyerFinancialInstitutionRoutingNumber: modalForm.buyerFinancialInstitutionRoutingNumber,
+        sellerFinancialInstitutionRoutingNumber: modalForm.sellerFinancialInstitutionRoutingNumber,
+        titleCompany: modalForm.titleCompany,
+        insuranceCompany: modalForm.insuranceCompany,
+        inspectionPeriod: modalForm.inspectionPeriod,
+        contingencies: modalForm.contingencies,
+        city: modalForm.city,
+        state: modalForm.state,
+        zipCode: modalForm.zipCode,
+        country: modalForm.country,
+        additionalParties: additionalPartiesData,
+        party1Role: party1ContractRole,
+        party2Role: party2ContractRole,
+        documentIds: [] as string[],
+      };
+
+      // Debug logging to check final contract object
+      console.log('Final Contract Object:', {
+        id: newContract.id,
+        value: newContract.value,
+        propertyType: newContract.propertyType,
+        state: newContract.state,
+        country: newContract.country,
+        earnestMoney: newContract.earnestMoney,
+        downPayment: newContract.downPayment,
+        loanAmount: newContract.loanAmount
+      });
+
+      // Debug: Log the contract being sent to API
+      console.log('Contract being sent to API:', newContract);
+      console.log('API request body:', JSON.stringify(newContract));
+
+      // Save the new contract to the API
+      try {
+        const response = await fetch('/api/contracts', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newContract),
         });
-      setRecipients([
-        {
-          name: '',
-          email: '',
-          signerRole: 'Buyer',
-          contractRole: 'Buyer',
-          showSignerRoleDropdown: false,
-          showContractRoleDropdown: false,
-          signerRoleButtonRef: React.createRef<HTMLButtonElement>(),
-          signerRoleDropdownRef: React.createRef<HTMLDivElement>(),
-          contractRoleButtonRef: React.createRef<HTMLButtonElement>(),
-          contractRoleDropdownRef: React.createRef<HTMLDivElement>(),
-        },
-        {
-          name: '',
-          email: '',
-          signerRole: 'Seller',
-          contractRole: 'Seller',
-          showSignerRoleDropdown: false,
-          showContractRoleDropdown: false,
-          signerRoleButtonRef: React.createRef<HTMLButtonElement>(),
-          signerRoleDropdownRef: React.createRef<HTMLDivElement>(),
-          contractRoleButtonRef: React.createRef<HTMLButtonElement>(),
-          contractRoleDropdownRef: React.createRef<HTMLDivElement>(),
-        },
-      ]);
-      setFormErrors({});
-      setRecipientErrors({});
-      setUploadedFiles([]);
-      setStep4Documents([]);
+
+        if (!response.ok) {
+          console.error('Failed to save contract to file');
+        } else {
+          // Create documents with proper IDs and associate them with the new contract
+          const finalDocumentIds: string[] = [];
+          
+          // Process step4Documents (documents added during contract creation)
+          if (step4Documents.length > 0) {
+            try {
+              for (const docInfo of step4Documents) {
+                // Create document with proper ID and contract association, including assignee and document type
+                const documentId = await addDocument(docInfo.file, newContractId, newContract.title, currentUserName, docInfo.assignee, docInfo.type);
+                
+                // Update the document name
+                const { updateDocumentName } = useDocumentStore.getState();
+                updateDocumentName(documentId, docInfo.name);
+                
+                finalDocumentIds.push(documentId);
+              }
+            } catch (error) {
+              console.error('Error creating documents for contract:', error);
+            }
+          }
+          
+          // Process any previously uploaded files (from handleFileChange)
+          if (uploadedFiles.length > 0) {
+            try {
+              for (const file of uploadedFiles) {
+                // Create document with proper ID and contract association, including assignee (current user as default)
+                const documentId = await addDocument(file, newContractId, newContract.title, currentUserName, currentUserName, undefined);
+                finalDocumentIds.push(documentId);
+              }
+            } catch (error) {
+              console.error('Error creating documents from uploaded files:', error);
+            }
+          }
+          
+          // Update the contract with the final document IDs
+          newContract.documentIds = finalDocumentIds;
+        }
+      } catch (error) {
+        console.error('Error saving contract:', error);
+      }
+
+      // Debug: Log what's being saved to localStorage
+      console.log('Saving to localStorage:', newContract);
+      console.log('localStorage JSON:', JSON.stringify(newContract));
+
+      // Save new contract to localStorage for other pages to pick up
+      try {
+        localStorage.setItem('newContract', JSON.stringify(newContract));
+        // Trigger storage event for other tabs/pages
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: 'newContract',
+          newValue: JSON.stringify(newContract)
+        }));
+        console.log('Successfully saved to localStorage and dispatched storage event');
+      } catch (error) {
+        console.error('Error saving new contract to localStorage:', error);
+      }
+      
+      // Close modal and reset form
+      onClose();
+      resetForm();
+      
+      // Show success feedback
+      toast({
+        title: "Contract created successfully",
+        description: `"${newContract.title}" has been created with ID ${newContract.id}`,
+        duration: Infinity, // Make toast persistent - user must close it manually
+      });
     }
   };
 
@@ -638,19 +1171,19 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl mx-auto px-4 sm:px-8 pb-8 font-sans max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl mx-auto px-4 sm:px-8 pb-8 font-sans max-h-[98vh] overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
         {/* Modal Header */}
-        <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 py-4 sm:px-8 sm:pt-8 sm:pb-2 border-b border-gray-100 dark:border-gray-700 gap-2">
+        <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between py-4 sm:pt-8 sm:pb-2 mb-4 gap-2">
           <div className="flex items-center gap-4">
-            <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-primary/10">
-              <HiOutlineDocumentText className="text-primary text-2xl" />
-            </span>
+            <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800">
+              <TbFilePlus size={20} className="text-teal-500 dark:text-teal-400" />
+            </div>
             <div>
-              <h2 className="text-xl font-bold text-black dark:text-white leading-tight">Create New Contract</h2>
-              <p className="text-gray-500 dark:text-gray-400 text-sm leading-tight">Fill in the details to quickly get started</p>
+              <h2 className="text-lg font-bold text-black dark:text-white leading-tight">Create New Contract</h2>
+              <p className="text-gray-500 text-xs leading-tight cursor-default select-none">Fill in the contract details to get started</p>
             </div>
           </div>
-          <button onClick={() => { onClose(); setModalStep(1); }} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-full">
+          <button onClick={() => { onClose(); setModalStep(1); }} className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -658,17 +1191,18 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
         </div>
 
         {/* Stepper */}
-        <div className="flex items-center justify-center w-full px-0 sm:px-2 py-3 sm:pt-4 sm:pb-2 overflow-x-auto">
-          <div className="flex items-center space-x-2 flex-nowrap justify-center w-full px-2">
+        <div className="w-full overflow-x-auto py-3 sm:pt-4 sm:pb-2">
+          <div className="flex items-center justify-between mb-6 min-w-[340px] sm:min-w-0">
+            <div className="flex items-center space-x-2 w-full flex-nowrap px-0">
             {[1, 2, 3, 4].map((step, idx) => (
               <React.Fragment key={step}>
                 <button
                   type="button"
                   onClick={() => setModalStep(step)}
-                  className={`flex items-center gap-2 font-semibold transition-all duration-300 text-sm px-2 py-1 sm:text-base sm:px-4 sm:py-1.5 rounded-lg whitespace-nowrap
+                  className={`flex items-center gap-2 rounded-xl font-semibold border transition-all duration-300 text-sm px-4 py-2 whitespace-nowrap
                     ${modalStep === step
-                      ? 'text-primary border-2 border-gray-200 dark:border-gray-600'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}
+                      ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 ring-1 ring-inset ring-gray-200 dark:ring-gray-600 shadow-sm'
+                      : 'text-gray-500 dark:text-gray-400 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700'}
                   `}
                 >
                   <span className={`inline-block transition-all duration-300 ${modalStep === step ? 'opacity-100 mr-2' : 'opacity-0 w-0 mr-0'}`} style={{width: modalStep === step ? 18 : 0}}>
@@ -679,9 +1213,10 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                   {step === 3 && 'Step 3: Details'}
                   {step === 4 && 'Step 4: Documents'}
                 </button>
-                {idx < 3 && <div className="flex-1 h-0.5 bg-gray-200 dark:bg-gray-600 mx-2 min-w-[20px]" />}
+                {idx < 3 && <div className="flex-1 h-0.5 bg-gray-200 dark:bg-gray-600" />}
               </React.Fragment>
             ))}
+          </div>
           </div>
         </div>
 
@@ -797,8 +1332,15 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                             className={`w-full text-left px-3 py-0.5 text-xs font-medium ${modalForm.propertyType === type ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                             onClick={e => {
                               e.preventDefault();
-                              setModalForm(prev => ({ ...prev, propertyType: type }));
+                              console.log('Setting propertyType to:', type);
+                              console.log('Previous modalForm.propertyType:', modalForm.propertyType);
+                              setModalForm(prev => {
+                                const newForm = { ...prev, propertyType: type };
+                                console.log('New modalForm.propertyType will be:', newForm.propertyType);
+                                return newForm;
+                              });
                               setShowPropertyTypeDropdown(false);
+                              setFormErrors(prev => ({ ...prev, propertyType: false }));
                             }}
                           >
                             {type}
@@ -857,6 +1399,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                     value={modalForm.value}
                     onChange={(e) => {
                       const formattedValue = parseAndFormatCurrency(e.target.value);
+                        console.log('Setting value to:', formattedValue);
                       setModalForm(prev => ({ ...prev, value: formattedValue }));
                     }}
                     className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
@@ -939,10 +1482,22 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                           setShowStateDropdown(true);
                         }
                       }}
+                      onInput={(e) => {
+                        // Handle browser autofill by mapping state names to codes
+                        const inputValue = e.currentTarget.value;
+                        if (inputValue && !stateSearchTerm) {
+                          const matchingState = US_STATES.find(s => 
+                            s.label.toLowerCase() === inputValue.toLowerCase()
+                          );
+                          if (matchingState) {
+                            setModalForm(prev => ({ ...prev, state: matchingState.value }));
+                          }
+                        }
+                      }}
                     />
                     <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     {showStateDropdown && (
-                      <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                      <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-hidden overflow-y-auto [&::-webkit-scrollbar]:hidden">
                         {US_STATES
                           .filter(state => 
                             state.label.toLowerCase().includes(stateSearchTerm.toLowerCase())
@@ -985,7 +1540,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                       type="text"
                       className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 bg-white dark:bg-gray-900"
                       placeholder="Select Country..."
-                      value={countrySearchTerm || modalForm.country || ''}
+                      value={countrySearchTerm || COUNTRIES.find(c => c.value === modalForm.country)?.label || ''}
                       onChange={handleCountrySearch}
                       onKeyDown={(e) => {
                         if (e.key === 'Backspace' && !countrySearchTerm) {
@@ -998,26 +1553,38 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                           setShowCountryDropdown(true);
                         }
                       }}
+                      onInput={(e) => {
+                        // Handle browser autofill by mapping country names to codes
+                        const inputValue = e.currentTarget.value;
+                        if (inputValue && !countrySearchTerm) {
+                          const matchingCountry = COUNTRIES.find(c => 
+                            c.label.toLowerCase() === inputValue.toLowerCase()
+                          );
+                          if (matchingCountry) {
+                            setModalForm(prev => ({ ...prev, country: matchingCountry.value }));
+                          }
+                        }
+                      }}
                     />
                     <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     {showCountryDropdown && (
-                      <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                        {['United States', 'Canada', 'Mexico', 'United Kingdom', 'Germany', 'France', 'Australia', 'Japan', 'China', 'India', 'Brazil', 'Argentina', 'South Africa', 'Nigeria', 'Egypt', 'Kenya', 'Morocco', 'Tunisia', 'Algeria', 'Libya', 'Sudan', 'Ethiopia', 'Somalia', 'Djibouti', 'Eritrea', 'Uganda', 'Tanzania', 'Rwanda', 'Burundi', 'Democratic Republic of the Congo', 'Republic of the Congo', 'Central African Republic', 'Chad', 'Cameroon', 'Gabon', 'Equatorial Guinea', 'São Tomé and Príncipe', 'Angola', 'Zambia', 'Malawi', 'Mozambique', 'Zimbabwe', 'Botswana', 'Namibia', 'Lesotho', 'Eswatini', 'Madagascar', 'Comoros', 'Mauritius', 'Seychelles', 'Cape Verde', 'Guinea-Bissau', 'Senegal', 'The Gambia', 'Guinea', 'Sierra Leone', 'Liberia', 'Ivory Coast', 'Ghana', 'Togo', 'Benin', 'Burkina Faso', 'Mali', 'Niger', 'Mauritania', 'Western Sahara', 'Spain', 'Portugal', 'Italy', 'Switzerland', 'Austria', 'Slovenia', 'Croatia', 'Bosnia and Herzegovina', 'Serbia', 'Montenegro', 'Kosovo', 'North Macedonia', 'Albania', 'Greece', 'Bulgaria', 'Romania', 'Moldova', 'Ukraine', 'Belarus', 'Lithuania', 'Latvia', 'Estonia', 'Finland', 'Sweden', 'Norway', 'Denmark', 'Iceland', 'Ireland', 'Netherlands', 'Belgium', 'Luxembourg', 'Poland', 'Czech Republic', 'Slovakia', 'Hungary', 'Russia', 'Kazakhstan', 'Uzbekistan', 'Turkmenistan', 'Kyrgyzstan', 'Tajikistan', 'Afghanistan', 'Pakistan', 'India', 'Nepal', 'Bhutan', 'Bangladesh', 'Myanmar', 'Thailand', 'Laos', 'Cambodia', 'Vietnam', 'Malaysia', 'Singapore', 'Indonesia', 'Philippines', 'Brunei', 'East Timor', 'Papua New Guinea', 'Fiji', 'Vanuatu', 'New Caledonia', 'Solomon Islands', 'Tuvalu', 'Kiribati', 'Nauru', 'Palau', 'Micronesia', 'Marshall Islands', 'Samoa', 'Tonga', 'Cook Islands', 'Niue', 'Tokelau', 'American Samoa', 'French Polynesia', 'Wallis and Futuna', 'Pitcairn Islands', 'Easter Island', 'Galápagos Islands', 'Falkland Islands', 'South Georgia and the South Sandwich Islands', 'Bouvet Island', 'Heard Island and McDonald Islands', 'French Southern and Antarctic Lands', 'Antarctica']
+                      <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-hidden overflow-y-auto [&::-webkit-scrollbar]:hidden">
+                        {COUNTRIES
                           .filter(country => 
-                            country.toLowerCase().includes(countrySearchTerm.toLowerCase())
+                            country.label.toLowerCase().includes(countrySearchTerm.toLowerCase())
                           )
                           .map(country => (
                           <button
-                            key={country}
-                            className={`w-full text-left px-3 py-0.5 text-xs font-medium ${modalForm.country === country ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                            key={country.value}
+                            className={`w-full text-left px-3 py-0.5 text-xs font-medium ${modalForm.country === country.value ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                             onClick={e => {
                               e.preventDefault();
-                              setModalForm(prev => ({ ...prev, country }));
+                              setModalForm(prev => ({ ...prev, country: country.value }));
                               setShowCountryDropdown(false);
                               setCountrySearchTerm('');
                             }}
                           >
-                            {country}
+                            {country.label}
                           </button>
                         ))}
                       </div>
@@ -1438,6 +2005,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                     value={modalForm.loanAmount}
                     onChange={(e) => {
                       const formattedValue = parseAndFormatCurrency(e.target.value);
+                      console.log('Setting loanAmount to:', formattedValue);
                       setModalForm(prev => ({ ...prev, loanAmount: formattedValue }));
                     }}
                     className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
@@ -1477,6 +2045,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                     value={modalForm.downPayment}
                     onChange={(e) => {
                       const formattedValue = parseAndFormatCurrency(e.target.value);
+                      console.log('Setting downPayment to:', formattedValue);
                       setModalForm(prev => ({ ...prev, downPayment: formattedValue }));
                     }}
                     className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
@@ -1492,6 +2061,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                     value={modalForm.earnestMoney}
                     onChange={(e) => {
                       const formattedValue = parseAndFormatCurrency(e.target.value);
+                      console.log('Setting earnestMoney to:', formattedValue);
                       setModalForm(prev => ({ ...prev, earnestMoney: formattedValue }));
                     }}
                     className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
@@ -1531,26 +2101,336 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
 
           {modalStep === 4 && (
             <form onSubmit={handleSubmit} noValidate>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
-                  {/* Uploaded Documents Display - Above the upload box */}
+                  
+                  {/* Direct Document Upload Fields */}
+                  <div className="space-y-6">
+                    
+
+
+                    {/* Document Name and Assignee - Side by Side */}
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Document Name <span className="text-red-500">*</span></label>
+                        <input
+                          type="text"
+                          placeholder="Enter document name..."
+                          className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs transition-colors cursor-text focus:ring-2 focus:ring-primary focus:border-primary"
+                          value={step4DocumentName}
+                          onChange={(e) => setStep4DocumentName(e.target.value)}
+                          style={{ fontFamily: 'Avenir, sans-serif' }}
+                        />
+                        
+                        {/* Assignee - Moved to left column */}
+                        <div className="mt-6">
+                        <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Assignee <span className="text-red-500">*</span></label>
+                        <div className="relative" ref={step4AssigneeDropdownRef}>
+                          <input
+                            type="text"
+                            className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs transition-colors cursor-text focus:ring-2 focus:ring-primary focus:border-primary pr-10"
+                            placeholder="Choose an assignee..."
+                            value={step4DocumentAssignee}
+                            onChange={(e) => setStep4DocumentAssignee(e.target.value)}
+                            onFocus={() => setShowStep4AssigneeDropdown(true)}
+                            style={{ fontFamily: 'Avenir, sans-serif' }}
+                            autoComplete="off"
+                          />
+                          <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          
+                          {showStep4AssigneeDropdown && (
+                            <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:hidden" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                              {allAssignees.length > 0 ? (
+                                <>
+                                  {allAssignees.map((assignee: string) => (
+                                    <div
+                                      key={assignee}
+                                      className={`px-4 py-2 text-xs cursor-pointer ${step4DocumentAssignee === assignee ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'} select-none`}
+                                      onClick={() => {
+                                        setStep4DocumentAssignee(assignee);
+                                        setShowStep4AssigneeDropdown(false);
+                                      }}
+                                    >
+                                      {assignee}
+                                    </div>
+                                  ))}
+                                  <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                                  <div
+                                    className="px-4 py-2 text-xs cursor-pointer text-primary hover:bg-primary/10 select-none flex items-center gap-2"
+                                    onClick={() => {
+                                      // TODO: Add logic to create new assignee
+                                      setShowStep4AssigneeDropdown(false);
+                                    }}
+                                  >
+                                    <FaPlus className="text-xs" />
+                                    Add new assignee
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <div className="px-4 py-2 text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">No assignees found</div>
+                                  <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                                  <div
+                                    className="px-4 py-2 text-xs cursor-pointer text-primary hover:bg-primary/10 select-none flex items-center gap-2"
+                                    onClick={() => {
+                                      // TODO: Add logic to create new assignee
+                                      setShowStep4AssigneeDropdown(false);
+                                    }}
+                                  >
+                                    <FaPlus className="text-xs" />
+                                    Add new assignee
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Document Type</label>
+                        <input
+                          type="text"
+                          placeholder="Enter document type..."
+                          className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs transition-colors cursor-text focus:ring-2 focus:ring-primary focus:border-primary"
+                          value={step4DocumentType}
+                          onChange={(e) => setStep4DocumentType(e.target.value)}
+                          style={{ fontFamily: 'Avenir, sans-serif' }}
+                        />
+                      </div>
+                    </div>
+
+
+                  </div>
+
+                                       {/* Direct File Upload Option */}
+                   <div className="mt-6">
+ 
+                     <div className="relative" ref={step4UploadDropdownRef}>
+                       <div 
+                         className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 py-8 px-4 text-center transition hover:border-primary cursor-pointer"
+                         onClick={() => {
+                           setShowStep4UploadDropdown(!showStep4UploadDropdown);
+                         }}
+                         onDragOver={(e) => {
+                           e.preventDefault();
+                           e.stopPropagation();
+                         }}
+                         onDrop={(e) => {
+                           e.preventDefault();
+                           e.stopPropagation();
+                           
+                           const files = Array.from(e.dataTransfer.files);
+                           if (files.length > 0) {
+                             // Set file source to Desktop
+                             setStep4FileSource('Desktop');
+                             
+                             // Add files to selected files
+                             setStep4SelectedFiles(prev => [...prev, ...files]);
+                             
+                             // Pre-populate document name with first file name (without extension) only if field is empty
+                             if (!step4DocumentName.trim()) {
+                               const fileName = files[0].name;
+                               const nameWithoutExtension = fileName.replace(/\.[^/.]+$/, "");
+                               setStep4DocumentName(nameWithoutExtension);
+                             }
+                           }
+                         }}
+                       >
+                         <TbDragDrop className="text-3xl text-gray-400 mb-2" />
+                         <div className="text-xs text-gray-700 dark:text-gray-300 font-medium cursor-default select-none">Click to upload or drag and drop</div>
+                         <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 cursor-default select-none">PDF, DOC, DOCX, or JPG (max. 10MB each)</div>
+                       </div>
+                       
+                       {/* Upload Source Dropdown */}
+                       {showStep4UploadDropdown && (
+                         <div className="fixed inset-0 z-[60] pointer-events-none">
+                           <div className="absolute bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 cursor-default select-none pointer-events-auto"
+                                style={{
+                                  left: step4UploadDropdownRef.current?.getBoundingClientRect().left || 0,
+                                  top: (step4UploadDropdownRef.current?.getBoundingClientRect().bottom || 0) + 4,
+                                  width: step4UploadDropdownRef.current?.getBoundingClientRect().width || 'auto',
+                                  minWidth: '200px'
+                                }}>
+                           <div className="py-2">
+                             <label htmlFor="step4-upload-desktop-file-upload" className="block px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+                               <div className="flex items-center gap-2">
+                                 <TbDeviceDesktopPlus className="text-base text-primary" />
+                                 <span className="text-xs cursor-default select-none">Desktop</span>
+                               </div>
+                             </label>
+                             <input
+                               id="step4-upload-desktop-file-upload"
+                               name="step4-upload-desktop-file-upload"
+                               type="file"
+                               accept=".pdf,.doc,.docx,.jpg,.jpeg"
+                               className="hidden"
+                               multiple
+                               onChange={(e) => {
+                                 setStep4FileSource('Desktop');
+                                 setShowStep4UploadDropdown(false);
+                                 if (e.target.files) {
+                                   const newFiles = Array.from(e.target.files);
+                                   setStep4SelectedFiles(prev => [...prev, ...newFiles]);
+                                   // Pre-populate document name with first file name (without extension) only if field is empty
+                                   if (newFiles.length > 0 && !step4DocumentName.trim()) {
+                                     const fileName = newFiles[0].name;
+                                     const nameWithoutExtension = fileName.replace(/\.[^/.]+$/, "");
+                                     setStep4DocumentName(nameWithoutExtension);
+                                   }
+                                 }
+                               }}
+                             />
+                             <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setStep4FileSource('Box'); setShowStep4UploadDropdown(false); }}>
+                               <SiBox className="text-base text-primary" />
+                               <span className="text-xs cursor-default select-none">Box</span>
+                             </button>
+                             <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setStep4FileSource('Dropbox'); setShowStep4UploadDropdown(false); }}>
+                               <SlSocialDropbox className="text-base text-primary" />
+                               <span className="text-xs cursor-default select-none">Dropbox</span>
+                             </button>
+                             <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setStep4FileSource('Google Drive'); setShowStep4UploadDropdown(false); }}>
+                               <TbBrandGoogleDrive className="text-base text-primary" />
+                               <span className="text-xs cursor-default select-none">Google Drive</span>
+                             </button>
+                             <button className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer select-none" onClick={() => { setStep4FileSource('OneDrive'); setShowStep4UploadDropdown(false); }}>
+                               <TbBrandOnedrive className="text-base text-primary" />
+                               <span className="text-xs cursor-default select-none">OneDrive</span>
+                             </button>
+                           </div>
+                         </div>
+                       </div>
+                       )}
+                     </div>
+                   </div>
+
+                   {/* Added Documents Display - Below the upload box */}
                   {step4Documents.length > 0 && (
-                    <div className="mb-4">
-                      <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-3 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Uploaded Documents</h4>
+                     <div className="mt-6">
+                       <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-3 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Added Documents</h4>
                       <div className="flex flex-col gap-2 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
                         {step4Documents.map((doc, idx) => (
                           <div 
                             key={idx} 
-                            className="flex items-center justify-between rounded-lg px-4 py-3 border border-transparent hover:bg-gray-100 dark:hover:bg-gray-700 hover:border-gray-200 dark:hover:border-gray-600 cursor-pointer transition-colors"
-                          >
+                             className="bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600 transition-colors"
+                           >
+                             {editingStep4DocumentIndex === idx ? (
+                               // Inline editing mode
+                               <div className="space-y-3">
+                                 <div className="flex items-center justify-between">
+                                   <div className="flex-1 min-w-0">
+                                     <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Document Name</label>
+                                     <input
+                                       type="text"
+                                       value={inlineEditingStep4DocumentName}
+                                       onChange={(e) => setInlineEditingStep4DocumentName(e.target.value)}
+                                       className="w-full h-[28px] px-3 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-xs focus:ring-1 focus:ring-primary focus:border-primary"
+                                       style={{ fontFamily: 'Avenir, sans-serif' }}
+                                     />
+                                   </div>
+                                   <div className="flex-1 min-w-0 ml-3">
+                                     <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Document Type</label>
+                                     <input
+                                       type="text"
+                                       value={inlineEditingStep4DocumentType}
+                                       onChange={(e) => setInlineEditingStep4DocumentType(e.target.value)}
+                                       className="w-full h-[28px] px-3 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-xs focus:ring-1 focus:ring-primary focus:border-primary"
+                                       style={{ fontFamily: 'Avenir, sans-serif' }}
+                                     />
+                                   </div>
+                                   <div className="flex-1 min-w-0 ml-3">
+                                     <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none">Assignee</label>
+                                     <div className="relative" ref={step4DocumentAssigneeDropdownRef}>
+                                       <input
+                                         type="text"
+                                         value={inlineEditingStep4DocumentAssignee}
+                                         onChange={(e) => {
+                                           setInlineEditingStep4DocumentAssignee(e.target.value);
+                                           if (e.target.value === '') {
+                                             setShowStep4DocumentAssigneeDropdown(false);
+                                           } else if (!showStep4DocumentAssigneeDropdown) {
+                                             setShowStep4DocumentAssigneeDropdown(true);
+                                           }
+                                         }}
+                                         onFocus={() => setShowStep4DocumentAssigneeDropdown(true)}
+                                         className="w-full h-[28px] px-3 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-xs focus:ring-1 focus:ring-primary focus:border-primary pr-8"
+                                         style={{ fontFamily: 'Avenir, sans-serif' }}
+                                         autoComplete="off"
+                                       />
+                                       <HiMiniChevronDown className="pointer-events-none absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                       
+                                       {showStep4DocumentAssigneeDropdown && (
+                                         <div className="fixed inset-0 z-[9999] pointer-events-none">
+                                           <div className="absolute bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 max-h-96 overflow-y-auto pointer-events-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" 
+                                                style={{
+                                                  left: step4DocumentAssigneeDropdownRef.current?.getBoundingClientRect().left || 0,
+                                                  top: (step4DocumentAssigneeDropdownRef.current?.getBoundingClientRect().bottom || 0) + 4,
+                                                  width: step4DocumentAssigneeDropdownRef.current?.getBoundingClientRect().width || 'auto',
+                                                  minWidth: '200px'
+                                                }}>
+                                             {allAssignees
+                                               .filter(assignee => assignee.toLowerCase().includes(inlineEditingStep4DocumentAssignee.toLowerCase()))
+                                               .map((assignee: string) => (
+                                                 <div
+                                                   key={assignee}
+                                                   className={`px-3 py-2 text-xs cursor-pointer ${inlineEditingStep4DocumentAssignee === assignee ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                                                   onClick={() => {
+                                                     setInlineEditingStep4DocumentAssignee(assignee);
+                                                     setShowStep4DocumentAssigneeDropdown(false);
+                                                   }}
+                                                 >
+                                                   {assignee}
+                                                 </div>
+                                               ))}
+                                           </div>
+                                         </div>
+                                       )}
+                                     </div>
+                                   </div>
+                                 </div>
+                                 
+                                 <div className="flex items-center justify-between">
+                                   <div className="text-xs text-gray-500 cursor-default select-none">
+                                     {formatDateYYYYMMDD(new Date())} &bull; {doc.file.name.split('.').pop()?.toUpperCase() || 'Unknown'} &bull; {(doc.file.size / 1024 / 1024).toFixed(2)} MB
+                                   </div>
+                                   <div className="flex">
+                                     <button
+                                       type="button"
+                                       onClick={() => handleSaveInlineEditStep4Document(idx)}
+                                       disabled={!inlineEditingStep4DocumentName.trim() || !inlineEditingStep4DocumentType.trim() || !inlineEditingStep4DocumentAssignee.trim()}
+                                       className="px-2.5 py-1 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                     >
+                                       Save
+                                     </button>
+                                     <button
+                                       type="button"
+                                       onClick={handleCancelInlineEditStep4Document}
+                                       className="px-2.5 py-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ml-1"
+                                     >
+                                       Cancel
+                                     </button>
+                                   </div>
+                                 </div>
+                               </div>
+                             ) : (
+                               // Display mode
+                               <div className="flex items-center justify-between">
                             <div className="flex-1 min-w-0 pl-3">
                               <div className="font-semibold text-xs text-black dark:text-white flex-1 min-w-0 truncate">
                                 {doc.name}
                               </div>
                               <div className="text-xs text-gray-500 cursor-default select-none">
-                                {new Date().toISOString().split('T')[0]} &bull; {doc.file.name.split('.').pop()?.toUpperCase() || 'Unknown'} &bull; {(doc.file.size / 1024 / 1024).toFixed(2)} MB &bull; {doc.assignee}
+                                     {formatDateYYYYMMDD(new Date())} &bull; {doc.type || 'Unknown Type'} &bull; {doc.file.name.split('.').pop()?.toUpperCase() || 'Unknown'} &bull; {(doc.file.size / 1024 / 1024).toFixed(2)} MB &bull; {doc.assignee}
                               </div>
                             </div>
+                                 <div className="flex items-center gap-1">
+                                   <button 
+                                     type="button"
+                                     onClick={() => handleStartInlineEditStep4Document(idx)}
+                                     className="text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors p-1"
+                                   >
+                                     <HiOutlinePencil className="h-4 w-4" />
+                                   </button>
                             <button 
                               className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1 pr-3"
                               onClick={(e) => {
@@ -1560,41 +2440,30 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                             >
                               <HiOutlineTrash className="h-4 w-4" />
                             </button>
-                          </div>
-                        ))}
                       </div>
                     </div>
                   )}
-                  
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 cursor-default select-none">Upload Documents (Optional)</label>
-              <label htmlFor="file-upload" className="block cursor-pointer">
-                    <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 py-8 px-4 text-center transition hover:border-primary">
-                  <HiOutlineUpload className="text-3xl text-gray-400 mb-2" />
-                      <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">Click to upload or drag and drop</div>
-                      <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">PDF, DOC, DOCX, or JPG (max. 10MB each)</div>
-                  <input
-                    id="file-upload"
-                    name="file-upload"
-                    type="file"
-                    accept=".pdf,.doc,.docx,.jpg,.jpeg"
-                    className="hidden"
-                    multiple
-                    onChange={handleFileChange}
-                  />
                 </div>
-              </label>
-              {uploadedFiles.length > 0 && (
-                    <ul className="mt-3 text-sm text-gray-600 dark:text-gray-400">
-                  {uploadedFiles.map((file, idx) => (
-                    <li key={idx} className="truncate">{file.name}</li>
                   ))}
-                </ul>
+                       </div>
+                     </div>
               )}
             </div>
+                <div className="flex justify-between mt-12">
+                  <button type="button" onClick={() => setModalStep(3)} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm cursor-default select-none">Previous</button>
+                  <div className="flex">
+                    <button
+                      type="button"
+                      onClick={handleAddStep4Document}
+                      disabled={!step4DocumentName.trim() || !step4DocumentType.trim() || !step4DocumentAssignee.trim() || step4SelectedFiles.length === 0}
+                      className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                    >
+                      Add Document
+                    </button>
+                    <button type="submit" className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm ml-1">Create Contract</button>
               </div>
-              <div className="flex justify-between mt-6">
-                <button type="button" onClick={() => setModalStep(3)} className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Previous</button>
-                <button type="submit" className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm" style={{ fontFamily: 'Avenir, sans-serif' }}>Create Contract</button>
+                </div>
             </div>
           </form>
         )}

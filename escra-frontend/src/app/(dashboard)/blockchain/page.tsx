@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/common/Card';
-import { FaPlus, FaCopy, FaWallet, FaNetworkWired, FaBook, FaExternalLinkAlt, FaCogs, FaArrowRight, FaSearch, FaCheck } from 'react-icons/fa';
+import { FaPlus, FaCopy, FaWallet, FaNetworkWired, FaBook, FaExternalLinkAlt, FaCogs, FaArrowRight, FaCheck } from 'react-icons/fa';
 import { FaTimeline, FaFaucetDrip, FaRegSquareCheck, FaArrowUpRightFromSquare } from 'react-icons/fa6';
 import { HiOutlineExternalLink, HiOutlineDuplicate, HiOutlineViewBoards, HiOutlineDocumentSearch, HiOutlineDocumentText, HiOutlineClipboardList } from 'react-icons/hi';
 import { BiBookOpen } from 'react-icons/bi';
@@ -15,10 +15,12 @@ import { MdOutlineAddToPhotos, MdOutlineUpdate } from 'react-icons/md';
 import { mockContracts } from '@/data/mockContracts';
 import Image from 'next/image';
 import { LuSquareArrowOutUpRight, LuFileTerminal, LuBookText } from 'react-icons/lu';
-import { TbClockPin, TbShieldLock, TbDropletFilled, TbReportSearch, TbHistory, TbHistoryOff, TbClockEdit, TbTopologyBus } from 'react-icons/tb';
+import { TbClockPin, TbShieldLock, TbDropletFilled, TbReportSearch, TbHistory, TbHistoryOff, TbClockEdit, TbTopologyBus, TbSearch, TbFileSearch, TbLayoutGrid, TbFilePlus } from 'react-icons/tb';
 import { CgTerminal } from 'react-icons/cg';
 import { AiOutlineNodeExpand } from 'react-icons/ai';
 import { PiHandCoins } from 'react-icons/pi';
+import { useToast } from '@/components/ui/use-toast';
+import { Toaster } from '@/components/ui/toaster';
 
 const BLOCK_HASH = "0x7ad9e3b8f2c1a4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9";
 const PROPOSER_HASH = "0xabc1234def5678fedcba9876543210abcdef1234567890fedcba0987654321ab";
@@ -256,6 +258,9 @@ export default function BlockchainPage() {
   const [activitySearchTerm, setActivitySearchTerm] = useState('');
   const [selectedActivityTypes, setSelectedActivityTypes] = useState<string[]>(['All']);
   const [showActivityTypeDropdown, setShowActivityTypeDropdown] = useState(false);
+  
+  // Toast notification system
+  const { toast } = useToast();
   const [selectedActivityContracts, setSelectedActivityContracts] = useState<string[]>([]);
   const [openActivityContractDropdown, setOpenActivityContractDropdown] = useState(false);
   const [activityContractSearch, setActivityContractSearch] = useState('');
@@ -399,8 +404,31 @@ export default function BlockchainPage() {
     };
   }, [openActivityContractDropdown]);
 
+  // Listen for new contract creation from modal
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'newContract' && event.newValue) {
+        try {
+          const newContract = JSON.parse(event.newValue);
+          // Show toast notification
+          toast({
+            title: "Contract created successfully",
+            description: `"${newContract.title}" has been created with ID ${newContract.id}`,
+            duration: Infinity, // Make toast persistent - user must close it manually
+          });
+        } catch (error) {
+          console.error('Error parsing new contract from storage:', error);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [toast]);
+
   return (
-    <div className="space-y-4 cursor-default select-none">
+    <>
+      <div className="space-y-4 cursor-default select-none">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0 mb-3 sm:mb-6 cursor-default select-none">
         <div className="pb-1 cursor-default select-none">
@@ -411,7 +439,7 @@ export default function BlockchainPage() {
           className="flex items-center justify-center w-full md:w-auto px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
           onClick={() => setShowNewContractModal(true)}
         >
-          <MdOutlineAddToPhotos className="mr-2 text-lg" />
+          <TbFilePlus className="mr-2 text-[22px]" />
           New Contract
         </button>
         <NewContractModal isOpen={showNewContractModal} onClose={() => setShowNewContractModal(false)} />
@@ -487,7 +515,7 @@ export default function BlockchainPage() {
             <div className="lg:hidden space-y-2 cursor-default select-none">
               {/* Search Bar */}
               <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 w-full cursor-default select-none">
-                <FaSearch className="text-gray-400 mr-2" size={18} />
+                <TbSearch className="text-gray-400 mr-2" size={18} />
                 <input
                   type="text"
                   placeholder="Search contracts, parties, or IDs"
@@ -513,7 +541,7 @@ export default function BlockchainPage() {
                       }
                     }}
                   >
-                    <span className="flex items-center"><TbHistory className="text-gray-400 text-base mr-2" />Status</span>
+                    <span className="flex items-center"><TbHistory className="text-gray-400 mr-2" size={17} />Status</span>
                     <HiMiniChevronDown className="text-gray-400" size={16} />
                   </button>
                   {showStatusDropdown && (
@@ -579,7 +607,7 @@ export default function BlockchainPage() {
                       }
                     }}
                   >
-                    <span className="flex items-center"><HiOutlineDocumentSearch className="text-gray-400 text-base mr-2" />Contract</span>
+                    <span className="flex items-center"><TbFileSearch className="text-gray-400 mr-2" size={17} />Contract</span>
                     <HiMiniChevronDown className="text-gray-400" size={16} />
                   </button>
                   {openContractDropdown && (
@@ -602,7 +630,7 @@ export default function BlockchainPage() {
                             className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-black dark:text-white bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                             style={{ fontFamily: 'Avenir, sans-serif' }}
                           />
-                          <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                          <TbSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                         </div>
                       </div>
 
@@ -660,7 +688,7 @@ export default function BlockchainPage() {
             <div className="hidden lg:flex items-center gap-1">
               {/* Search Bar */}
               <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex-1 min-w-0">
-                <FaSearch className="text-gray-400 mr-2" size={18} />
+                <TbSearch className="text-gray-400 mr-2" size={18} />
                 <input
                   type="text"
                   placeholder="Search contracts, parties, or IDs"
@@ -687,7 +715,7 @@ export default function BlockchainPage() {
                       }
                     }}
                   >
-                    <TbHistory className="text-gray-400 w-4 h-4" />
+                    <TbHistory className="text-gray-400" size={18} />
                     <span>Status</span>
                     <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
                   </button>
@@ -755,7 +783,7 @@ export default function BlockchainPage() {
                       }
                     }}
                   >
-                    <HiOutlineDocumentSearch className="text-gray-400 w-4 h-4" />
+                    <TbFileSearch className="text-gray-400" size={18} />
                     <span>Contract</span>
                     <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
                   </button>
@@ -779,7 +807,7 @@ export default function BlockchainPage() {
                             className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-black dark:text-white bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                             style={{ fontFamily: 'Avenir, sans-serif' }}
                           />
-                          <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                          <TbSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                         </div>
                       </div>
 
@@ -918,7 +946,7 @@ export default function BlockchainPage() {
             <div className="lg:hidden space-y-2 cursor-default select-none">
               {/* Search Bar */}
               <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 w-full cursor-default select-none">
-                <FaSearch className="text-gray-400 mr-2" size={18} />
+                <TbSearch className="text-gray-400 mr-2" size={18} />
                 <input
                   type="text"
                   placeholder="Search transactions, descriptions, or IDs"
@@ -944,7 +972,7 @@ export default function BlockchainPage() {
                       }
                     }}
                   >
-                    <span className="flex items-center"><HiOutlineViewBoards className="text-gray-400 text-base mr-2" />Type</span>
+                    <span className="flex items-center"><TbLayoutGrid className="text-gray-400 mr-2" size={17} />Type</span>
                     <HiMiniChevronDown className="text-gray-400" size={16} />
                   </button>
                   {showActivityTypeDropdown && (
@@ -1010,7 +1038,7 @@ export default function BlockchainPage() {
                       }
                     }}
                   >
-                    <span className="flex items-center"><HiOutlineDocumentSearch className="text-gray-400 text-base mr-2" />Contract</span>
+                    <span className="flex items-center"><TbFileSearch className="text-gray-400 mr-2" size={17} />Contract</span>
                     <HiMiniChevronDown className="text-gray-400" size={16} />
                   </button>
                   {openActivityContractDropdown && (
@@ -1033,7 +1061,7 @@ export default function BlockchainPage() {
                             className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-black dark:text-white bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                             style={{ fontFamily: 'Avenir, sans-serif' }}
                           />
-                          <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                          <TbSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                         </div>
                       </div>
 
@@ -1091,7 +1119,7 @@ export default function BlockchainPage() {
             <div className="hidden lg:flex items-center gap-1">
               {/* Search Bar */}
               <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex-1 min-w-0">
-                <FaSearch className="text-gray-400 mr-2" size={18} />
+                <TbSearch className="text-gray-400 mr-2" size={18} />
                 <input
                   type="text"
                   placeholder="Search transactions, descriptions, or IDs"
@@ -1116,7 +1144,7 @@ export default function BlockchainPage() {
                       setOpenActivityContractDropdown(false);
                     }}
                   >
-                    <HiOutlineViewBoards className="text-gray-400 w-4 h-4" />
+                    <TbLayoutGrid className="text-gray-400" size={18} />
                     <span>Type</span>
                     <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
                   </button>
@@ -1184,7 +1212,7 @@ export default function BlockchainPage() {
                       }
                     }}
                   >
-                    <HiOutlineDocumentSearch className="text-gray-400 w-4 h-4" />
+                    <TbFileSearch className="text-gray-400" size={18} />
                     <span>Contract</span>
                     <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
                   </button>
@@ -1208,7 +1236,7 @@ export default function BlockchainPage() {
                             className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-black dark:text-white bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                             style={{ fontFamily: 'Avenir, sans-serif' }}
                           />
-                          <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                          <TbSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                         </div>
                       </div>
 
@@ -2663,5 +2691,7 @@ export default function BlockchainPage() {
       )}
       </div>
     </div>
+    <Toaster />
+    </>
   );
 } 

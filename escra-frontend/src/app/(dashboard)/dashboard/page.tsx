@@ -7,7 +7,7 @@ import { IconBaseProps } from 'react-icons';
 import { LuPen } from 'react-icons/lu';
 import { PiMoneyWavyBold } from 'react-icons/pi';
 import { MdOutlineAddToPhotos } from 'react-icons/md';
-import { TbClockPin, TbClockUp } from 'react-icons/tb';
+import { TbClockPin, TbClockUp, TbCoins, TbTransactionDollar, TbPencilExclamation, TbTransfer, TbFileText, TbClockShare, TbClockDown, TbArrowsExchange, TbClockEdit, TbFilePlus } from 'react-icons/tb';
 import { HiMiniChevronDown } from 'react-icons/hi2';
 import { HiOutlineDocumentText } from 'react-icons/hi';
 import { GrMoney } from 'react-icons/gr';
@@ -17,6 +17,8 @@ import { mockContracts } from '@/data/mockContracts';
 import { SignatureDocument, mockSignatures } from '@/data/mockSignatures';
 import { useTaskStore } from '@/data/taskStore';
 import { Task } from '@/types/task';
+import { useToast } from '@/components/ui/use-toast';
+import { Toaster } from '@/components/ui/toaster';
 
 // Define Contract interface to match contracts page
 interface Contract {
@@ -383,6 +385,17 @@ export default function DashboardPage() {
   const completionTimeButtonRef = React.useRef<HTMLButtonElement>(null);
   const completionTimeDropdownRef = React.useRef<HTMLDivElement>(null);
   
+  // Mock completion time trend data - in real app this would come from API
+  const [completionTimeTrend, setCompletionTimeTrend] = React.useState<'up' | 'down'>('up');
+  
+  // Function to update completion time trend based on selected time period
+  const updateCompletionTimeTrend = (timePeriod: string) => {
+    // Mock logic - in real app this would fetch data and calculate trend
+    // For demo purposes, we'll alternate between up/down based on time period
+    const isUp = timePeriod.includes('Last') || timePeriod.includes('This');
+    setCompletionTimeTrend(isUp ? 'up' : 'down');
+  };
+  
   // Sorting state variables
   const [idSortDirection, setIdSortDirection] = React.useState<'asc' | 'desc' | null>('asc');
   const [contractSortDirection, setContractSortDirection] = React.useState<'asc' | 'desc' | null>(null);
@@ -417,6 +430,9 @@ export default function DashboardPage() {
   
   // Tasks data state
   const { tasks, initializeTasks } = useTaskStore();
+  
+  // Toast notification system
+  const { toast } = useToast();
   
   // Tab state
   const [activeTab, setActiveTab] = React.useState('contracts');
@@ -928,6 +944,30 @@ export default function DashboardPage() {
       console.log('Initialized tasks:', tasks);
     }
   }, []); // Remove initializeTasks from dependencies to prevent infinite loop
+
+  // Listen for new contract creation from modal
+  React.useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'newContract' && event.newValue) {
+        try {
+          const newContract = JSON.parse(event.newValue);
+          // Show toast notification
+          toast({
+            title: "Contract created successfully",
+            description: `"${newContract.title}" has been created with ID ${newContract.id}`,
+            duration: Infinity, // Make toast persistent - user must close it manually
+          });
+          // Update contracts list
+          setContracts(prev => [newContract, ...prev]);
+        } catch (error) {
+          console.error('Error parsing new contract from storage:', error);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [toast]);
   
   const chartData = processContractDataForChart(contracts, selectedRecentlyUpdated);
   const currentValue = calculateTotalContractValue(contracts);
@@ -970,7 +1010,8 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="space-y-4 cursor-default select-none">
+    <>
+      <div className="space-y-4 cursor-default select-none">
       {/* Dashboard Title and Subtitle Group */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0 mb-3 sm:mb-6 cursor-default select-none">
         {/* Group title and subtitle with controlled spacing */}
@@ -978,7 +1019,7 @@ export default function DashboardPage() {
           <h1 className="text-[30px] font-bold text-black dark:text-white mb-0 cursor-default select-none">Dashboard</h1>
           <p className="text-gray-500 dark:text-gray-400 text-[16px] mt-0 cursor-default select-none">Overview of your contract closing activities & metrics</p>
         </div>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 w-full md:w-auto cursor-default select-none">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full md:w-auto cursor-default select-none">
           <div className="inline-block rounded-full bg-primary/10 dark:bg-primary/20 px-2 py-0.5 text-primary dark:text-primary font-semibold text-xs border border-primary/20 dark:border-primary/30 self-start sm:self-center cursor-default select-none">
             Logged in as: Creator
           </div>
@@ -1006,7 +1047,7 @@ export default function DashboardPage() {
             className="flex items-center justify-center w-full md:w-auto px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
             onClick={() => setShowNewContractModal(true)}
           >
-            <MdOutlineAddToPhotos className="mr-2 text-lg" />
+            <TbFilePlus className="mr-2 text-[22px]" />
             New Contract
           </button>
         </div>
@@ -1028,7 +1069,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between mb-3 cursor-default select-none">
             <div className="flex items-center gap-2 cursor-default select-none">
               <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800 cursor-default select-none">
-                <GrMoney size={20} className="text-teal-500 dark:text-teal-400" />
+                <TbCoins size={21} className="text-teal-500 dark:text-teal-400" />
               </div>
               <div className="cursor-default select-none">
                 <p className="text-sm text-tertiary dark:text-gray-400 cursor-default select-none">Total Contract Value</p>
@@ -1233,7 +1274,7 @@ export default function DashboardPage() {
         {/* Metric Card 2: Total Contracts */}
         <Card className="flex items-center gap-4 rounded-xl border border-gray-300 dark:border-gray-700 min-h-[120px] min-w-0 bg-white dark:bg-gray-800 p-6 cursor-default select-none">
           <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800 cursor-default select-none">
-            <HiOutlineDocumentText size={20} className="text-teal-500 dark:text-teal-400" />
+            <TbFileText size={21} className="text-teal-500 dark:text-teal-400" />
           </div>
           <div className="flex flex-col items-start cursor-default select-none">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contracts</p>
@@ -1245,11 +1286,20 @@ export default function DashboardPage() {
         {/* Metric Card 4: Average Completion Time */}
         <Card className="flex items-center gap-4 rounded-xl border border-gray-300 dark:border-gray-700 min-h-[120px] min-w-0 bg-white dark:bg-gray-800 p-6 cursor-default select-none">
           <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center border-2 border-blue-200 dark:border-blue-800 cursor-default select-none">
-            <TbClockUp size={20} className="text-blue-500 dark:text-blue-400" />
+            {completionTimeTrend === 'up' ? (
+              <TbClockUp size={21} className="text-blue-500 dark:text-blue-400" />
+            ) : (
+                              <TbClockDown size={21} className="text-blue-500 dark:text-blue-400" />
+            )}
           </div>
           <div className="flex flex-col items-start cursor-default select-none">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Average Completion Time</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">3.2 days</p>
+            <div className="flex items-center gap-2 cursor-default select-none">
+              <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">3.2 days</p>
+              <span className={`text-xs font-semibold ${completionTimeTrend === 'up' ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'} cursor-default select-none`}>
+                {completionTimeTrend === 'up' ? '↑' : '↓'}
+              </span>
+            </div>
             <div className="relative cursor-default select-none">
               <button
                 ref={completionTimeButtonRef}
@@ -1268,7 +1318,10 @@ export default function DashboardPage() {
                     <button
                       key={option}
                       className={`w-full px-3 py-1.5 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center cursor-pointer ${selectedCompletionTime === option ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
-                      onClick={() => setSelectedCompletionTime(option)}
+                      onClick={() => {
+                      setSelectedCompletionTime(option);
+                      updateCompletionTimeTrend(option);
+                    }}
                     >
                       <div className="w-3 h-3 border border-gray-300 rounded mr-2 flex items-center justify-center cursor-default select-none">
                         {selectedCompletionTime === option && (
@@ -1289,7 +1342,7 @@ export default function DashboardPage() {
         {/* Metric Card 5: Pending Signatures */}
         <Card className="flex items-center gap-4 rounded-xl border border-gray-300 dark:border-gray-700 min-h-[120px] min-w-0 bg-white dark:bg-gray-800 p-6 cursor-default select-none">
           <div className="h-10 w-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center border-2 border-purple-200 dark:border-purple-800 cursor-default select-none">
-            {React.createElement(LuPen, { size: 20, className: "text-purple-500 dark:text-purple-400" } as IconBaseProps)}
+            <TbClockEdit size={21} className="text-purple-500 dark:text-purple-400" />
           </div>
           <div className="flex flex-col items-start cursor-default select-none">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Pending Signatures</p>
@@ -1301,7 +1354,7 @@ export default function DashboardPage() {
         {/* Metric Card 6: Wire Transfers Pending */}
         <Card className="flex items-center gap-4 rounded-xl border border-gray-300 dark:border-gray-700 min-h-[120px] min-w-0 bg-white dark:bg-gray-800 p-6 cursor-default select-none">
           <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center border-2 border-green-200 dark:border-green-800 cursor-default select-none">
-            <PiMoneyWavyBold size={20} className="text-green-500 dark:text-green-400" />
+            <TbArrowsExchange size={21} className="text-green-500 dark:text-green-400" />
           </div>
           <div className="flex flex-col items-start cursor-default select-none">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Wire Transfers Pending</p>
@@ -1724,5 +1777,7 @@ export default function DashboardPage() {
 
       </div>
     </div>
+    <Toaster />
+    </>
   );
 } 

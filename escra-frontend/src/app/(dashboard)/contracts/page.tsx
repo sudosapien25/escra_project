@@ -2,13 +2,13 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { FaSearch, FaClock, FaSort, FaPlus, FaDollarSign, FaTimes, FaChevronDown, FaChevronUp, FaRegClock, FaCheck } from 'react-icons/fa';
+import { FaClock, FaSort, FaPlus, FaDollarSign, FaTimes, FaChevronDown, FaChevronUp, FaRegClock, FaCheck } from 'react-icons/fa';
 import { FaArrowUpRightFromSquare } from 'react-icons/fa6';
 import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutlineEye, HiOutlineEyeOff, HiOutlineClipboardList, HiOutlineExclamation, HiChevronDown, HiOutlineDocumentSearch, HiOutlineDocumentAdd, HiOutlineUpload, HiOutlineTrash, HiOutlineX, HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight, HiOutlinePencil } from 'react-icons/hi';
 import { HiOutlineViewBoards } from 'react-icons/hi';
 import { LuCalendarFold, LuPen } from 'react-icons/lu';
 import { BiDotsHorizontal, BiCommentAdd } from 'react-icons/bi';
-import { TbWorldDollar, TbEdit, TbClockUp, TbCubeSend, TbClockPin, TbFilePlus, TbScript } from 'react-icons/tb';
+import { TbWorldDollar, TbEdit, TbClockUp, TbCubeSend, TbClockPin, TbFilePlus, TbScript, TbCoins, TbFileText, TbClockEdit, TbUpload, TbDownload, TbSearch, TbFileSearch } from 'react-icons/tb';
 import { Logo } from '@/components/common/Logo';
 import { mockContracts } from '@/data/mockContracts';
 import { useEditor } from '@tiptap/react';
@@ -1181,7 +1181,7 @@ const ContractsPage: React.FC = () => {
         parties: partiesString,
         status: 'Initiation',
         updated: 'Just now',
-        value: formatCurrency(modalForm.value), // Format value as currency
+        value: modalForm.value, // Format value as currency
         documents: uploadedFiles.length, // Count uploaded files
         type: modalForm.type,
         buyer: buyerRecipient?.name || '',
@@ -1196,9 +1196,9 @@ const ContractsPage: React.FC = () => {
         escrowNumber: modalForm.escrowNumber,
         buyerEmail: buyerRecipient?.email || '',
         sellerEmail: sellerRecipient?.email || '',
-        earnestMoney: formatCurrency(modalForm.earnestMoney),
-        downPayment: formatCurrency(modalForm.downPayment),
-        loanAmount: formatCurrency(modalForm.loanAmount),
+        earnestMoney: modalForm.earnestMoney,
+        downPayment: modalForm.downPayment,
+        loanAmount: modalForm.loanAmount,
         interestRate: modalForm.interestRate,
         loanTerm: modalForm.loanTerm,
         lenderName: modalForm.lenderName,
@@ -1242,8 +1242,8 @@ const ContractsPage: React.FC = () => {
           if (step4Documents.length > 0) {
             try {
               for (const docInfo of step4Documents) {
-                // Create document with proper ID and contract association
-                const documentId = await addDocument(docInfo.file, newContractId, newContract.title, currentUserName);
+                // Create document with proper ID and contract association, including assignee and document type
+                const documentId = await addDocument(docInfo.file, newContractId, newContract.title, currentUserName, docInfo.assignee, docInfo.type);
                 
                 // Update the document name and assignee
                 const { updateDocumentName } = useDocumentStore.getState();
@@ -1264,8 +1264,8 @@ const ContractsPage: React.FC = () => {
           if (uploadedFiles.length > 0) {
             try {
               for (const file of uploadedFiles) {
-                // Create document with proper ID and contract association
-                const documentId = await addDocument(file, newContractId, newContract.title, currentUserName);
+                // Create document with proper ID and contract association, including assignee (current user as default)
+                const documentId = await addDocument(file, newContractId, newContract.title, currentUserName, currentUserName, undefined);
               
                 // Set the assignee in the assignee store (using current user as default)
                 const { setAssignee } = useAssigneeStore.getState();
@@ -1746,6 +1746,7 @@ const ContractsPage: React.FC = () => {
   const [showContractDetailsStateDropdown, setShowContractDetailsStateDropdown] = useState(false);
   const [showContractDetailsCountryDropdown, setShowContractDetailsCountryDropdown] = useState(false);
   const [showContractDetailsPropertyTypeDropdown, setShowContractDetailsPropertyTypeDropdown] = useState(false);
+  const [showContractDetailsContractTypeDropdown, setShowContractDetailsContractTypeDropdown] = useState(false);
   const [contractDetailsStateSearchTerm, setContractDetailsStateSearchTerm] = useState('');
   const [contractDetailsCountrySearchTerm, setContractDetailsCountrySearchTerm] = useState('');
 
@@ -1787,6 +1788,7 @@ const ContractsPage: React.FC = () => {
   const contractDetailsStateDropdownRef = useRef<HTMLDivElement>(null);
   const contractDetailsCountryDropdownRef = useRef<HTMLDivElement>(null);
   const contractDetailsPropertyTypeDropdownRef = useRef<HTMLDivElement>(null);
+  const contractDetailsContractTypeDropdownRef = useRef<HTMLDivElement>(null);
 
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
@@ -2164,6 +2166,32 @@ const ContractsPage: React.FC = () => {
     const timeoutId = setTimeout(loadEnhancedContracts, 100);
     
     return () => clearTimeout(timeoutId);
+  }, []);
+
+  // Listen for new contracts created from other pages
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'newContract' && event.newValue) {
+        try {
+          const newContract = JSON.parse(event.newValue);
+          console.log('New contract received from storage:', newContract);
+          setContracts(prev => {
+            // Check if contract already exists to prevent duplicates
+            const contractExists = prev.some(contract => contract.id === newContract.id);
+            if (contractExists) {
+              console.log('Contract already exists, skipping duplicate:', newContract.id);
+              return prev;
+            }
+            return [newContract, ...prev];
+          });
+        } catch (error) {
+          console.error('Error parsing new contract from storage:', error);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   // Table resize handlers
@@ -3699,13 +3727,16 @@ const ContractsPage: React.FC = () => {
       if (showContractDetailsPropertyTypeDropdown && !contractDetailsPropertyTypeDropdownRef.current?.contains(event.target as Node)) {
         setShowContractDetailsPropertyTypeDropdown(false);
       }
+      if (showContractDetailsContractTypeDropdown && !contractDetailsContractTypeDropdownRef.current?.contains(event.target as Node)) {
+        setShowContractDetailsContractTypeDropdown(false);
+      }
     }
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showContractDetailsStateDropdown, showContractDetailsCountryDropdown, showContractDetailsPropertyTypeDropdown]);
+  }, [showContractDetailsStateDropdown, showContractDetailsCountryDropdown, showContractDetailsPropertyTypeDropdown, showContractDetailsContractTypeDropdown]);
 
   // Click outside handler for click to upload dropdown
   useEffect(() => {
@@ -3725,14 +3756,14 @@ const ContractsPage: React.FC = () => {
     <>
       <div className="space-y-4 select-none cursor-default">
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0 mb-3 sm:mb-6 cursor-default select-none">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 sm:mb-6 gap-4 cursor-default select-none">
           <div className="pb-1 cursor-default select-none">
             <h1 className="text-[30px] font-bold text-black dark:text-white mb-0 cursor-default select-none">Contracts</h1>
             <p className="text-gray-500 text-[16px] mt-0 cursor-default select-none">
               Manage & monitor all your contracts
             </p>
           </div>
-          <div className="flex w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-0 w-full sm:w-auto">
             <button 
               onClick={() => {
                 setShowNewDocumentModal(true);
@@ -3758,8 +3789,8 @@ const ContractsPage: React.FC = () => {
               }}
               className="flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold w-full sm:w-auto cursor-pointer"
             >
-              <TbLibraryPlus className="mr-2 text-xl" />
-              New Document
+              <TbLibraryPlus className="mr-2 text-[22px] flex-shrink-0" />
+              <span className="leading-none text-sm font-semibold">New Document</span>
             </button>
             <button 
               onClick={() => {
@@ -3769,10 +3800,10 @@ const ContractsPage: React.FC = () => {
                 setSelectedNewDocumentFormFileSource('');
                 setShowNewDocumentUploadDropdown(false);
               }}
-              className="flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold w-full sm:w-auto cursor-pointer ml-1"
+              className="flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold w-full sm:w-auto cursor-pointer sm:ml-1"
             >
-              <TbFilePlus className="mr-2 text-xl" />
-              New Contract
+              <TbFilePlus className="mr-2 text-[22px] flex-shrink-0" />
+              <span className="leading-none text-sm font-semibold">New Contract</span>
             </button>
           </div>
         </div>
@@ -4107,7 +4138,7 @@ const ContractsPage: React.FC = () => {
                       />
                       <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                       {showStateDropdown && (
-                        <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                        <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-hidden overflow-y-auto [&::-webkit-scrollbar]:hidden">
                           {US_STATES
                             .filter(state => 
                               state.label.toLowerCase().includes(stateSearchTerm.toLowerCase())
@@ -4179,7 +4210,7 @@ const ContractsPage: React.FC = () => {
                       />
                       <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                       {showCountryDropdown && (
-                        <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                        <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-hidden overflow-y-auto [&::-webkit-scrollbar]:hidden">
                           {COUNTRIES
                             .filter(country => 
                               country.label.toLowerCase().includes(countrySearchTerm.toLowerCase())
@@ -4824,7 +4855,7 @@ const ContractsPage: React.FC = () => {
                             <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                             
                             {showStep4AssigneeDropdown && (
-                              <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                              <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:hidden" style={{ fontFamily: 'Avenir, sans-serif' }}>
                                 {allAssignees.length > 0 ? (
                                   <>
                                     {allAssignees.map((assignee: string) => (
@@ -5039,7 +5070,7 @@ const ContractsPage: React.FC = () => {
                                          
                                          {showStep4DocumentAssigneeDropdown && (
                                            <div className="fixed inset-0 z-[9999] pointer-events-none">
-                                             <div className="absolute bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 max-h-96 overflow-y-auto pointer-events-auto" 
+                                             <div className="absolute bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 max-h-96 overflow-y-auto pointer-events-auto [&::-webkit-scrollbar]:hidden" 
                                                   style={{
                                                     left: step4DocumentAssigneeDropdownRef.current?.getBoundingClientRect().left || 0,
                                                     top: (step4DocumentAssigneeDropdownRef.current?.getBoundingClientRect().bottom || 0) + 4,
@@ -5374,9 +5405,9 @@ const ContractsPage: React.FC = () => {
                             />
                             <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                             {showNewDocumentContractDropdown && (
-                              <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                                {/* Search Bar */}
-                                <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+                              <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                {/* Fixed Search Bar */}
+                                <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800">
                                   <div className="relative">
                                     <input
                                       type="text"
@@ -5386,27 +5417,30 @@ const ContractsPage: React.FC = () => {
                                       className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-700 dark:text-white bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                                       style={{ fontFamily: 'Avenir, sans-serif' }}
                                     />
-                                    <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                                    <TbSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                                   </div>
                                 </div>
-                                {contracts
-                                  .filter(contract => 
-                                    contract.id.toLowerCase().includes(newDocumentContractSearch.toLowerCase()) ||
-                                    contract.title.toLowerCase().includes(newDocumentContractSearch.toLowerCase())
-                                  )
-                                  .sort((a, b) => Number(a.id) - Number(b.id))
-                                  .map(contract => (
-                                    <div
-                                      key={contract.id}
-                                      className={`px-4 py-2 text-xs cursor-pointer ${documentModalForm.contract === `${contract.id} - ${contract.title}` ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'} select-none`}
-                                      onClick={() => {
-                                        setDocumentModalForm(prev => ({ ...prev, contract: `${contract.id} - ${contract.title}` }));
-                                        setShowNewDocumentContractDropdown(false);
-                                      }}
-                                    >
-                                      {contract.id} - {contract.title}
-                                    </div>
-                                  ))}
+                                {/* Scrollable Contracts List */}
+                                <div className="max-h-40 overflow-y-auto [&::-webkit-scrollbar]:hidden">
+                                  {contracts
+                                    .filter(contract => 
+                                      contract.id.toLowerCase().includes(newDocumentContractSearch.toLowerCase()) ||
+                                      contract.title.toLowerCase().includes(newDocumentContractSearch.toLowerCase())
+                                    )
+                                    .sort((a, b) => Number(a.id) - Number(b.id))
+                                    .map(contract => (
+                                      <div
+                                        key={contract.id}
+                                        className={`px-4 py-2 text-xs cursor-pointer ${documentModalForm.contract === `${contract.id} - ${contract.title}` ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'} select-none`}
+                                        onClick={() => {
+                                          setDocumentModalForm(prev => ({ ...prev, contract: `${contract.id} - ${contract.title}` }));
+                                          setShowNewDocumentContractDropdown(false);
+                                        }}
+                                      >
+                                        {contract.id} - {contract.title}
+                                      </div>
+                                    ))}
+                                </div>
                               </div>
                             )}
                           </div>
@@ -5440,7 +5474,7 @@ const ContractsPage: React.FC = () => {
                             <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                             
                             {showNewDocumentAssigneeDropdown && (
-                              <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                              <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:hidden" style={{ fontFamily: 'Avenir, sans-serif' }}>
                                 {allAssignees.length > 0 ? (
                                   <>
                                     {allAssignees.map((assignee: string) => (
@@ -5637,7 +5671,7 @@ const ContractsPage: React.FC = () => {
                                     
                                     {showInlineEditingNewDocumentAssigneeDropdown && (
                                       <div className="fixed inset-0 z-[9999] pointer-events-none">
-                                        <div className="absolute bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 max-h-96 overflow-y-auto pointer-events-auto" 
+                                        <div className="absolute bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 max-h-96 overflow-y-auto pointer-events-auto [&::-webkit-scrollbar]:hidden"
                                              style={{
                                                left: inlineEditingNewDocumentAssigneeDropdownRef.current?.getBoundingClientRect().left || 0,
                                                top: (inlineEditingNewDocumentAssigneeDropdownRef.current?.getBoundingClientRect().bottom || 0) + 4,
@@ -5684,7 +5718,7 @@ const ContractsPage: React.FC = () => {
                                     
                                     {showInlineEditingNewDocumentContractDropdown && (
                                       <div className="fixed inset-0 z-[9999] pointer-events-none">
-                                        <div className="absolute bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 max-h-96 overflow-y-auto pointer-events-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" 
+                                        <div className="absolute bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 max-h-96 overflow-y-auto pointer-events-auto [&::-webkit-scrollbar]:hidden"
                                              style={{
                                                left: inlineEditingNewDocumentContractDropdownRef.current?.getBoundingClientRect().left || 0,
                                                top: (inlineEditingNewDocumentContractDropdownRef.current?.getBoundingClientRect().bottom || 0) + 4,
@@ -5702,7 +5736,7 @@ const ContractsPage: React.FC = () => {
                                                 className="w-full px-2 py-1 border border-gray-200 dark:border-gray-700 rounded text-xs font-medium text-gray-700 dark:text-white bg-white dark:bg-gray-900 focus:ring-1 focus:ring-primary focus:border-primary transition-colors"
                                                 style={{ fontFamily: 'Avenir, sans-serif' }}
                                               />
-                                              <FaSearch className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                                              <TbSearch className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
                                             </div>
                                           </div>
                                           {contracts
@@ -5985,7 +6019,7 @@ const ContractsPage: React.FC = () => {
             {/* Total Contracts */}
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
               <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800 cursor-default select-none">
-                <HiOutlineDocumentText size={20} className="text-teal-500 dark:text-teal-400" />
+                <TbFileText size={21} className="text-teal-500 dark:text-teal-400" />
               </div>
               <div className="flex flex-col items-start h-full cursor-default select-none">
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contracts</p>
@@ -5996,7 +6030,7 @@ const ContractsPage: React.FC = () => {
             {/* Total Contract Value */}
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
               <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800 cursor-default select-none">
-                <GrMoney size={20} className="text-teal-500 dark:text-teal-400" />
+                <TbCoins size={21} className="text-teal-500 dark:text-teal-400" />
               </div>
               <div className="flex flex-col items-start h-full cursor-default select-none">
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contract Value</p>
@@ -6007,7 +6041,7 @@ const ContractsPage: React.FC = () => {
             {/* Avg. Completion Time */}
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
               <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center border-2 border-blue-200 dark:border-blue-800 cursor-default select-none">
-                <TbClockUp size={20} className="text-blue-500 dark:text-blue-400" />
+                <TbClockUp size={21} className="text-blue-500 dark:text-blue-400" />
               </div>
               <div className="flex flex-col items-start h-full cursor-default select-none">
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Average Completion Time</p>
@@ -6051,7 +6085,7 @@ const ContractsPage: React.FC = () => {
             {/* Pending Signatures */}
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
               <div className="h-10 w-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center border-2 border-purple-200 dark:border-purple-800 cursor-default select-none">
-                <TbEdit size={20} className="text-purple-500 dark:text-purple-400" />
+                <TbClockEdit size={21} className="text-purple-500 dark:text-purple-400" />
               </div>
               <div className="flex flex-col items-start h-full cursor-default select-none">
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Pending Signatures</p>
@@ -6071,7 +6105,7 @@ const ContractsPage: React.FC = () => {
         <div className="lg:hidden">
           {/* Search Bar */}
           <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 w-full">
-            <FaSearch className="text-gray-400 mr-2" size={18} />
+            <TbSearch className="text-gray-400 mr-2" size={18} />
             <input
               type="text"
               placeholder="Search contracts, parties, documents or IDs"
@@ -6097,7 +6131,7 @@ const ContractsPage: React.FC = () => {
                     setOpenAssigneeDropdown(false);
                   }}
                 >
-                                      <span className="flex items-center"><TbHistory className="text-gray-400 text-base mr-2" />Status</span>
+                                      <span className="flex items-center"><TbHistory className="text-gray-400 mr-2" size={17} />Status</span>
                   <HiMiniChevronDown className="text-gray-400" size={16} />
                 </button>
                 {showStatusDropdown && (
@@ -6163,7 +6197,7 @@ const ContractsPage: React.FC = () => {
                     style={{ fontFamily: 'Avenir, sans-serif' }}
                     onClick={() => { setOpenContractDropdown(v => !v); setOpenAssigneeDropdown(false); setShowStatusDropdown(false); }}
                   >
-                    <span className="flex items-center"><HiOutlineDocumentSearch className="text-gray-400 text-base mr-2" />Contract</span>
+                    <span className="flex items-center"><TbFileSearch className="text-gray-400 mr-2" size={17} />Contract</span>
                     <HiMiniChevronDown className="text-gray-400" size={16} />
                   </button>
                   {openContractDropdown && (
@@ -6185,7 +6219,7 @@ const ContractsPage: React.FC = () => {
                             className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-700 dark:text-white bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                             style={{ fontFamily: 'Avenir, sans-serif' }}
                           />
-                          <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                          <TbSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                         </div>
                       </div>
 
@@ -6241,7 +6275,7 @@ const ContractsPage: React.FC = () => {
                     style={{ fontFamily: 'Avenir, sans-serif' }}
                     onClick={() => { setOpenAssigneeDropdown(v => !v); setOpenContractDropdown(false); setShowStatusDropdown(false); }}
                   >
-                    <span className="flex items-center"><RiUserSearchLine className="text-gray-400 text-base mr-2" />Assignee</span>
+                    <span className="flex items-center"><RiUserSearchLine className="text-gray-400 mr-2" size={17} />Assignee</span>
                     <HiMiniChevronDown className="text-gray-400" size={16} />
                   </button>
                   {openAssigneeDropdown && (
@@ -6335,7 +6369,7 @@ const ContractsPage: React.FC = () => {
                   }
                 }}
               >
-                <span className="flex items-center"><TbClockPin className="text-gray-400 text-base mr-2" />{selectedRecentlyUpdated}</span>
+                <span className="flex items-center"><TbClockPin className="text-gray-400 mr-2" size={17} />{selectedRecentlyUpdated}</span>
                 <HiMiniChevronDown className="text-gray-400" size={16} />
               </button>
               {openRecentlyUpdatedDropdown && (
@@ -6373,7 +6407,7 @@ const ContractsPage: React.FC = () => {
         <div className="hidden lg:flex items-center gap-1">
           {/* Search Bar */}
           <div className={`flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 min-w-0 ${activeContentTab === 'documents' ? 'flex-[1.5]' : 'flex-1'}`}>
-            <FaSearch className="text-gray-400 mr-2" size={18} />
+            <TbSearch className="text-gray-400 mr-2" size={18} />
             <input
               type="text"
               placeholder="Search contracts, parties, documents or IDs"
@@ -6401,8 +6435,8 @@ const ContractsPage: React.FC = () => {
                     }
                   }}
                 >
-                                      <TbHistory className="text-gray-400 w-4 h-4" />
-                    <span>Status</span>
+                                                        <TbHistory className="text-gray-400" size={18} />
+                  <span>Status</span>
                   <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
                 </button>
                 {showStatusDropdown && (
@@ -6468,7 +6502,7 @@ const ContractsPage: React.FC = () => {
                     style={{ fontFamily: 'Avenir, sans-serif' }}
                     onClick={() => { setOpenContractDropdown(v => !v); setOpenAssigneeDropdown(false); setShowStatusDropdown(false); }}
                   >
-                    <HiOutlineDocumentSearch className="text-gray-400 w-4 h-4" />
+                    <TbFileSearch className="text-gray-400" size={18} />
                     <span>Contract</span>
                     <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
                   </button>
@@ -6490,7 +6524,7 @@ const ContractsPage: React.FC = () => {
                             className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-700 dark:text-white bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                             style={{ fontFamily: 'Avenir, sans-serif' }}
                           />
-                          <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                          <TbSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                         </div>
                       </div>
 
@@ -6547,7 +6581,7 @@ const ContractsPage: React.FC = () => {
                     style={{ fontFamily: 'Avenir, sans-serif' }}
                     onClick={() => { setOpenAssigneeDropdown(v => !v); setOpenContractDropdown(false); setShowStatusDropdown(false); }}
                   >
-                    <RiUserSearchLine className="text-gray-400 w-4 h-4" />
+                    <RiUserSearchLine className="text-gray-400" size={18} />
                     <span>Assignee</span>
                     <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
                   </button>
@@ -6642,7 +6676,7 @@ const ContractsPage: React.FC = () => {
                   }
                 }}
               >
-                <TbClockPin className="text-gray-400 w-4 h-4" />
+                <TbClockPin className="text-gray-400" size={18} />
                 <span>{selectedRecentlyUpdated}</span>
                 <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
               </button>
@@ -6856,7 +6890,7 @@ const ContractsPage: React.FC = () => {
                           </span>
                         </button>
                         <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group" onClick={e => { e.stopPropagation(); setShowUploadModal(true); setUploadContractId(contract.id); }}>
-                          <HiOutlineUpload className="h-4 w-4 transition-colors" />
+                          <TbUpload className="h-4 w-4 transition-colors" />
                           <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                             Upload
                           </span>
@@ -7053,7 +7087,7 @@ const ContractsPage: React.FC = () => {
                             }
                           }}
                         >
-                          <HiOutlineDownload className="h-4 w-4 transition-colors" />
+                          <TbDownload className="h-4 w-4 transition-colors" />
                           <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                             Download
                           </span>
@@ -7317,7 +7351,48 @@ const ContractsPage: React.FC = () => {
                       </div>
                       <div>
                         <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Contract Type</div>
-                        <div className="w-full px-4 py-2 text-xs text-black dark:text-white -ml-4 select-none cursor-default">{selectedType}</div>
+                        <div className="relative w-full" ref={contractDetailsContractTypeDropdownRef}>
+                          <input
+                            type="text"
+                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white dark:bg-gray-900"
+                            placeholder="Select contract type"
+                            value={selectedContract.type || ''}
+                            readOnly
+                            onKeyDown={(e) => {
+                              if (e.key === 'Backspace') {
+                                e.preventDefault();
+                                if (selectedContract) {
+                                  handleContractDetailsFieldUpdate('type', '');
+                                }
+                              }
+                            }}
+                            onFocus={(e) => {
+                              // Move cursor to end of text when focused
+                              e.target.setSelectionRange(e.target.value.length, e.target.value.length);
+                            }}
+                            onClick={() => setShowContractDetailsContractTypeDropdown(!showContractDetailsContractTypeDropdown)}
+                          />
+                          <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          {showContractDetailsContractTypeDropdown && (
+                            <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ maxHeight: '200px' }}>
+                              {CONTRACT_TYPES.map(type => (
+                                <button
+                                  key={type}
+                                  className={`w-full text-left px-3 py-0.5 text-xs font-medium ${selectedContract.type === type ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                                  onClick={e => {
+                                    e.preventDefault();
+                                    if (selectedContract) {
+                                      handleContractDetailsFieldUpdate('type', type);
+                                    }
+                                    setShowContractDetailsContractTypeDropdown(false);
+                                  }}
+                                >
+                                  {type}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
                       {/* Status Row */}
                       <div>
@@ -7486,7 +7561,7 @@ const ContractsPage: React.FC = () => {
                                 type="text"
                                 className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white dark:bg-gray-900"
                                 placeholder="Select property type"
-                                value={PROPERTY_TYPES.find(t => t === selectedContract.propertyType) || ''}
+                                value={selectedContract.propertyType || ''}
                                 readOnly
                                 onKeyDown={(e) => {
                                   if (e.key === 'Backspace') {
@@ -7504,7 +7579,7 @@ const ContractsPage: React.FC = () => {
                               />
                               <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                               {showContractDetailsPropertyTypeDropdown && (
-                                <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ maxHeight: '200px' }}>
                                   {PROPERTY_TYPES.map(type => (
                                     <button
                                       key={type}
@@ -7604,7 +7679,7 @@ const ContractsPage: React.FC = () => {
                               />
                               <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                               {showContractDetailsStateDropdown && (
-                                <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ maxHeight: '200px' }}>
                                   {US_STATES
                                     .filter(state => 
                                       state.label.toLowerCase().includes(contractDetailsStateSearchTerm.toLowerCase())
@@ -7707,7 +7782,7 @@ const ContractsPage: React.FC = () => {
                               />
                               <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                               {showContractDetailsCountryDropdown && (
-                                <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ maxHeight: '200px' }}>
                                   {COUNTRIES
                                     .filter(country => 
                                       country.label.toLowerCase().includes(contractDetailsCountrySearchTerm.toLowerCase())
@@ -9005,7 +9080,7 @@ const ContractsPage: React.FC = () => {
                     />
                     <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     {showUploadModalAssigneeDropdown && (
-                      <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                      <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:hidden" style={{ fontFamily: 'Avenir, sans-serif' }}>
                         {allAssignees.length > 0 ? (
                           <>
                             {allAssignees.map((assignee: string) => (
@@ -9234,7 +9309,10 @@ const ContractsPage: React.FC = () => {
                               <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                               
                               {showInlineEditingUploadModalAssigneeDropdown && (
-                                <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:hidden" 
+                                     style={{ 
+                                       fontFamily: 'Avenir, sans-serif'
+                                     }}>
                                   {allAssignees.length > 0 ? (
                                     <>
                                       {allAssignees.map((assignee: string) => (
@@ -9567,7 +9645,7 @@ const ContractsPage: React.FC = () => {
                           autoComplete="off"
                         />
                         {showAssigneeDropdown && (
-                          <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                          <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:hidden" style={{ fontFamily: 'Avenir, sans-serif' }}>
                             {allAssignees.length > 0 ? (
                               allAssignees.map((assignee: string) => (
                                 <div
@@ -9694,7 +9772,7 @@ const ContractsPage: React.FC = () => {
                   <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                   
                   {showDocumentUploadAssigneeDropdown && (
-                    <div className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 max-h-40 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
+                    <div className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 max-h-40 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:hidden">
                       <div className="py-2">
                         {allAssignees.map((assignee) => (
                           <button

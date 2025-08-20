@@ -10,7 +10,7 @@ import { HiMiniChevronDown } from 'react-icons/hi2';
 import { CgPlayPauseR, CgPlayStopR } from 'react-icons/cg';
 import { BsPerson } from 'react-icons/bs';
 import { LuCalendarClock, LuSendHorizontal, LuCalendarFold, LuTable2, LuListTodo, LuListPlus } from 'react-icons/lu';
-import { FaPlus, FaSearch, FaCheckCircle, FaCheck } from 'react-icons/fa';
+import { FaPlus, FaCheckCircle, FaCheck } from 'react-icons/fa';
 import { FaRetweet } from 'react-icons/fa6';
 import { PiListMagnifyingGlassBold, PiListPlusBold, PiDotsThreeOutline } from 'react-icons/pi';
 import { FaRegSquareCheck } from 'react-icons/fa6';
@@ -19,7 +19,7 @@ import { MdCancelPresentation, MdOutlineLibraryAddCheck } from 'react-icons/md';
 import { MdOutlineLightMode, MdOutlineDarkMode } from 'react-icons/md';
 import { RiUserSearchLine, RiKanbanView2 } from 'react-icons/ri';
 import { HiOutlineDocumentSearch } from 'react-icons/hi';
-import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbLibraryPlus, TbEdit, TbStatusChange, TbHistory, TbCategoryPlus, TbDragDrop, TbPencil, TbSubtask } from 'react-icons/tb';
+import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbLibraryPlus, TbEdit, TbStatusChange, TbHistory, TbCategoryPlus, TbDragDrop, TbPencil, TbSubtask, TbSearch, TbFileSearch } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
 
@@ -1174,7 +1174,7 @@ export default function WorkflowsPage() {
                         />
                         <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                         {showNewTaskAssigneeDropdown && (
-                          <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                          <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:hidden" style={{ fontFamily: 'Avenir, sans-serif' }}>
                             {uniqueAssignees.length > 0 ? (
                               <>
                                 {uniqueAssignees.map((assignee: string) => (
@@ -1249,7 +1249,7 @@ export default function WorkflowsPage() {
                         />
                         <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                         {showNewTaskStatusDropdown && (
-                          <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                          <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:hidden" style={{ fontFamily: 'Avenir, sans-serif' }}>
                             {statusOptions.map(status => (
                               <div
                                 key={status.key}
@@ -1329,9 +1329,9 @@ export default function WorkflowsPage() {
                         />
                         <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                         {showNewTaskContractDropdown && (
-                          <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                            {/* Search Bar */}
-                            <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+                          <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                            {/* Fixed Search Bar */}
+                            <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800">
                               <div className="relative">
                                 <input
                                   type="text"
@@ -1341,27 +1341,30 @@ export default function WorkflowsPage() {
                                   className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-700 dark:text-white bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                                   style={{ fontFamily: 'Avenir, sans-serif' }}
                                 />
-                                <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                                <TbSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                               </div>
                             </div>
-                            {contracts
-                              .filter(contract => 
-                                contract.id.toLowerCase().includes(newTaskContractSearch.toLowerCase()) ||
-                                contract.title.toLowerCase().includes(newTaskContractSearch.toLowerCase())
-                              )
-                              .sort((a, b) => Number(a.id) - Number(b.id))
-                              .map(contract => (
-                                <div
-                                  key={contract.id}
-                                  className={`px-4 py-2 text-xs cursor-pointer ${newTaskModalForm.contract === `${contract.id} - ${contract.title}` ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'} select-none`}
-                                  onClick={() => {
-                                    setNewTaskModalForm(prev => ({ ...prev, contract: `${contract.id} - ${contract.title}` }));
-                                    setShowNewTaskContractDropdown(false);
-                                  }}
-                                >
-                                  {contract.id} - {contract.title}
-                                </div>
-                              ))}
+                            {/* Scrollable Contracts List */}
+                            <div className="max-h-40 overflow-y-auto [&::-webkit-scrollbar]:hidden">
+                              {contracts
+                                .filter(contract => 
+                                  contract.id.toLowerCase().includes(newTaskContractSearch.toLowerCase()) ||
+                                  contract.title.toLowerCase().includes(newTaskContractSearch.toLowerCase())
+                                )
+                                .sort((a, b) => Number(a.id) - Number(b.id))
+                                .map(contract => (
+                                  <div
+                                    key={contract.id}
+                                    className={`px-4 py-2 text-xs cursor-pointer ${newTaskModalForm.contract === `${contract.id} - ${contract.title}` ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'} select-none`}
+                                    onClick={() => {
+                                      setNewTaskModalForm(prev => ({ ...prev, contract: `${contract.id} - ${contract.title}` }));
+                                      setShowNewTaskContractDropdown(false);
+                                    }}
+                                  >
+                                    {contract.id} - {contract.title}
+                                  </div>
+                                ))}
+                            </div>
                           </div>
                         )}
                       </div>
@@ -1495,7 +1498,7 @@ export default function WorkflowsPage() {
                            />
                            <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                            {showNewSubtaskAssigneeDropdown && (
-                             <div className="subtask-assignee-dropdown absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-[9999] max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                             <div className="subtask-assignee-dropdown absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-[9999] max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:hidden" style={{ fontFamily: 'Avenir, sans-serif' }}>
                                {uniqueAssignees.length > 0 ? (
                                  <>
                                    {uniqueAssignees.map((assignee: string) => (
@@ -1567,7 +1570,7 @@ export default function WorkflowsPage() {
                            />
                            <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                            {showNewSubtaskStatusDropdown && (
-                             <div className="subtask-status-dropdown absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-[9999] max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                             <div className="subtask-status-dropdown absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-[9999] max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:hidden" style={{ fontFamily: 'Avenir, sans-serif' }}>
                                {statusOptions.map(status => (
                                  <div
                                    key={status.key}
@@ -1663,7 +1666,7 @@ export default function WorkflowsPage() {
                                     />
                                     <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                                     {showInlineSubtaskAssigneeDropdown && (
-                                      <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none">
+                                      <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:hidden">
                                         {uniqueAssignees.length > 0 ? (
                                           <>
                                             {uniqueAssignees.map((assignee: string) => (
@@ -2212,7 +2215,7 @@ export default function WorkflowsPage() {
               {/* Tasks in Progress */}
               <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
                 <div className="h-10 w-10 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center border-2 border-blue-200 dark:border-blue-800 cursor-default select-none">
-                  <FaRetweet size={20} className="text-blue-500 dark:text-blue-400" />
+                  <FaRetweet size={21} className="text-blue-500 dark:text-blue-400" />
                 </div>
                 <div className="flex flex-col items-start h-full cursor-default select-none">
                   <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Tasks in Progress</p>
@@ -2224,7 +2227,7 @@ export default function WorkflowsPage() {
               {/* Due Within 7 Days */}
               <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
                 <div className="h-10 w-10 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center border-2 border-yellow-200 dark:border-yellow-800 cursor-default select-none">
-                  <LuCalendarClock size={20} className="text-yellow-500 dark:text-yellow-400" />
+                  <LuCalendarClock size={21} className="text-yellow-500 dark:text-yellow-400" />
                 </div>
                 <div className="flex flex-col items-start h-full cursor-default select-none">
                   <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Due Within 7 Days</p>
@@ -2269,7 +2272,7 @@ export default function WorkflowsPage() {
         <div className="lg:hidden">
           {/* Search Bar */}
           <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 w-full">
-            <FaSearch className="text-gray-400 mr-2" size={18} />
+            <TbSearch className="text-gray-400 mr-2" size={18} />
             <input
               type="text"
               placeholder="Search tasks, assignees, contracts or IDs"
@@ -2297,7 +2300,7 @@ export default function WorkflowsPage() {
                   }
                 }}
               >
-                <span className="flex items-center"><HiOutlineDocumentSearch className="text-gray-400 text-base mr-2" />Contract</span>
+                <span className="flex items-center"><TbFileSearch className="text-gray-400 mr-2" size={17} />Contract</span>
                 <HiMiniChevronDown className="text-gray-400" size={16} />
               </button>
               {openContractDropdown && (
@@ -2315,7 +2318,7 @@ export default function WorkflowsPage() {
                         className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-700 dark:text-white bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       />
-                      <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                      <TbSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                     </div>
                   </div>
 
@@ -2388,7 +2391,7 @@ export default function WorkflowsPage() {
                   }
                 }}
               >
-                <span className="flex items-center"><RiUserSearchLine className="text-gray-400 text-base mr-2" />Assignee</span>
+                <span className="flex items-center"><RiUserSearchLine className="text-gray-400 mr-2" size={17} />Assignee</span>
                 <HiMiniChevronDown className="text-gray-400" size={16} />
               </button>
               {openAssigneeDropdown && (
@@ -2481,7 +2484,7 @@ export default function WorkflowsPage() {
                   }
                 }}
               >
-                                    <span className="flex items-center"><TbHistory className="text-gray-400 text-base mr-2" />Status</span>
+                                    <span className="flex items-center"><TbHistory className="text-gray-400 mr-2" size={17} />Status</span>
                 <HiMiniChevronDown className="text-gray-400" size={16} />
               </button>
               {showStatusDropdown && (
@@ -2573,7 +2576,7 @@ export default function WorkflowsPage() {
         <div className="hidden lg:flex items-center gap-1">
           {/* Search Bar */}
           <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex-1 min-w-0">
-            <FaSearch className="text-gray-400 mr-2" size={18} />
+            <TbSearch className="text-gray-400 mr-2" size={18} />
             <input
               type="text"
               placeholder="Search tasks, assignees, contracts or IDs"
@@ -2593,14 +2596,14 @@ export default function WorkflowsPage() {
                 style={{ fontFamily: 'Avenir, sans-serif' }}
                 onClick={() => { setOpenContractDropdown(v => !v); setOpenAssigneeDropdown(false); setShowStatusDropdown(false); }}
               >
-                <HiOutlineDocumentSearch className="text-gray-400 w-4 h-4" />
+                <TbFileSearch className="text-gray-400" size={18} />
                 <span>Contract</span>
                 <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
               </button>
               {openContractDropdown && (
                 <div 
                   ref={contractDropdownRef}
-                  className="absolute right-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[320px] w-72 contract-dropdown" 
+                  className="absolute right-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 min-w-[320px] w-72 contract-dropdown max-h-96 overflow-y-auto [&::-webkit-scrollbar]:hidden" 
                   style={{ fontFamily: 'Avenir, sans-serif' }}
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -2615,7 +2618,7 @@ export default function WorkflowsPage() {
                         className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-700 dark:text-white bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       />
-                      <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                      <TbSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                     </div>
                   </div>
 
@@ -2680,14 +2683,14 @@ export default function WorkflowsPage() {
                 style={{ fontFamily: 'Avenir, sans-serif' }}
                 onClick={() => { setOpenAssigneeDropdown(v => !v); setOpenContractDropdown(false); setShowStatusDropdown(false); }}
               >
-                <RiUserSearchLine className="text-gray-400 w-4 h-4" />
+                <RiUserSearchLine className="text-gray-400" size={18} />
                 <span>Assignee</span>
                 <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
               </button>
               {openAssigneeDropdown && (
                 <div 
                   ref={assigneeDropdownRef}
-                  className="absolute top-full right-0 mt-2 w-44 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 assignee-dropdown" 
+                  className="absolute top-full right-0 mt-2 w-44 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 assignee-dropdown max-h-96 overflow-y-auto [&::-webkit-scrollbar]:hidden" 
                   style={{ fontFamily: 'Avenir, sans-serif' }}
                 >
                   <button
@@ -2767,14 +2770,14 @@ export default function WorkflowsPage() {
                 style={{ fontFamily: 'Avenir, sans-serif' }}
                 onClick={() => { setShowStatusDropdown(v => !v); setOpenAssigneeDropdown(false); setOpenContractDropdown(false); }}
               >
-                                    <TbHistory className="text-gray-400 w-4 h-4" />
+                                    <TbHistory className="text-gray-400" size={18} />
                     <span>Status</span>
                 <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
               </button>
               {showStatusDropdown && (
                 <div 
                   ref={statusDropdownRef}
-                  className="absolute top-full right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 status-filter-dropdown" 
+                  className="absolute top-full right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 status-filter-dropdown max-h-96 overflow-y-auto [&::-webkit-scrollbar]:hidden" 
                   style={{ fontFamily: 'Avenir, sans-serif' }}
                 >
                   <button
@@ -3388,7 +3391,7 @@ export default function WorkflowsPage() {
                           <input
                             ref={taskDetailsAssigneeInputRef}
                             type="text"
-                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900"
+                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 bg-white dark:bg-gray-900"
                             placeholder={selectedTask?.assignee || ''}
                             value={editedAssignee}
                             onChange={e => setEditedAssignee(e.target.value)}
@@ -3396,8 +3399,9 @@ export default function WorkflowsPage() {
                             style={{ fontFamily: 'Avenir, sans-serif' }}
                             autoComplete="off"
                           />
+                          <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                           {showAssigneeDropdown && (
-                            <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                            <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ fontFamily: 'Avenir, sans-serif' }}>
                               <div
                                 className="px-4 py-2 text-xs cursor-pointer hover:bg-primary/10 hover:text-primary text-gray-900 dark:text-white"
                                 onClick={() => {
@@ -3439,7 +3443,7 @@ export default function WorkflowsPage() {
                           />
                           <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                           {showModalStatusDropdown && (
-                            <div ref={modalStatusDropdownRef} className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 status-dropdown" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
+                            <div ref={modalStatusDropdownRef} className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:hidden status-dropdown" style={{ fontFamily: 'Avenir, sans-serif' }}>
                               {statusOptions.map(status => (
                                 <button
                                   key={status.key}
@@ -4125,7 +4129,7 @@ export default function WorkflowsPage() {
                        />
                        <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                        {showNewSubtaskModalAssigneeDropdown && (
-                         <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                         <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:hidden" style={{ fontFamily: 'Avenir, sans-serif' }}>
                            {uniqueAssignees.length > 0 ? (
                              <>
                                {uniqueAssignees.map((assignee: string) => (
@@ -4197,7 +4201,7 @@ export default function WorkflowsPage() {
                        />
                        <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                        {showNewSubtaskModalStatusDropdown && (
-                         <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                         <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:hidden" style={{ fontFamily: 'Avenir, sans-serif' }}>
                            {statusOptions.map(status => (
                              <div
                                key={status.key}
@@ -4401,7 +4405,7 @@ export default function WorkflowsPage() {
                       />
                       <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                       {showEditSubtaskModalAssigneeDropdown && (
-                        <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                        <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:hidden" style={{ fontFamily: 'Avenir, sans-serif' }}>
                           {uniqueAssignees.length > 0 ? (
                             <>
                               {uniqueAssignees.map((assignee: string) => (
@@ -4473,7 +4477,7 @@ export default function WorkflowsPage() {
                       />
                       <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                       {showEditSubtaskModalStatusDropdown && (
-                        <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                        <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:hidden" style={{ fontFamily: 'Avenir, sans-serif' }}>
                           {statusOptions.map(status => (
                             <div
                               key={status.key}

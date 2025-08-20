@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbContract, TbRouteSquare, TbUsersGroup, TbMessageQuestion, TbBrandDiscord, TbBrandYoutube, TbInfoSquare, TbBuildingCommunity, TbBallAmericanFootball, TbTool } from 'react-icons/tb';
+import { TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbContract, TbRouteSquare, TbUsersGroup, TbMessageQuestion, TbBrandDiscord, TbBrandYoutube, TbInfoSquare, TbBuildingCommunity, TbBallAmericanFootball, TbTool, TbCoins } from 'react-icons/tb';
 import { HiOutlineDuplicate } from 'react-icons/hi';
 import { MdOutlineSportsFootball, MdOutlineMovieFilter, MdOutlineHealthAndSafety, MdOutlineGeneratingTokens } from 'react-icons/md';
 import { LuConstruction, LuBriefcaseBusiness, LuClipboardCheck, LuBrainCircuit, LuCircuitBoard, LuListEnd, LuVideo, LuBookOpenText, LuNewspaper, LuLinkedin, LuMic, LuContact, LuBuilding2 } from 'react-icons/lu';
@@ -27,7 +27,7 @@ interface IndustryOption {
 const INDUSTRIES: IndustryOption[] = [
       { value: 'real_estate', label: 'Real Estate', icon: TbBuildingCommunity, description: 'Property sale & lease agreements' },
   { value: 'corporate', label: 'Corporate', icon: LuBriefcaseBusiness, description: 'Enterprise, employment & vendor agreements' },
-  { value: 'finance', label: 'Finance', icon: GrMoney, description: 'Advisory, Lending, M&A agreements' },
+  { value: 'finance', label: 'Finance', icon: TbCoins, description: 'Advisory, Lending, M&A agreements' },
   { value: 'legal', label: 'Legal', icon: VscLaw, description: 'Wills, trusts, deeds & compliance agreements' },
   { value: 'supply_chain', label: 'Logistics', icon: TbWorld, description: 'Transportation, supply-chain & warehousing agreements' },
   { value: 'labor', label: 'Labor', icon: GrUserWorker, description: 'Dispute resolution, collective-bargaining & union agreements' },
