@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { initToolbar } from '@stagewise/toolbar';
+// Temporarily disabled - @stagewise/toolbar package not available
+// import { initToolbar } from '@stagewise/toolbar';
 
 export default function StagewiseToolbar() {
   const initialized = useRef(false);
@@ -13,10 +14,11 @@ export default function StagewiseToolbar() {
     if (!initialized.current && process.env.NODE_ENV === 'development') {
       console.log('StagewiseToolbar: Initializing toolbar...');
       try {
-        initToolbar({
-          plugins: []
-        });
-        console.log('StagewiseToolbar: Initialization successful');
+        // Temporarily disabled - @stagewise/toolbar package not available
+        // initToolbar({
+        //   plugins: []
+        // });
+        console.log('StagewiseToolbar: Toolbar initialization skipped (package not available)');
         initialized.current = true;
       } catch (error) {
         console.error('StagewiseToolbar: Initialization failed:', error);

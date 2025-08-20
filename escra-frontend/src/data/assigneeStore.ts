@@ -27,13 +27,13 @@ const initialUniqueAssignees = Array.from(new Set(Object.values(initialAssignees
 export const useAssigneeStore = create<AssigneeStore>((set, get) => {
   // Initialize store with initial assignees
   const storedMap = typeof window !== 'undefined' ? localStorage.getItem('assigneeMap') : null;
-  const parsedMap = storedMap ? JSON.parse(storedMap) : {};
+  const parsedMap: Record<string, string> = storedMap ? JSON.parse(storedMap) : {};
   
   // Always merge with initial assignees to ensure they're available
   const initialMap = { ...initialAssignees, ...parsedMap };
   
   // Get all unique assignees, including initial ones
-  const allAssignees = Array.from(new Set([...initialUniqueAssignees, ...Object.values(parsedMap)])).sort();
+  const allAssignees: string[] = Array.from(new Set([...initialUniqueAssignees, ...Object.values(parsedMap)])).sort();
 
   return {
     assigneeMap: initialMap,
