@@ -8,7 +8,7 @@ import { LuPen } from 'react-icons/lu';
 import { PiMoneyWavyBold } from 'react-icons/pi';
 import { MdOutlineAddToPhotos } from 'react-icons/md';
 import { TbClockPin, TbClockUp, TbCoins, TbTransactionDollar, TbPencilExclamation, TbTransfer, TbFileText, TbClockShare, TbClockDown, TbArrowsExchange, TbClockEdit, TbFilePlus } from 'react-icons/tb';
-import { HiMiniChevronDown } from 'react-icons/hi2';
+import { TbChevronDown } from 'react-icons/tb';
 import { HiOutlineDocumentText } from 'react-icons/hi';
 import { GrMoney } from 'react-icons/gr';
 import NewContractModal from '@/components/common/NewContractModal';
@@ -1097,7 +1097,7 @@ export default function DashboardPage() {
               onClick={() => setOpenRecentlyUpdatedDropdown(!openRecentlyUpdatedDropdown)}
             >
               <span>{selectedRecentlyUpdated}</span>
-              <HiMiniChevronDown className="text-gray-400" size={16} />
+                              <TbChevronDown className="text-gray-400 dark:text-gray-500" size={18} />
             </button>
             {openRecentlyUpdatedDropdown && (
               <div 
@@ -1185,7 +1185,7 @@ export default function DashboardPage() {
                 onClick={() => setOpenBarChartDropdown(!openBarChartDropdown)}
               >
                 <span>{selectedBarChartPeriod}</span>
-                <HiMiniChevronDown className="text-gray-400" size={16} />
+                <TbChevronDown className="text-gray-400 dark:text-gray-500" size={18} />
               </button>
               {openBarChartDropdown && (
                 <div 
@@ -1307,7 +1307,7 @@ export default function DashboardPage() {
                 onClick={() => setOpenCompletionTimeDropdown(!openCompletionTimeDropdown)}
               >
                 <span>{selectedCompletionTime}</span>
-                <HiMiniChevronDown className="text-gray-400" size={16} />
+                <TbChevronDown className="text-gray-400 dark:text-gray-500" size={18} />
               </button>
               {openCompletionTimeDropdown && (
                 <div 

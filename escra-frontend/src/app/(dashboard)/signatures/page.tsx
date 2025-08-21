@@ -1,25 +1,25 @@
 'use client';
 
 import React, { useState, useRef, useEffect, RefObject, createRef } from 'react';
-import { FaUser, FaFilter, FaSort, FaCheckCircle, FaPlus, FaTimes, FaChevronDown, FaChevronUp, FaCheck } from 'react-icons/fa';
+import { FaUser, FaFilter, FaSort, FaCheckCircle, FaPlus, FaTimes, FaChevronUp, FaCheck } from 'react-icons/fa';
 import { FaRegSquareCheck } from 'react-icons/fa6';
-import { HiOutlineEye, HiOutlineViewBoards, HiOutlineTrash, HiOutlineUpload, HiOutlineDocumentText, HiOutlineBell, HiOutlineCog, HiOutlineDuplicate, HiOutlineDocumentSearch, HiOutlineUserGroup, HiOutlineX } from 'react-icons/hi';
-import { HiMiniChevronUpDown, HiMiniChevronDown } from 'react-icons/hi2';
-import { LuPen, LuCalendarClock, LuBellRing, LuPenLine, LuCalendarFold, LuEraser } from 'react-icons/lu';
+import { HiOutlineEye, HiOutlineViewBoards, HiOutlineUpload, HiOutlineDocumentText, HiOutlineBell, HiOutlineCog, HiOutlineDuplicate, HiOutlineDocumentSearch, HiOutlineUserGroup, HiOutlineX } from 'react-icons/hi';
+import { HiMiniChevronUpDown } from 'react-icons/hi2';
+import { LuPen, LuCalendarClock, LuBellRing, LuPenLine, LuCalendarFold } from 'react-icons/lu';
 import { MdCancelPresentation } from 'react-icons/md';
 import { FaRegClock } from 'react-icons/fa';
 import { BsPerson } from 'react-icons/bs';
 import { PiWarningDiamondBold } from 'react-icons/pi';
 import clsx from 'clsx';
 import { IconBaseProps } from 'react-icons';
-import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbClockPin, TbPencilShare, TbPencilPlus, TbClockEdit, TbStatusChange, TbHistory, TbCalendarExclamation, TbPencilCheck, TbDownload, TbSearch, TbFileSearch } from 'react-icons/tb';
+import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbClockPin, TbPencilShare, TbPencilPlus, TbClockEdit, TbStatusChange, TbHistory, TbCalendarExclamation, TbPencilCheck, TbDownload, TbSearch, TbFileSearch, TbLibrary, TbEraser, TbTrash, TbChevronDown, TbChevronsLeft, TbChevronsRight } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
 import { TiUserAddOutline } from 'react-icons/ti';
 import { Modal } from '@/components/common/Modal';
 import { RiLayoutColumnLine, RiDashboardLine, RiBox3Line, RiUserSharedLine, RiUserSearchLine } from 'react-icons/ri';
 import { FaSignature } from 'react-icons/fa';
-import { HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight, HiChevronDown } from 'react-icons/hi';
+import { HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight } from 'react-icons/hi';
 import { MdOutlineLightMode, MdOutlineDarkMode } from 'react-icons/md';
 import { FaDochub } from 'react-icons/fa6';
 import { SiAdobe } from 'react-icons/si';
@@ -142,6 +142,8 @@ export default function SignaturesPage() {
   const [showContractDropdown, setShowContractDropdown] = useState(false);
   const [selectedContracts, setSelectedContracts] = useState<string[]>([]);
   const [contractSearch, setContractSearch] = useState('');
+  // Contracts state that includes both mock contracts and newly created contracts
+  const [contracts, setContracts] = useState(mockContracts);
   const contractDropdownRef = useRef<HTMLDivElement>(null);
   // State for dynamic recipient cards
   type Recipient = {
@@ -334,6 +336,56 @@ export default function SignaturesPage() {
   const [showPdfViewer, setShowPdfViewer] = useState(false);
   const [selectedPdf, setSelectedPdf] = useState<{ name: string; url: string; id?: string } | null>(null);
   
+  // Function to add a new contract to the contracts list
+  const addNewContract = (newContract: any) => {
+    setContracts(prev => [newContract, ...prev]);
+  };
+
+  // Load enhanced contracts (including additional contracts) on component mount
+  useEffect(() => {
+    const loadEnhancedContracts = async () => {
+      try {
+        const response = await fetch('/api/contracts');
+        if (response.ok) {
+          const data = await response.json();
+          // Update contracts with enhanced data (mock + additional)
+          if (data.contracts && data.contracts.length > 0) {
+            setContracts(data.contracts);
+          }
+        } else {
+          console.error('Failed to load enhanced contracts');
+          // Keep the initial mockContracts that are already loaded
+        }
+      } catch (error) {
+        console.error('Error loading enhanced contracts:', error);
+        // Keep the initial mockContracts that are already loaded
+      }
+    };
+
+    // Load enhanced contracts after a small delay
+    const timeoutId = setTimeout(loadEnhancedContracts, 100);
+    return () => clearTimeout(timeoutId);
+  }, []);
+
+  // Listen for new contracts from localStorage or other sources
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'newContract' && e.newValue) {
+        try {
+          const newContract = JSON.parse(e.newValue);
+          addNewContract(newContract);
+          // Clear the storage after reading
+          localStorage.removeItem('newContract');
+        } catch (error) {
+          console.error('Error parsing new contract:', error);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   // Load signatures data on component mount
   useEffect(() => {
     const loadEnhancedSignatures = async () => {
@@ -2179,7 +2231,7 @@ export default function SignaturesPage() {
                 }}
               >
                                     <span className="flex items-center"><TbHistory className="text-gray-400 mr-2" size={17} />Status</span>
-                <HiMiniChevronDown className="text-gray-400" size={16} />
+                <TbChevronDown className="text-gray-400 dark:text-gray-500" size={18} />
               </button>
               {showStatusDropdown && (
                 <div ref={mobileStatusDropdownRef} className="absolute top-full right-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" style={{ fontFamily: 'Avenir, sans-serif' }}>
@@ -2237,7 +2289,7 @@ export default function SignaturesPage() {
                 }}
               >
                 <span className="flex items-center"><TbFileSearch className="text-gray-400 mr-2" size={17} />Contract</span>
-                <HiMiniChevronDown className="text-gray-400" size={16} />
+                <TbChevronDown className="text-gray-400 dark:text-gray-500" size={18} />
               </button>
               {openContractDropdown && (
                 <div 
@@ -2278,11 +2330,12 @@ export default function SignaturesPage() {
                     </div>
                     All
                   </button>
-                  {mockContracts
+                  {contracts
                     .filter(contract => 
                       contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
                       contract.title.toLowerCase().includes(contractSearch.toLowerCase())
                     )
+                    .sort((a, b) => Number(a.id) - Number(b.id))
                     .map(contract => (
                       <button
                         key={contract.id}
@@ -2330,7 +2383,7 @@ export default function SignaturesPage() {
                 }}
               >
                 <span className="flex items-center"><RiUserSharedLine className="text-gray-400 mr-2" size={17} />Sender</span>
-                <HiMiniChevronDown className="text-gray-400" size={16} />
+                <TbChevronDown className="text-gray-400 dark:text-gray-500" size={18} />
               </button>
               {showSenderDropdown && (
                 <div 
@@ -2379,7 +2432,7 @@ export default function SignaturesPage() {
                 }}
               >
                 <span className="flex items-center"><RiUserSearchLine className="text-gray-400 mr-2" size={17} />Assignee</span>
-                <HiMiniChevronDown className="text-gray-400" size={16} />
+                <TbChevronDown className="text-gray-400 dark:text-gray-500" size={18} />
               </button>
               {showAssigneeDropdown && (
                 <div ref={mobileAssigneeDropdownRef} className="absolute top-full right-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" style={{ fontFamily: 'Avenir, sans-serif' }}>
@@ -2468,7 +2521,7 @@ export default function SignaturesPage() {
                 }}
               >
                 <span className="flex items-center"><TbClockPin className="text-gray-400 mr-2" size={17} />{selectedRecentlyUpdated}</span>
-                <HiMiniChevronDown className="text-gray-400" size={16} />
+                <TbChevronDown className="text-gray-400 dark:text-gray-500" size={18} />
               </button>
               {openRecentlyUpdatedDropdown && (
                 <div 
@@ -2537,7 +2590,7 @@ export default function SignaturesPage() {
         >
                                                       <TbHistory className="text-gray-400" size={18} />
                     <span>Status</span>
-                <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+                <TbChevronDown className="ml-1 text-gray-400 dark:text-gray-500" size={18} />
               </button>
               {showStatusDropdown && (
                 <div ref={statusDropdownRef} className="absolute top-full right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" style={{ fontFamily: 'Avenir, sans-serif' }}>
@@ -2595,7 +2648,7 @@ export default function SignaturesPage() {
               >
                 <TbFileSearch className="text-gray-400" size={18} />
                 <span>Contract</span>
-                <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+                <TbChevronDown className="ml-1 text-gray-400 dark:text-gray-500" size={18} />
               </button>
                         {openContractDropdown && (
             <div 
@@ -2634,11 +2687,12 @@ export default function SignaturesPage() {
                     </div>
                     All
                   </button>
-                  {mockContracts
+                  {contracts
                     .filter(contract => 
                       contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
                       contract.title.toLowerCase().includes(contractSearch.toLowerCase())
                     )
+                    .sort((a, b) => Number(a.id) - Number(b.id))
                     .map(contract => (
                       <button
                         key={contract.id}
@@ -2686,7 +2740,7 @@ export default function SignaturesPage() {
           >
                 <RiUserSharedLine className="text-gray-400" size={18} />
                 <span>Sender</span>
-                <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+                <TbChevronDown className="ml-1 text-gray-400 dark:text-gray-500" size={18} />
               </button>
                         {showSenderDropdown && (
             <div 
@@ -2735,7 +2789,7 @@ export default function SignaturesPage() {
         >
                 <RiUserSearchLine className="text-gray-400" size={18} />
                 <span>Assignee</span>
-                <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+                <TbChevronDown className="ml-1 text-gray-400 dark:text-gray-500" size={18} />
               </button>
                         {showAssigneeDropdown && (
             <div ref={assigneeDropdownRef} className="absolute top-full right-0 mt-2 w-44 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" style={{ fontFamily: 'Avenir, sans-serif' }}>
@@ -2823,7 +2877,7 @@ export default function SignaturesPage() {
               >
                 <TbClockPin className="text-gray-400" size={18} />
                 <span>{selectedRecentlyUpdated}</span>
-                <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+                <TbChevronDown className="ml-1 text-gray-400 dark:text-gray-500" size={18} />
               </button>
               {openRecentlyUpdatedDropdown && (
                 <div 
@@ -3130,7 +3184,7 @@ export default function SignaturesPage() {
                                       toggleRecipientsExpansion(row.id);
                                     }}
                                   >
-                                    <HiMiniChevronDown 
+                                    <TbChevronDown 
                                       size={14} 
                                       className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
                                     />
@@ -3245,7 +3299,7 @@ export default function SignaturesPage() {
                         <option value={20}>20</option>
                       </select>
                       <div className="absolute inset-y-0 right-1 flex items-center pointer-events-none">
-                        <HiChevronDown className="w-3 h-3 text-gray-400" />
+                        <TbChevronDown className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                       </div>
                     </div>
                   </div>
@@ -3253,17 +3307,11 @@ export default function SignaturesPage() {
                     Page 1 of 1
                   </div>
                   <div className="flex space-x-1">
-                    <button className="p-1 text-gray-400 cursor-not-allowed">
-                      <HiOutlineChevronDoubleLeft className="w-3 h-3" />
+                    <button className="p-1 text-gray-400 dark:text-gray-500 cursor-not-allowed">
+                      <TbChevronsLeft className="w-4 h-4" />
                     </button>
-                    <button className="p-1 text-gray-400 cursor-not-allowed">
-                      <HiOutlineChevronDoubleLeft className="w-3 h-3 rotate-180" />
-                    </button>
-                    <button className="p-1 text-gray-400 cursor-not-allowed">
-                      <HiOutlineChevronDoubleRight className="w-3 h-3 rotate-180" />
-                    </button>
-                    <button className="p-1 text-gray-400 cursor-not-allowed">
-                      <HiOutlineChevronDoubleRight className="w-3 h-3" />
+                    <button className="p-1 text-gray-400 dark:text-gray-500 cursor-not-allowed">
+                      <TbChevronsRight className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -3659,7 +3707,7 @@ export default function SignaturesPage() {
 
       {/* Request Signature Modal */}
       {showRequestSignatureModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black bg-opacity-40" style={{ paddingTop: '95px' }}>
           <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden">
             {/* Sticky Header */}
             <div className="sticky top-0 z-40 bg-gray-50 dark:bg-gray-900 px-6 py-4">
@@ -3707,7 +3755,7 @@ export default function SignaturesPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       {/* Left Column: Add Documents Box */}
                     <div 
-                        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 relative"
+                        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 relative h-[440px]"
                       onDragOver={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -3728,12 +3776,12 @@ export default function SignaturesPage() {
                     >
                         <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 relative z-10" style={{ fontFamily: 'Avenir, sans-serif' }}>Add Documents</h3>
                         
-                        {/* Upload interface - always visible */}
-                      <div className="flex flex-col items-center mb-4">
+                        {/* Upload interface - moved down vertically */}
+                      <div className="flex flex-col items-center justify-center h-full -mt-8">
                           <div className="h-11 w-11 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800 mb-2">
-                            <HiOutlineDocumentText size={22} className="text-teal-500 dark:text-teal-400" />
+                            <TbLibrary size={22} className="text-teal-500 dark:text-teal-400" />
                         </div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400 font-semibold">Drop your files here or...</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 font-semibold mb-2" style={{ fontFamily: 'Avenir, sans-serif' }}>Drop your files here or...</div>
                         {isDraggingOver && (
                           <div className="absolute inset-x-0 flex flex-col items-center justify-center" style={{ top: '0', height: '100%' }}>
                             <div className="h-full w-full flex flex-col items-center justify-center bg-white/95 dark:bg-gray-800/95 rounded-lg" style={{ marginTop: '1px' }}>
@@ -3748,8 +3796,7 @@ export default function SignaturesPage() {
                             </div>
                           </div>
                         )}
-                      </div>
-                      <div className={`flex justify-center gap-1 ${isDraggingOver ? 'blur-sm' : ''}`}>
+                        <div className={`flex justify-center gap-1 ${isDraggingOver ? 'blur-sm' : ''}`}>
                         <div className="relative" ref={documentDropdownRef}>
                           <button
                             type="button"
@@ -3757,7 +3804,7 @@ export default function SignaturesPage() {
                               className="flex items-center gap-2 px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-xs font-semibold border border-transparent"
                           >
                             Select
-                            <HiMiniChevronDown size={17} className="text-white -mt-[1px]" />
+                            <TbChevronDown size={17} className="text-white -mt-[1px]" />
                           </button>
                           {showDocumentDropdown && (
                               <div className="absolute z-50 mt-1 w-[300px] bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
@@ -3849,6 +3896,7 @@ export default function SignaturesPage() {
                             </div>
                           )}
                         </div>
+                        </div>
                       </div>
                       {documentError && (
                         <div className="flex justify-center mt-2">
@@ -3860,19 +3908,19 @@ export default function SignaturesPage() {
                       </div>
 
                       {/* Right Column: Documents Box */}
-                      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 h-[440px]">
                         <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>Documents</h3>
                         
                         {/* Show document thumbnails when documents are selected */}
                         {(selectedDocuments.length > 0 || uploadedFiles.length > 0) ? (
-                          <div className="space-y-3">
+                          <div className="space-y-3 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ height: 'calc(440px - 100px)', minHeight: '280px' }}>
                             {/* Selected Documents */}
                           {selectedDocuments.map(docId => {
                             const doc = allDocuments.find(d => d.id === docId);
                             return doc ? (
-                                <div key={docId} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600">
+                                <div key={docId} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
                                   <div className="flex items-center gap-3">
-                                    <HiOutlineDocumentText className="w-5 h-5 text-primary" />
+                                    <TbLibrary className="w-5 h-5 text-primary" />
                                     <div className="flex-1 min-w-0">
                                       <div 
                                         className="font-semibold text-xs text-black dark:text-white truncate max-w-[140px]"
@@ -3934,7 +3982,7 @@ export default function SignaturesPage() {
                                       }}
                                       className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group"
                                     >
-                                      <HiOutlineTrash className="h-4 w-4 transition-colors" />
+                                      <TbTrash className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                         Delete
                                       </span>
@@ -3953,9 +4001,9 @@ export default function SignaturesPage() {
                               const associatedAssignee = uploadedFileAssignees[fileKey];
                               
                               return (
-                                <div key={idx} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600">
+                                <div key={idx} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
                                   <div className="flex items-center gap-3">
-                                    <HiOutlineDocumentText className="w-5 h-5 text-primary" />
+                                    <TbLibrary className="w-5 h-5 text-primary" />
                                     <div className="flex-1 min-w-0">
                                       {isEditing ? (
                                         <div className="flex items-center gap-2">
@@ -4049,7 +4097,7 @@ export default function SignaturesPage() {
                                       onClick={() => setUploadedFiles(prev => prev.filter((_, i) => i !== idx))}
                                       className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group"
                                     >
-                                      <HiOutlineTrash className="h-4 w-4 transition-colors" />
+                                      <TbTrash className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                         Delete
                                       </span>
@@ -4060,10 +4108,10 @@ export default function SignaturesPage() {
                             })}
                           </div>
                         ) : (
-                          <div className="flex flex-col items-center justify-center py-8 text-gray-500 dark:text-gray-400">
-                            <HiOutlineDocumentText size={26} className="mb-2" />
-                            <p className="text-sm">No documents selected</p>
-                            <p className="text-xs">Select or upload documents from the left panel</p>
+                          <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400 -mt-8">
+                            <TbLibrary size={26} className="mb-2 text-primary" />
+                            <p className="text-sm" style={{ fontFamily: 'Avenir, sans-serif' }}>No documents selected</p>
+                            <p className="text-xs" style={{ fontFamily: 'Avenir, sans-serif' }}>Select or upload documents in the left panel</p>
                           </div>
                         )}
                       </div>
@@ -4155,7 +4203,7 @@ export default function SignaturesPage() {
                                   >
                                     <LuPen className="w-3 h-3 text-white" />
                                     <span>{recipient.signerRole || 'Signer Role'}</span>
-                                    <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px] text-white" />
+                                    <TbChevronDown size={14} className="inline-block align-middle -mt-[1px] text-white" />
                                   </button>
                                   {recipient.showSignerRoleDropdown && (
                                     <div
@@ -4195,7 +4243,7 @@ export default function SignaturesPage() {
                                     tabIndex={0}
                                   >
                                     <span>{recipient.contractRole || 'Contract Role'}</span>
-                                    <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px] text-white" />
+                                    <TbChevronDown size={14} className="inline-block align-middle -mt-[1px] text-white" />
                                   </button>
                                   {recipient.showContractRoleDropdown && (
                                     <div
@@ -4233,7 +4281,7 @@ export default function SignaturesPage() {
                                     tabIndex={0}
                                   >
                                     <span>Customize</span>
-                                    <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px]" />
+                                    <TbChevronDown size={14} className="inline-block align-middle -mt-[1px]" />
                                   </button>
                                 </div>
                               </div>
@@ -4248,7 +4296,7 @@ export default function SignaturesPage() {
                                     setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, name: '', email: '' } : r));
                                   }}
                                 >
-                                  <LuEraser className="w-4 h-4" />
+                                  <TbEraser className="w-4 h-4" />
                                   <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                     Erase
                                   </span>
@@ -4262,7 +4310,7 @@ export default function SignaturesPage() {
                                   }} 
                                   disabled={recipients.length === 1}
                                 >
-                                    <HiOutlineTrash className="w-4 h-4" />
+                                    <TbTrash className="w-4 h-4" />
                                     <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                       Delete
                                     </span>
@@ -4370,7 +4418,7 @@ export default function SignaturesPage() {
                                 style={{ fontFamily: 'Avenir, sans-serif' }}
                                 autoComplete="off"
                               />
-                              <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                              <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                               
                               {showSignatureAssigneeDropdown && (
                                 <div className="absolute left-0 top-full mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none w-full [&::-webkit-scrollbar]:hidden" style={{ fontFamily: 'Avenir, sans-serif' }}>
@@ -4607,7 +4655,7 @@ export default function SignaturesPage() {
                               className="flex items-center gap-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-xs font-semibold border border-transparent"
                             >
                               Select
-                              <HiMiniChevronDown size={17} className="text-white -mt-[1px]" />
+                              <TbChevronDown size={17} className="text-white -mt-[1px]" />
                             </button>
                             {showDocuSignDocumentDropdown && (
                               <div className="absolute z-50 mt-1 w-[300px] bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
@@ -4788,7 +4836,7 @@ export default function SignaturesPage() {
                                       }}
                                       className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group"
                                     >
-                                      <HiOutlineTrash className="h-4 w-4 transition-colors" />
+                                      <TbTrash className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                         Delete
                                       </span>
@@ -4903,7 +4951,7 @@ export default function SignaturesPage() {
                                       onClick={() => setDocuSignUploadedFiles(prev => prev.filter((_, i) => i !== idx))}
                                       className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group"
                                     >
-                                      <HiOutlineTrash className="h-4 w-4 transition-colors" />
+                                      <TbTrash className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                         Delete
                                       </span>
@@ -5009,7 +5057,7 @@ export default function SignaturesPage() {
                                   >
                                     <LuPen className="w-3 h-3 text-white" />
                                     <span>{recipient.signerRole || 'Signer Role'}</span>
-                                    <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px] text-white" />
+                                    <TbChevronDown size={14} className="inline-block align-middle -mt-[1px] text-white" />
                                   </button>
                                   {recipient.showSignerRoleDropdown && (
                                     <div
@@ -5041,7 +5089,7 @@ export default function SignaturesPage() {
                                     tabIndex={0}
                                   >
                                     <span>{recipient.contractRole || 'Contract Role'}</span>
-                                    <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px] text-white" />
+                                    <TbChevronDown size={14} className="inline-block align-middle -mt-[1px] text-white" />
                                   </button>
                                   {recipient.showContractRoleDropdown && (
                                     <div
@@ -5071,7 +5119,7 @@ export default function SignaturesPage() {
                                     tabIndex={0}
                                   >
                                     <span>Customize</span>
-                                    <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px]" />
+                                    <TbChevronDown size={14} className="inline-block align-middle -mt-[1px]" />
                                   </button>
                                 </div>
                               </div>
@@ -5086,7 +5134,7 @@ export default function SignaturesPage() {
                                     setDocuSignRecipients(prev => prev.map((r, i) => i === idx ? { ...r, name: '', email: '' } : r));
                                   }}
                                 >
-                                  <LuEraser className="w-4 h-4" />
+                                  <TbEraser className="w-4 h-4" />
                                   <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                     Erase
                                   </span>
@@ -5100,7 +5148,7 @@ export default function SignaturesPage() {
                                   }} 
                                   disabled={docuSignRecipients.length === 1}
                                 >
-                                  <HiOutlineTrash className="w-4 h-4" />
+                                  <TbTrash className="w-4 h-4" />
                                   <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                     Delete
                                   </span>
@@ -5292,7 +5340,7 @@ export default function SignaturesPage() {
                         ) : (
                           <span className="text-gray-400">Select a contract...</span>
                         )}
-                        <HiMiniChevronDown className="text-gray-400" size={16} />
+                        <TbChevronDown className="text-gray-400 dark:text-gray-500" size={18} />
                       </button>
                       {showModalContractDropdown && (
                         <div className="absolute top-full left-0 mt-1 min-w-[280px] w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 contract-dropdown">

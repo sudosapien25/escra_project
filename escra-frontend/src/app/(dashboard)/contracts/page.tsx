@@ -2,13 +2,13 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { FaClock, FaSort, FaPlus, FaDollarSign, FaTimes, FaChevronDown, FaChevronUp, FaRegClock, FaCheck } from 'react-icons/fa';
+import { FaClock, FaSort, FaPlus, FaDollarSign, FaTimes, FaRegClock, FaCheck } from 'react-icons/fa';
 import { FaArrowUpRightFromSquare } from 'react-icons/fa6';
-import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineDownload, HiOutlineEye, HiOutlineEyeOff, HiOutlineClipboardList, HiOutlineExclamation, HiChevronDown, HiOutlineDocumentSearch, HiOutlineDocumentAdd, HiOutlineUpload, HiOutlineTrash, HiOutlineX, HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight, HiOutlinePencil } from 'react-icons/hi';
+import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineEye, HiOutlineEyeOff, HiOutlineClipboardList, HiOutlineExclamation, HiOutlineDocumentSearch, HiOutlineDocumentAdd, HiOutlineX, HiOutlinePencil } from 'react-icons/hi';
 import { HiOutlineViewBoards } from 'react-icons/hi';
-import { LuCalendarFold, LuPen } from 'react-icons/lu';
+import { LuCalendarFold, LuCalendarClock, LuPen } from 'react-icons/lu';
 import { BiDotsHorizontal, BiCommentAdd } from 'react-icons/bi';
-import { TbWorldDollar, TbEdit, TbClockUp, TbCubeSend, TbClockPin, TbFilePlus, TbScript, TbCoins, TbFileText, TbClockEdit, TbUpload, TbDownload, TbSearch, TbFileSearch } from 'react-icons/tb';
+import { TbWorldDollar, TbEdit, TbClockUp, TbCubeSend, TbClockPin, TbFilePlus, TbScript, TbCoins, TbFileText, TbClockEdit, TbUpload, TbDownload, TbSearch, TbFileSearch, TbLibrary, TbCalendarClock, TbLayoutGrid, TbMessage2Plus, TbChevronDown, TbEraser, TbTrash, TbChevronsLeft, TbChevronsRight } from 'react-icons/tb';
 import { Logo } from '@/components/common/Logo';
 import { mockContracts } from '@/data/mockContracts';
 import { useEditor } from '@tiptap/react';
@@ -24,7 +24,7 @@ import { LuSendHorizontal } from 'react-icons/lu';
 import { RxCaretSort } from 'react-icons/rx';
 import { MdOutlineEditCalendar, MdOutlineUpdate, MdOutlineAddToPhotos, MdCancelPresentation } from 'react-icons/md';
 import { RiArrowDropDownLine } from 'react-icons/ri';
-import { HiMiniChevronUpDown, HiMiniChevronDown } from 'react-icons/hi2';
+import { HiMiniChevronUpDown } from 'react-icons/hi2';
 import { useTaskStore } from '@/data/taskStore';
 import { X } from 'lucide-react';
 import { useAssigneeStore } from '@/data/assigneeStore';
@@ -32,7 +32,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { useAuth } from '@/context/AuthContext';
 import { useDocumentStore } from '@/data/documentNameStore';
-import { PiMoneyWavyBold, PiBankBold, PiSignatureBold, PiCaretUpDownBold } from 'react-icons/pi';
+import { PiMoneyWavyBold, PiBankBold, PiSignatureBold, PiCaretUpDownBold, PiCaretUpDown } from 'react-icons/pi';
 import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbChevronsDownRight, TbMailPlus, TbLibraryPlus, TbStatusChange, TbDragDrop, TbHistory } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
@@ -1547,6 +1547,22 @@ const ContractsPage: React.FC = () => {
 
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [selectedTask, setSelectedTask] = useState<string | null>(null);
+  const [openMenuTask, setOpenMenuTask] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  
+  // Click outside handler for task menu dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpenMenuTask(null);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+  
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editableTitle, setEditableTitle] = useState('');
   const [selectedType, setSelectedType] = useState('Property Sale');
@@ -3925,7 +3941,7 @@ const ContractsPage: React.FC = () => {
                         }}
                         onClick={(e) => handleDropdownClick(e, showContractTypeDropdown, setShowContractTypeDropdown, [setShowMilestoneDropdown, setShowPropertyTypeDropdown])}
                       />
-                      <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                       {showContractTypeDropdown && (
                         <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                           {CONTRACT_TYPES.map(type => (
@@ -3970,7 +3986,7 @@ const ContractsPage: React.FC = () => {
                         }}
                         onClick={(e) => handleDropdownClick(e, showPropertyTypeDropdown, setShowPropertyTypeDropdown, [setShowContractTypeDropdown, setShowMilestoneDropdown])}
                       />
-                      <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                       {showPropertyTypeDropdown && (
                         <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                           {PROPERTY_TYPES.map(type => (
@@ -4011,7 +4027,7 @@ const ContractsPage: React.FC = () => {
                         }}
                         onClick={(e) => handleDropdownClick(e, showMilestoneDropdown, setShowMilestoneDropdown, [setShowContractTypeDropdown, setShowPropertyTypeDropdown])}
                       />
-                      <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                       {showMilestoneDropdown && (
                         <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                           {MILESTONE_TEMPLATES.map(template => (
@@ -4136,7 +4152,7 @@ const ContractsPage: React.FC = () => {
                           }
                         }}
                       />
-                      <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                       {showStateDropdown && (
                         <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-hidden overflow-y-auto [&::-webkit-scrollbar]:hidden">
                           {US_STATES
@@ -4208,7 +4224,7 @@ const ContractsPage: React.FC = () => {
                           }
                         }}
                       />
-                      <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                       {showCountryDropdown && (
                         <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-hidden overflow-y-auto [&::-webkit-scrollbar]:hidden">
                           {COUNTRIES
@@ -4350,7 +4366,7 @@ const ContractsPage: React.FC = () => {
                               >
                                 <LuPen className="w-3 h-3 text-primary dark:text-white" />
                                 <span>{recipient.signerRole || 'Signer Role'}</span>
-                                <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px]" />
+                                <TbChevronDown size={16} className="inline-block align-middle -mt-[1px] text-gray-400 dark:text-white" />
                               </button>
                               {recipient.showSignerRoleDropdown && (
                                 <div
@@ -4391,7 +4407,7 @@ const ContractsPage: React.FC = () => {
                                 tabIndex={0}
                               >
                                 <span>{recipient.contractRole || 'Contract Role'}</span>
-                                <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px]" />
+                                <TbChevronDown size={16} className="inline-block align-middle -mt-[1px] text-gray-400 dark:text-white" />
                               </button>
                               {recipient.showContractRoleDropdown && (
                                 <div
@@ -4423,14 +4439,32 @@ const ContractsPage: React.FC = () => {
                             </div>
                           </div>
                           
-                          {/* Delete button */}
-                          <button 
-                            className="self-end sm:self-auto text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1" 
-                            onClick={() => handleDeleteRecipient(idx)} 
-                            disabled={recipients.length === 1}
-                          >
-                            <HiOutlineTrash className="w-4 h-4" />
-                          </button>
+                          {/* Clear and Delete buttons */}
+                          <div className="flex items-center gap-1">
+                            <button 
+                              className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1 relative group" 
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, name: '', email: '' } : r));
+                              }}
+                            >
+                              <TbEraser className="w-4 h-4" />
+                              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                Erase
+                              </span>
+                            </button>
+                            <button 
+                              className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1 relative group" 
+                              onClick={() => handleDeleteRecipient(idx)} 
+                              disabled={recipients.length === 1}
+                            >
+                              <TbTrash className="w-4 h-4" />
+                              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                Delete
+                              </span>
+                            </button>
+                          </div>
                         </div>
                         
                         {/* Form fields */}
@@ -4852,7 +4886,7 @@ const ContractsPage: React.FC = () => {
                               style={{ fontFamily: 'Avenir, sans-serif' }}
                               autoComplete="off"
                             />
-                            <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                             
                             {showStep4AssigneeDropdown && (
                               <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:hidden" style={{ fontFamily: 'Avenir, sans-serif' }}>
@@ -5066,7 +5100,7 @@ const ContractsPage: React.FC = () => {
                                            style={{ fontFamily: 'Avenir, sans-serif' }}
                                            autoComplete="off"
                                          />
-                                         <HiMiniChevronDown className="pointer-events-none absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                         <TbChevronDown className="pointer-events-none absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                                          
                                          {showStep4DocumentAssigneeDropdown && (
                                            <div className="fixed inset-0 z-[9999] pointer-events-none">
@@ -5147,7 +5181,7 @@ const ContractsPage: React.FC = () => {
                                          setStep4Documents(prev => prev.filter((_, i) => i !== idx));
                                        }}
                                      >
-                                       <HiOutlineTrash className="h-4 w-4" />
+                                       <TbTrash className="h-4 w-4" />
                                      </button>
                                    </div>
                                  </div>
@@ -5271,7 +5305,7 @@ const ContractsPage: React.FC = () => {
                                         style={{ fontFamily: 'Avenir, sans-serif' }}
                                         autoComplete="off"
                                       />
-                                      <HiMiniChevronDown className="pointer-events-none absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                      <TbChevronDown className="pointer-events-none absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                                       
                                                                              {showStep4DocumentAssigneeDropdown && (
                                          <div className="fixed inset-0 z-[9999] pointer-events-none">
@@ -5352,7 +5386,7 @@ const ContractsPage: React.FC = () => {
                                       setStep4Documents(prev => prev.filter((_, i) => i !== idx));
                                     }}
                                   >
-                                    <HiOutlineTrash className="h-4 w-4" />
+                                    <TbTrash className="h-4 w-4" />
                                   </button>
                                 </div>
                               </div>
@@ -5403,7 +5437,7 @@ const ContractsPage: React.FC = () => {
                               style={{ fontFamily: 'Avenir, sans-serif' }}
                               autoComplete="off"
                             />
-                            <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                             {showNewDocumentContractDropdown && (
                               <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
                                 {/* Fixed Search Bar */}
@@ -5471,7 +5505,7 @@ const ContractsPage: React.FC = () => {
                               style={{ fontFamily: 'Avenir, sans-serif' }}
                               autoComplete="off"
                             />
-                            <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                             
                             {showNewDocumentAssigneeDropdown && (
                               <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:hidden" style={{ fontFamily: 'Avenir, sans-serif' }}>
@@ -5667,7 +5701,7 @@ const ContractsPage: React.FC = () => {
                                       style={{ fontFamily: 'Avenir, sans-serif' }}
                                       autoComplete="off"
                                     />
-                                    <HiMiniChevronDown className="pointer-events-none absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <TbChevronDown className="pointer-events-none absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                                     
                                     {showInlineEditingNewDocumentAssigneeDropdown && (
                                       <div className="fixed inset-0 z-[9999] pointer-events-none">
@@ -5714,7 +5748,7 @@ const ContractsPage: React.FC = () => {
                                       style={{ fontFamily: 'Avenir, sans-serif' }}
                                       autoComplete="off"
                                     />
-                                    <HiMiniChevronDown className="pointer-events-none absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <TbChevronDown className="pointer-events-none absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                                     
                                     {showInlineEditingNewDocumentContractDropdown && (
                                       <div className="fixed inset-0 z-[9999] pointer-events-none">
@@ -5805,13 +5839,13 @@ const ContractsPage: React.FC = () => {
                                     <HiOutlinePencil className="h-4 w-4" />
                                   </button>
                                   <button 
-                                    className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1 pr-3"
+                                    className="text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1 pr-3"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       setNewDocumentDocuments(prev => prev.filter((_, i) => i !== idx));
                                     }}
                                   >
-                                    <HiOutlineTrash className="h-4 w-4" />
+                                    <TbTrash className="h-4 w-4" />
                                   </button>
                                 </div>
                               </div>
@@ -6053,7 +6087,7 @@ const ContractsPage: React.FC = () => {
                     onClick={() => setOpenCompletionTimeDropdown(!openCompletionTimeDropdown)}
                   >
                     <span>{selectedCompletionTime}</span>
-                    <HiMiniChevronDown className="text-gray-400" size={16} />
+                    <TbChevronDown className="text-gray-400 dark:text-gray-500" size={18} />
                   </button>
                   {openCompletionTimeDropdown && (
                     <div 
@@ -6132,7 +6166,7 @@ const ContractsPage: React.FC = () => {
                   }}
                 >
                                       <span className="flex items-center"><TbHistory className="text-gray-400 mr-2" size={17} />Status</span>
-                  <HiMiniChevronDown className="text-gray-400" size={16} />
+                  <TbChevronDown className="text-gray-400 dark:text-gray-500" size={18} />
                 </button>
                 {showStatusDropdown && (
                   <div 
@@ -6198,7 +6232,7 @@ const ContractsPage: React.FC = () => {
                     onClick={() => { setOpenContractDropdown(v => !v); setOpenAssigneeDropdown(false); setShowStatusDropdown(false); }}
                   >
                     <span className="flex items-center"><TbFileSearch className="text-gray-400 mr-2" size={17} />Contract</span>
-                    <HiMiniChevronDown className="text-gray-400" size={16} />
+                    <TbChevronDown className="text-gray-400 dark:text-gray-500" size={18} />
                   </button>
                   {openContractDropdown && (
                     <div 
@@ -6276,7 +6310,7 @@ const ContractsPage: React.FC = () => {
                     onClick={() => { setOpenAssigneeDropdown(v => !v); setOpenContractDropdown(false); setShowStatusDropdown(false); }}
                   >
                     <span className="flex items-center"><RiUserSearchLine className="text-gray-400 mr-2" size={17} />Assignee</span>
-                    <HiMiniChevronDown className="text-gray-400" size={16} />
+                    <TbChevronDown className="text-gray-400 dark:text-gray-500" size={18} />
                   </button>
                   {openAssigneeDropdown && (
                     <div 
@@ -6370,7 +6404,7 @@ const ContractsPage: React.FC = () => {
                 }}
               >
                 <span className="flex items-center"><TbClockPin className="text-gray-400 mr-2" size={17} />{selectedRecentlyUpdated}</span>
-                <HiMiniChevronDown className="text-gray-400" size={16} />
+                <TbChevronDown className="text-gray-400 dark:text-gray-500" size={18} />
               </button>
               {openRecentlyUpdatedDropdown && (
                 <div 
@@ -6437,7 +6471,7 @@ const ContractsPage: React.FC = () => {
                 >
                                                         <TbHistory className="text-gray-400" size={18} />
                   <span>Status</span>
-                  <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+                  <TbChevronDown className="ml-1 text-gray-400 dark:text-gray-500" size={18} />
                 </button>
                 {showStatusDropdown && (
                   <div 
@@ -6504,7 +6538,7 @@ const ContractsPage: React.FC = () => {
                   >
                     <TbFileSearch className="text-gray-400" size={18} />
                     <span>Contract</span>
-                    <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+                    <TbChevronDown className="ml-1 text-gray-400 dark:text-gray-500" size={18} />
                   </button>
                   {openContractDropdown && (
                     <div 
@@ -6583,7 +6617,7 @@ const ContractsPage: React.FC = () => {
                   >
                     <RiUserSearchLine className="text-gray-400" size={18} />
                     <span>Assignee</span>
-                    <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+                    <TbChevronDown className="ml-1 text-gray-400 dark:text-gray-500" size={18} />
                   </button>
                   {openAssigneeDropdown && (
                     <div 
@@ -6678,7 +6712,7 @@ const ContractsPage: React.FC = () => {
               >
                 <TbClockPin className="text-gray-400" size={18} />
                 <span>{selectedRecentlyUpdated}</span>
-                <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+                <TbChevronDown className="ml-1 text-gray-400 dark:text-gray-500" size={18} />
               </button>
               {openRecentlyUpdatedDropdown && (
                 <div 
@@ -6858,8 +6892,8 @@ const ContractsPage: React.FC = () => {
                                   togglePartiesExpansion(contract.id);
                                 }}
                               >
-                                <HiMiniChevronDown 
-                                  size={14} 
+                                <TbChevronDown 
+                                  size={16} 
                                   className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
                                 />
                                 <span className="ml-1 text-xs">
@@ -6935,7 +6969,7 @@ const ContractsPage: React.FC = () => {
                       <option value={50}>50</option>
                     </select>
                     <div className="absolute inset-y-0 right-1 flex items-center pointer-events-none">
-                      <HiChevronDown className="w-3 h-3 text-gray-400" />
+                      <TbChevronDown className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                     </div>
                   </div>
                 </div>
@@ -6943,17 +6977,11 @@ const ContractsPage: React.FC = () => {
                   Page 1 of 1
                 </div>
                 <div className="flex space-x-1">
-                  <button className="p-1 text-gray-400 cursor-not-allowed">
-                    <HiOutlineChevronDoubleLeft className="w-3 h-3" />
+                  <button className="p-1 text-gray-400 dark:text-gray-500 cursor-not-allowed">
+                    <TbChevronsLeft className="w-4 h-4" />
                   </button>
-                  <button className="p-1 text-gray-400 cursor-not-allowed">
-                    <HiOutlineChevronDoubleLeft className="w-3 h-3 rotate-180" />
-                  </button>
-                  <button className="p-1 text-gray-400 cursor-not-allowed">
-                    <HiOutlineChevronDoubleRight className="w-3 h-3 rotate-180" />
-                  </button>
-                  <button className="p-1 text-gray-400 cursor-not-allowed">
-                    <HiOutlineChevronDoubleRight className="w-3 h-3" />
+                  <button className="p-1 text-gray-400 dark:text-gray-500 cursor-not-allowed">
+                    <TbChevronsRight className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -7099,7 +7127,7 @@ const ContractsPage: React.FC = () => {
                             deleteDocument(doc.id, doc.name);
                           }}
                         >
-                          <HiOutlineTrash className="h-4 w-4 transition-colors" />
+                          <TbTrash className="h-4 w-4 transition-colors" />
                           <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                             Delete
                           </span>
@@ -7132,7 +7160,7 @@ const ContractsPage: React.FC = () => {
                       <option value={50}>50</option>
                     </select>
                     <div className="absolute inset-y-0 right-1 flex items-center pointer-events-none">
-                      <HiChevronDown className="w-3 h-3 text-gray-400" />
+                      <TbChevronDown className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                     </div>
                   </div>
                 </div>
@@ -7140,17 +7168,11 @@ const ContractsPage: React.FC = () => {
                   Page 1 of 1
                 </div>
                 <div className="flex space-x-1">
-                  <button className="p-1 text-gray-400 cursor-not-allowed">
-                    <HiOutlineChevronDoubleLeft className="w-3 h-3" />
+                  <button className="p-1 text-gray-400 dark:text-gray-500 cursor-not-allowed">
+                    <TbChevronsLeft className="w-4 h-4" />
                   </button>
-                  <button className="p-1 text-gray-400 cursor-not-allowed">
-                    <HiOutlineChevronDoubleLeft className="w-3 h-3 rotate-180" />
-                  </button>
-                  <button className="p-1 text-gray-400 cursor-not-allowed">
-                    <HiOutlineChevronDoubleRight className="w-3 h-3 rotate-180" />
-                  </button>
-                  <button className="p-1 text-gray-400 cursor-not-allowed">
-                    <HiOutlineChevronDoubleRight className="w-3 h-3" />
+                  <button className="p-1 text-gray-400 dark:text-gray-500 cursor-not-allowed">
+                    <TbChevronsRight className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -7169,7 +7191,7 @@ const ContractsPage: React.FC = () => {
     </div>
     {/* Modal for contract details */}
     {selectedContract && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 cursor-default select-none">
+      <div className="fixed inset-0 z-50 flex items-start justify-center bg-black bg-opacity-40 cursor-default select-none" style={{ paddingTop: '80px' }}>
         <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden cursor-default select-none">
           {/* Sticky Header with Download Summary and Close buttons */}
           <div className="sticky top-0 z-40 bg-gray-50 dark:bg-gray-900 px-6 py-4 cursor-default select-none">
@@ -7197,7 +7219,7 @@ const ContractsPage: React.FC = () => {
             <div className="w-full overflow-x-auto cursor-default select-none [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
               <div className="flex flex-col items-center w-full max-w-full cursor-default select-none">
                 {/* Progress Bar */}
-                <div className="relative w-full max-w-[1100px] h-2 mb-6 bg-gray-200 rounded-full cursor-default select-none">
+                <div className="relative w-full max-w-[1100px] h-2 mb-6 bg-gray-200 dark:bg-gray-700 rounded-full cursor-default select-none">
                   {(() => {
                     const steps = [
                       { key: 'initiation', label: 'Initiation', number: 1 },
@@ -7237,7 +7259,7 @@ const ContractsPage: React.FC = () => {
                         <div key={step.key} className="flex flex-col items-center cursor-default select-none" style={{ minWidth: 80, flex: 1 }}>
                           <div className="relative flex items-center justify-center" style={{ width: 48 }}>
                             <div className={`flex items-center justify-center rounded-full border-2 transition-all duration-300 w-8 h-8 text-sm font-bold
-                              ${isCompleted ? 'bg-primary border-primary text-white' : isCurrent ? 'bg-primary border-primary text-white' : 'bg-white border-gray-300 text-gray-400'} cursor-default select-none`}
+                              ${isCompleted ? 'bg-primary border-primary text-white' : isCurrent ? 'bg-primary border-primary text-white' : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-300'} cursor-default select-none`}
                             >
                               {isCompleted ? (
                                 <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
@@ -7372,7 +7394,7 @@ const ContractsPage: React.FC = () => {
                             }}
                             onClick={() => setShowContractDetailsContractTypeDropdown(!showContractDetailsContractTypeDropdown)}
                           />
-                          <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                           {showContractDetailsContractTypeDropdown && (
                             <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ maxHeight: '200px' }}>
                               {CONTRACT_TYPES.map(type => (
@@ -7496,9 +7518,9 @@ const ContractsPage: React.FC = () => {
                         className="h-[34px] px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer flex items-center gap-2"
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       >
-                        <PiCaretUpDownBold 
-                          size={16} 
-                          className={`transition-transform duration-200 text-white ${showContractDetailsExpanded ? 'rotate-180' : ''}`}
+                        <PiCaretUpDown 
+                          size={18} 
+                          className={`transition-transform duration-200 text-primary dark:text-white ${showContractDetailsExpanded ? 'rotate-180' : ''}`}
                         />
                         <span className="text-xs font-medium">
                           {showContractDetailsExpanded ? 'Hide' : 'Show'} Additional Details
@@ -7577,7 +7599,7 @@ const ContractsPage: React.FC = () => {
                                 }}
                                 onClick={() => setShowContractDetailsPropertyTypeDropdown(!showContractDetailsPropertyTypeDropdown)}
                               />
-                              <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                              <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                               {showContractDetailsPropertyTypeDropdown && (
                                 <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ maxHeight: '200px' }}>
                                   {PROPERTY_TYPES.map(type => (
@@ -7677,7 +7699,7 @@ const ContractsPage: React.FC = () => {
                                   }
                                 }}
                               />
-                              <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                              <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                               {showContractDetailsStateDropdown && (
                                 <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ maxHeight: '200px' }}>
                                   {US_STATES
@@ -7780,7 +7802,7 @@ const ContractsPage: React.FC = () => {
                                   }
                                 }}
                               />
-                              <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                              <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                               {showContractDetailsCountryDropdown && (
                                 <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ maxHeight: '200px' }}>
                                   {COUNTRIES
@@ -8300,7 +8322,7 @@ const ContractsPage: React.FC = () => {
                               style={{ fontFamily: 'Avenir, sans-serif' }}
                             >
                               <span>{party1Role}</span>
-                              <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px]" />
+                              <TbChevronDown size={18} className="inline-block align-middle -mt-[1px] text-gray-400 dark:text-gray-500" />
                             </button>
                             {showParty1RoleDropdown && (
                               <div
@@ -8383,7 +8405,7 @@ const ContractsPage: React.FC = () => {
                               style={{ fontFamily: 'Avenir, sans-serif' }}
                             >
                               <span>{party2Role}</span>
-                              <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px]" />
+                              <TbChevronDown size={18} className="inline-block align-middle -mt-[1px] text-gray-400 dark:text-gray-500" />
                             </button>
                             {showParty2RoleDropdown && (
                               <div
@@ -8484,7 +8506,7 @@ const ContractsPage: React.FC = () => {
                                   style={{ fontFamily: 'Avenir, sans-serif' }}
                                 >
                                   <span>{party.role}</span>
-                                  <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px]" />
+                                  <TbChevronDown size={16} className="inline-block align-middle -mt-[1px] text-gray-400 dark:text-gray-500" />
                                 </button>
                                 {party.showRoleDropdown && (
                                   <div
@@ -8652,23 +8674,26 @@ const ContractsPage: React.FC = () => {
                 {/* RIGHT COLUMN: Documents, Signature Status, Tasks */}
                 <div className="flex flex-col gap-6 w-full cursor-default select-none">
                   {/* Documents Box */}
-                  <div ref={documentsBoxRef} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 w-full box-border cursor-default select-none">
-                    <div className="flex items-center justify-between cursor-default select-none">
-                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Documents</h3>
+                  <div ref={documentsBoxRef} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 w-full box-border cursor-default select-none h-[440px]">
+                    <div className="flex items-center justify-between mb-4 cursor-default select-none">
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white cursor-default select-none">Documents</h3>
                       <button 
                         onClick={() => { setShowUploadModal(true); setUploadContractId(selectedContract?.id || null); }}
                         className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-primary text-gray-700 dark:text-white font-semibold text-xs hover:bg-gray-200 dark:hover:bg-primary-dark transition-colors cursor-pointer" style={{ fontFamily: 'Avenir, sans-serif' }}
                       >
-                        <HiOutlineUpload className="text-base text-primary dark:text-white" /> Upload
+                        <TbUpload className="text-base text-primary dark:text-white" /> Upload
                       </button>
                     </div>
-                    <div className="flex flex-col gap-3 overflow-y-auto mt-4 pr-2 cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ maxHeight: '450px', minHeight: '140px' }}>
+                    <div className="space-y-3 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ height: 'calc(440px - 100px)', minHeight: '280px' }}>
                       {filteredDocuments
                         .filter(doc => doc.contractId === selectedContract.id)
-                        .map(doc => (
-                        <div key={doc.id} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600 cursor-default select-none">
+                        .length > 0 ? (
+                        filteredDocuments
+                          .filter(doc => doc.contractId === selectedContract.id)
+                          .map(doc => (
+                        <div key={doc.id} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors select-none">
                           <div className="flex items-center gap-3 cursor-default select-none">
-                            <HiOutlineDocumentText className="w-5 h-5 text-primary" />
+                            <TbLibrary className="w-5 h-5 text-primary" />
                             <div className="flex-1 min-w-0">
                               {editingDocumentName === doc.id ? (
                                 <div className="flex items-center gap-1">
@@ -8750,7 +8775,7 @@ const ContractsPage: React.FC = () => {
                                 }
                               }}
                             >
-                              <HiOutlineDownload className="h-4 w-4 transition-colors" />
+                              <TbDownload className="h-4 w-4 transition-colors" />
                               <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                 Download
                               </span>
@@ -8762,14 +8787,21 @@ const ContractsPage: React.FC = () => {
                                 deleteDocument(doc.id, doc.name);
                               }}
                             >
-                              <HiOutlineTrash className="h-4 w-4 transition-colors" />
+                              <TbTrash className="h-4 w-4 transition-colors" />
                               <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                 Delete
                               </span>
                             </button>
                           </div>
                         </div>
-                      ))}
+                      ))
+                      ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400 -mt-8">
+                          <TbLibrary size={26} className="mb-2 text-primary" />
+                          <p className="text-sm" style={{ fontFamily: 'Avenir, sans-serif' }}>No documents uploaded yet</p>
+                          <p className="text-xs" style={{ fontFamily: 'Avenir, sans-serif' }}>Click "Upload" to add documents</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                   {/* Signature Status Box */}
@@ -8813,38 +8845,69 @@ const ContractsPage: React.FC = () => {
                         <span className="text-base font-bold text-primary dark:text-white">+</span> New Task
                       </button>
                     </div>
-                    <div className="flex flex-col gap-3 overflow-y-auto cursor-default select-none flex-1 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ minHeight: '830px' }}>
+                    <div className="space-y-3 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ height: '567px', minHeight: '280px' }}>
                       {selectedContract ? (
                         getTasksByContract(selectedContract.id).length > 0 ? (
                           getTasksByContract(selectedContract.id).map(task => (
-                            <div key={task.id} className="bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 p-4 shadow-sm relative cursor-default select-none">
+                            <div 
+                              key={task.id} 
+                              className="bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 p-4 shadow-sm relative cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors select-none"
+                              onContextMenu={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setOpenMenuTask(openMenuTask === task.id ? null : task.id);
+                              }}
+                            >
                               {/* Task Number and Open Button - Top Row */}
                               <div className="flex items-center justify-between mb-3 cursor-default select-none">
                                 <div className="cursor-default select-none">
-                                  <span className="text-[10px] font-bold bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-200 cursor-default select-none">
+                                  <span className="text-[10px] font-bold bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded border border-gray-700 dark:border-gray-500 cursor-default select-none">
                                     Task #{task.taskNumber}
                                   </span>
-                                  <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20 ml-1 cursor-default select-none">
+                                  <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary ml-1 cursor-default select-none">
                                     # {task.contractId}
                                   </span>
                                 </div>
-                                {/* Open Task Button - Top Right */}
-                                <button 
-                                  className="border border-gray-300 dark:border-gray-500 rounded-md px-1 py-0.5 text-white hover:border-primary hover:text-primary transition-colors cursor-pointer relative group"
-                                >
-                                  <FaArrowUpRightFromSquare className="h-3 w-3" />
-                                  <span className="absolute -bottom-8 -right-1 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                                    Open Task
-                                  </span>
-                                </button>
+                                {/* Task Menu - Positioned at top right */}
+                                <div className="absolute top-3 right-3">
+                                  <button
+                                    className="border border-gray-300 dark:border-gray-700 rounded-md px-1 py-0.5 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors"
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      setOpenMenuTask(openMenuTask === task.id ? null : task.id);
+                                    }}
+                                  >
+                                    <BiDotsHorizontal size={18} />
+                                  </button>
+                                  {openMenuTask === task.id && (
+                                    <div
+                                      ref={menuRef}
+                                      className="absolute right-0 mt-[1px] w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 py-2 z-50"
+                                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                                    >
+                                      <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700">Mark as Done</button>
+                                      <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700">Edit Task</button>
+                                      <button 
+                                        className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-red-600 dark:hover:text-red-400"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          // TODO: Implement delete task functionality
+                                          setOpenMenuTask(null);
+                                        }}
+                                      >
+                                        Delete Task
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                               {/* Task Title */}
                               <h3 className="text-xs font-bold text-gray-900 dark:text-white mb-2 cursor-default select-none">{task.title}</h3>
                               {/* Due Date and Status */}
                               <div className="flex items-center justify-between mb-3 cursor-default select-none">
                     <div className="flex items-center gap-1 cursor-default select-none">
-                                  <LuCalendarFold className="text-gray-400 text-sm" />
-                                  <span className="text-xs text-gray-500 cursor-default select-none">{formatDatePretty(task.due)}</span>
+                                  <TbCalendarClock className="text-gray-400 text-base" />
+                                  <span className="text-xs text-gray-900 dark:text-white cursor-default select-none">{formatDatePretty(task.due)}</span>
                     </div>
                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${getTaskStatusBadgeStyle(task.status)} cursor-default select-none`}>
                                   {getTaskStatusLabel(task.status)}
@@ -8877,8 +8940,10 @@ const ContractsPage: React.FC = () => {
                             </div>
                           ))
                         ) : (
-                          <div className="text-center py-8 text-gray-500 text-sm cursor-default select-none">
-                            <span className="text-sm text-gray-500 cursor-default select-none">No tasks for this contract. Click "New Task" to add one.</span>
+                          <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400 -mt-8">
+                            <TbLayoutGrid size={26} className="mb-2 text-primary" />
+                            <p className="text-sm" style={{ fontFamily: 'Avenir, sans-serif' }}>No tasks for this contract</p>
+                            <p className="text-xs" style={{ fontFamily: 'Avenir, sans-serif' }}>Click "New Task" to add one</p>
                           </div>
                         )
                       ) : (
@@ -8954,7 +9019,7 @@ const ContractsPage: React.FC = () => {
                               <button onClick={() => commentEditor.chain().focus().toggleBulletList().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('bulletList') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'} cursor-pointer`} title="Bullet List">• List</button>
                               <button onClick={() => commentEditor.chain().focus().toggleOrderedList().run()} className={`text-xs px-1 rounded ${commentEditor.isActive('orderedList') ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'} cursor-pointer`} title="Numbered List">1. List</button>
                               <button onClick={handlePostContractComment} className="ml-auto -mr-4 text-xs px-2 py-1 rounded transition-colors flex items-center group relative cursor-pointer" title="Send">
-                                <BiCommentAdd className="w-5 h-5 text-gray-700 dark:text-white group-hover:text-primary transition-colors" />
+                                <TbMessage2Plus className="w-5 h-5 text-gray-700 dark:text-white group-hover:text-primary transition-colors" />
                                 <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 cursor-default select-none">
                                   Send
                                 </span>
@@ -9078,7 +9143,7 @@ const ContractsPage: React.FC = () => {
                       style={{ fontFamily: 'Avenir, sans-serif' }}
                       autoComplete="off"
                     />
-                    <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     {showUploadModalAssigneeDropdown && (
                       <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:hidden" style={{ fontFamily: 'Avenir, sans-serif' }}>
                         {allAssignees.length > 0 ? (
@@ -9306,7 +9371,7 @@ const ContractsPage: React.FC = () => {
                                 style={{ fontFamily: 'Avenir, sans-serif' }}
                                 autoComplete="off"
                               />
-                              <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                              <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                               
                               {showInlineEditingUploadModalAssigneeDropdown && (
                                 <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:hidden" 
@@ -9401,7 +9466,7 @@ const ContractsPage: React.FC = () => {
                         className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1"
                         onClick={() => handleRemoveUploadModalAddedDocument(idx)}
                       >
-                        <HiOutlineTrash className="h-4 w-4" />
+                        <TbTrash className="h-4 w-4" />
                       </button>
                           </div>
                         </div>
@@ -9769,7 +9834,7 @@ const ContractsPage: React.FC = () => {
                     style={{ fontFamily: 'Avenir, sans-serif' }}
                     autoComplete="off"
                   />
-                  <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                   
                   {showDocumentUploadAssigneeDropdown && (
                     <div className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 max-h-40 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:hidden">
