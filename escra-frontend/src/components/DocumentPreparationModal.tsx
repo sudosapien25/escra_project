@@ -511,12 +511,12 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
                   <Listbox value={selectedDocumentIndex} onChange={setSelectedDocumentIndex}>
                     <div className="relative">
                       <Listbox.Button
-                        className="flex items-center justify-between w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs"
+                        className="flex items-center justify-between w-full bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs"
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       >
                         <span className="block truncate">
                           {documentData.selectedDocuments && documentData.selectedDocuments[selectedDocumentIndex] 
-                            ? (documentData.selectedDocuments[selectedDocumentIndex].name || `Document ${selectedDocumentIndex + 1}`)
+                            ? `${documentData.selectedDocuments[selectedDocumentIndex].name || `Document ${selectedDocumentIndex + 1}`} (${documentData.selectedDocuments[selectedDocumentIndex].id})`
                             : 'Select Document'
                           }
                         </span>
@@ -572,29 +572,6 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
                 </div>
               </div>
 
-              {/* Field Types */}
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                  Field Types
-                </h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {Object.values(FieldType).map((fieldType) => (
-                    <button
-                      key={fieldType}
-                      onClick={() => handleFieldSelect(fieldType)}
-                      className={`p-3 rounded-lg border-2 text-xs font-medium transition-colors ${
-                        selectedField === fieldType
-                          ? 'border-primary bg-primary/10 text-primary'
-                          : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500'
-                      }`}
-                      style={{ fontFamily: 'Avenir, sans-serif' }}
-                    >
-                      {FIELD_TYPE_LABELS[fieldType]}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* Recipients */}
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3" style={{ fontFamily: 'Avenir, sans-serif' }}>
@@ -619,6 +596,29 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
                 </div>
               </div>
 
+              {/* Field Types */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                  Field Types
+                </h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {Object.values(FieldType).map((fieldType) => (
+                    <button
+                      key={fieldType}
+                      onClick={() => handleFieldSelect(fieldType)}
+                      className={`p-3 rounded-lg border-2 text-xs font-medium transition-colors ${
+                        selectedField === fieldType
+                          ? 'border-primary bg-primary/10 text-primary'
+                          : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500'
+                      }`}
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                    >
+                      {FIELD_TYPE_LABELS[fieldType]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Instructions */}
               <div className="bg-gray-100 dark:bg-gray-900 p-3 rounded-lg border-2 border-gray-200 dark:border-gray-600">
                 <h4 className="text-xs font-semibold text-gray-900 dark:text-white mb-2" style={{ fontFamily: 'Avenir, sans-serif' }}>
@@ -626,10 +626,10 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
                 </h4>
                 <ul className="text-xs text-gray-700 dark:text-gray-300 space-y-1">
                   <li>• Select document(s) to prepare</li>
+                  <li>• Choose recipient(s)</li>
                   <li>• Select relevant field types</li>
-                  <li>• Choose a recipient</li>
-                  <li>• Click on the document to place fields</li>
-                  <li>• Drag fields to reposition them</li>
+                  <li>• Drag fields into position on document</li>
+                  <li>• Click on document to place fields</li>
                 </ul>
               </div>
 
