@@ -6,7 +6,7 @@ import Image from 'next/image';
 import DecryptedText from '@/components/DecryptedText';
 import { HiMiniChevronRight } from 'react-icons/hi2';
 import { HiOutlineIdentification, HiOutlineKey, HiOutlineCube, HiOutlineCog, HiOutlineDocumentText, HiOutlineClipboardCheck, HiOutlineServer, HiOutlineFingerPrint, HiOutlineLockClosed, HiOutlineChip, HiOutlineChevronLeft, HiOutlineChevronRight, HiOutlineDuplicate } from 'react-icons/hi';
-import { TbBuildingEstate, TbWorld, TbSettingsAutomation, TbServerSpark, TbAdjustmentsAlt, TbAtom, TbBolt, TbAbacus, TbWindow, TbEyeSearch, TbShieldSearch, TbShield, TbLock, TbShieldCheck, TbServer, TbNetwork, TbShieldStar, TbEngine, TbScale, TbWall, TbShieldLock, TbClipboardSearch, TbBuildingCommunity, TbBallAmericanFootball, TbManualGearbox, TbTool, TbGitBranch, TbCoins } from 'react-icons/tb';
+import { TbBuildingEstate, TbWorld, TbSettingsAutomation, TbServerSpark, TbAdjustmentsAlt, TbAtom, TbBolt, TbAbacus, TbWindow, TbEyeSearch, TbShieldSearch, TbShield, TbLock, TbShieldCheck, TbServer, TbNetwork, TbShieldStar, TbEngine, TbScale, TbWall, TbShieldLock, TbClipboardSearch, TbBuildingCommunity, TbBallAmericanFootball, TbManualGearbox, TbTool, TbGitBranch, TbCoins, TbSchema, TbKey } from 'react-icons/tb';
 import { LuBriefcaseBusiness, LuConstruction, LuTrello, LuBlocks, LuIdCard, LuCpu, LuAtom, LuLayers3 } from 'react-icons/lu';
 import { GrMoney, GrUserWorker } from 'react-icons/gr';
 import { VscLaw } from 'react-icons/vsc';
@@ -412,7 +412,7 @@ export default function LandingPage() {
             {/* Cryptographic Signature Verification */}
             <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200 hover:shadow-xl transition-shadow">
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                <HiOutlineKey className="w-6 h-6 text-primary" />
+                <TbKey className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Cryptographic Signature Verification</h3>
               <p className="text-gray-600 text-sm leading-relaxed">
@@ -652,7 +652,7 @@ export default function LandingPage() {
             {/* Immutable Audit Architecture */}
             <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200 hover:shadow-xl transition-shadow">
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                <PiLockKeyBold className="w-6 h-6 text-primary" />
+                <TbSchema className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Immutable Audit Architecture</h3>
               <p className="text-gray-600 text-sm leading-relaxed mb-3">

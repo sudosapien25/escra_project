@@ -29,7 +29,7 @@ import { useTaskStore } from '@/data/taskStore';
 import { X } from 'lucide-react';
 import { useAssigneeStore } from '@/data/assigneeStore';
 import { useToast } from '@/components/ui/use-toast';
-import { Toaster } from '@/components/ui/toaster';
+import { ContractsToaster } from '@/components/ui/contracts-toaster';
 import { useAuth } from '@/context/AuthContext';
 import { useDocumentStore } from '@/data/documentNameStore';
 import { PiMoneyWavyBold, PiBankBold, PiSignatureBold, PiCaretUpDownBold, PiCaretUpDown } from 'react-icons/pi';
@@ -289,6 +289,40 @@ const ContractsPage: React.FC = () => {
   const currentUserName = user?.name || '';
   const { toast } = useToast();
   const { addDocument, getDocumentsByContract, removeDocument, updateDocumentContract } = useDocumentStore();
+
+  // Test function to generate multiple toast notifications
+  const generateTestToasts = () => {
+    // Generate 4 test toasts with different types
+    toast({
+      title: "Contract Created Successfully",
+      description: "Sample Contract #12345 has been created successfully (Try closing me individually!)",
+      duration: 30000,
+    });
+
+    setTimeout(() => {
+      toast({
+        title: "Document Uploaded",
+        description: "Purchase Agreement.pdf has been uploaded to Contract #12345 (Or use Close All!)",
+        duration: 30000,
+      });
+    }, 500);
+
+    setTimeout(() => {
+      toast({
+        title: "Signature Request Sent",
+        description: "Signature request sent to john.doe@example.com for Contract #12345",
+        duration: 30000,
+      });
+    }, 1000);
+
+    setTimeout(() => {
+      toast({
+        title: "Payment Processed",
+        description: "Payment of $50,000 has been processed for Contract #12345",
+        duration: 30000,
+      });
+    }, 1500);
+  };
 
   const [activeTab, setActiveTab] = useState('allContracts');
   const [activeContentTab, setActiveContentTab] = useState('contractList');
@@ -1223,6 +1257,62 @@ const ContractsPage: React.FC = () => {
       };
 
       // Save the new contract to the mockContracts.ts file
+      // Create documents with proper IDs and associate them with the new contract
+      const finalDocumentIds: string[] = [];
+      const createdDocuments: Array<{id: string, name: string}> = [];
+      
+      // Process step4Documents (documents added during contract creation)
+      console.log('Processing step4Documents:', step4Documents.length, step4Documents);
+      if (step4Documents.length > 0) {
+        try {
+          for (const docInfo of step4Documents) {
+            console.log('Creating document from step4Documents:', docInfo);
+            // Create document with proper ID and contract association, including assignee and document type
+            const documentId = await addDocument(docInfo.file, newContractId, newContract.title, currentUserName, docInfo.assignee, docInfo.type);
+            console.log('Document created with ID:', documentId);
+            
+            // Update the document name and assignee
+            const { updateDocumentName } = useDocumentStore.getState();
+            updateDocumentName(documentId, docInfo.name);
+
+           // Set the assignee in the assignee store
+           const { setAssignee } = useAssigneeStore.getState();
+           setAssignee(documentId, docInfo.assignee);
+            
+            finalDocumentIds.push(documentId);
+            createdDocuments.push({ id: documentId, name: docInfo.name });
+            console.log('Added to createdDocuments:', { id: documentId, name: docInfo.name });
+          }
+        } catch (error) {
+          console.error('Error creating documents for contract:', error);
+        }
+      }
+      
+      // Process any previously uploaded files (from handleFileChange)
+      console.log('Processing uploadedFiles:', uploadedFiles.length, uploadedFiles);
+      if (uploadedFiles.length > 0) {
+        try {
+          for (const file of uploadedFiles) {
+            console.log('Creating document from uploadedFiles:', file.name);
+            // Create document with proper ID and contract association, including assignee (current user as default)
+            const documentId = await addDocument(file, newContractId, newContract.title, currentUserName, currentUserName, undefined);
+            console.log('Document created with ID:', documentId);
+          
+            // Set the assignee in the assignee store (using current user as default)
+            const { setAssignee } = useAssigneeStore.getState();
+            setAssignee(documentId, currentUserName);
+            finalDocumentIds.push(documentId);
+            createdDocuments.push({ id: documentId, name: file.name });
+            console.log('Added to createdDocuments:', { id: documentId, name: file.name });
+          }
+        } catch (error) {
+          console.error('Error creating documents from uploaded files:', error);
+        }
+      }
+      
+      // Update the contract with the final document IDs
+      newContract.documentIds = finalDocumentIds;
+      
       try {
         const response = await fetch('/api/contracts', {
           method: 'POST',
@@ -1234,51 +1324,6 @@ const ContractsPage: React.FC = () => {
 
         if (!response.ok) {
           console.error('Failed to save contract to file');
-        } else {
-          // Create documents with proper IDs and associate them with the new contract
-          const finalDocumentIds: string[] = [];
-          
-          // Process step4Documents (documents added during contract creation)
-          if (step4Documents.length > 0) {
-            try {
-              for (const docInfo of step4Documents) {
-                // Create document with proper ID and contract association, including assignee and document type
-                const documentId = await addDocument(docInfo.file, newContractId, newContract.title, currentUserName, docInfo.assignee, docInfo.type);
-                
-                // Update the document name and assignee
-                const { updateDocumentName } = useDocumentStore.getState();
-                updateDocumentName(documentId, docInfo.name);
-
-               // Set the assignee in the assignee store
-               const { setAssignee } = useAssigneeStore.getState();
-               setAssignee(documentId, docInfo.assignee);
-                
-                finalDocumentIds.push(documentId);
-              }
-            } catch (error) {
-              console.error('Error creating documents for contract:', error);
-            }
-          }
-          
-          // Process any previously uploaded files (from handleFileChange)
-          if (uploadedFiles.length > 0) {
-            try {
-              for (const file of uploadedFiles) {
-                // Create document with proper ID and contract association, including assignee (current user as default)
-                const documentId = await addDocument(file, newContractId, newContract.title, currentUserName, currentUserName, undefined);
-              
-                // Set the assignee in the assignee store (using current user as default)
-                const { setAssignee } = useAssigneeStore.getState();
-                setAssignee(documentId, currentUserName);
-                finalDocumentIds.push(documentId);
-              }
-            } catch (error) {
-              console.error('Error creating documents from uploaded files:', error);
-            }
-          }
-          
-          // Update the contract with the final document IDs
-          newContract.documentIds = finalDocumentIds;
         }
       } catch (error) {
         console.error('Error saving contract:', error);
@@ -1310,15 +1355,50 @@ const ContractsPage: React.FC = () => {
       setDocumentName(''); // Clear document name
       setDocumentNameError(false); // Clear document name error
       
-      // Show success feedback
+      // Show success feedback for contract creation first
+      console.log('Creating contract toast notification');
       toast({
-        title: "Contract created successfully",
-        description: `"${newContract.title}" has been created with ID ${newContract.id}`,
-        duration: Infinity, // Make toast persistent - user must close it manually
+        title: "Contract Created Successfully",
+        description: `"${newContract.title}" has been created with Contract ID ${newContract.id}`,
+        duration: 30000, // 30 seconds
         onClick: () => {
           setSelectedContract(newContract);
         },
       });
+
+      // Show success feedback for each document created with slight delay to ensure proper ordering
+      console.log(`Creating ${createdDocuments.length} document toast notifications:`, createdDocuments);
+      
+      if (createdDocuments.length > 0) {
+        // For 6+ documents: show only 4 individual document toasts + 1 summary = 5 total + 1 contract = 6 total
+        // For <6 documents: show all individual document toasts
+        const maxIndividualDocs = createdDocuments.length >= 6 ? 4 : Math.min(createdDocuments.length, 5);
+        const documentsToShow = createdDocuments.slice(0, maxIndividualDocs);
+        
+        documentsToShow.forEach((doc, index) => {
+          setTimeout(() => {
+            console.log(`Creating toast for document ${index + 1}/${documentsToShow.length}: ${doc.name} (ID: ${doc.id})`);
+            toast({
+              title: "Document Created Successfully",
+              description: `"${doc.name}" with Document ID ${doc.id} has been created for Contract ID ${newContract.id} - ${newContract.title}`,
+              duration: 30000, // 30 seconds
+            });
+          }, (index + 1) * 100); // 100ms delay between each document toast
+        });
+
+        // If there were more documents than we showed individually, show a summary toast
+        if (createdDocuments.length > maxIndividualDocs) {
+          setTimeout(() => {
+            const remainingCount = createdDocuments.length - maxIndividualDocs;
+            console.log(`Creating additional documents summary toast for ${remainingCount} extra documents`);
+            toast({
+              title: "Additional Documents Created", 
+              description: `${remainingCount} additional document(s) were also created successfully`,
+              duration: 30000, // 30 seconds
+            });
+          }, (maxIndividualDocs + 1) * 100);
+        }
+      }
     } else {
       setShowNewContractForm(false);
       setModalStep(1);
@@ -3821,6 +3901,13 @@ const ContractsPage: React.FC = () => {
               <TbFilePlus className="mr-2 text-[22px] flex-shrink-0" />
               <span className="leading-none text-sm font-semibold">New Contract</span>
             </button>
+            <button 
+              onClick={generateTestToasts}
+              className="flex items-center justify-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-semibold w-full sm:w-auto cursor-pointer sm:ml-1"
+              style={{ fontFamily: 'Avenir, sans-serif' }}
+            >
+              🧪 Test Toasts
+            </button>
           </div>
         </div>
 
@@ -5051,7 +5138,7 @@ const ContractsPage: React.FC = () => {
                      {step4Documents.length > 0 && (
                        <div className="mt-6">
                          <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-3 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Added Documents</h4>
-                         <div className="flex flex-col gap-2 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
+                         <div className="flex flex-col gap-2 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:hidden">
                            {step4Documents.map((doc, idx) => (
                              <div 
                                key={idx} 
@@ -9889,7 +9976,7 @@ const ContractsPage: React.FC = () => {
 
 
       </div>
-    <Toaster />
+          <ContractsToaster />
     </>
   );
 }

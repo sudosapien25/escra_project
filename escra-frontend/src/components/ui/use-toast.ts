@@ -5,7 +5,7 @@ import type {
   ToastProps,
 } from "@/components/ui/toast"
 
-const TOAST_LIMIT = 1
+const TOAST_LIMIT = 6
 const TOAST_REMOVE_DELAY = 1000000 // Default delay, can be overridden by duration prop
 
 type ToasterToast = ToastProps & {

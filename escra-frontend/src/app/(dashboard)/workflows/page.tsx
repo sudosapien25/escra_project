@@ -66,6 +66,7 @@ interface Comment {
 import { useTaskStore } from '@/data/taskStore';
 import { Logo } from '@/components/common/Logo';
 import { useToast } from '@/components/ui/use-toast';
+import { Toaster } from '@/components/ui/toaster';
 
 type TaskStatus = 'To Do' | 'Blocked' | 'On Hold' | 'In Progress' | 'In Review' | 'Done' | 'Canceled';
 type StatusOption = TaskStatus | 'All';
@@ -1680,7 +1681,7 @@ export default function WorkflowsPage() {
                         rows={3}
                       />
                       {newTaskFormErrors.description && (
-                        <p className="mt-1 text-xs text-red-600 font-medium cursor-default select-none">Description is required</p>
+                        <p className="mt-0.5 text-xs text-red-600 font-medium cursor-default select-none">Description is required</p>
                       )}
                     </div>
                   </div>
@@ -2254,8 +2255,8 @@ export default function WorkflowsPage() {
                   {/* Uploaded Files Display */}
                   {newTaskUploadedFiles.length > 0 && (
                     <div className="mt-4">
-                      <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-3 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Uploaded Files</h4>
-                      <div className="flex flex-col gap-2 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
+                      <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-3 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Added Documents</h4>
+                      <div className="flex flex-col gap-2 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:hidden">
                         {newTaskUploadedFiles.map((file, idx) => (
                           <div key={idx} className="bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-700 transition-colors">
                             {editingTaskFileIndex === idx ? (
@@ -2265,7 +2266,7 @@ export default function WorkflowsPage() {
                                   <input
                                     type="text"
                                     placeholder="Document name..."
-                                    className="flex-1 h-[28px] px-2 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-xs text-gray-900 dark:text-white focus:ring-1 focus:ring-primary focus:border-primary"
+                                    className="w-1/3 h-[28px] px-2 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-xs text-gray-900 dark:text-white focus:ring-1 focus:ring-primary focus:border-primary"
                                     value={inlineEditingTaskFileName}
                                     onChange={(e) => setInlineEditingTaskFileName(e.target.value)}
                                   />
@@ -2393,6 +2394,14 @@ export default function WorkflowsPage() {
                           
                           // Add the task to the store
                           addTask(newTask);
+                          
+                          // Show success toast notification
+                          const selectedContract = contracts.find(c => c.id === contractId);
+                          toast({
+                            title: "Task Created Successfully",
+                            description: `"${newTask.title}" with Task ID ${newTask.taskNumber} has been created for Contract ID ${contractId} - ${selectedContract?.title || 'Unknown Contract'}`,
+                            duration: 30000, // 30 seconds
+                          });
                           
                           // Store uploaded files with the task (you might want to implement file storage logic)
                           if (newTaskUploadedFiles.length > 0) {
@@ -3233,7 +3242,20 @@ export default function WorkflowsPage() {
                                         className="absolute right-0 mt-[1px] w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 py-2 z-50"
                                         style={{ fontFamily: 'Avenir, sans-serif' }}
                                       >
-                                        <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700">Mark as Done</button>
+                                        <button 
+                                          className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            updateTask(task.code, { ...task, status: 'Done' });
+                                            setOpenMenuTask(null);
+                                            toast({
+                                              title: "Task Marked as Done",
+                                              description: `Task "${task.title}" has been marked as done.`,
+                                            });
+                                          }}
+                                        >
+                                          Mark as Done
+                                        </button>
                                         <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700">Edit Task</button>
                                         <button 
                                           className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -3257,8 +3279,9 @@ export default function WorkflowsPage() {
                                             deleteTask(task.code);
                                             setOpenMenuTask(null);
                                             toast({
-                                              title: "Task Deleted",
-                                              description: `Task "${task.title}" has been deleted along with all associated documents and comments.`,
+                                              title: "Task Deleted Successfully",
+                                              description: `Task ID ${task.taskNumber} - ${task.title} for Contract ID ${task.contractId} - ${contracts.find(c => c.id === task.contractId)?.title || 'Unknown Contract'} has been deleted along with all its associated subtasks, documents & comments`,
+                                              duration: 30000, // 30 seconds
                                             });
                                           }}
                                         >
@@ -3336,13 +3359,27 @@ export default function WorkflowsPage() {
                                           />
                                         </button>
                                       )}
-                                      <span className="text-xs text-gray-900 dark:text-white">
+                                      <button
+                                        className="text-xs text-gray-900 dark:text-white hover:text-primary dark:hover:text-primary transition-colors"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setExpandedSubtaskCards(prev => {
+                                            const newSet = new Set(prev);
+                                            if (newSet.has(task.code)) {
+                                              newSet.delete(task.code);
+                                            } else {
+                                              newSet.add(task.code);
+                                            }
+                                            return newSet;
+                                          });
+                                        }}
+                                      >
                                         {(() => {
                                           const taskSubtasks = task.subtasks || [];
                                           const completed = taskSubtasks.filter(st => st.completed).length;
                                           return `${completed} of ${taskSubtasks.length}`;
                                         })()}
-                                      </span>
+                                      </button>
                                     </div>
                                   </div>
                                   
@@ -3350,7 +3387,14 @@ export default function WorkflowsPage() {
                                   {expandedSubtaskCards.has(task.code) && task.subtasks && task.subtasks.length > 0 && (
                                     <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
                                       <div className="space-y-1">
-                                        {task.subtasks.map((subtask: any, index: number) => (
+                                        {task.subtasks
+                                          .sort((a: any, b: any) => {
+                                            // Move completed subtasks to the end
+                                            if (a.completed && !b.completed) return 1;
+                                            if (!a.completed && b.completed) return -1;
+                                            return 0;
+                                          })
+                                          .map((subtask: any, index: number) => (
                                           <div key={subtask.id || index} className="flex items-center justify-between">
                                             <span className={`text-xs text-gray-900 dark:text-white truncate flex-1 mr-2 ${
                                               subtask.completed || subtask.status === 'Done' ? 'line-through' : ''
@@ -3787,6 +3831,13 @@ export default function WorkflowsPage() {
                         className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors resize-none bg-white dark:bg-gray-900 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-track]:dark:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500"
                         rows={3}
                         placeholder="Enter task description..."
+                        value={selectedTask?.description || ''}
+                        onChange={(e) => {
+                          if (selectedTask) {
+                            updateTask(selectedTask.code, { ...selectedTask, description: e.target.value });
+                            setSelectedTask({ ...selectedTask, description: e.target.value });
+                          }
+                        }}
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       />
                     </div>
@@ -3808,7 +3859,14 @@ export default function WorkflowsPage() {
                       </button>
                     </div>
                     <div className="space-y-3 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ height: 'calc(440px - 100px)', minHeight: '280px' }}>
-                      {selectedTask?.subtasks?.map((subtask) => (
+                      {selectedTask?.subtasks
+                        ?.sort((a, b) => {
+                          // Move completed subtasks to the end
+                          if (a.completed && !b.completed) return 1;
+                          if (!a.completed && b.completed) return -1;
+                          return 0;
+                        })
+                        .map((subtask) => (
                         <div 
                           key={subtask.id} 
                           className="flex items-center gap-3 px-4 py-3 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors relative"
@@ -3835,7 +3893,9 @@ export default function WorkflowsPage() {
                           }}
                         >
                           <div className="flex-1">
-                            <div className="font-semibold text-xs text-black dark:text-white flex-1 min-w-0 truncate">
+                            <div className={`font-semibold text-xs text-black dark:text-white flex-1 min-w-0 truncate ${
+                              subtask.completed || subtask.status === 'Done' ? 'line-through' : ''
+                            }`}>
                               {subtask.title}
                             </div>
                             <div className="text-xs text-gray-500 cursor-default select-none">
@@ -5076,7 +5136,11 @@ export default function WorkflowsPage() {
             </form>
                                   </div>
                                           </div>
-      )}      </div>
-                                      </div>
+      )}
+      </div>
+      
+      {/* Toast Notifications */}
+      <Toaster />
+    </div>
   );
 }

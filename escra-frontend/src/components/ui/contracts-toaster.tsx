@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import {
   Toast,
   ToastClose,
@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/toast"
 import { useToast } from "@/components/ui/use-toast"
 
-export function Toaster() {
+export function ContractsToaster() {
   const { toasts, dismiss } = useToast()
   const [buttonClicked, setButtonClicked] = useState(false)
   const [toastIds, setToastIds] = useState<string[]>([])
@@ -71,9 +71,9 @@ export function Toaster() {
         return (
           <Toast key={id} {...props} onClick={onClick}>
             <div className="grid gap-1">
-              {title && <ToastTitle>{title}</ToastTitle>}
+              {title && <ContractsToastTitle>{title}</ContractsToastTitle>}
               {description && (
-                <ToastDescription>{description}</ToastDescription>
+                <ContractsToastDescription>{description}</ContractsToastDescription>
               )}
             </div>
             {action}
@@ -99,4 +99,28 @@ export function Toaster() {
       <ToastViewport className="fixed top-[2.375rem] z-[100] flex max-h-screen w-full flex-col gap-2 p-4 sm:bottom-[2.375rem] sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]" />
     </ToastProvider>
   )
-} 
+}
+
+// Custom ToastTitle for contracts page - using teal color like workflows page
+const ContractsToastTitle = ({ children, ...props }: any) => (
+  <div
+    className="text-sm font-semibold text-primary"
+    style={{ fontFamily: 'Avenir, sans-serif' }}
+    {...props}
+  >
+    {children}
+  </div>
+)
+
+// Custom ToastDescription for contracts page
+const ContractsToastDescription = ({ children, ...props }: any) => (
+  <div
+    className="text-xs opacity-90 text-gray-700 dark:text-gray-300"
+    style={{ fontFamily: 'Avenir, sans-serif' }}
+    {...props}
+  >
+    {children}
+  </div>
+)
+
+

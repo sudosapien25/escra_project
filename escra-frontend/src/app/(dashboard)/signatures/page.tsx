@@ -12,7 +12,7 @@ import { BsPerson } from 'react-icons/bs';
 import { PiWarningDiamondBold } from 'react-icons/pi';
 import clsx from 'clsx';
 import { IconBaseProps } from 'react-icons';
-import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbClockPin, TbPencilShare, TbPencilPlus, TbClockEdit, TbStatusChange, TbHistory, TbCalendarExclamation, TbPencilCheck, TbDownload, TbSearch, TbFileSearch, TbLibrary, TbEraser, TbTrash, TbChevronDown, TbChevronsLeft, TbChevronsRight } from 'react-icons/tb';
+import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbClockPin, TbPencilShare, TbPencilPlus, TbClockEdit, TbStatusChange, TbHistory, TbCalendarExclamation, TbPencilCheck, TbDownload, TbSearch, TbFileSearch, TbLibrary, TbEraser, TbTrash, TbChevronDown, TbChevronsLeft, TbChevronsRight, TbClockExclamation } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
 import { TiUserAddOutline } from 'react-icons/ti';
@@ -2143,7 +2143,7 @@ export default function SignaturesPage() {
         {/* Action Required */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
           <div className="h-10 w-10 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center border-2 border-orange-200 dark:border-orange-800 cursor-default select-none">
-            <PiWarningDiamondBold size={21} className="text-orange-500 dark:text-orange-400" />
+            <TbClockExclamation size={21} className="text-orange-500 dark:text-orange-400" />
           </div>
           <div className="flex flex-col items-start h-full cursor-default select-none">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Action Required</p>
@@ -3738,7 +3738,7 @@ export default function SignaturesPage() {
 
             <div className="flex flex-col flex-1 min-h-0">
               <div className="overflow-y-auto p-6 flex-1 bg-gray-50 dark:bg-gray-900 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
-                <form onSubmit={async (e) => { 
+                <form id="request-signature-form" onSubmit={async (e) => { 
                   e.preventDefault(); 
                   
                   // Validate recipients before proceeding
@@ -3897,14 +3897,14 @@ export default function SignaturesPage() {
                           )}
                         </div>
                         </div>
+                        {documentError && (
+                          <div className="flex justify-center mt-1.5">
+                            <p className="text-xs text-red-600 font-medium cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                              Select an existing or upload a new document
+                            </p>
+                          </div>
+                        )}
                       </div>
-                      {documentError && (
-                        <div className="flex justify-center mt-2">
-                          <p className="text-xs text-red-600 font-medium cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                            Select an existing or upload a new document
-                          </p>
-                        </div>
-                      )}
                       </div>
 
                       {/* Right Column: Documents Box */}
@@ -4502,50 +4502,56 @@ export default function SignaturesPage() {
 
 
 
-                    <div className="flex justify-end gap-1">
-                      <button
-                        type="button"
-                        onClick={() => { 
-                          setShowRequestSignatureModal(false); 
-                          setUploadedFiles([]); 
-                          setSelectedDocuments([]); 
-                          setRecipients([{
-                            name: '',
-                            email: '',
-                            signerRole: 'Signer Role',
-                            contractRole: '',
-                            showSignerRoleDropdown: false,
-                            showContractRoleDropdown: false,
-                            signerRoleButtonRef: createRef<HTMLButtonElement>(),
-                            signerRoleDropdownRef: createRef<HTMLDivElement>(),
-                            contractRoleButtonRef: createRef<HTMLButtonElement>(),
-                            contractRoleDropdownRef: createRef<HTMLDivElement>(),
-                          }]);
-                          setIsOnlySigner(false);
-                          setSetSigningOrder(false);
-                          setEditingFileName(null);
-                          setShowDocumentDropdown(false);
-                          setDocumentSearch('');
-                          setIsDraggingOver(false);
-                          setDueDate('');
-                          setSubject('');
-                          setMessage('');
-                        }}
-                        className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
-                        style={{ fontFamily: 'Avenir, sans-serif' }}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
-                        style={{ fontFamily: 'Avenir, sans-serif' }}
-                      >
-                        Prepare Document
-                      </button>
-                    </div>
+
                   </div>
                 </form>
+              </div>
+
+              {/* Sticky Footer */}
+              <div className="sticky bottom-0 bg-gray-50 dark:bg-gray-900 px-6 py-4">
+                <div className="flex justify-end gap-1">
+                  <button
+                    type="button"
+                    onClick={() => { 
+                      setShowRequestSignatureModal(false); 
+                      setUploadedFiles([]); 
+                      setSelectedDocuments([]); 
+                      setRecipients([{
+                        name: '',
+                        email: '',
+                        signerRole: 'Signer Role',
+                        contractRole: '',
+                        showSignerRoleDropdown: false,
+                        showContractRoleDropdown: false,
+                        signerRoleButtonRef: createRef<HTMLButtonElement>(),
+                        signerRoleDropdownRef: createRef<HTMLDivElement>(),
+                        contractRoleButtonRef: createRef<HTMLButtonElement>(),
+                        contractRoleDropdownRef: createRef<HTMLDivElement>(),
+                      }]);
+                      setIsOnlySigner(false);
+                      setSetSigningOrder(false);
+                      setEditingFileName(null);
+                      setShowDocumentDropdown(false);
+                      setDocumentSearch('');
+                      setIsDraggingOver(false);
+                      setDueDate('');
+                      setSubject('');
+                      setMessage('');
+                    }}
+                    className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    form="request-signature-form"
+                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                  >
+                    Prepare Document
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -5539,10 +5545,14 @@ export default function SignaturesPage() {
       <DocumentPreparationModal
         isOpen={showDocumentPreparationModal}
         onClose={() => setShowDocumentPreparationModal(false)}
+        onBackToRequestSignature={() => {
+          setShowDocumentPreparationModal(false);
+          setShowRequestSignatureModal(true);
+        }}
         documentData={{
           recipients: recipients,
           uploadedFiles: uploadedFiles,
-          selectedDocuments: selectedDocuments,
+          selectedDocuments: selectedDocuments.map(docId => allDocuments.find(doc => doc.id === docId)).filter(Boolean),
         }}
       />
 

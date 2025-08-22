@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbContract, TbRouteSquare, TbUsersGroup, TbMessageQuestion, TbBrandDiscord, TbBrandYoutube, TbInfoSquare, TbBuildingCommunity, TbBallAmericanFootball, TbTool, TbCoins } from 'react-icons/tb';
+import { TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbContract, TbRouteSquare, TbUsersGroup, TbMessageQuestion, TbBrandDiscord, TbBrandYoutube, TbInfoSquare, TbBuildingCommunity, TbBallAmericanFootball, TbTool, TbCoins, TbShieldLock, TbShieldSearch, TbKey } from 'react-icons/tb';
 import { HiOutlineDuplicate } from 'react-icons/hi';
 import { MdOutlineSportsFootball, MdOutlineMovieFilter, MdOutlineHealthAndSafety, MdOutlineGeneratingTokens } from 'react-icons/md';
 import { LuConstruction, LuBriefcaseBusiness, LuClipboardCheck, LuBrainCircuit, LuCircuitBoard, LuListEnd, LuVideo, LuBookOpenText, LuNewspaper, LuLinkedin, LuMic, LuContact, LuBuilding2 } from 'react-icons/lu';
@@ -116,7 +116,7 @@ export default function GlobalNavigation() {
                         </a>
                         <a href="#" className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors group" style={{ minHeight: '60px' }}>
                           <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-primary/10 transition-colors">
-                            <HiOutlineKey className="w-4 h-4 text-gray-600 group-hover:text-primary" />
+                            <TbKey className="w-4 h-4 text-gray-600 group-hover:text-primary" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="text-xs font-medium text-gray-900 group-hover:text-primary">Cryptographic Signature Authentication</div>
@@ -125,7 +125,7 @@ export default function GlobalNavigation() {
                         </a>
                         <a href="#" className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors group" style={{ minHeight: '60px' }}>
                           <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-primary/10 transition-colors">
-                            <PiListMagnifyingGlassBold className="w-4 h-4 text-gray-600 group-hover:text-primary" />
+                            <TbShieldSearch className="w-4 h-4 text-gray-600 group-hover:text-primary" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="text-xs font-medium text-gray-900 group-hover:text-primary">Immutable Ledger & Audit Trail</div>
@@ -140,7 +140,7 @@ export default function GlobalNavigation() {
                       <div className="space-y-4" style={{ marginTop: '2rem' }}>
                         <a href="#" className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors group" style={{ minHeight: '60px' }}>
                           <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-primary/10 transition-colors">
-                            <PiLockKeyBold className="w-4 h-4 text-gray-600 group-hover:text-primary" />
+                            <TbShieldLock className="w-4 h-4 text-gray-600 group-hover:text-primary" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="text-xs font-medium text-gray-900 group-hover:text-primary">Quantum Resilient Security</div>
