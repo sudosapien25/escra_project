@@ -3,10 +3,10 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbContract, TbRouteSquare, TbUsersGroup, TbMessageQuestion, TbBrandDiscord, TbBrandYoutube, TbInfoSquare, TbBuildingCommunity, TbBallAmericanFootball, TbTool, TbCoins, TbShieldLock, TbShieldSearch, TbKey } from 'react-icons/tb';
+import { TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbContract, TbRouteSquare, TbUsersGroup, TbMessageQuestion, TbBrandDiscord, TbBrandYoutube, TbInfoSquare, TbBuildingCommunity, TbBallAmericanFootball, TbTool, TbCoins, TbShieldLock, TbShieldSearch, TbKey, TbStethoscope, TbCopy, TbBriefcase, TbBarrierBlock } from 'react-icons/tb';
 import { HiOutlineDuplicate } from 'react-icons/hi';
 import { MdOutlineSportsFootball, MdOutlineMovieFilter, MdOutlineHealthAndSafety, MdOutlineGeneratingTokens } from 'react-icons/md';
-import { LuConstruction, LuBriefcaseBusiness, LuClipboardCheck, LuBrainCircuit, LuCircuitBoard, LuListEnd, LuVideo, LuBookOpenText, LuNewspaper, LuLinkedin, LuMic, LuContact, LuBuilding2 } from 'react-icons/lu';
+import { LuConstruction, LuBriefcaseBusiness, LuClipboardCheck, LuBrainCircuit, LuCircuitBoard, LuListEnd, LuVideo, LuBookOpenText, LuNewspaper, LuLinkedin, LuMic, LuContact, LuBuilding2, LuHardHat } from 'react-icons/lu';
 import { GrMoney, GrUserWorker, GrStatusInfo } from 'react-icons/gr';
 import { VscLaw } from 'react-icons/vsc';
 import { LiaToolsSolid } from 'react-icons/lia';
@@ -26,15 +26,15 @@ interface IndustryOption {
 
 const INDUSTRIES: IndustryOption[] = [
       { value: 'real_estate', label: 'Real Estate', icon: TbBuildingCommunity, description: 'Property sale & lease agreements' },
-  { value: 'corporate', label: 'Corporate', icon: LuBriefcaseBusiness, description: 'Enterprise, employment & vendor agreements' },
+  { value: 'corporate', label: 'Corporate', icon: TbBriefcase, description: 'Enterprise, employment & vendor agreements' },
   { value: 'finance', label: 'Finance', icon: TbCoins, description: 'Advisory, Lending, M&A agreements' },
   { value: 'legal', label: 'Legal', icon: VscLaw, description: 'Wills, trusts, deeds & compliance agreements' },
   { value: 'supply_chain', label: 'Logistics', icon: TbWorld, description: 'Transportation, supply-chain & warehousing agreements' },
-  { value: 'labor', label: 'Labor', icon: GrUserWorker, description: 'Dispute resolution, collective-bargaining & union agreements' },
+  { value: 'labor', label: 'Labor', icon: LuHardHat, description: 'Dispute resolution, collective-bargaining & union agreements' },
   { value: 'entertainment', label: 'Entertainment', icon: MdOutlineMovieFilter, description: 'Media, artist & performance agreements' },
       { value: 'athletics', label: 'Athletics', icon: TbBallAmericanFootball, description: 'Front-offices, leagues, player contracts & endorsements' },
-  { value: 'construction', label: 'Construction', icon: LuConstruction, description: 'Building, project & subcontractor agreements' },
-  { value: 'healthcare', label: 'Healthcare', icon: MdOutlineHealthAndSafety, description: 'Medical provider & health service agreements' },
+  { value: 'construction', label: 'Construction', icon: TbBarrierBlock, description: 'Building, project & subcontractor agreements' },
+  { value: 'healthcare', label: 'Healthcare', icon: TbStethoscope, description: 'Medical provider & health service agreements' },
       { value: 'manufacturing', label: 'Manufacturing', icon: TbTool, description: 'Production, supply & equipment agreements' },
   { value: 'technology', label: 'Technology', icon: HiOutlineChip, description: 'IT service, vendor & software licensing agreements' }
 ];
@@ -478,7 +478,7 @@ export default function GlobalNavigation() {
                                     onMouseLeave={() => setHoveredEmail(false)}
                                     aria-label="Copy email address"
                                   >
-                                    <HiOutlineDuplicate className="w-[14px] h-[14px]" />
+                                    <TbCopy className="w-[14px] h-[14px]" />
                                   </button>
                                   {copiedEmail && (
                                     <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none">

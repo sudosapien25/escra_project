@@ -116,7 +116,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
                       <div className="w-16 flex justify-center -ml-6">
                         <IconWrapper icon={item.icon} className="w-6 h-6 flex-shrink-0" />
                       </div>
-                      <span className="text-sm font-medium flex-1 text-left">{item.name}</span>
+                      <span className="text-base font-medium flex-1 text-left">{item.name}</span>
                       {isCollapsed && (
                         <span className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                           {item.name}
@@ -137,7 +137,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
                     <div className={clsx("flex justify-center", isCollapsed ? "w-full" : "w-16 -ml-6")}>
                       <IconWrapper icon={item.icon} className="w-6 h-6 flex-shrink-0" />
                     </div>
-                    {!isCollapsed && <span className="text-sm font-medium">{item.name}</span>}
+                    {!isCollapsed && <span className="text-base font-medium">{item.name}</span>}
                     {isCollapsed && (
                       <span className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                         {item.name}
@@ -165,7 +165,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
                 <div className={clsx("flex justify-center", isCollapsed ? "w-full" : "w-16 -ml-6")}>
                   <IconWrapper icon={item.icon} className="w-6 h-6 flex-shrink-0" />
                 </div>
-                {!isCollapsed && <span className="text-sm font-medium">{item.name}</span>}
+                {!isCollapsed && <span className="text-base font-medium">{item.name}</span>}
                 {isCollapsed && (
                   <span className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                     {item.name}
@@ -193,7 +193,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
                 <IconWrapper icon={MdOutlineDarkMode} className="w-6 h-6 flex-shrink-0" />
               )}
             </div>
-            {!isCollapsed && <span className="text-sm font-medium">{theme.isDark ? 'Light Mode' : 'Dark Mode'}</span>}
+            {!isCollapsed && <span className="text-base font-medium">{theme.isDark ? 'Light Mode' : 'Dark Mode'}</span>}
             {isCollapsed && (
               <span className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                 {theme.isDark ? 'Light Mode' : 'Dark Mode'}
@@ -218,7 +218,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
                 <IconWrapper icon={HiOutlineChevronDoubleLeft} className="w-6 h-6 flex-shrink-0" />
               )}
             </div>
-            {!isCollapsed && <span className="text-sm font-medium">Collapse</span>}
+            {!isCollapsed && <span className="text-base font-medium">Collapse</span>}
             {isCollapsed && (
               <span className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                 Expand
@@ -244,7 +244,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
             <div className={clsx("flex justify-center", isCollapsed ? "w-full" : "w-16 -ml-6")}>
               <IconWrapper icon={TbLogout2} className="w-6 h-6 flex-shrink-0" />
             </div>
-            {!isCollapsed && <span className="text-sm font-medium">Logout</span>}
+            {!isCollapsed && <span className="text-base font-medium">Logout</span>}
             {isCollapsed && (
               <span className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                 Logout

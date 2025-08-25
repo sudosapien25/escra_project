@@ -7,7 +7,7 @@ import { IconBaseProps } from 'react-icons';
 import { LuPen } from 'react-icons/lu';
 import { PiMoneyWavyBold } from 'react-icons/pi';
 import { MdOutlineAddToPhotos } from 'react-icons/md';
-import { TbClockPin, TbClockUp, TbCoins, TbTransactionDollar, TbPencilExclamation, TbTransfer, TbFileText, TbClockShare, TbClockDown, TbArrowsExchange, TbClockEdit, TbFilePlus } from 'react-icons/tb';
+import { TbClockPin, TbClockUp, TbCoins, TbTransactionDollar, TbPencilExclamation, TbTransfer, TbFileText, TbClockShare, TbClockDown, TbArrowsExchange, TbClockEdit, TbFilePlus, TbBusinessplan } from 'react-icons/tb';
 import { TbChevronDown } from 'react-icons/tb';
 import { HiOutlineDocumentText } from 'react-icons/hi';
 import { GrMoney } from 'react-icons/gr';
@@ -1069,10 +1069,10 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between mb-3 cursor-default select-none">
             <div className="flex items-center gap-2 cursor-default select-none">
               <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800 cursor-default select-none">
-                <TbCoins size={21} className="text-teal-500 dark:text-teal-400" />
+                <TbBusinessplan size={21} className="text-teal-500 dark:text-teal-400" />
               </div>
               <div className="cursor-default select-none">
-                <p className="text-sm text-tertiary dark:text-gray-400 cursor-default select-none">Total Contract Value</p>
+                <p className="text-sm text-tertiary dark:text-gray-400 cursor-default select-none font-bold">Total Contract Value</p>
                 <p className="text-lg font-bold text-primary dark:text-primary cursor-default select-none">
                   ${hoveredValue ? hoveredValue.toLocaleString() : currentValue.toLocaleString()}
                 </p>
@@ -1376,7 +1376,7 @@ export default function DashboardPage() {
 
       <Card className="p-6 rounded-xl border border-gray-300 dark:border-gray-700 overflow-x-auto bg-white dark:bg-gray-800 cursor-default select-none">
         <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-4 md:gap-0 min-w-0 cursor-default select-none">
-          <h3 className="text-lg font-semibold text-primary dark:text-primary cursor-default select-none">Activity Timeline</h3>
+                          <h3 className="text-sm font-semibold text-tertiary dark:text-gray-400 cursor-default select-none">Activity Timeline</h3>
         </div>
         {/* Activity Timeline Entries */}
         <div className="relative pl-6 min-w-0 cursor-default select-none">

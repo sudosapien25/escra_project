@@ -8,7 +8,7 @@ import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineEye, HiOutlineEyeOf
 import { HiOutlineViewBoards } from 'react-icons/hi';
 import { LuCalendarFold, LuCalendarClock, LuPen } from 'react-icons/lu';
 import { BiDotsHorizontal, BiCommentAdd } from 'react-icons/bi';
-import { TbWorldDollar, TbEdit, TbClockUp, TbCubeSend, TbClockPin, TbFilePlus, TbScript, TbCoins, TbFileText, TbClockEdit, TbUpload, TbDownload, TbSearch, TbFileSearch, TbLibrary, TbCalendarClock, TbLayoutGrid, TbMessage2Plus, TbChevronDown, TbEraser, TbTrash, TbChevronsLeft, TbChevronsRight } from 'react-icons/tb';
+import { TbWorldDollar, TbEdit, TbClockUp, TbCubeSend, TbClockPin, TbFilePlus, TbScript, TbCoins, TbFileText, TbClockEdit, TbUpload, TbDownload, TbSearch, TbFileSearch, TbLibrary, TbCalendarClock, TbLayoutGrid, TbMessage2Plus, TbChevronDown, TbEraser, TbTrash, TbChevronsLeft, TbChevronsRight, TbBusinessplan } from 'react-icons/tb';
 import { Logo } from '@/components/common/Logo';
 import { mockContracts } from '@/data/mockContracts';
 import { useEditor } from '@tiptap/react';
@@ -6334,10 +6334,10 @@ const ContractsPage: React.FC = () => {
             {/* Total Contract Value */}
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
               <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800 cursor-default select-none">
-                <TbCoins size={21} className="text-teal-500 dark:text-teal-400" />
+                <TbBusinessplan size={21} className="text-teal-500 dark:text-teal-400" />
               </div>
               <div className="flex flex-col items-start h-full cursor-default select-none">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contract Value</p>
+                <p className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contract Value</p>
                 <p className="text-2xl font-bold text-primary cursor-default select-none">{calculateTotalValue()}</p>
                 <p className="text-xs text-green-600 dark:text-green-400 font-semibold cursor-default select-none">↑ 12% from last month</p>
               </div>
