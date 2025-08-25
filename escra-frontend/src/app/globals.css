@@ -144,6 +144,17 @@ input:-webkit-autofill {
   box-shadow: none !important;
 }
 
+/* Prevent white flashing during sidebar transitions */
+aside {
+  background-color: inherit !important;
+  transition: background-color 0.15s ease-in-out !important;
+}
+
+/* Ensure sidebar maintains dark mode during transitions */
+.dark aside {
+  background-color: rgb(31 41 55) !important;
+}
+
 /* Style lists in TipTap editor */
 .tiptap ul,
 .tiptap ol {

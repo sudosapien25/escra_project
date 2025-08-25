@@ -30,6 +30,8 @@ const toastVariants = cva(
         default: "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white",
         destructive:
           "destructive group border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-100",
+        voided:
+          "border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-100",
       },
     },
     defaultVariants: {
@@ -88,11 +90,16 @@ ToastClose.displayName = ToastPrimitives.Close.displayName
 
 const ToastTitle = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Title>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Title>
->(({ className, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Title> &
+    VariantProps<typeof toastVariants>
+>(({ className, variant, ...props }, ref) => (
   <ToastPrimitives.Title
     ref={ref}
-    className={cn("text-sm font-semibold text-primary", className)}
+    className={cn(
+      "text-sm font-semibold",
+      variant === "voided" ? "text-red-600 dark:text-red-400" : "text-primary",
+      className
+    )}
     style={{ fontFamily: 'Avenir, sans-serif' }}
     {...props}
   />

@@ -1150,7 +1150,11 @@ export default function WorkflowsPage() {
       const target = event.target as Node;
       const dropdown = menuRef.current;
       
-      if (openMenuTask && dropdown && !dropdown.contains(target)) {
+      // Check if the click is on a 3-dots button or its parent button
+      const clickedButton = (target as Element).closest('button');
+      const isDotsButton = clickedButton && clickedButton.querySelector('svg');
+      
+      if (openMenuTask && dropdown && !dropdown.contains(target) && !isDotsButton) {
         setOpenMenuTask(null);
       }
     }
@@ -3256,7 +3260,6 @@ export default function WorkflowsPage() {
                                         >
                                           Mark as Done
                                         </button>
-                                        <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700">Edit Task</button>
                                         <button 
                                           className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700"
                                           onClick={(e) => {
@@ -3270,8 +3273,9 @@ export default function WorkflowsPage() {
                                         >
                                           Add Subtask
                                         </button>
+                                        <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700">Edit</button>
                                         <button 
-                                          className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:text-red-400"
+                                          className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 dark:text-white hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400"
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             // Clean up all task-related data before deleting the task
@@ -3285,7 +3289,7 @@ export default function WorkflowsPage() {
                                             });
                                           }}
                                         >
-                                          Delete Task
+                                          Delete
                                         </button>
                                       </div>
                                     )}

@@ -35,7 +35,7 @@ function NotificationPageContent() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div className="pb-1">
-          <h1 className="text-[30px] font-bold text-black dark:text-white mb-1">Notifications</h1>
+          <h1 className="text-[30px] font-bold text-black dark:text-white mb-1">Activity Monitor</h1>
           <p className="text-gray-500 dark:text-gray-400 text-[16px] mt-0">Stay updated on your activities</p>
         </div>
         <div className="flex">
@@ -78,22 +78,51 @@ function NotificationPageContent() {
       {/* Notification List */}
       <div className="rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden">
         {filtered.length === 0 && (
-          <div className="p-8 text-center text-gray-400 dark:text-gray-500 text-xs">No notifications found.</div>
+          <div className="p-8 text-center text-gray-400 dark:text-gray-500 text-xs">No activity found.</div>
         )}
         {filtered.map((n, index) => (
           <div
             key={n.id}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              markAsRead(n.id);
+            }}
             className={clsx(
-              'flex items-start gap-4 p-6 mx-1 my-1 rounded',
-              !n.read && 'bg-gray-100 dark:bg-gray-600',
+              'flex items-start gap-4 p-6 mx-1 my-1 rounded cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600',
+              !n.read && (n.type === 'contract_voided' ? 'bg-red-50/50 dark:bg-red-900/10' : 'bg-gray-100 dark:bg-gray-600'),
               index > 0 && 'border-t border-gray-100 dark:border-gray-700',
               'transition-colors'
             )}
           >
-            <div className="flex-shrink-0 mt-1">{getNotificationIcon(n.type)}</div>
+            <div className="flex-shrink-0 mt-1">
+              {getNotificationIcon(n.type)}
+              <div 
+                className={`w-4 h-4 border border-gray-300 rounded flex items-center justify-center cursor-pointer mt-1 ${
+                  n.type === 'contract_voided' ? 'border-red-500' : 'border-primary'
+                }`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  markAsRead(n.id);
+                }}
+              >
+                {n.read && (
+                  <div className={`w-3 h-3 rounded-sm flex items-center justify-center ${
+                    n.type === 'contract_voided' ? 'bg-red-500' : 'bg-primary'
+                  }`}>
+                    <FaCheck className="text-white" size={8} />
+                  </div>
+                )}
+              </div>
+            </div>
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-gray-900 dark:text-white text-sm">{n.title}</span>
+                <span className={`font-semibold text-sm ${
+                  n.type === 'contract_voided' 
+                    ? 'text-red-600 dark:text-red-400' 
+                    : 'text-gray-900 dark:text-white'
+                }`}>{n.title}</span>
                 {!n.read && (
                   <span className="ml-2 px-2 py-0.5 text-xs font-semibold rounded bg-primary text-white border border-primary">Unread</span>
                 )}

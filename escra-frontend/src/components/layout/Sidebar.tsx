@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { HiOutlineDocumentText, HiOutlineBell, HiOutlineCog } from 'react-icons/hi';
 import { RiLayoutColumnLine, RiDashboardLine, RiBox3Line } from 'react-icons/ri';
 import { FaSignature } from 'react-icons/fa';
-import { TbSubtask, TbCubeSpark, TbLayoutDashboard, TbScript, TbLayoutBoard, TbWritingSign, TbFileText } from 'react-icons/tb';
+import { TbSubtask, TbCubeSpark, TbLayoutDashboard, TbScript, TbLayoutBoard, TbWritingSign, TbFileText, TbTimeline, TbLogout2 } from 'react-icons/tb';
 import { IconBaseProps } from 'react-icons';
 import clsx from 'clsx';
 import { HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight } from 'react-icons/hi';
@@ -14,6 +14,7 @@ import React, { useEffect, useRef } from 'react';
 import { LiaCubesSolid } from 'react-icons/lia';
 import { HiCubeTransparent } from 'react-icons/hi2';
 import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
 
 interface NavItem {
   name: string;
@@ -43,6 +44,7 @@ const IconWrapper: React.FC<{ icon: React.ComponentType<IconBaseProps>; classNam
 
 export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSidebar }) => {
   const { theme, setTheme } = useTheme();
+  const { logout } = useAuth();
   const rawPathname = usePathname();
   const pathname = rawPathname || '';
   const router = useRouter();
@@ -78,13 +80,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
   ];
 
   const bottomNavItems: NavItem[] = [
-    { name: 'Notifications', href: '/notifications', icon: HiOutlineBell },
+    { name: 'Activity Monitor', href: '/activity-monitor', icon: TbTimeline },
     { name: 'Settings', href: '/admin-settings', icon: HiOutlineCog },
   ];
 
   return (
-    <aside className="text-gray-800 dark:text-gray-200 p-4 flex flex-col" style={{ width: `${width}px` }}>
-      <nav className="flex-grow">
+    <aside className="text-gray-800 dark:text-gray-200 p-4 flex flex-col bg-white dark:bg-gray-800 h-full transition-colors duration-150" style={{ width: `${width}px` }}>
+      {/* Main navigation section */}
+      <nav className="flex-1">
         <ul>
           {navItems.map((item) => (
             <React.Fragment key={item.href}>
@@ -110,7 +113,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
                         isSignaturesPage ? 'bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-400' : '',
                       )}
                     >
-                      <IconWrapper icon={item.icon} className={clsx('w-5 h-5 flex-shrink-0', 'mr-2')} />
+                      <div className="w-16 flex justify-center -ml-6">
+                        <IconWrapper icon={item.icon} className="w-6 h-6 flex-shrink-0" />
+                      </div>
                       <span className="text-sm font-medium flex-1 text-left">{item.name}</span>
                       {isCollapsed && (
                         <span className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
@@ -129,13 +134,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
                       isCollapsed && pathname === item.href ? 'px-4' : ''
                     )}
                   >
-                    <IconWrapper icon={item.icon} className={clsx(
-                      item.name === 'Dashboard' || item.name === 'Tasks' || item.name === 'Signatures' || item.name === 'Contracts'
-                        ? 'w-[21px] h-[21px]' 
-                        : 'w-5 h-5', 
-                      'flex-shrink-0', 
-                      !isCollapsed && 'mr-2'
-                    )} />
+                    <div className={clsx("flex justify-center", isCollapsed ? "w-full" : "w-16 -ml-6")}>
+                      <IconWrapper icon={item.icon} className="w-6 h-6 flex-shrink-0" />
+                    </div>
                     {!isCollapsed && <span className="text-sm font-medium">{item.name}</span>}
                     {isCollapsed && (
                       <span className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
@@ -145,30 +146,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
                   </Link>
                 )}
               </li>
-              {/* Add sub-options under Signatures - HIDDEN */}
-              {/* {item.name === 'Signatures' && !isCollapsed && signaturesOpen && (
-                <ul className="ml-8 mb-2">
-                  {[
-                    { name: 'Inbox', href: '/signatures/inbox' },
-                    { name: 'Outbox', href: '/signatures/sent' },
-                    { name: 'Drafts', href: '/signatures/drafts' },
-                    { name: 'Completed', href: '/signatures/completed' },
-                    { name: 'Canceled', href: '/signatures/canceled' },
-                  ].map((sub) => (
-                    <li key={sub.href} className="mb-1">
-                      <Link
-                        href={sub.href}
-                        className={clsx(
-                          'block pl-4 py-1 rounded-md text-xs hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors',
-                          pathname === sub.href ? 'bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 font-semibold' : 'text-gray-600 dark:text-gray-300'
-                        )}
-                      >
-                        {sub.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )} */}
             </React.Fragment>
           ))}
         </ul>
@@ -185,7 +162,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
                   isCollapsed && pathname === item.href ? 'px-4' : ''
                 )}
               >
-                <IconWrapper icon={item.icon} className={clsx('w-5 h-5 flex-shrink-0', !isCollapsed && 'mr-2')} />
+                <div className={clsx("flex justify-center", isCollapsed ? "w-full" : "w-16 -ml-6")}>
+                  <IconWrapper icon={item.icon} className="w-6 h-6 flex-shrink-0" />
+                </div>
                 {!isCollapsed && <span className="text-sm font-medium">{item.name}</span>}
                 {isCollapsed && (
                   <span className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
@@ -196,52 +175,84 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
             </li>
           ))}
         </ul>
-      </nav>
-      {/* Bottom buttons */}
-      <div className="mt-auto space-y-2">
+        
         {/* Theme Toggle Button */}
-        <button
-          onClick={toggleTheme}
-          className={clsx(
-            'flex items-center w-full p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150 relative group',
-            isCollapsed ? 'justify-center' : ''
-          )}
-          aria-label={theme.isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          {theme.isDark ? (
-            <IconWrapper icon={MdOutlineLightMode} className={clsx('w-5 h-5 flex-shrink-0', !isCollapsed && 'mr-2')} />
-          ) : (
-            <IconWrapper icon={MdOutlineDarkMode} className={clsx('w-5 h-5 flex-shrink-0', !isCollapsed && 'mr-2')} />
-          )}
-          {!isCollapsed && <span className="text-sm font-medium">{theme.isDark ? 'Light Mode' : 'Dark Mode'}</span>}
-          {isCollapsed && (
-            <span className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-              {theme.isDark ? 'Light Mode' : 'Dark Mode'}
-            </span>
-          )}
-        </button>
-
+        <div className="mt-4">
+          <button
+            onClick={toggleTheme}
+            className={clsx(
+              'flex items-center w-full p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150 relative group',
+              isCollapsed ? 'justify-center' : ''
+            )}
+            aria-label={theme.isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            <div className={clsx("flex justify-center", isCollapsed ? "w-full" : "w-16 -ml-6")}>
+              {theme.isDark ? (
+                <IconWrapper icon={MdOutlineLightMode} className="w-6 h-6 flex-shrink-0" />
+              ) : (
+                <IconWrapper icon={MdOutlineDarkMode} className="w-6 h-6 flex-shrink-0" />
+              )}
+            </div>
+            {!isCollapsed && <span className="text-sm font-medium">{theme.isDark ? 'Light Mode' : 'Dark Mode'}</span>}
+            {isCollapsed && (
+              <span className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                {theme.isDark ? 'Light Mode' : 'Dark Mode'}
+              </span>
+            )}
+          </button>
+        </div>
+        
         {/* Collapse Button */}
-        <button
-          onClick={toggleSidebar}
-          className={clsx(
-            'flex items-center w-full p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150 relative group',
-            isCollapsed ? 'justify-center' : ''
-          )}
-        >
-          {isCollapsed ? (
-            <IconWrapper icon={HiOutlineChevronDoubleRight} className="w-5 h-5 flex-shrink-0" />
-          ) : (
-            <IconWrapper icon={HiOutlineChevronDoubleLeft} className={clsx('w-5 h-5 flex-shrink-0', !isCollapsed && 'mr-2')} />
-          )}
-          {!isCollapsed && <span className="text-sm font-medium">Collapse</span>}
-          {isCollapsed && (
-            <span className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-              Expand
-            </span>
-          )}
-        </button>
-      </div>
+        <div className="mt-2">
+          <button
+            onClick={toggleSidebar}
+            className={clsx(
+              'flex items-center w-full p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150 relative group',
+              isCollapsed ? 'justify-center' : ''
+            )}
+          >
+            <div className={clsx("flex justify-center", isCollapsed ? "w-full" : "w-16 -ml-6")}>
+              {isCollapsed ? (
+                <IconWrapper icon={HiOutlineChevronDoubleRight} className="w-6 h-6 flex-shrink-0" />
+              ) : (
+                <IconWrapper icon={HiOutlineChevronDoubleLeft} className="w-6 h-6 flex-shrink-0" />
+              )}
+            </div>
+            {!isCollapsed && <span className="text-sm font-medium">Collapse</span>}
+            {isCollapsed && (
+              <span className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                Expand
+              </span>
+            )}
+          </button>
+        </div>
+        
+        {/* Large spacer to push logout button down */}
+        <div className="h-[1145px]"></div>
+        
+        {/* Logout Button - Now positioned at the very bottom */}
+        <div>
+          <button
+            onClick={() => {
+              logout();
+            }}
+            className={clsx(
+              'flex items-center w-full p-2 rounded-md hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-400 transition-colors duration-150 relative group',
+              isCollapsed ? 'justify-center' : ''
+            )}
+          >
+            <div className={clsx("flex justify-center", isCollapsed ? "w-full" : "w-16 -ml-6")}>
+              <IconWrapper icon={TbLogout2} className="w-6 h-6 flex-shrink-0" />
+            </div>
+            {!isCollapsed && <span className="text-sm font-medium">Logout</span>}
+            {isCollapsed && (
+              <span className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                Logout
+              </span>
+            )}
+          </button>
+        </div>
+      </nav>
     </aside>
   );
 }; 

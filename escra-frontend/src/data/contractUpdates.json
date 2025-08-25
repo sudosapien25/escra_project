@@ -8,12 +8,20 @@
     "deleted": true
   },
   "6891": {
-    "propertyAddress": ""
+    "propertyAddress": "",
+    "deleted": true
   },
   "7234": {
-    "inspectionPeriod": ""
+    "inspectionPeriod": "",
+    "deleted": true
+  },
+  "8423": {
+    "deleted": true
   },
   "9145": {
     "value": "$2,500,000"
+  },
+  "10002": {
+    "deleted": true
   }
 }

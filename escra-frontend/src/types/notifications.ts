@@ -13,7 +13,10 @@ export type NotificationType =
   | 'transaction_cancelled'
   | 'approaching_deadline'
   | 'overdue_action'
-  | 'security_alert';
+  | 'security_alert'
+  | 'contract_created'
+  | 'document_created'
+  | 'contract_voided';
 
 export interface NotificationMeta {
   contractId?: string;

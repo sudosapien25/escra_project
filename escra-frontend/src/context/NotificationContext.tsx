@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Notification, NotificationType } from '../types/notifications';
 import { FaCheckCircle, FaExclamationTriangle, FaUserPlus, FaEdit, FaFileSignature, FaCommentDots, FaMoneyCheckAlt, FaTimesCircle, FaClock, FaLock, FaChartLine, FaCheck } from 'react-icons/fa';
-import { TbWritingSign, TbCloudUpload } from 'react-icons/tb';
+import { TbWritingSign, TbCloudUpload, TbFileText, TbFileDescription } from 'react-icons/tb';
 import { PiMoneyWavyBold } from 'react-icons/pi';
 import { AiOutlineFileDone } from 'react-icons/ai';
 import { HiOutlineClipboardCheck } from 'react-icons/hi';
@@ -24,85 +24,26 @@ const notificationIcons: Record<NotificationType, React.ReactNode> = {
   approaching_deadline: <LuCalendarPlus className="text-primary text-2xl" />,
   overdue_action: <FaExclamationTriangle className="text-red-500 text-xl" />,
   security_alert: <FaLock className="text-red-500 text-xl" />,
+  contract_created: <TbFileText className="text-primary text-2xl" />,
+  document_created: <TbFileDescription className="text-primary text-2xl" />,
+  contract_voided: <FaTimesCircle className="text-red-500 text-xl" />,
 };
 
-// Mock notifications
-const mockNotifications: Notification[] = [
-  {
-    id: '1',
-    type: 'wire_info_submitted',
-    title: 'Contract #8423 Wire Transfer Requested',
-    message: 'A wire transfer of $45,000 has been requested for Contract #8423.',
-    read: false,
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-    icon: 'wire_info_submitted',
-    link: '#',
-    meta: { contractId: '8423' },
-  },
-  {
-    id: '2',
-    type: 'contract_signed',
-    title: 'Sarah Johnson signed Contract #9102',
-    message: 'The lease agreement has been signed by the tenant.',
-    read: false,
-    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), // 5 hours ago
-    icon: 'contract_signed',
-    link: '#',
-    meta: { contractId: '9102' },
-  },
-  {
-    id: '3',
-    type: 'comment_added',
-    title: 'Document Upload: Inspection Report',
-    message: 'New document has been uploaded to Contract #7650.',
-    read: true,
-    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-    icon: 'comment_added',
-    link: '#',
-    meta: { contractId: '7650' },
-  },
-  {
-    id: '4',
-    type: 'all_signatures_complete',
-    title: 'Inspection Completed',
-    message: 'Property inspection for Contract #8423 has been completed.',
-    read: true,
-    timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
-    icon: 'all_signatures_complete',
-    link: '#',
-    meta: { contractId: '8423' },
-  },
-  {
-    id: '5',
-    type: 'funds_received',
-    title: 'Wire Transfer Complete',
-    message: 'A wire transfer of $92,000 for Contract #7124 has been completed.',
-    read: true,
-    timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
-    icon: 'funds_received',
-    link: '#',
-    meta: { contractId: '7124' },
-  },
-  {
-    id: '6',
-    type: 'approaching_deadline',
-    title: 'Meeting Scheduled',
-    message: 'Virtual closing meeting for Contract #9145 scheduled for May 25th, 10:00 AM.',
-    read: true,
-    timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
-    icon: 'approaching_deadline',
-    link: '#',
-    meta: { contractId: '9145' },
-  },
-];
+// Start with empty notifications array
+const mockNotifications: Notification[] = [];
 
 interface NotificationContextType {
   notifications: Notification[];
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
+  deleteNotification: (id: string) => void;
   unreadCount: number;
   filter: string;
   setFilter: (filter: string) => void;
+  addNotification: (notification: Omit<Notification, 'id' | 'timestamp'>) => void;
+  addContractCreatedNotification: (contractId: string, contractTitle: string) => void;
+  addDocumentCreatedNotification: (documentId: string, documentName: string, contractId: string, contractTitle: string) => void;
+  addContractVoidedNotification: (contractId: string, contractTitle: string) => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -119,10 +60,71 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
+  const deleteNotification = (id: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  };
+
+  const addNotification = (notification: Omit<Notification, 'id' | 'timestamp'>) => {
+    const newNotification: Notification = {
+      ...notification,
+      id: Date.now().toString(),
+      timestamp: new Date().toISOString(),
+    };
+    setNotifications((prev) => [newNotification, ...prev]);
+  };
+
+  const addContractCreatedNotification = (contractId: string, contractTitle: string) => {
+    addNotification({
+      type: 'contract_created',
+      title: 'Contract Created Successfully',
+      message: `"${contractTitle}" has been created with Contract ID ${contractId}`,
+      read: false,
+      icon: 'contract_created',
+      link: `/contracts`,
+      meta: { contractId },
+    });
+  };
+
+  const addDocumentCreatedNotification = (documentId: string, documentName: string, contractId: string, contractTitle: string) => {
+    addNotification({
+      type: 'document_created',
+      title: 'Document Created Successfully',
+      message: `"${documentName}" with Document ID ${documentId} has been created for Contract ID ${contractId} - ${contractTitle}`,
+      read: false,
+      icon: 'document_created',
+      link: `/contracts`,
+      meta: { contractId, documentId },
+    });
+  };
+
+  const addContractVoidedNotification = (contractId: string, contractTitle: string) => {
+    addNotification({
+      type: 'contract_voided',
+      title: 'Contract Voided Successfully',
+      message: `"${contractTitle}" with Contract ID ${contractId} has been voided along with all associated documents`,
+      read: false,
+      icon: 'contract_voided',
+      link: `/contracts`,
+      meta: { contractId },
+    });
+  };
+
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
-    <NotificationContext.Provider value={{ notifications, markAsRead, markAllAsRead, unreadCount, filter, setFilter }}>
+    <NotificationContext.Provider value={{ 
+      notifications, 
+      markAsRead, 
+      markAllAsRead, 
+      deleteNotification,
+      unreadCount, 
+      filter, 
+      setFilter,
+      addNotification,
+      addContractCreatedNotification,
+      addDocumentCreatedNotification,
+      addContractVoidedNotification
+    }}>
       {children}
     </NotificationContext.Provider>
   );

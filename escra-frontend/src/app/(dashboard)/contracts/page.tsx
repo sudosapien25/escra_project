@@ -29,11 +29,12 @@ import { useTaskStore } from '@/data/taskStore';
 import { X } from 'lucide-react';
 import { useAssigneeStore } from '@/data/assigneeStore';
 import { useToast } from '@/components/ui/use-toast';
+import { useNotifications } from '@/context/NotificationContext';
 import { ContractsToaster } from '@/components/ui/contracts-toaster';
 import { useAuth } from '@/context/AuthContext';
 import { useDocumentStore } from '@/data/documentNameStore';
 import { PiMoneyWavyBold, PiBankBold, PiSignatureBold, PiCaretUpDownBold, PiCaretUpDown } from 'react-icons/pi';
-import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbChevronsDownRight, TbMailPlus, TbLibraryPlus, TbStatusChange, TbDragDrop, TbHistory } from 'react-icons/tb';
+import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbChevronsDownRight, TbMailPlus, TbLibraryPlus, TbStatusChange, TbDragDrop, TbHistory, TbBell } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
 import { FaCheckCircle } from 'react-icons/fa';
@@ -288,40 +289,68 @@ const ContractsPage: React.FC = () => {
   const { user } = useAuth();
   const currentUserName = user?.name || '';
   const { toast } = useToast();
+  const { addContractCreatedNotification, addDocumentCreatedNotification, addContractVoidedNotification } = useNotifications();
   const { addDocument, getDocumentsByContract, removeDocument, updateDocumentContract } = useDocumentStore();
 
   // Test function to generate multiple toast notifications
   const generateTestToasts = () => {
-    // Generate 4 test toasts with different types
+    // Generate 10+ individual test toasts with actual contract/document style and text
+    const testContractId = "9876";
+    const testContractTitle = "Test Property Acquisition Contract";
+    
+    // 1. Contract Created Successfully
     toast({
       title: "Contract Created Successfully",
-      description: "Sample Contract #12345 has been created successfully (Try closing me individually!)",
+      description: `"${testContractTitle}" has been created with Contract ID ${testContractId}`,
       duration: 30000,
     });
+    
+    // Add notification for test contract
+    addContractCreatedNotification(testContractId, testContractTitle);
 
+    // Generate 10 document notifications with proper delays
+    const testDocuments = [
+      "Purchase Agreement.pdf",
+      "Wire Authorization.pdf", 
+      "Closing Disclosure.pdf",
+      "Title Insurance.pdf",
+      "Appraisal Report.pdf",
+      "Property Survey.pdf",
+      "Loan Estimate.pdf",
+      "Inspection Report.pdf",
+      "Final Walkthrough.pdf",
+      "Homeowners Insurance.pdf"
+    ];
+
+    testDocuments.forEach((docName, index) => {
+      const docId = 8001 + index;
+      setTimeout(() => {
+        toast({
+          title: "Document Created Successfully",
+          description: `"${docName}" with Document ID ${docId} has been created for Contract ID ${testContractId} - ${testContractTitle}`,
+          duration: 30000,
+        });
+        
+        // Add notification for test document
+        addDocumentCreatedNotification(docId.toString(), docName, testContractId, testContractTitle);
+      }, (index + 1) * 200); // 200ms delay between each document toast
+    });
+
+    // Add voided contract notification after all documents
     setTimeout(() => {
+      const voidedContractId = "9999";
+      const voidedContractTitle = "Test Voided Contract";
+      
       toast({
-        title: "Document Uploaded",
-        description: "Purchase Agreement.pdf has been uploaded to Contract #12345 (Or use Close All!)",
+        title: "Contract Voided Successfully",
+        description: `"${voidedContractTitle}" with Contract ID ${voidedContractId} has been voided along with all associated documents.`,
+        variant: "voided",
         duration: 30000,
       });
-    }, 500);
-
-    setTimeout(() => {
-      toast({
-        title: "Signature Request Sent",
-        description: "Signature request sent to john.doe@example.com for Contract #12345",
-        duration: 30000,
-      });
-    }, 1000);
-
-    setTimeout(() => {
-      toast({
-        title: "Payment Processed",
-        description: "Payment of $50,000 has been processed for Contract #12345",
-        duration: 30000,
-      });
-    }, 1500);
+      
+      // Add notification for voided contract
+      addContractVoidedNotification(voidedContractId, voidedContractTitle);
+    }, (testDocuments.length + 1) * 200); // Delay after all documents
   };
 
   const [activeTab, setActiveTab] = useState('allContracts');
@@ -1264,8 +1293,8 @@ const ContractsPage: React.FC = () => {
       // Process step4Documents (documents added during contract creation)
       console.log('Processing step4Documents:', step4Documents.length, step4Documents);
       if (step4Documents.length > 0) {
-        try {
-          for (const docInfo of step4Documents) {
+        for (const docInfo of step4Documents) {
+          try {
             console.log('Creating document from step4Documents:', docInfo);
             // Create document with proper ID and contract association, including assignee and document type
             const documentId = await addDocument(docInfo.file, newContractId, newContract.title, currentUserName, docInfo.assignee, docInfo.type);
@@ -1281,18 +1310,18 @@ const ContractsPage: React.FC = () => {
             
             finalDocumentIds.push(documentId);
             createdDocuments.push({ id: documentId, name: docInfo.name });
-            console.log('Added to createdDocuments:', { id: documentId, name: docInfo.name });
+            console.log('Successfully added to createdDocuments:', { id: documentId, name: docInfo.name });
+          } catch (error) {
+            console.error('Error creating document from step4Documents:', docInfo.name, error);
           }
-        } catch (error) {
-          console.error('Error creating documents for contract:', error);
         }
       }
       
       // Process any previously uploaded files (from handleFileChange)
       console.log('Processing uploadedFiles:', uploadedFiles.length, uploadedFiles);
       if (uploadedFiles.length > 0) {
-        try {
-          for (const file of uploadedFiles) {
+        for (const file of uploadedFiles) {
+          try {
             console.log('Creating document from uploadedFiles:', file.name);
             // Create document with proper ID and contract association, including assignee (current user as default)
             const documentId = await addDocument(file, newContractId, newContract.title, currentUserName, currentUserName, undefined);
@@ -1303,15 +1332,22 @@ const ContractsPage: React.FC = () => {
             setAssignee(documentId, currentUserName);
             finalDocumentIds.push(documentId);
             createdDocuments.push({ id: documentId, name: file.name });
-            console.log('Added to createdDocuments:', { id: documentId, name: file.name });
+            console.log('Successfully added to createdDocuments:', { id: documentId, name: file.name });
+          } catch (error) {
+            console.error('Error creating document from uploadedFiles:', file.name, error);
           }
-        } catch (error) {
-          console.error('Error creating documents from uploaded files:', error);
         }
       }
       
       // Update the contract with the final document IDs
       newContract.documentIds = finalDocumentIds;
+      
+      // Log final document processing results
+      console.log(`Document processing complete. Final counts:`);
+      console.log(`- finalDocumentIds: ${finalDocumentIds.length}`);
+      console.log(`- createdDocuments: ${createdDocuments.length}`);
+      console.log(`- step4Documents processed: ${step4Documents.length}`);
+      console.log(`- uploadedFiles processed: ${uploadedFiles.length}`);
       
       try {
         const response = await fetch('/api/contracts', {
@@ -1344,17 +1380,6 @@ const ContractsPage: React.FC = () => {
         console.error('Error saving new contract to localStorage:', error);
       }
       
-      // Close modal and reset form
-      setShowNewContractForm(false);
-      resetForm();
-      setCountrySearchTerm('');
-      setStateSearchTerm('');
-      setUploadedFiles([]); // Clear uploaded files
-      setUploadedDocumentIds([]); // Clear uploaded document IDs
-      setStep4Documents([]); // Clear step 4 documents
-      setDocumentName(''); // Clear document name
-      setDocumentNameError(false); // Clear document name error
-      
       // Show success feedback for contract creation first
       console.log('Creating contract toast notification');
       toast({
@@ -1365,15 +1390,61 @@ const ContractsPage: React.FC = () => {
           setSelectedContract(newContract);
         },
       });
+      
+      // Add notification for contract creation
+      addContractCreatedNotification(newContract.id, newContract.title);
 
       // Show success feedback for each document created with slight delay to ensure proper ordering
       console.log(`Creating ${createdDocuments.length} document toast notifications:`, createdDocuments);
+      console.log('Final createdDocuments array:', JSON.stringify(createdDocuments, null, 2));
       
+      // Calculate expected total documents
+      const expectedTotalDocs = step4Documents.length + uploadedFiles.length;
+      console.log(`Expected total documents: ${expectedTotalDocs} (step4Documents: ${step4Documents.length}, uploadedFiles: ${uploadedFiles.length})`);
+      
+      // Ensure ALL documents get notifications by creating a comprehensive list
+      const allDocumentsForNotifications: Array<{id: string, name: string}> = [];
+      
+      // Add documents from createdDocuments array (successfully created)
       if (createdDocuments.length > 0) {
-        // For 6+ documents: show only 4 individual document toasts + 1 summary = 5 total + 1 contract = 6 total
-        // For <6 documents: show all individual document toasts
-        const maxIndividualDocs = createdDocuments.length >= 6 ? 4 : Math.min(createdDocuments.length, 5);
-        const documentsToShow = createdDocuments.slice(0, maxIndividualDocs);
+        allDocumentsForNotifications.push(...createdDocuments);
+      }
+      
+      // Add any missing documents from step4Documents and uploadedFiles
+      const createdDocNames = createdDocuments.map(doc => doc.name);
+      const step4DocNames = step4Documents.map(doc => doc.name);
+      const uploadedFileNames = uploadedFiles.map(file => file.name);
+      
+      // Find missing step4Documents
+      step4Documents.forEach((doc, index) => {
+        if (!createdDocNames.includes(doc.name)) {
+          allDocumentsForNotifications.push({ 
+            id: `step4-${index}`, 
+            name: doc.name 
+          });
+        }
+      });
+      
+      // Find missing uploadedFiles
+      uploadedFiles.forEach((file, index) => {
+        if (!createdDocNames.includes(file.name)) {
+          allDocumentsForNotifications.push({ 
+            id: `uploaded-${index}`, 
+            name: file.name 
+          });
+        }
+      });
+      
+      console.log(`Final allDocumentsForNotifications: ${allDocumentsForNotifications.length} documents`);
+      console.log('All documents for notifications:', allDocumentsForNotifications);
+      
+      // Create toasts for ALL documents using the comprehensive list
+      if (allDocumentsForNotifications.length > 0) {
+        // Show ALL individual document toasts (up to 19 to stay within 20-toast limit including contract)
+        const maxIndividualDocs = Math.min(allDocumentsForNotifications.length, 19);
+        const documentsToShow = allDocumentsForNotifications.slice(0, maxIndividualDocs);
+        
+        console.log(`Will show ${documentsToShow.length} individual document toasts out of ${allDocumentsForNotifications.length} total documents`);
         
         documentsToShow.forEach((doc, index) => {
           setTimeout(() => {
@@ -1383,22 +1454,104 @@ const ContractsPage: React.FC = () => {
               description: `"${doc.name}" with Document ID ${doc.id} has been created for Contract ID ${newContract.id} - ${newContract.title}`,
               duration: 30000, // 30 seconds
             });
-          }, (index + 1) * 100); // 100ms delay between each document toast
+            
+            // Add notification for document creation
+            addDocumentCreatedNotification(doc.id, doc.name, newContract.id, newContract.title);
+          }, (index + 1) * 200); // 200ms delay between each document toast to ensure proper spacing
         });
 
         // If there were more documents than we showed individually, show a summary toast
-        if (createdDocuments.length > maxIndividualDocs) {
+        if (allDocumentsForNotifications.length > maxIndividualDocs) {
           setTimeout(() => {
-            const remainingCount = createdDocuments.length - maxIndividualDocs;
-            console.log(`Creating additional documents summary toast for ${remainingCount} extra documents`);
+            const remainingCount = allDocumentsForNotifications.length - maxIndividualDocs;
+            const remainingDocs = allDocumentsForNotifications.slice(maxIndividualDocs);
+            const remainingNames = remainingDocs.map(doc => doc.name).join(', ');
+            console.log(`Creating additional documents summary toast for ${remainingCount} extra documents: ${remainingNames}`);
             toast({
               title: "Additional Documents Created", 
-              description: `${remainingCount} additional document(s) were also created successfully`,
+              description: `${remainingCount} additional document(s) created: ${remainingNames}`,
               duration: 30000, // 30 seconds
             });
-          }, (maxIndividualDocs + 1) * 100);
+            
+            // Add notifications for remaining documents
+            remainingDocs.forEach((doc, index) => {
+              addDocumentCreatedNotification(doc.id, doc.name, newContract.id, newContract.title);
+            });
+          }, (maxIndividualDocs + 1) * 200);
+        }
+      } else {
+        // FALLBACK: If no documents were found at all, create toasts from expected documents
+        console.log('FALLBACK: No documents found in any array, creating toasts from expected documents');
+        const allExpectedDocs = [...step4Documents, ...uploadedFiles];
+        const maxIndividualDocs = Math.min(allExpectedDocs.length, 19);
+        const documentsToShow = allExpectedDocs.slice(0, maxIndividualDocs);
+        
+        documentsToShow.forEach((doc, index) => {
+          setTimeout(() => {
+            let docName = 'Unknown Document';
+            if ('name' in doc && typeof doc.name === 'string') {
+              docName = doc.name;
+            } else if ('file' in doc && doc.file instanceof File) {
+              docName = doc.file.name;
+            } else if (doc instanceof File) {
+              docName = doc.name;
+            }
+            console.log(`FALLBACK: Creating toast for document ${index + 1}/${documentsToShow.length}: ${docName}`);
+            toast({
+              title: "Document Created Successfully",
+              description: `"${docName}" with Document ID fallback-${index} has been created for Contract ID ${newContract.id} - ${newContract.title}`,
+              duration: 30000, // 30 seconds
+            });
+            
+            // Add notification for document creation (fallback)
+            addDocumentCreatedNotification(`fallback-${index}`, docName, newContract.id, newContract.title);
+          }, (index + 1) * 200);
+        });
+
+        // If there were more documents than we showed individually, show a summary toast
+        if (allExpectedDocs.length > maxIndividualDocs) {
+          setTimeout(() => {
+            const remainingCount = allExpectedDocs.length - maxIndividualDocs;
+            const remainingDocs = allExpectedDocs.slice(maxIndividualDocs);
+            const remainingNames = remainingDocs.map(doc => {
+              if ('name' in doc && typeof doc.name === 'string') return doc.name;
+              if ('file' in doc && doc.file instanceof File) return doc.file.name;
+              if (doc instanceof File) return doc.name;
+              return 'Unknown';
+            }).join(', ');
+            console.log(`FALLBACK: Creating additional documents summary toast for ${remainingCount} extra documents: ${remainingNames}`);
+            toast({
+              title: "Additional Documents Created", 
+              description: `${remainingCount} additional document(s) created: ${remainingNames}`,
+              duration: 30000, // 30 seconds
+            });
+            
+            // Add notifications for remaining documents in fallback
+            remainingDocs.forEach((doc, index) => {
+              let docName = 'Unknown Document';
+              if ('name' in doc && typeof doc.name === 'string') {
+                docName = doc.name;
+              } else if ('file' in doc && doc.file instanceof File) {
+                docName = doc.file.name;
+              } else if (doc instanceof File) {
+                docName = doc.name;
+              }
+              addDocumentCreatedNotification(`fallback-${maxIndividualDocs + index}`, docName, newContract.id, newContract.title);
+            });
+          }, (maxIndividualDocs + 1) * 200);
         }
       }
+      
+      // Close modal and reset form AFTER all notifications are created
+      setShowNewContractForm(false);
+      resetForm();
+      setCountrySearchTerm('');
+      setStateSearchTerm('');
+      setUploadedFiles([]); // Clear uploaded files
+      setUploadedDocumentIds([]); // Clear uploaded document IDs
+      setStep4Documents([]); // Clear step 4 documents
+      setDocumentName(''); // Clear document name
+      setDocumentNameError(false); // Clear document name error
     } else {
       setShowNewContractForm(false);
       setModalStep(1);
@@ -2434,7 +2587,18 @@ const ContractsPage: React.FC = () => {
     }
   };
 
+  // Add state to track deleting contracts
+  const [deletingContracts, setDeletingContracts] = useState<Set<string>>(new Set());
+
   const deleteContract = async (contractId: string, contractTitle: string) => {
+    // Prevent multiple clicks on the same contract
+    if (deletingContracts.has(contractId)) {
+      return;
+    }
+
+    // Add contract to deleting set
+    setDeletingContracts(prev => new Set(prev).add(contractId));
+
     try {
       // First, delete all documents associated with this contract
       const { getAllDocuments, removeDocument } = useDocumentStore.getState();
@@ -2456,7 +2620,9 @@ const ContractsPage: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete contract from backend');
+        const errorData = await response.text();
+        console.error('Backend error:', errorData);
+        throw new Error(`Failed to delete contract from backend: ${response.status} ${response.statusText}`);
       }
 
       // Remove the contract from the contracts array
@@ -2469,16 +2635,27 @@ const ContractsPage: React.FC = () => {
 
       // Show success message
       toast({
-        title: "Contract Deleted",
-        description: `"${contractTitle}" has been permanently deleted along with all associated documents.`,
+        title: "Contract Voided Successfully",
+        description: `"${contractTitle}" with Contract ID ${contractId} has been voided along with all associated documents.`,
+        variant: "voided",
       });
+      
+      // Add notification for contract voided
+      addContractVoidedNotification(contractId, contractTitle);
 
     } catch (error) {
       console.error('Error deleting contract:', error);
       toast({
         title: "Delete Error",
-        description: "Failed to delete contract. Please try again.",
+        description: `Failed to delete contract: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
+      });
+    } finally {
+      // Remove contract from deleting set
+      setDeletingContracts(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(contractId);
+        return newSet;
       });
     }
   };
@@ -3860,6 +4037,7 @@ const ContractsPage: React.FC = () => {
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-0 w-full sm:w-auto">
+
             <button 
               onClick={() => {
                 setShowNewDocumentModal(true);
@@ -3883,7 +4061,7 @@ const ContractsPage: React.FC = () => {
                 setInlineEditingNewDocumentAssignee('');
                 setShowInlineEditingNewDocumentAssigneeDropdown(false);
               }}
-              className="flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold w-full sm:w-auto cursor-pointer"
+              className="flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold w-full sm:w-auto cursor-pointer sm:ml-1"
             >
               <TbLibraryPlus className="mr-2 text-[22px] flex-shrink-0" />
               <span className="leading-none text-sm font-semibold">New Document</span>
@@ -3906,7 +4084,7 @@ const ContractsPage: React.FC = () => {
               className="flex items-center justify-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-semibold w-full sm:w-auto cursor-pointer sm:ml-1"
               style={{ fontFamily: 'Avenir, sans-serif' }}
             >
-              🧪 Test Toasts
+              🧪 Test 12 Toasts
             </button>
           </div>
         </div>
@@ -5137,7 +5315,12 @@ const ContractsPage: React.FC = () => {
                      {/* Added Documents Display - Below the upload box */}
                      {step4Documents.length > 0 && (
                        <div className="mt-6">
-                         <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-3 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Added Documents</h4>
+                         <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-3 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                           Added Documents
+                           <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
+                             ({step4Documents.length})
+                           </span>
+                         </h4>
                          <div className="flex flex-col gap-2 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:hidden">
                            {step4Documents.map((doc, idx) => (
                              <div 
@@ -7017,15 +7200,26 @@ const ContractsPage: React.FC = () => {
                           </span>
                         </button>
                         <button 
-                          className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group" 
+                          className={`border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 transition-colors bg-transparent dark:bg-gray-800 relative group ${
+                            deletingContracts.has(contract.id) 
+                              ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' 
+                              : 'text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 dark:hover:border-red-500 dark:hover:text-red-500'
+                          }`}
                           onClick={e => { 
                             e.stopPropagation(); 
-                            deleteContract(contract.id, contract.title);
+                            if (!deletingContracts.has(contract.id)) {
+                              deleteContract(contract.id, contract.title);
+                            }
                           }}
+                          disabled={deletingContracts.has(contract.id)}
                         >
-                          <MdCancelPresentation className="h-4 w-4 transition-colors" />
+                          {deletingContracts.has(contract.id) ? (
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-red-500" />
+                          ) : (
+                            <MdCancelPresentation className="text-sm sm:text-base transition-colors" />
+                          )}
                           <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                            Void
+                            {deletingContracts.has(contract.id) ? 'Voiding...' : 'Void'}
                           </span>
                         </button>
                       </div>

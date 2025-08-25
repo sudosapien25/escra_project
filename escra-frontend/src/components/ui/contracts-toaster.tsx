@@ -10,12 +10,14 @@ import {
 import { useToast } from "@/components/ui/use-toast"
 
 export function ContractsToaster() {
-  const { toasts, dismiss } = useToast()
+  const { toasts, dismiss, toast } = useToast()
   const [buttonClicked, setButtonClicked] = useState(false)
   const [toastIds, setToastIds] = useState<string[]>([])
+  const [remainingToasts, setRemainingToasts] = useState<any[]>([])
+  const [isShowingRemaining, setIsShowingRemaining] = useState(false)
 
-  // Limit to maximum 6 notifications
-  const displayedToasts = toasts.slice(0, 6)
+  // Limit to maximum 20 notifications (increased from 12)
+  const displayedToasts = toasts.slice(0, 20)
 
   // Show button when there are multiple toasts AND button hasn't been clicked for current session
   const showCloseAllButton = displayedToasts.length > 1 && !buttonClicked
@@ -23,6 +25,12 @@ export function ContractsToaster() {
   // Use refs to avoid infinite loops
   const toastIdsRef = useRef<string[]>([])
   const buttonClickedRef = useRef(false)
+  const allToastsRef = useRef<any[]>([])
+
+  // Track all toasts to maintain queue
+  useEffect(() => {
+    allToastsRef.current = toasts
+  }, [toasts])
 
   // Track toast IDs to detect new toast sessions
   useEffect(() => {
@@ -34,6 +42,8 @@ export function ContractsToaster() {
       setToastIds([])
       toastIdsRef.current = []
       buttonClickedRef.current = false
+      setIsShowingRemaining(false)
+      setRemainingToasts([])
     }
     // If we have new toasts (different IDs), this is a new session
     else if (displayedToasts.length > 1) {
@@ -61,17 +71,57 @@ export function ContractsToaster() {
   const handleCloseAll = () => {
     // Mark button as clicked for this session
     setButtonClicked(true)
-    // Dismiss all toasts
+    
+    // Store remaining toasts if there are more than displayed
+    const remaining = allToastsRef.current.slice(20)
+    if (remaining.length > 0) {
+      setRemainingToasts(remaining)
+    }
+    
+    // Dismiss all current toasts
     dismiss()
   }
 
+  // Show remaining toasts when current toasts are dismissed
+  useEffect(() => {
+    if (toasts.length === 0 && remainingToasts.length > 0 && !isShowingRemaining) {
+      setIsShowingRemaining(true)
+      
+      // Show notification that remaining toasts are coming
+      toast({
+        title: "More Notifications",
+        description: `Showing ${remainingToasts.length} additional notification(s)...`,
+        duration: 3000,
+      })
+      
+      // Show remaining toasts with delay
+      remainingToasts.forEach((toastData, index) => {
+        setTimeout(() => {
+          toast({
+            title: toastData.title,
+            description: toastData.description,
+            duration: toastData.duration || 30000,
+            onClick: toastData.onClick,
+            variant: toastData.variant
+          })
+        }, (index + 1) * 200) // 200ms delay between remaining toasts
+      })
+      
+      // Clear remaining toasts after showing
+      setTimeout(() => {
+        setRemainingToasts([])
+        setIsShowingRemaining(false)
+      }, remainingToasts.length * 200 + 1000)
+    }
+  }, [toasts.length, remainingToasts, isShowingRemaining, toast])
+
   return (
     <ToastProvider>
-      {displayedToasts.map(function ({ id, title, description, action, onClick, ...props }) {
+      {displayedToasts.map(function ({ id, title, description, action, onClick, variant, ...props }) {
         return (
-          <Toast key={id} {...props} onClick={onClick}>
+          <Toast key={id} variant={variant} {...props} onClick={onClick}>
             <div className="grid gap-1">
-              {title && <ContractsToastTitle>{title}</ContractsToastTitle>}
+              {title && <ContractsToastTitle variant={variant}>{title}</ContractsToastTitle>}
               {description && (
                 <ContractsToastDescription>{description}</ContractsToastDescription>
               )}
@@ -91,7 +141,7 @@ export function ContractsToaster() {
             style={{ fontFamily: 'Avenir, sans-serif' }}
             aria-label="Close all notifications"
           >
-            Close All
+            {allToastsRef.current.length > 20 ? `Close All (${allToastsRef.current.length - 20} more coming)` : 'Close All'}
           </button>
         </div>
       )}
@@ -101,10 +151,12 @@ export function ContractsToaster() {
   )
 }
 
-// Custom ToastTitle for contracts page - using teal color like workflows page
-const ContractsToastTitle = ({ children, ...props }: any) => (
+// Custom ToastTitle for contracts page - using teal color like workflows page, red for voided
+const ContractsToastTitle = ({ children, variant, ...props }: any) => (
   <div
-    className="text-sm font-semibold text-primary"
+    className={`text-sm font-semibold ${
+      variant === "voided" ? "text-red-600 dark:text-red-400" : "text-primary"
+    }`}
     style={{ fontFamily: 'Avenir, sans-serif' }}
     {...props}
   >
