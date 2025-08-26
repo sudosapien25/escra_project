@@ -2,11 +2,11 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { FaUser } from 'react-icons/fa';
-import { TbCameraCog, TbActivity, TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbBuildingCommunity, TbBallAmericanFootball, TbTool } from 'react-icons/tb';
+import { TbCameraCog, TbActivity, TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbBuildingCommunity, TbBallAmericanFootball, TbTool, TbWallet, TbLock, TbKey, TbApiApp, TbDevicesX, TbKeyOff, TbWalletOff, TbPlug, TbPlugOff, TbApiOff, TbWebhookOff, TbApiAppOff } from 'react-icons/tb';
 import { HiChevronDown, HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight, HiOutlineKey, HiOutlineDuplicate, HiStatusOffline } from 'react-icons/hi';
 import { MdOutlineGeneratingTokens, MdWebhook, MdOutlineSportsFootball, MdOutlineMovieFilter, MdOutlineHealthAndSafety, MdCancelPresentation } from 'react-icons/md';
 import { HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
-import { PiEjectBold, PiPowerBold, PiLockKeyBold, PiWalletBold, PiMinusSquareBold } from 'react-icons/pi';
+import { PiEjectBold, PiPowerBold, PiLockKeyBold, PiMinusSquareBold } from 'react-icons/pi';
 import { LuConstruction, LuBriefcaseBusiness } from 'react-icons/lu';
 import { GrMoney, GrUserWorker } from 'react-icons/gr';
 import { VscLaw } from 'react-icons/vsc';
@@ -16,6 +16,9 @@ import { CgAddR, CgRemoveR } from 'react-icons/cg';
 import { HiOutlineQrcode } from 'react-icons/hi';
 import { IconType } from 'react-icons';
 import { Logo } from '@/components/common/Logo';
+import { useNotifications } from '@/context/NotificationContext';
+import { useToast } from '@/components/ui/use-toast';
+import { Toaster } from '@/components/ui/toaster';
 
 const TABS = [
   { key: 'profile', label: 'Profile' },
@@ -667,6 +670,12 @@ const webhooksData = [
     url: 'https://api.example.com/webhooks/contract-signed',
     created: '2 weeks ago',
     lastUsed: '1 day ago'
+  },
+  {
+    name: 'User Invited Webhook',
+    url: 'https://api.example.com/webhooks/user-invited',
+    created: '1 week ago',
+    lastUsed: '3 days ago'
   }
 ];
 
@@ -734,6 +743,8 @@ const billingPlans = [
 ];
 
 export default function AdminSettingsPage() {
+  const { addPasskeyAddedNotification, addPasskeyRemovedNotification, addWalletAddedNotification, addWalletRemovedNotification, addApiTokenAddedNotification, addApiTokenRemovedNotification } = useNotifications();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('profile');
   const [avatarImage, setAvatarImage] = useState<string | null>(null);
   const [userRole, setUserRole] = useState('Admin');
@@ -1018,6 +1029,94 @@ export default function AdminSettingsPage() {
     setIndustrySearchTerm(e.target.value);
   };
 
+    // Test function to generate passkey notification toasts
+  const generateTestPasskeyToasts = () => {
+    // Test passkey added notification
+    const testPasskeyName = "Test iPhone 15 Pro";
+    
+    toast({
+      title: "Passkey Added Successfully",
+      description: `"${testPasskeyName}" has been added successfully to your account`,
+      duration: 5000,
+    });
+    
+    // Add notification for test passkey added
+    addPasskeyAddedNotification(testPasskeyName);
+
+    // Test passkey removed notification after a delay
+    setTimeout(() => {
+      const removedPasskeyName = "Test MacBook Pro";
+      
+      toast({
+        title: "Passkey Removed Successfully",
+        description: `"${removedPasskeyName}" has been removed successfully from your account`,
+        duration: 5000,
+        variant: "voided",
+      });
+      
+      // Add notification for test passkey removed
+      addPasskeyRemovedNotification(removedPasskeyName);
+    }, 2000); // 2 second delay
+
+    // Test another passkey added notification after a delay
+    setTimeout(() => {
+      const anotherPasskeyName = "Test iPad Air";
+      
+      toast({
+        title: "Passkey Added Successfully",
+        description: `"${anotherPasskeyName}" has been added successfully to your account`,
+        duration: 5000,
+      });
+      
+      // Add notification for test passkey added
+      addPasskeyAddedNotification(anotherPasskeyName);
+    }, 4000); // 4 second delay
+  };
+
+  // Test function to generate wallet notification toasts
+  const generateTestWalletToasts = () => {
+    // Test wallet added notification
+    const testWalletName = "Test Pera Wallet";
+    
+    toast({
+      title: "Wallet Added Successfully",
+      description: `"${testWalletName}" has been added successfully to your account`,
+      duration: 5000,
+    });
+    
+    // Add notification for test wallet added
+    addWalletAddedNotification(testWalletName);
+
+    // Test wallet removed notification after a delay
+    setTimeout(() => {
+      const removedWalletName = "Test MyAlgo Wallet";
+      
+      toast({
+        title: "Wallet Removed Successfully",
+        description: `"${removedWalletName}" has been removed successfully from your account`,
+        duration: 5000,
+        variant: "voided",
+      });
+      
+      // Add notification for test wallet removed
+      addWalletRemovedNotification(removedWalletName);
+    }, 2000); // 2 second delay
+
+    // Test another wallet added notification after a delay
+    setTimeout(() => {
+      const anotherWalletName = "Test AlgoSigner";
+      
+      toast({
+        title: "Wallet Added Successfully",
+        description: `"${anotherWalletName}" has been added successfully to your account`,
+        duration: 5000,
+      });
+      
+      // Add notification for test wallet added
+      addWalletAddedNotification(anotherWalletName);
+    }, 4000); // 4 second delay
+  };
+
   const scrollToSelectedState = () => {
     if (showStateDropdown && state) {
       setTimeout(() => {
@@ -1078,9 +1177,27 @@ export default function AdminSettingsPage() {
       <div className="flex-1 bg-gray-50 dark:bg-gray-900">
         <div>
           {/* Page Title and Subtitle */}
-          <div className="mb-3 sm:mb-6">
-            <h1 className="text-[30px] font-bold text-black dark:text-white mb-1">Settings</h1>
-            <p className="text-gray-500 dark:text-gray-400 text-[16px] mt-0">Manage your account & system preferences</p>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 sm:mb-6 gap-4">
+            <div>
+              <h1 className="text-[30px] font-bold text-black dark:text-white mb-1">Settings</h1>
+              <p className="text-gray-500 dark:text-gray-400 text-[16px] mt-0">Manage your account & system preferences</p>
+            </div>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <button
+                onClick={generateTestPasskeyToasts}
+                className="flex items-center justify-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-semibold w-full sm:w-auto"
+                style={{ fontFamily: 'Avenir, sans-serif' }}
+              >
+                🧪 Test Passkey Notifications
+              </button>
+              <button
+                onClick={generateTestWalletToasts}
+                className="flex items-center justify-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-semibold w-full sm:w-auto"
+                style={{ fontFamily: 'Avenir, sans-serif' }}
+              >
+                🧪 Test Wallet Notifications
+              </button>
+            </div>
           </div>
           {/* Divider Line */}
           <hr className="my-3 sm:my-6 border-gray-300 cursor-default select-none" />
@@ -1362,7 +1479,7 @@ export default function AdminSettingsPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center border-2 border-gray-200 dark:border-gray-600">
-                    <PiLockKeyBold size={20} className="text-gray-600 dark:text-gray-400" />
+                    <TbLock size={20} className="text-gray-600 dark:text-gray-400" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-900 dark:text-white">2FA is currently disabled</p>
@@ -1387,9 +1504,9 @@ export default function AdminSettingsPage() {
               {!showPasskeys && (
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center border-2 border-gray-200 dark:border-gray-600">
-                      <HiOutlineKey size={20} className="text-gray-600 dark:text-gray-400" />
-                    </div>
+                                      <div className="h-10 w-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center border-2 border-gray-200 dark:border-gray-600">
+                    <TbKey size={20} className="text-gray-600 dark:text-gray-400" />
+                  </div>
                     <div>
                       <p className="text-sm font-medium text-gray-900 dark:text-white">{passkeysData.length} passkeys configured</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">Manage your passkeys across devices</p>
@@ -1434,6 +1551,7 @@ export default function AdminSettingsPage() {
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-2/5">Name</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-2/5">Created</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5">Last Used</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -1442,6 +1560,34 @@ export default function AdminSettingsPage() {
                             <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-2/5">{passkey.name}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-2/5">{passkey.created}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/5">{passkey.lastUsed}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/5">
+                              <div className="pl-3">
+                                <button
+                                  onClick={() => {
+                                    addPasskeyRemovedNotification(passkey.name);
+                                    
+                                    // Show toast notification
+                                    toast({
+                                      title: "Passkey Removed Successfully",
+                                      description: `"${passkey.name}" has been removed successfully from your account`,
+                                      duration: 5000,
+                                      variant: "voided",
+                                    });
+                                    
+                                    // Remove from local state (in a real app, this would call an API)
+                                    const newPasskeysData = passkeysData.filter((_, i) => i !== index);
+                                    // Note: In a real implementation, you'd update state here
+                                  }}
+                                  className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group flex items-center justify-center"
+                                  title="Remove passkey"
+                                >
+                                  <TbKeyOff className="text-sm sm:text-base transition-colors" />
+                                  <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                    Remove
+                                  </span>
+                                </button>
+                              </div>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -1639,7 +1785,7 @@ export default function AdminSettingsPage() {
                             <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white">
                               <div className="pl-2">
                                 <button className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group flex items-center justify-center">
-                                  <PiEjectBold className="text-sm sm:text-base transition-colors" />
+                                  <TbDevicesX className="text-sm sm:text-base transition-colors" />
                                   <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                     Revoke
                                   </span>
@@ -1703,7 +1849,7 @@ export default function AdminSettingsPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center border-2 border-gray-200 dark:border-gray-600">
-                      <PiWalletBold size={20} className="text-gray-600 dark:text-gray-400" />
+                      <TbWallet size={20} className="text-gray-600 dark:text-gray-400" />
                     </div>
                                             <div>
                           <p className="text-sm font-medium text-gray-900 dark:text-white">{connectedWallets.length} wallets configured</p>
@@ -1762,7 +1908,7 @@ export default function AdminSettingsPage() {
                           <tr key={wallet.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                             <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white">
                               <div className="flex items-center gap-2">
-                                <PiWalletBold className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                                <TbWallet className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                                 <span>{wallet.provider}</span>
                               </div>
                             </td>
@@ -1808,21 +1954,38 @@ export default function AdminSettingsPage() {
                               <div className="flex items-center space-x-1">
                                 {wallet.connected ? (
                                   <button className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-orange-500 hover:text-orange-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-orange-500 dark:hover:text-orange-500 relative group flex items-center justify-center">
-                                    <HiStatusOffline className="text-sm sm:text-base transition-colors" />
+                                    <TbPlugOff className="text-sm sm:text-base transition-colors" />
                                     <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                       Disconnect
                                     </span>
                                   </button>
                                 ) : (
                                   <button className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-green-500 hover:text-green-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-green-500 dark:hover:text-green-500 relative group flex items-center justify-center">
-                                    <PiPowerBold className="text-sm sm:text-base transition-colors" />
+                                    <TbPlug className="text-sm sm:text-base transition-colors" />
                                     <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                       Connect
                                     </span>
                                   </button>
                                 )}
-                                <button className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group flex items-center justify-center">
-                                  <PiMinusSquareBold className="text-sm sm:text-base transition-colors" />
+                                <button 
+                                  onClick={() => {
+                                    addWalletRemovedNotification(wallet.name);
+                                    
+                                    // Show toast notification
+                                    toast({
+                                      title: "Wallet Removed Successfully",
+                                      description: `"${wallet.name}" has been removed successfully from your account`,
+                                      duration: 5000,
+                                      variant: "voided",
+                                    });
+                                    
+                                    // Remove from local state (in a real app, this would call an API)
+                                    const newConnectedWallets = connectedWallets.filter((_, i) => i !== index);
+                                    // Note: In a real implementation, you'd update state here
+                                  }}
+                                  className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group flex items-center justify-center"
+                                >
+                                  <TbWalletOff className="text-sm sm:text-base transition-colors" />
                                   <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                     Remove
                                   </span>
@@ -2004,7 +2167,7 @@ export default function AdminSettingsPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center border-2 border-gray-200 dark:border-gray-600">
-                      <MdOutlineGeneratingTokens size={20} className="text-gray-600 dark:text-gray-400" />
+                      <TbApiApp size={20} className="text-gray-600 dark:text-gray-400" />
                     </div>
                     <div>
                       <p className="text-sm font-medium text-gray-900 dark:text-white">{apiTokensData.length} API tokens configured</p>
@@ -2050,6 +2213,7 @@ export default function AdminSettingsPage() {
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-2/5">Token Name</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-2/5">Created</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5">Last Used</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -2058,6 +2222,34 @@ export default function AdminSettingsPage() {
                             <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-2/5">{token.name}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-2/5">{token.created}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/5">{token.lastUsed}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/5">
+                              <div className="pl-3">
+                                <button
+                                  onClick={() => {
+                                    addApiTokenRemovedNotification(token.name);
+                                    
+                                    // Show toast notification
+                                    toast({
+                                      title: "API Token Removed Successfully",
+                                      description: `"${token.name}" has been removed successfully from your account`,
+                                      duration: 5000,
+                                      variant: "voided",
+                                    });
+                                    
+                                    // Remove from local state (in a real app, this would call an API)
+                                    const newApiTokensData = apiTokensData.filter((_, i) => i !== index);
+                                    // Note: In a real implementation, you'd update state here
+                                  }}
+                                  className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group flex items-center justify-center"
+                                  title="Remove API token"
+                                >
+                                  <TbApiAppOff className="text-sm sm:text-base transition-colors" />
+                                  <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                    Remove
+                                  </span>
+                                </button>
+                              </div>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -2153,7 +2345,7 @@ export default function AdminSettingsPage() {
               
               {showWebhooks && (
                 <div className="mt-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                  <div className="overflow-x-auto overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700">
+                  <div className="overflow-x-auto overflow-y-auto pr-2 h-64 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700">
                     <table className="w-full">
                       <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700">
                         <tr>
@@ -2161,6 +2353,7 @@ export default function AdminSettingsPage() {
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-2/5">URL</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5">Created</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5">Last Used</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -2170,6 +2363,23 @@ export default function AdminSettingsPage() {
                             <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-2/5">{webhook.url}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/5">{webhook.created}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/5">{webhook.lastUsed}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/5">
+                              <div className="pl-3">
+                                <button
+                                  onClick={() => {
+                                    // Handle webhook removal logic here
+                                    // In a real app, this would call an API to remove the webhook
+                                  }}
+                                  className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group flex items-center justify-center"
+                                  title="Remove webhook"
+                                >
+                                  <TbWebhookOff className="text-sm sm:text-base transition-colors" />
+                                  <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                    Remove
+                                  </span>
+                                </button>
+                              </div>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -2798,7 +3008,17 @@ export default function AdminSettingsPage() {
               <button
                 onClick={() => {
                   // Handle add passkey logic here
+                  addPasskeyAddedNotification(passkeyName);
+                  
+                  // Show toast notification
+                  toast({
+                    title: "Passkey Added Successfully",
+                    description: `"${passkeyName}" has been added successfully to your account`,
+                    duration: 5000,
+                  });
+                  
                   setShowAddPasskeyModal(false);
+                  // In a real app, you would also add the passkey to the data here
                 }}
                 className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
                 style={{ fontFamily: 'Avenir, sans-serif' }}
@@ -2908,6 +3128,20 @@ export default function AdminSettingsPage() {
               <button
                 onClick={() => {
                   // Handle create token logic here
+                  if (apiTokenName.trim()) {
+                    addApiTokenAddedNotification(apiTokenName);
+                    
+                    // Show toast notification
+                    toast({
+                      title: "API Token Added Successfully",
+                      description: `"${apiTokenName}" has been successfully added to your account`,
+                      duration: 5000,
+                    });
+                    
+                    // Reset form
+                    setApiTokenName('');
+                    setSelectedTokenExpiration('');
+                  }
                   setShowAddApiTokenModal(false);
                 }}
                 className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
@@ -3261,6 +3495,16 @@ export default function AdminSettingsPage() {
               <button
                 onClick={() => {
                   // Handle add wallet logic here
+                  if (walletName && selectedWalletProvider) {
+                    addWalletAddedNotification(walletName);
+                    
+                    // Show toast notification
+                    toast({
+                      title: "Wallet Added Successfully",
+                      description: `"${walletName}" has been added successfully to your account`,
+                      duration: 5000,
+                    });
+                  }
                   setShowAddWalletModal(false);
                 }}
                 className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold ml-1"
@@ -3272,6 +3516,9 @@ export default function AdminSettingsPage() {
           </div>
         </div>
       )}
+      
+      {/* Toast Notifications */}
+      <Toaster />
     </div>
   );
 }

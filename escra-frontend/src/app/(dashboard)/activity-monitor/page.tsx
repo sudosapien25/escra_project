@@ -22,7 +22,7 @@ function NotificationPageContent() {
     if (filter === 'all') return true;
     if (filter === 'unread') return !n.read;
     if (filter === 'contracts') return [
-      'contract_signed', 'contract_modified', 'contract_rejected', 'all_signatures_complete', 'transaction_complete', 'transaction_cancelled', 'invited', 'role_change', 'action_required', 'comment_added'
+      'contract_signed', 'contract_modified', 'contract_rejected', 'all_signatures_complete', 'transaction_complete', 'transaction_cancelled', 'invited', 'role_change', 'action_required', 'comment_added', 'passkey_added', 'passkey_removed', 'wallet_added', 'wallet_removed'
     ].includes(n.type);
     if (filter === 'wire_transfers') return [
       'wire_info_submitted', 'funds_received', 'approaching_deadline', 'overdue_action'
@@ -88,19 +88,19 @@ function NotificationPageContent() {
               e.stopPropagation();
               markAsRead(n.id);
             }}
-            className={clsx(
-              'flex items-start gap-4 p-6 mx-1 my-1 rounded cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600',
-              !n.read && (n.type === 'contract_voided' ? 'bg-red-50/50 dark:bg-red-900/10' : 'bg-gray-100 dark:bg-gray-600'),
-              index > 0 && 'border-t border-gray-100 dark:border-gray-700',
-              'transition-colors'
-            )}
+                          className={clsx(
+                'flex items-start gap-4 p-6 mx-1 my-1 rounded cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600',
+                !n.read && (['contract_voided', 'passkey_removed', 'wallet_removed'].includes(n.type) ? 'bg-red-50/50 dark:bg-red-900/10' : 'bg-gray-100 dark:bg-gray-600'),
+                index > 0 && 'border-t border-gray-100 dark:border-gray-700',
+                'transition-colors'
+              )}
           >
             <div className="flex-shrink-0 mt-1">
               {getNotificationIcon(n.type)}
-              <div 
-                className={`w-4 h-4 border border-gray-300 rounded flex items-center justify-center cursor-pointer mt-1 ${
-                  n.type === 'contract_voided' ? 'border-red-500' : 'border-primary'
-                }`}
+                              <div 
+                  className={`w-4 h-4 border border-gray-300 rounded flex items-center justify-center cursor-pointer mt-1 ${
+                    ['contract_voided', 'passkey_removed', 'wallet_removed'].includes(n.type) ? 'border-red-500' : 'border-primary'
+                  }`}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -109,7 +109,7 @@ function NotificationPageContent() {
               >
                 {n.read && (
                   <div className={`w-3 h-3 rounded-sm flex items-center justify-center ${
-                    n.type === 'contract_voided' ? 'bg-red-500' : 'bg-primary'
+                    ['contract_voided', 'passkey_removed', 'wallet_removed'].includes(n.type) ? 'bg-red-500' : 'bg-primary'
                   }`}>
                     <FaCheck className="text-white" size={8} />
                   </div>
@@ -119,7 +119,7 @@ function NotificationPageContent() {
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <span className={`font-semibold text-sm ${
-                  n.type === 'contract_voided' 
+                  ['contract_voided', 'passkey_removed', 'wallet_removed'].includes(n.type)
                     ? 'text-red-600 dark:text-red-400' 
                     : 'text-gray-900 dark:text-white'
                 }`}>{n.title}</span>

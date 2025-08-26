@@ -6,6 +6,7 @@ import { PiMoneyWavyBold } from 'react-icons/pi';
 import { AiOutlineFileDone } from 'react-icons/ai';
 import { HiOutlineClipboardCheck } from 'react-icons/hi';
 import { LuCalendarPlus } from 'react-icons/lu';
+import { HiOutlineKey } from 'react-icons/hi';
 
 // Map notification type to icon component
 const notificationIcons: Record<NotificationType, React.ReactNode> = {
@@ -33,7 +34,11 @@ const notificationIcons: Record<NotificationType, React.ReactNode> = {
   task_deleted: <FaTimesCircle className="text-red-500 text-xl" />,
   signature_requested: <FaSignature className="text-primary text-2xl" />,
   signature_voided: <FaTimesCircle className="text-red-500 text-xl" />,
-  document_signed: <FaCheckCircle className="text-green-500 text-2xl" />,
+  document_signed: <FaSignature className="text-primary text-2xl" />,
+  passkey_added: <HiOutlineKey className="text-primary text-2xl" />,
+  passkey_removed: <FaTimesCircle className="text-red-500 text-xl" />,
+  wallet_added: <PiMoneyWavyBold className="text-primary text-2xl" />,
+  wallet_removed: <FaTimesCircle className="text-red-500 text-xl" />,
 };
 
 // Start with empty notifications array
@@ -58,6 +63,10 @@ interface NotificationContextType {
   addSignatureRequestedNotification: (signatureId: string, documentName: string, recipients: Array<{name: string, email: string}>) => void;
   addSignatureVoidedNotification: (signatureId: string, documentName: string, recipients: Array<{name: string, email: string}>) => void;
   addDocumentSignedNotification: (documentId: string, documentName: string, contractId: string, contractName: string, signerName?: string) => void;
+  addPasskeyAddedNotification: (passkeyName: string) => void;
+  addPasskeyRemovedNotification: (passkeyName: string) => void;
+  addWalletAddedNotification: (walletName: string) => void;
+  addWalletRemovedNotification: (walletName: string) => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -239,6 +248,54 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const addPasskeyAddedNotification = (passkeyName: string) => {
+    addNotification({
+      type: 'passkey_added',
+      title: 'Passkey Added Successfully',
+      message: `"${passkeyName}" has been added successfully to your account`,
+      read: false,
+      icon: 'passkey_added',
+      link: `/admin-settings`,
+      meta: { passkeyName },
+    });
+  };
+
+  const addPasskeyRemovedNotification = (passkeyName: string) => {
+    addNotification({
+      type: 'passkey_removed',
+      title: 'Passkey Removed Successfully',
+      message: `"${passkeyName}" has been removed successfully from your account`,
+      read: false,
+      icon: 'passkey_removed',
+      link: `/admin-settings`,
+      meta: { passkeyName },
+    });
+  };
+
+  const addWalletAddedNotification = (walletName: string) => {
+    addNotification({
+      type: 'wallet_added',
+      title: 'Wallet Added Successfully',
+      message: `"${walletName}" has been added successfully to your account`,
+      read: false,
+      icon: 'wallet_added',
+      link: `/admin-settings`,
+      meta: { walletName },
+    });
+  };
+
+  const addWalletRemovedNotification = (walletName: string) => {
+    addNotification({
+      type: 'wallet_removed',
+      title: 'Wallet Removed Successfully',
+      message: `"${walletName}" has been removed successfully from your account`,
+      read: false,
+      icon: 'wallet_removed',
+      link: `/admin-settings`,
+      meta: { walletName },
+    });
+  };
+
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
@@ -260,7 +317,11 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       addTaskDeletedNotification,
       addSignatureRequestedNotification,
       addSignatureVoidedNotification,
-      addDocumentSignedNotification
+      addDocumentSignedNotification,
+      addPasskeyAddedNotification,
+      addPasskeyRemovedNotification,
+      addWalletAddedNotification,
+      addWalletRemovedNotification
     }}>
       {children}
     </NotificationContext.Provider>

@@ -2,14 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { HiOutlineDocumentText, HiOutlineBell, HiOutlineCog } from 'react-icons/hi';
+import { HiOutlineDocumentText, HiOutlineBell } from 'react-icons/hi';
 import { RiLayoutColumnLine, RiDashboardLine, RiBox3Line } from 'react-icons/ri';
 import { FaSignature } from 'react-icons/fa';
-import { TbSubtask, TbCubeSpark, TbLayoutDashboard, TbScript, TbLayoutBoard, TbWritingSign, TbFileText, TbTimeline, TbLogout2 } from 'react-icons/tb';
+import { TbSubtask, TbCubeSpark, TbLayoutDashboard, TbScript, TbLayoutBoard, TbWritingSign, TbFileText, TbTimeline, TbLogout2, TbSettingsCog, TbSunHigh, TbMoon, TbChevronsLeft, TbChevronsRight } from 'react-icons/tb';
 import { IconBaseProps } from 'react-icons';
 import clsx from 'clsx';
-import { HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight } from 'react-icons/hi';
-import { MdOutlineLightMode, MdOutlineDarkMode } from 'react-icons/md';
+
+
 import React, { useEffect, useRef } from 'react';
 import { LiaCubesSolid } from 'react-icons/lia';
 import { HiCubeTransparent } from 'react-icons/hi2';
@@ -81,7 +81,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
 
   const bottomNavItems: NavItem[] = [
     { name: 'Activity Monitor', href: '/activity-monitor', icon: TbTimeline },
-    { name: 'Settings', href: '/admin-settings', icon: HiOutlineCog },
+    { name: 'Settings', href: '/admin-settings', icon: TbSettingsCog },
   ];
 
   return (
@@ -91,7 +91,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
         <ul>
           {navItems.map((item) => (
             <React.Fragment key={item.href}>
-              <li className="mb-2">
+              <li className="mb-3">
                 {item.name === 'Signatures' && !isCollapsed ? (
                   <div className="relative w-full">
                     <button
@@ -152,7 +152,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
         <hr className="my-4 border-gray-200 dark:border-gray-700" />
         <ul>
           {bottomNavItems.map((item) => (
-            <li key={item.href} className="mb-2">
+            <li key={item.href} className="mb-3">
               <Link
                 href={item.href}
                 className={clsx(
@@ -177,7 +177,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
         </ul>
         
         {/* Theme Toggle Button */}
-        <div className="mt-4">
+        <div className="mt-5">
           <button
             onClick={toggleTheme}
             className={clsx(
@@ -188,9 +188,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
           >
             <div className={clsx("flex justify-center", isCollapsed ? "w-full" : "w-16 -ml-6")}>
               {theme.isDark ? (
-                <IconWrapper icon={MdOutlineLightMode} className="w-6 h-6 flex-shrink-0" />
+                <IconWrapper icon={TbSunHigh} className="w-6 h-6 flex-shrink-0" />
               ) : (
-                <IconWrapper icon={MdOutlineDarkMode} className="w-6 h-6 flex-shrink-0" />
+                <IconWrapper icon={TbMoon} className="w-6 h-6 flex-shrink-0" />
               )}
             </div>
             {!isCollapsed && <span className="text-base font-medium">{theme.isDark ? 'Light Mode' : 'Dark Mode'}</span>}
@@ -203,7 +203,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
         </div>
         
         {/* Collapse Button */}
-        <div className="mt-2">
+        <div className="mt-3">
           <button
             onClick={toggleSidebar}
             className={clsx(
@@ -213,9 +213,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
           >
             <div className={clsx("flex justify-center", isCollapsed ? "w-full" : "w-16 -ml-6")}>
               {isCollapsed ? (
-                <IconWrapper icon={HiOutlineChevronDoubleRight} className="w-6 h-6 flex-shrink-0" />
+                <IconWrapper icon={TbChevronsRight} className="w-7 h-7 flex-shrink-0" />
               ) : (
-                <IconWrapper icon={HiOutlineChevronDoubleLeft} className="w-6 h-6 flex-shrink-0" />
+                <IconWrapper icon={TbChevronsLeft} className="w-7 h-7 flex-shrink-0" />
               )}
             </div>
             {!isCollapsed && <span className="text-base font-medium">Collapse</span>}

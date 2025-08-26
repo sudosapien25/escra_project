@@ -1255,7 +1255,7 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
         
         {/* Sticky Footer - Only show on preparation step */}
         {currentStep === 'preparation' && (
-          <div className="sticky bottom-0 bg-gray-100 dark:bg-gray-900 px-6 py-4 relative">
+          <div className="sticky bottom-0 bg-gray-100 dark:bg-gray-900 px-6 py-4">
             {/* Vertical divider line in footer - same as main divider */}
             <div className="absolute left-[319px] top-0 bottom-0 w-[2px] bg-gray-200 dark:bg-gray-700 pointer-events-none"></div>
             <div className="flex justify-between items-center relative z-10">

@@ -23,7 +23,11 @@ export type NotificationType =
   | 'task_deleted'
   | 'signature_requested'
   | 'signature_voided'
-  | 'document_signed';
+  | 'document_signed'
+  | 'passkey_added'
+  | 'passkey_removed'
+  | 'wallet_added'
+  | 'wallet_removed';
 
 export interface NotificationMeta {
   contractId?: string;
