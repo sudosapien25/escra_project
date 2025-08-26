@@ -66,13 +66,47 @@ interface Comment {
 import { useTaskStore } from '@/data/taskStore';
 import { Logo } from '@/components/common/Logo';
 import { useToast } from '@/components/ui/use-toast';
-import { Toaster } from '@/components/ui/toaster';
+import { ContractsToaster } from '@/components/ui/contracts-toaster';
+import { useNotifications } from '@/context/NotificationContext';
 
 type TaskStatus = 'To Do' | 'Blocked' | 'On Hold' | 'In Progress' | 'In Review' | 'Done' | 'Canceled';
 type StatusOption = TaskStatus | 'All';
 
 export default function WorkflowsPage() {
   const { toast } = useToast();
+  const { addTaskCreatedNotification, addTaskDeletedNotification } = useNotifications();
+
+  // Test function to generate multiple toast notifications
+  const generateTestToasts = () => {
+    // Generate test toasts with actual task style and text
+    const testTaskId = "1001";
+    const testTaskTitle = "Test Task";
+    const testContractId = "1234";
+    const testContractTitle = "Test Contract";
+    
+    // 1. Task Created Successfully
+    toast({
+      title: "Task Created Successfully",
+      description: `"${testTaskTitle}" with Task ID ${testTaskId} has been created for Contract ID ${testContractId} - ${testContractTitle}`,
+      duration: 30000,
+    });
+    
+    // Add notification for test task created
+    addTaskCreatedNotification(testTaskId, testTaskTitle, testContractId, testContractTitle);
+
+    // 2. Task Deleted Successfully (after a delay)
+    setTimeout(() => {
+      toast({
+        title: "Task Deleted Successfully",
+        description: `"${testTaskTitle}" with Task ID ${testTaskId} associated with Contract ID ${testContractId} - ${testContractTitle} has been deleted`,
+        variant: "voided",
+        duration: 30000,
+      });
+      
+      // Add notification for test task deleted
+      addTaskDeletedNotification(testTaskId, testTaskTitle, testContractId, testContractTitle);
+    }, 1000); // 1 second delay
+  };
   const [kanbanTab, setKanbanTab] = React.useState('All');
   const kanbanTabs = ['All', 'Active', 'Upcoming'];
   const [taskSearchTerm, setTaskSearchTerm] = React.useState('');
@@ -1331,13 +1365,22 @@ export default function WorkflowsPage() {
           <h1 className="text-[30px] font-bold text-black dark:text-white mb-1">Tasks</h1>
           <p className="text-gray-500 dark:text-gray-400 text-[16px] mt-0">Track &amp; manage your activity</p>
         </div>
-        <button
-          onClick={() => setShowNewTaskModal(true)}
-          className="flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
-        >
-          <TbCategoryPlus className="mr-2 text-[22px]" />
-          New Task
-        </button>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <button
+            onClick={() => setShowNewTaskModal(true)}
+            className="flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold w-full sm:w-auto"
+          >
+            <TbCategoryPlus className="mr-2 text-[22px]" />
+            New Task
+          </button>
+          <button 
+            onClick={generateTestToasts}
+            className="flex items-center justify-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-semibold w-full sm:w-auto"
+            style={{ fontFamily: 'Avenir, sans-serif' }}
+          >
+            🧪 Test 2 Toasts
+          </button>
+        </div>
       </div>
 
       <hr className="my-3 md:my-6 border-gray-300 cursor-default select-none" />
@@ -2407,6 +2450,9 @@ export default function WorkflowsPage() {
                             duration: 30000, // 30 seconds
                           });
                           
+                          // Add notification for task created
+                          addTaskCreatedNotification(newTask.taskNumber.toString(), newTask.title, contractId, selectedContract?.title || 'Unknown Contract');
+                          
                           // Store uploaded files with the task (you might want to implement file storage logic)
                           if (newTaskUploadedFiles.length > 0) {
                             // Store files in localStorage for now (in a real app, you'd upload to server)
@@ -3284,9 +3330,13 @@ export default function WorkflowsPage() {
                                             setOpenMenuTask(null);
                                             toast({
                                               title: "Task Deleted Successfully",
-                                              description: `Task ID ${task.taskNumber} - ${task.title} for Contract ID ${task.contractId} - ${contracts.find(c => c.id === task.contractId)?.title || 'Unknown Contract'} has been deleted along with all its associated subtasks, documents & comments`,
+                                              description: `"${task.title}" with Task ID ${task.taskNumber} associated with Contract ID ${task.contractId} - ${contracts.find(c => c.id === task.contractId)?.title || 'Unknown Contract'} has been deleted`,
+                                              variant: "voided",
                                               duration: 30000, // 30 seconds
                                             });
+                                            
+                                            // Add notification for task deleted
+                                            addTaskDeletedNotification(task.taskNumber.toString(), task.title, task.contractId, contracts.find(c => c.id === task.contractId)?.title || 'Unknown Contract');
                                           }}
                                         >
                                           Delete
@@ -5144,7 +5194,7 @@ export default function WorkflowsPage() {
       </div>
       
       {/* Toast Notifications */}
-      <Toaster />
+      <ContractsToaster />
     </div>
   );
 }

@@ -289,7 +289,7 @@ const ContractsPage: React.FC = () => {
   const { user } = useAuth();
   const currentUserName = user?.name || '';
   const { toast } = useToast();
-  const { addContractCreatedNotification, addDocumentCreatedNotification, addContractVoidedNotification } = useNotifications();
+  const { addContractCreatedNotification, addDocumentCreatedNotification, addContractVoidedNotification, addContractDeletedNotification, addDocumentDeletedNotification } = useNotifications();
   const { addDocument, getDocumentsByContract, removeDocument, updateDocumentContract } = useDocumentStore();
 
   // Test function to generate multiple toast notifications
@@ -343,7 +343,7 @@ const ContractsPage: React.FC = () => {
       
       toast({
         title: "Contract Voided Successfully",
-        description: `"${voidedContractTitle}" with Contract ID ${voidedContractId} has been voided along with all associated documents.`,
+        description: `"${voidedContractTitle}" with Contract ID ${voidedContractId} has been voided along with its associated documents`,
         variant: "voided",
         duration: 30000,
       });
@@ -351,6 +351,40 @@ const ContractsPage: React.FC = () => {
       // Add notification for voided contract
       addContractVoidedNotification(voidedContractId, voidedContractTitle);
     }, (testDocuments.length + 1) * 200); // Delay after all documents
+
+    // Add deleted contract notification after voided contract
+    setTimeout(() => {
+      const deletedContractId = "8888";
+      const deletedContractTitle = "Test Deleted Contract";
+      
+      toast({
+        title: "Contract Deleted Successfully",
+        description: `"${deletedContractTitle}" with Contract ID ${deletedContractId} has been deleted along with its associated documents`,
+        variant: "voided",
+        duration: 30000,
+      });
+      
+      // Add notification for deleted contract
+      addContractDeletedNotification(deletedContractId, deletedContractTitle);
+    }, (testDocuments.length + 2) * 200); // Delay after voided contract
+
+    // Add deleted document notification after deleted contract
+    setTimeout(() => {
+      const deletedDocumentId = "8001";
+      const deletedDocumentName = "Test Deleted Document.pdf";
+      const deletedDocumentContractId = "8888";
+      const deletedDocumentContractTitle = "Test Deleted Contract";
+      
+      toast({
+        title: "Document Deleted Successfully",
+        description: `"${deletedDocumentName}" with Document ID ${deletedDocumentId} associated with Contract ID ${deletedDocumentContractId} - ${deletedDocumentContractTitle} has been deleted`,
+        variant: "voided",
+        duration: 30000,
+      });
+      
+      // Add notification for deleted document
+      addDocumentDeletedNotification(deletedDocumentId, deletedDocumentName, deletedDocumentContractId, deletedDocumentContractTitle);
+    }, (testDocuments.length + 3) * 200); // Delay after deleted contract
   };
 
   const [activeTab, setActiveTab] = useState('allContracts');
@@ -2562,13 +2596,23 @@ const ContractsPage: React.FC = () => {
       // Check if this is a stored document (ID >= 8000 or old format with 'doc_' prefix)
       const docIdNum = parseInt(documentId);
       if (docIdNum >= 8000 || documentId.startsWith('doc_')) {
+        // Get document info before removing it
+        const { getDocument } = useDocumentStore.getState();
+        const document = getDocument(documentId);
+        const contractId = document?.contractId || 'Unknown';
+        const contractName = document?.contractName || 'Unknown Contract';
+        
         // Remove from document store
         removeDocument(documentId);
         
         toast({
-          title: "Document Deleted",
-          description: `${documentName} has been permanently deleted.`,
+          title: "Document Deleted Successfully",
+          description: `"${documentName}" with Document ID ${documentId} associated with Contract ID ${contractId} - ${contractName} has been deleted`,
+          variant: "voided",
         });
+        
+        // Add notification for document deleted
+        addDocumentDeletedNotification(documentId, documentName, contractId, contractName);
       } else {
         // Handle sample document deletion (placeholder)
         toast({
@@ -2605,9 +2649,11 @@ const ContractsPage: React.FC = () => {
       const allDocuments = getAllDocuments();
       const contractDocuments = allDocuments.filter(doc => doc.contractId === contractId);
       
-      // Remove all documents associated with this contract
+      // Remove all documents associated with this contract and add notifications
       contractDocuments.forEach(doc => {
         removeDocument(doc.id);
+        // Add notification for each deleted document
+        addDocumentDeletedNotification(doc.id, doc.name, contractId, contractTitle);
       });
 
       // Delete the contract from the backend
@@ -2635,13 +2681,13 @@ const ContractsPage: React.FC = () => {
 
       // Show success message
       toast({
-        title: "Contract Voided Successfully",
-        description: `"${contractTitle}" with Contract ID ${contractId} has been voided along with all associated documents.`,
+        title: "Contract Deleted Successfully",
+        description: `"${contractTitle}" with Contract ID ${contractId} has been deleted along with its associated documents`,
         variant: "voided",
       });
       
-      // Add notification for contract voided
-      addContractVoidedNotification(contractId, contractTitle);
+      // Add notification for contract deleted
+      addContractDeletedNotification(contractId, contractTitle);
 
     } catch (error) {
       console.error('Error deleting contract:', error);
@@ -7220,6 +7266,25 @@ const ContractsPage: React.FC = () => {
                           )}
                           <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                             {deletingContracts.has(contract.id) ? 'Voiding...' : 'Void'}
+                          </span>
+                        </button>
+                        <button 
+                          className={`border border-gray-300 rounded-md px-1.5 py-1 transition-colors bg-transparent dark:bg-gray-800 relative group ${
+                            ['Initiation', 'Preparation', 'In Review'].includes(contract.status)
+                              ? 'text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 dark:hover:border-red-500 dark:hover:text-red-500'
+                              : 'text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                          }`}
+                          onClick={e => {
+                            e.stopPropagation();
+                            if (['Initiation', 'Preparation', 'In Review'].includes(contract.status)) {
+                              deleteContract(contract.id, contract.title);
+                            }
+                          }}
+                          disabled={!['Initiation', 'Preparation', 'In Review'].includes(contract.status)}
+                        >
+                          <TbTrash className="h-4 w-4 transition-colors" />
+                          <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                            Delete
                           </span>
                         </button>
                       </div>

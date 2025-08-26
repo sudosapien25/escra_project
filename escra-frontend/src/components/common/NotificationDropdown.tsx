@@ -137,8 +137,8 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                     e.stopPropagation();
                     handleNotificationClick(notification);
                   }}
-                  className={`p-4 hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer transition-colors ${
-                    !notification.read && (notification.type === 'contract_voided' 
+                  className={`p-4 hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer transition-colors group ${
+                    !notification.read && (['contract_voided', 'contract_deleted', 'document_deleted', 'task_deleted', 'signature_voided'].includes(notification.type)
                       ? 'bg-red-50/70 dark:bg-red-900/25' 
                       : 'bg-gray-100 dark:bg-gray-700')
                   }`}
@@ -148,7 +148,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                       {!notification.read && (
                         <div 
                           className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                            notification.type === 'contract_voided' ? 'bg-red-500' : 'bg-primary'
+                            ['contract_voided', 'contract_deleted', 'document_deleted', 'task_deleted', 'signature_voided'].includes(notification.type) ? 'bg-red-500' : 'bg-primary'
                           }`}
                         />
                       )}
@@ -156,24 +156,26 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <p className={`text-sm font-medium ${
-                          notification.type === 'contract_voided'
+                          ['contract_voided', 'contract_deleted', 'document_deleted', 'task_deleted', 'signature_voided'].includes(notification.type)
                             ? 'text-red-600 dark:text-red-400'
-                            : !notification.read 
-                              ? 'text-gray-900 dark:text-white' 
-                              : 'text-gray-700 dark:text-gray-300'
+                            : !notification.read && (notification.type === 'signature_requested' || notification.type === 'task_created' || notification.type === 'document_created' || notification.type === 'contract_created')
+                              ? 'text-primary'
+                              : !notification.read 
+                                ? 'text-gray-900 dark:text-white' 
+                                : 'text-gray-700 dark:text-gray-300'
                         }`}>
                           {notification.title}
                         </p>
                         <div className="relative">
                           <button 
                             className={`rounded-md px-1 py-0.5 transition-colors ${
-                              notification.type === 'contract_voided'
+                              ['contract_voided', 'contract_deleted', 'document_deleted', 'signature_voided', 'task_deleted'].includes(notification.type)
                                 ? !notification.read
-                                  ? 'border border-red-300 dark:border-transparent text-red-700 dark:text-red-400 hover:border-red-500 dark:hover:border-red-400 hover:text-red-500 dark:hover:text-red-400'
-                                  : 'border border-gray-300 dark:border-transparent text-gray-400 dark:text-gray-400 hover:border-red-400 dark:hover:border-red-400 hover:text-red-400 dark:hover:text-red-400'
+                                  ? 'border border-transparent text-gray-700 dark:text-gray-300 group-hover:border-gray-300 dark:group-hover:border-gray-700'
+                                  : 'border border-transparent text-gray-400 dark:text-gray-400 group-hover:border-gray-400 dark:group-hover:border-gray-400'
                                 : !notification.read 
                                   ? 'border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary' 
-                                  : 'border border-gray-300 dark:border-transparent text-gray-400 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-400 hover:text-gray-400 dark:hover:text-gray-400'
+                                  : 'border border-transparent text-gray-400 dark:text-gray-400 group-hover:border-gray-400 dark:group-hover:border-gray-400'
                             }`}
                             onClick={e => {
                               e.stopPropagation();
@@ -206,15 +208,23 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                                   setOpenMenuNotification(null);
                                 }}
                               >
-                                Delete
+                                Clear
                               </button>
                             </div>
                           )}
                         </div>
                       </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
-                        {notification.message}
-                      </p>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        {notification.type === 'signature_requested' || notification.type === 'signature_voided' ? (
+                          <div className="whitespace-pre-line">
+                            {notification.message}
+                          </div>
+                        ) : (
+                          <p className="line-clamp-2">
+                            {notification.message}
+                          </p>
+                        )}
+                      </div>
                       <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
                         {formatDistanceToNow(new Date(notification.timestamp), { addSuffix: true })}
                       </p>

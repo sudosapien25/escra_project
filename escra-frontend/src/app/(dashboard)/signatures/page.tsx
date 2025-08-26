@@ -27,6 +27,7 @@ import { mockContracts } from '@/data/mockContracts';
 import { useAssigneeStore } from '@/data/assigneeStore';
 import { useDocumentStore } from '@/data/documentNameStore';
 import { useAuth } from '@/context/AuthContext';
+import { useNotifications } from '@/context/NotificationContext';
 import { useToast } from '@/components/ui/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Logo } from '@/components/common/Logo';
@@ -56,6 +57,7 @@ export default function SignaturesPage() {
   const { getAllDocuments } = useDocumentStore();
   const { getAssignee } = useAssigneeStore();
   const { toast } = useToast();
+  const { addSignatureRequestedNotification, addSignatureVoidedNotification, addDocumentSignedNotification } = useNotifications();
   
   const [activeTab, setActiveTab] = useState('all');
   const [inboxTab, setInboxTab] = useState('all');
@@ -1146,6 +1148,115 @@ export default function SignaturesPage() {
     setShowToolSelectorModal(true);
   };
 
+  // Test function to generate signature notification toasts
+  const generateTestSignatureToasts = () => {
+    // Test signature request with multiple recipients
+    const testSignatureId = "SIG-9876";
+    const testDocumentName = "Test Purchase Agreement.pdf";
+    const testRecipients = [
+      { name: "John Smith", email: "john.smith@example.com" },
+      { name: "Jane Doe", email: "jane.doe@example.com" },
+      { name: "Mike Johnson", email: "mike.johnson@example.com" },
+      { name: "Sarah Wilson", email: "sarah.wilson@example.com" },
+      { name: "David Brown", email: "david.brown@example.com" }
+    ];
+
+    // Create bulleted list of recipients for toast
+    const recipientsList = testRecipients.map(recipient => 
+      `• ${recipient.name} at ${recipient.email}`
+    ).join('\n');
+    
+    const toastDescription = `Requests for signature have been sent to:\n${recipientsList}`;
+
+    // Show success feedback
+    toast({
+      title: "Signatures Requested Successfully",
+      description: (
+        <div className="whitespace-pre-line">
+          {toastDescription}
+        </div>
+      ),
+      duration: 5000,
+    });
+
+    // Add notification to header
+    addSignatureRequestedNotification(
+      testSignatureId,
+      testDocumentName,
+      testRecipients
+    );
+
+    // Test signature voided notification after a delay
+    setTimeout(() => {
+      const voidedToastDescription = `Request for signature to the following individuals has been voided and canceled:\n${recipientsList}`;
+
+      toast({
+        title: "Signature Request Voided Successfully",
+        description: (
+          <div className="whitespace-pre-line">
+            {voidedToastDescription}
+          </div>
+        ),
+        variant: "voided",
+        duration: 5000,
+      });
+
+      // Add voided notification to header
+      addSignatureVoidedNotification(
+        testSignatureId,
+        testDocumentName,
+        testRecipients
+      );
+    }, 2000); // 2 second delay
+
+    // Test document signed notification (self-signing) after a delay
+    setTimeout(() => {
+      const signedToastDescription = `You have successfully signed Document ID SIG-9876 - ${testDocumentName} for Contract ID CON-1234 - Test Contract`;
+
+      toast({
+        title: "You Signed Document Successfully",
+        description: (
+          <div className="whitespace-pre-line">
+            {signedToastDescription}
+          </div>
+        ),
+        duration: 5000,
+      });
+
+      // Add signed notification to header
+      addDocumentSignedNotification(
+        "SIG-9876",
+        testDocumentName,
+        "CON-1234",
+        "Test Contract"
+      );
+    }, 4000); // 4 second delay
+
+    // Test document signed notification (other user signing) after a delay
+    setTimeout(() => {
+      const otherSignedToastDescription = `John Smith has successfully signed Document ID SIG-5432 - Test Closing Disclosure.pdf for Contract ID CON-5678 - Test Property Contract`;
+
+      toast({
+        title: "Recipient Signed Document Successfully",
+        description: (
+          <div className="whitespace-pre-line">
+            {otherSignedToastDescription}
+          </div>
+        ),
+        duration: 5000,
+      });
+
+      // Add signed notification to header
+      addDocumentSignedNotification(
+        "SIG-5432",
+        "Test Closing Disclosure.pdf",
+        "CON-5678",
+        "Test Property Contract",
+        "John Smith"
+      );
+    }, 6000); // 6 second delay
+  };
+
   // Handle click outside for contract dropdown
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -1838,12 +1949,33 @@ export default function SignaturesPage() {
         // Add to state
         setSignaturesData(prev => [newSignatureRequest, ...prev]);
 
+        // Create bulleted list of recipients for toast
+        const validRecipients = cleanRecipients.filter(recipient => recipient.name && recipient.name.trim() !== '');
+        const recipientsList = validRecipients.map(recipient => 
+          `• ${recipient.name} at ${recipient.email}`
+        ).join('\n');
+        
+        const toastDescription = validRecipients.length > 0 
+          ? `Requests for signature have been sent to:\n${recipientsList}`
+          : `"${newSignatureRequest.document}" has been sent for signature`;
+
         // Show success feedback
         toast({
-          title: "Signature request created successfully",
-          description: `"${newSignatureRequest.document}" has been sent for signature`,
+          title: "Signatures Requested Successfully",
+          description: (
+            <div className="whitespace-pre-line">
+              {toastDescription}
+            </div>
+          ),
           duration: 5000,
         });
+
+        // Add notification to header
+        addSignatureRequestedNotification(
+          newSignatureRequest.id,
+          newSignatureRequest.document,
+          cleanRecipients
+        );
       } else {
         throw new Error('Failed to save signature request');
       }
@@ -1910,12 +2042,33 @@ export default function SignaturesPage() {
         // Add to state
         setSignaturesData(prev => [newSignatureRequest, ...prev]);
 
+        // Create bulleted list of recipients for toast
+        const validRecipients = cleanRecipients.filter(recipient => recipient.name && recipient.name.trim() !== '');
+        const recipientsList = validRecipients.map(recipient => 
+          `• ${recipient.name} at ${recipient.email}`
+        ).join('\n');
+        
+        const toastDescription = validRecipients.length > 0 
+          ? `Requests for signature have been sent to:\n${recipientsList}`
+          : `"${newSignatureRequest.document}" has been sent to DocuSign for signature`;
+
         // Show success feedback
         toast({
-          title: "DocuSign signature request created successfully",
-          description: `"${newSignatureRequest.document}" has been sent to DocuSign for signature`,
+          title: "Signatures Requested Successfully",
+          description: (
+            <div className="whitespace-pre-line">
+              {toastDescription}
+            </div>
+          ),
           duration: 5000,
         });
+
+        // Add notification to header
+        addSignatureRequestedNotification(
+          newSignatureRequest.id,
+          newSignatureRequest.document,
+          cleanRecipients
+        );
       } else {
         throw new Error('Failed to save DocuSign signature request');
       }
@@ -1946,6 +2099,9 @@ export default function SignaturesPage() {
 
   const deleteSignature = async (signatureId: string, documentName: string) => {
     try {
+      // Find the signature before deleting to get recipient information
+      const signatureToDelete = signaturesData.find(s => s.id === signatureId);
+      
       // Delete the signature from the backend
       const response = await fetch('/api/signatures', {
         method: 'DELETE',
@@ -1967,12 +2123,34 @@ export default function SignaturesPage() {
         setSelectedDocument(null);
       }
 
-      // Show success message with detailed information
-      const deletedSignature = signaturesData.find(s => s.id === signatureId);
+      // Create bulleted list of recipients for toast
+      const validRecipients = signatureToDelete?.recipients?.filter(recipient => recipient.name && recipient.name.trim() !== '') || [];
+      const recipientsList = validRecipients.map(recipient => 
+        `• ${recipient.name} at ${recipient.email}`
+      ).join('\n');
+      
+      const toastDescription = validRecipients.length > 0 
+        ? `Request for signature to the following individuals has been voided and canceled:\n${recipientsList}`
+        : `"${documentName}" signature request has been voided and canceled`;
+
+      // Show success message with recipient information
       toast({
-        title: "Signature Request Deleted",
-        description: `"${documentName}" (Document ID: ${deletedSignature?.documentId || 'N/A'}, Contract: ${deletedSignature?.contract || 'N/A'}, Contract ID: ${deletedSignature?.contractId || 'N/A'}) has been permanently deleted.`,
+        title: "Signature Request Voided Successfully",
+        description: (
+          <div className="whitespace-pre-line">
+            {toastDescription}
+          </div>
+        ),
+        variant: "voided",
+        duration: 5000,
       });
+
+      // Add notification to header
+      addSignatureVoidedNotification(
+        signatureId,
+        documentName,
+        signatureToDelete?.recipients || []
+      );
 
     } catch (error) {
       console.error('Error deleting signature:', error);
@@ -2051,6 +2229,17 @@ export default function SignaturesPage() {
         title: isCompleted ? "Document Signed Successfully" : "Signature Added Successfully",
         description: message,
       });
+
+      // Add notification for document signing
+      // For self-signing, pass undefined as signerName to show "You have successfully signed..."
+      // For others signing, pass the current user's name
+      addDocumentSignedNotification(
+        selectedDocument.documentId || selectedDocument.id,
+        selectedDocument.document,
+        selectedDocument.contractId,
+        selectedDocument.contract,
+        undefined // Self-signing, so no signer name
+      );
       
     } catch (error) {
       console.error("Error signing document:", error);
@@ -2078,14 +2267,24 @@ export default function SignaturesPage() {
           <h1 className="text-[30px] font-bold text-black dark:text-white mb-1 cursor-default select-none">Signatures</h1>
           <p className="text-gray-500 dark:text-gray-400 text-[16px] mt-0 cursor-default select-none">Manage electronic signatures for all your contracts</p>
         </div>
-        <button
-          onClick={handleRequestSignatureClick}
-          className="flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold mb-0"
-          style={{ fontFamily: 'Avenir, sans-serif' }}
-        >
-          <TbPencilPlus className="mr-2 text-[22px]" />
-          <span className="whitespace-nowrap">Request Signature</span>
-        </button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <button
+            onClick={handleRequestSignatureClick}
+            className="flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold mb-0"
+            style={{ fontFamily: 'Avenir, sans-serif' }}
+          >
+            <TbPencilPlus className="mr-2 text-[22px]" />
+            <span className="whitespace-nowrap">Request Signature</span>
+          </button>
+          <button
+            onClick={generateTestSignatureToasts}
+            className="flex items-center justify-center px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm font-semibold mb-0"
+            style={{ fontFamily: 'Avenir, sans-serif' }}
+          >
+            <FaSignature className="mr-2 text-[22px]" />
+            <span className="whitespace-nowrap">Test Notifications</span>
+          </button>
+        </div>
       </div>
 
       <hr className="my-3 sm:my-6 border-gray-300 cursor-default select-none" />

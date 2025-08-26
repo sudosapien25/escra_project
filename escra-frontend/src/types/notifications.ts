@@ -16,7 +16,14 @@ export type NotificationType =
   | 'security_alert'
   | 'contract_created'
   | 'document_created'
-  | 'contract_voided';
+  | 'contract_voided'
+  | 'contract_deleted'
+  | 'document_deleted'
+  | 'task_created'
+  | 'task_deleted'
+  | 'signature_requested'
+  | 'signature_voided'
+  | 'document_signed';
 
 export interface NotificationMeta {
   contractId?: string;
