@@ -8,7 +8,7 @@ import { LuPen } from 'react-icons/lu';
 import { PiMoneyWavyBold } from 'react-icons/pi';
 import { MdOutlineAddToPhotos } from 'react-icons/md';
 import { TbClockPin, TbClockUp, TbCoins, TbTransactionDollar, TbPencilExclamation, TbTransfer, TbFileText, TbClockShare, TbClockDown, TbArrowsExchange, TbClockEdit, TbFilePlus, TbBusinessplan } from 'react-icons/tb';
-import { TbChevronDown } from 'react-icons/tb';
+import { TbChevronDown, TbArrowsHorizontal } from 'react-icons/tb';
 import { HiOutlineDocumentText } from 'react-icons/hi';
 import { GrMoney } from 'react-icons/gr';
 import NewContractModal from '@/components/common/NewContractModal';
@@ -19,6 +19,7 @@ import { useTaskStore } from '@/data/taskStore';
 import { Task } from '@/types/task';
 import { useToast } from '@/components/ui/use-toast';
 import { Toaster } from '@/components/ui/toaster';
+import { useNotifications } from '@/context/NotificationContext';
 
 // Define Contract interface to match contracts page
 interface Contract {
@@ -365,7 +366,7 @@ const parseParties = (partiesString: string): string[] => {
 
 export default function DashboardPage() {
   const [showNewContractModal, setShowNewContractModal] = React.useState(false);
-  const [activeRole, setActiveRole] = React.useState('creator');
+  const [activeRole, setActiveRole] = React.useState('editor');
   const [hoveredValue, setHoveredValue] = React.useState<number | null>(null);
   const [hoveredDate, setHoveredDate] = React.useState<string | null>(null);
   const [contracts, setContracts] = React.useState<Contract[]>(mockContracts);
@@ -433,6 +434,9 @@ export default function DashboardPage() {
   
   // Toast notification system
   const { toast } = useToast();
+  
+  // Notification system
+  const { addContractCreatedNotification, addDocumentCreatedNotification } = useNotifications();
   
   // Tab state
   const [activeTab, setActiveTab] = React.useState('contracts');
@@ -953,10 +957,21 @@ export default function DashboardPage() {
           const newContract = JSON.parse(event.newValue);
           // Show toast notification
           toast({
-            title: "Contract created successfully",
-            description: `"${newContract.title}" has been created with ID ${newContract.id}`,
-            duration: Infinity, // Make toast persistent - user must close it manually
+            title: "Contract Created Successfully",
+            description: `"${newContract.title}" has been created with Contract ID #${newContract.id}`,
+            duration: 30000, // Match contracts page duration
           });
+          
+          // Add notification for contract creation
+          addContractCreatedNotification(newContract.id, newContract.title);
+          
+          // Add notifications for documents if they exist
+          if (newContract.documentIds && newContract.documentIds.length > 0) {
+            // Note: In a real implementation, you would fetch document details here
+            // For now, we'll add a generic document notification
+            addDocumentCreatedNotification("doc_" + newContract.id, "Contract Documents", newContract.id, newContract.title);
+          }
+          
           // Update contracts list
           setContracts(prev => [newContract, ...prev]);
         } catch (error) {
@@ -1021,10 +1036,10 @@ export default function DashboardPage() {
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full md:w-auto cursor-default select-none">
           <div className="inline-block rounded-full bg-primary/10 dark:bg-primary/20 px-2 py-0.5 text-primary dark:text-primary font-semibold text-xs border border-primary/20 dark:border-primary/30 self-start sm:self-center cursor-default select-none">
-            Logged in as: Creator
+            Logged in as: Editor
           </div>
           <div className="inline-flex self-start sm:self-center border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden cursor-default select-none">
-            {['admin', 'creator', 'editor', 'viewer'].map((role, idx, arr) => (
+            {['admin', 'editor', 'signer', 'viewer'].map((role, idx, arr) => (
               <button
                 key={role}
                 className={`px-3 py-1.5 text-xs font-medium transition-colors border-0 ${
@@ -1050,6 +1065,38 @@ export default function DashboardPage() {
             <TbFilePlus className="mr-2 text-[22px]" />
             New Contract
           </button>
+          <button
+            className="flex items-center justify-center w-full md:w-auto px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-semibold"
+            onClick={() => {
+              // Test contract created notification
+              const testContractId = "TEST1234";
+              const testContractTitle = "Test Property Acquisition Contract";
+              
+              toast({
+                title: "Contract Created Successfully",
+                description: `"${testContractTitle}" has been created with Contract ID #${testContractId}`,
+                duration: 30000, // Match contracts page duration
+              });
+              
+              addContractCreatedNotification(testContractId, testContractTitle);
+              
+              // Test document created notification after a delay
+              setTimeout(() => {
+                const testDocumentName = "Test Purchase Agreement.pdf";
+                const testDocumentId = "doc_TEST1234";
+                
+                toast({
+                  title: "Document Created Successfully",
+                  description: `"${testDocumentName}" with Document ID #${testDocumentId} has been created for Contract ID #${testContractId} - ${testContractTitle}`,
+                  duration: 30000, // Match contracts page duration
+                });
+                
+                addDocumentCreatedNotification(testDocumentId, testDocumentName, testContractId, testContractTitle);
+              }, 2000); // 2 second delay
+            }}
+          >
+            🧪 Test Notifications
+          </button>
         </div>
         <NewContractModal isOpen={showNewContractModal} onClose={() => setShowNewContractModal(false)} />
       </div>
@@ -1063,10 +1110,10 @@ export default function DashboardPage() {
       <h2 className="text-[15px] font-bold text-gray-700 dark:text-gray-300 pt-3 mb-4 cursor-default select-none">KEY METRICS</h2>
 
       {/* Flex container for the first two metric cards */}
-      <div className="flex flex-col md:flex-row gap-4 cursor-default select-none">
+      <div className="flex flex-col lg:flex-row gap-4 cursor-default select-none">
         {/* Interactive Total Contract Value Chart - Replacing Total Contracts Box */}
-        <Card className="flex flex-col rounded-xl border border-gray-300 dark:border-gray-700 min-h-[375px] w-[600px] bg-white dark:bg-gray-800 p-4 cursor-default select-none">
-          <div className="flex items-center justify-between mb-3 cursor-default select-none">
+        <Card className="flex flex-col rounded-xl border border-gray-300 dark:border-gray-700 min-h-[375px] w-full lg:w-[600px] bg-white dark:bg-gray-800 p-4 cursor-default select-none">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-3 cursor-default select-none">
             <div className="flex items-center gap-2 cursor-default select-none">
               <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800 cursor-default select-none">
                 <TbBusinessplan size={21} className="text-teal-500 dark:text-teal-400" />
@@ -1081,8 +1128,8 @@ export default function DashboardPage() {
                 )}
               </div>
             </div>
-            <div className="text-right cursor-default select-none">
-              <p className={`text-sm flex items-center ${percentageChange >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'} cursor-default select-none`}>
+            <div className="text-left sm:text-right cursor-default select-none">
+              <p className={`text-xs sm:text-sm flex items-center ${percentageChange >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'} cursor-default select-none`}>
                 <FaArrowUp className={`mr-1 ${percentageChange < 0 ? 'rotate-180' : ''}`} />
                 {Math.abs(percentageChange).toFixed(1)}% from last week
               </p>
@@ -1126,7 +1173,25 @@ export default function DashboardPage() {
           
           {/* Interactive Line Chart */}
           <div className="flex-1 min-h-[200px] -mx-6 -mb-6 cursor-default select-none">
-            <ResponsiveContainer width="100%" height="100%">
+            {/* Mobile Placeholder */}
+            <div className="sm:hidden flex items-center justify-center h-full mt-12">
+              <div className="text-center cursor-pointer group" onClick={() => {
+                // Try to enter fullscreen mode
+                if (document.documentElement.requestFullscreen) {
+                  document.documentElement.requestFullscreen();
+                } else if ((document.documentElement as any).webkitRequestFullscreen) {
+                  (document.documentElement as any).webkitRequestFullscreen();
+                } else if ((document.documentElement as any).msRequestFullscreen) {
+                  (document.documentElement as any).msRequestFullscreen();
+                }
+              }}>
+                <TbArrowsHorizontal className="w-8 h-8 text-gray-400 dark:text-gray-500 mx-auto mb-2 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
+                <p className="text-sm text-gray-500 dark:text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">Expand to view graph</p>
+              </div>
+            </div>
+            {/* Desktop Chart */}
+            <div className="hidden sm:block h-full">
+              <ResponsiveContainer width="100%" height="100%">
               <AreaChart
                 data={chartData}
                 margin={{ top: 10, right: 20, left: 20, bottom: 10 }}
@@ -1171,14 +1236,15 @@ export default function DashboardPage() {
                 />
               </AreaChart>
             </ResponsiveContainer>
+            </div>
           </div>
         </Card>
 
         {/* Contract Analytics Bar Chart */}
         <Card className="flex flex-1 flex-col rounded-xl border border-gray-300 dark:border-gray-700 min-h-[400px] min-w-0 bg-white dark:bg-gray-800 p-4 pb-2 cursor-default select-none">
-          <div className="flex items-center justify-between mb-4 cursor-default select-none">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 cursor-default select-none">
             {/* Time Filter Dropdown */}
-            <div className="relative cursor-default select-none">
+            <div className="relative cursor-default select-none order-2 sm:order-none">
               <button
                 ref={barChartButtonRef}
                 className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-lg px-3 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
@@ -1212,7 +1278,7 @@ export default function DashboardPage() {
               )}
             </div>
             
-            <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 border-2 border-gray-200 dark:border-gray-600 cursor-default select-none">
+            <div className="flex flex-col sm:flex-row bg-gray-100 dark:bg-gray-700 rounded-lg p-1 border-2 border-gray-200 dark:border-gray-600 cursor-default select-none order-1 sm:order-none sm:mt-1">
               <button
                 className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                   chartView === 'types' 
@@ -1247,7 +1313,25 @@ export default function DashboardPage() {
           </div>
           
           <div className="flex-1 min-h-[370px] pb-2.5 cursor-default select-none">
-            <ResponsiveContainer width="100%" height="100%">
+            {/* Mobile Placeholder */}
+            <div className="sm:hidden flex items-center justify-center h-full mt-24">
+              <div className="text-center cursor-pointer group" onClick={() => {
+                // Try to enter fullscreen mode
+                if (document.documentElement.requestFullscreen) {
+                  document.documentElement.requestFullscreen();
+                } else if ((document.documentElement as any).webkitRequestFullscreen) {
+                  (document.documentElement as any).webkitRequestFullscreen();
+                } else if ((document.documentElement as any).msRequestFullscreen) {
+                  (document.documentElement as any).msRequestFullscreen();
+                }
+              }}>
+                <TbArrowsHorizontal className="w-8 h-8 text-gray-400 dark:text-gray-500 mx-auto mb-2 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
+                <p className="text-sm text-gray-500 dark:text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">Expand to view chart</p>
+              </div>
+            </div>
+            {/* Desktop Chart */}
+            <div className="hidden sm:block h-full">
+              <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={processContractDataForBarChart(contracts, signaturesData, chartView)}
                 margin={{ top: 20, right: 30, left: -20, bottom: -10 }}
@@ -1262,29 +1346,30 @@ export default function DashboardPage() {
                   tick={{ fontSize: 10, fill: '#6B7280' }}
                 />
                 <Tooltip content={<BarChartTooltip />} cursor={false} />
-                <Bar dataKey="count" fill="#23B5B5" />
+                <Bar dataKey="count" fill="#23B5B5"                 />
               </BarChart>
             </ResponsiveContainer>
+            </div>
           </div>
         </Card>
       </div>
 
       {/* Metric Cards Grid - Remaining Cards */}
-      <div className="w-full mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 mt-4 cursor-default select-none" style={{ gridTemplateRows: 'minmax(0, 120px)' }}>
+      <div className="w-full mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 mt-4 cursor-default select-none" style={{ gridTemplateRows: 'minmax(0, 120px)' }}>
         {/* Metric Card 2: Total Contracts */}
-        <Card className="flex items-center gap-4 rounded-xl border border-gray-300 dark:border-gray-700 min-h-[120px] min-w-0 bg-white dark:bg-gray-800 p-6 cursor-default select-none">
+        <Card className="flex items-center gap-3 sm:gap-4 rounded-xl border border-gray-300 dark:border-gray-700 min-h-[120px] min-w-0 bg-white dark:bg-gray-800 p-4 sm:p-6 cursor-default select-none">
           <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800 cursor-default select-none">
             <TbFileText size={21} className="text-teal-500 dark:text-teal-400" />
           </div>
           <div className="flex flex-col items-start cursor-default select-none">
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contracts</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{contracts.length}</p>
+            <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Total Contracts</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{contracts.length}</p>
             <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">Active contracts</p>
           </div>
         </Card>
 
         {/* Metric Card 4: Average Completion Time */}
-        <Card className="flex items-center gap-4 rounded-xl border border-gray-300 dark:border-gray-700 min-h-[120px] min-w-0 bg-white dark:bg-gray-800 p-6 cursor-default select-none">
+        <Card className="flex items-center gap-3 sm:gap-4 rounded-xl border border-gray-300 dark:border-gray-700 min-h-[120px] min-w-0 bg-white dark:bg-gray-800 p-4 sm:p-6 cursor-default select-none">
           <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center border-2 border-blue-200 dark:border-blue-800 cursor-default select-none">
             {completionTimeTrend === 'up' ? (
               <TbClockUp size={21} className="text-blue-500 dark:text-blue-400" />
@@ -1293,9 +1378,9 @@ export default function DashboardPage() {
             )}
           </div>
           <div className="flex flex-col items-start cursor-default select-none">
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Average Completion Time</p>
+            <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Average Completion Time</p>
             <div className="flex items-center gap-2 cursor-default select-none">
-              <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">3.2 days</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">3.2 days</p>
               <span className={`text-xs font-semibold ${completionTimeTrend === 'up' ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'} cursor-default select-none`}>
                 {completionTimeTrend === 'up' ? '↑' : '↓'}
               </span>
@@ -1340,25 +1425,25 @@ export default function DashboardPage() {
         </Card>
 
         {/* Metric Card 5: Pending Signatures */}
-        <Card className="flex items-center gap-4 rounded-xl border border-gray-300 dark:border-gray-700 min-h-[120px] min-w-0 bg-white dark:bg-gray-800 p-6 cursor-default select-none">
+        <Card className="flex items-center gap-3 sm:gap-4 rounded-xl border border-gray-300 dark:border-gray-700 min-h-[120px] min-w-0 bg-white dark:bg-gray-800 p-4 sm:p-6 cursor-default select-none">
           <div className="h-10 w-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center border-2 border-purple-200 dark:border-purple-800 cursor-default select-none">
             <TbClockEdit size={21} className="text-purple-500 dark:text-purple-400" />
           </div>
           <div className="flex flex-col items-start cursor-default select-none">
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Pending Signatures</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">2</p>
+            <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Pending Signatures</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">2</p>
             <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">Requires action</p>
           </div>
         </Card>
 
         {/* Metric Card 6: Wire Transfers Pending */}
-        <Card className="flex items-center gap-4 rounded-xl border border-gray-300 dark:border-gray-700 min-h-[120px] min-w-0 bg-white dark:bg-gray-800 p-6 cursor-default select-none">
+        <Card className="flex items-center gap-3 sm:gap-4 rounded-xl border border-gray-300 dark:border-gray-700 min-h-[120px] min-w-0 bg-white dark:bg-gray-800 p-4 sm:p-6 cursor-default select-none">
           <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center border-2 border-green-200 dark:border-green-800 cursor-default select-none">
             <TbArrowsExchange size={21} className="text-green-500 dark:text-green-400" />
           </div>
           <div className="flex flex-col items-start cursor-default select-none">
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Wire Transfers Pending</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">3</p>
+            <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Wire Transfers Pending</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">3</p>
             <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">Awaiting transfer</p>
           </div>
         </Card>

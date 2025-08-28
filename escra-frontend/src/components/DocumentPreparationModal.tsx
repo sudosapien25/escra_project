@@ -857,7 +857,7 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
                 </div>
 
                 {/* Previous Button in Left Sidebar */}
-                <div className="pt-4 sm:pt-8">
+                <div className="mt-auto pt-4">
                   <button
                     onClick={() => setCurrentStep('preparation')}
                     className="px-4 sm:px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
@@ -1211,13 +1211,6 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
                 <div className="bg-gray-100 dark:bg-gray-900 px-4 sm:px-6 pt-0 pb-6">
                   <div className="flex justify-end gap-1">
                     <button
-                      onClick={() => setCurrentStep('preparation')}
-                      className="lg:hidden px-4 sm:px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold mr-auto"
-                      style={{ fontFamily: 'Avenir, sans-serif' }}
-                    >
-                      Previous
-                    </button>
-                    <button
                       onClick={onClose}
                       className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
                       style={{ fontFamily: 'Avenir, sans-serif' }}
@@ -1255,7 +1248,7 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
         
         {/* Sticky Footer - Only show on preparation step */}
         {currentStep === 'preparation' && (
-          <div className="sticky bottom-0 bg-gray-100 dark:bg-gray-900 px-6 py-4">
+          <div className="sticky bottom-0 bg-gray-100 dark:bg-gray-900 px-6 pt-4 pb-6">
             {/* Vertical divider line in footer - same as main divider */}
             <div className="absolute left-[319px] top-0 bottom-0 w-[2px] bg-gray-200 dark:bg-gray-700 pointer-events-none"></div>
             <div className="flex justify-between items-center relative z-10">

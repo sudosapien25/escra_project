@@ -1211,7 +1211,7 @@ export default function SignaturesPage() {
 
     // Test document signed notification (self-signing) after a delay
     setTimeout(() => {
-      const signedToastDescription = `You have successfully signed Document ID SIG-9876 - ${testDocumentName} for Contract ID CON-1234 - Test Contract`;
+      const signedToastDescription = `You have successfully signed Document ID #SIG-9876 - ${testDocumentName} for Contract ID #CON-1234 - Test Contract`;
 
       toast({
         title: "You Signed Document Successfully",
@@ -1234,7 +1234,7 @@ export default function SignaturesPage() {
 
     // Test document signed notification (other user signing) after a delay
     setTimeout(() => {
-      const otherSignedToastDescription = `John Smith has successfully signed Document ID SIG-5432 - Test Closing Disclosure.pdf for Contract ID CON-5678 - Test Property Contract`;
+      const otherSignedToastDescription = `John Smith has successfully signed Document ID #SIG-5432 - Test Closing Disclosure.pdf for Contract ID #CON-5678 - Test Property Contract`;
 
       toast({
         title: "Recipient Signed Document Successfully",
@@ -3909,8 +3909,8 @@ export default function SignaturesPage() {
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-black bg-opacity-40" style={{ paddingTop: '95px' }}>
           <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden">
             {/* Sticky Header */}
-            <div className="sticky top-0 z-40 bg-gray-50 dark:bg-gray-900 px-6 py-4">
-              <div className="flex items-start justify-between">
+            <div className="sticky top-0 z-40 bg-gray-50 dark:bg-gray-900 px-6 py-4 sm:pt-8 sm:pb-2">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800">
                     <TbPencilPlus size={20} className="text-teal-500 dark:text-teal-400" />
@@ -3921,7 +3921,7 @@ export default function SignaturesPage() {
                   </div>
                 </div>
                 <button
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-full ml-4 mt-1"
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-full -mt-3"
                     onClick={() => { 
                       setShowRequestSignatureModal(false); 
                       resetModalData();
@@ -4707,7 +4707,7 @@ export default function SignaturesPage() {
               </div>
 
               {/* Sticky Footer */}
-              <div className="sticky bottom-0 bg-gray-50 dark:bg-gray-900 px-6 py-4">
+              <div className="sticky bottom-0 bg-gray-50 dark:bg-gray-900 px-6 pt-4 pb-6">
                 <div className="flex justify-end gap-1">
                   <button
                     type="button"
@@ -4762,8 +4762,8 @@ export default function SignaturesPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
           <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden">
             {/* Sticky Header */}
-            <div className="sticky top-0 z-40 bg-gray-50 dark:bg-gray-900 px-6 py-4">
-              <div className="flex items-start justify-between">
+            <div className="sticky top-0 z-40 bg-gray-50 dark:bg-gray-900 px-6 py-4 sm:pt-8 sm:pb-2">
+              <div className="flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-3">
                     <div className="h-8 w-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
@@ -4774,7 +4774,7 @@ export default function SignaturesPage() {
                   <p className="text-gray-500 text-xs leading-tight cursor-default select-none ml-11">Fill in the request details to get started</p>
                 </div>
                                   <button
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-full ml-4 mt-1"
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-full -mt-3"
                     onClick={() => { 
                       setShowDocuSignModal(false); 
                       resetModalData();

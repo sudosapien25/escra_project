@@ -743,7 +743,7 @@ const billingPlans = [
 ];
 
 export default function AdminSettingsPage() {
-  const { addPasskeyAddedNotification, addPasskeyRemovedNotification, addWalletAddedNotification, addWalletRemovedNotification, addApiTokenAddedNotification, addApiTokenRemovedNotification } = useNotifications();
+  const { addPasskeyAddedNotification, addPasskeyRemovedNotification, addWalletAddedNotification, addWalletRemovedNotification, addApiTokenAddedNotification, addApiTokenRemovedNotification, addWebhookAddedNotification, addWebhookRemovedNotification } = useNotifications();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('profile');
   const [avatarImage, setAvatarImage] = useState<string | null>(null);
@@ -1117,6 +1117,94 @@ export default function AdminSettingsPage() {
     }, 4000); // 4 second delay
   };
 
+  // Test function to generate API token notification toasts
+  const generateTestApiTokenToasts = () => {
+    // Test API token added notification
+    const testTokenName = "Test Production API";
+    
+    toast({
+      title: "API Token Added Successfully",
+      description: `"${testTokenName}" has been added successfully to your account`,
+      duration: 5000,
+    });
+    
+    // Add notification for test API token added
+    addApiTokenAddedNotification(testTokenName);
+
+    // Test API token removed notification after a delay
+    setTimeout(() => {
+      const removedTokenName = "Test Development API";
+      
+      toast({
+        title: "API Token Removed Successfully",
+        description: `"${removedTokenName}" has been removed successfully from your account`,
+        duration: 5000,
+        variant: "destructive",
+      });
+      
+      // Add notification for test API token removed
+      addApiTokenRemovedNotification(removedTokenName);
+    }, 2000); // 2 second delay
+
+    // Test another API token added notification after a delay
+    setTimeout(() => {
+      const anotherTokenName = "Test Testing API";
+      
+      toast({
+        title: "API Token Added Successfully",
+        description: `"${anotherTokenName}" has been added successfully to your account`,
+        duration: 5000,
+      });
+      
+      // Add notification for test API token added
+      addApiTokenAddedNotification(anotherTokenName);
+    }, 4000); // 4 second delay
+  };
+
+  // Test function to generate webhook notification toasts
+  const generateTestWebhookToasts = () => {
+    // Test webhook added notification
+    const testWebhookUrl = "https://api.example.com/webhooks/test";
+    
+    toast({
+      title: "Webhook Added Successfully",
+      description: `Webhook for URL "${testWebhookUrl}" has been added successfully`,
+      duration: 5000,
+    });
+    
+    // Add notification for test webhook added
+    addWebhookAddedNotification(testWebhookUrl);
+
+    // Test webhook removed notification after a delay
+    setTimeout(() => {
+      const removedWebhookUrl = "https://api.example.com/webhooks/removed";
+      
+      toast({
+        title: "Webhook Removed Successfully",
+        description: `Webhook for URL "${removedWebhookUrl}" has been removed successfully`,
+        duration: 5000,
+        variant: "destructive",
+      });
+      
+      // Add notification for test webhook removed
+      addWebhookRemovedNotification(removedWebhookUrl);
+    }, 2000); // 2 second delay
+
+    // Test another webhook added notification after a delay
+    setTimeout(() => {
+      const anotherWebhookUrl = "https://api.example.com/webhooks/another";
+      
+      toast({
+        title: "Webhook Added Successfully",
+        description: `Webhook for URL "${anotherWebhookUrl}" has been added successfully`,
+        duration: 5000,
+      });
+      
+      // Add notification for test webhook added
+      addWebhookAddedNotification(anotherWebhookUrl);
+    }, 4000); // 4 second delay
+  };
+
   const scrollToSelectedState = () => {
     if (showStateDropdown && state) {
       setTimeout(() => {
@@ -1182,7 +1270,7 @@ export default function AdminSettingsPage() {
               <h1 className="text-[30px] font-bold text-black dark:text-white mb-1">Settings</h1>
               <p className="text-gray-500 dark:text-gray-400 text-[16px] mt-0">Manage your account & system preferences</p>
             </div>
-            <div className="flex gap-2 w-full sm:w-auto">
+            <div className="flex gap-2 w-full sm:w-auto flex-wrap">
               <button
                 onClick={generateTestPasskeyToasts}
                 className="flex items-center justify-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-semibold w-full sm:w-auto"
@@ -1196,6 +1284,20 @@ export default function AdminSettingsPage() {
                 style={{ fontFamily: 'Avenir, sans-serif' }}
               >
                 🧪 Test Wallet Notifications
+              </button>
+              <button
+                onClick={generateTestApiTokenToasts}
+                className="flex items-center justify-center px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm font-semibold w-full sm:w-auto"
+                style={{ fontFamily: 'Avenir, sans-serif' }}
+              >
+                🧪 Test API Token Notifications
+              </button>
+              <button
+                onClick={generateTestWebhookToasts}
+                className="flex items-center justify-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-semibold w-full sm:w-auto"
+                style={{ fontFamily: 'Avenir, sans-serif' }}
+              >
+                🧪 Test Webhook Notifications
               </button>
             </div>
           </div>
@@ -2233,7 +2335,7 @@ export default function AdminSettingsPage() {
                                       title: "API Token Removed Successfully",
                                       description: `"${token.name}" has been removed successfully from your account`,
                                       duration: 5000,
-                                      variant: "voided",
+                                      variant: "destructive",
                                     });
                                     
                                     // Remove from local state (in a real app, this would call an API)
@@ -2367,8 +2469,19 @@ export default function AdminSettingsPage() {
                               <div className="pl-3">
                                 <button
                                   onClick={() => {
-                                    // Handle webhook removal logic here
-                                    // In a real app, this would call an API to remove the webhook
+                                    addWebhookRemovedNotification(webhook.url);
+                                    
+                                    // Show toast notification
+                                    toast({
+                                      title: "Webhook Removed Successfully",
+                                      description: `Webhook for URL "${webhook.url}" has been removed successfully`,
+                                      duration: 5000,
+                                      variant: "destructive",
+                                    });
+                                    
+                                    // Remove from local state (in a real app, this would call an API)
+                                    const newWebhooksData = webhooksData.filter((_, i) => i !== index);
+                                    // Note: In a real implementation, you'd update state here
                                   }}
                                   className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group flex items-center justify-center"
                                   title="Remove webhook"
@@ -3388,6 +3501,22 @@ export default function AdminSettingsPage() {
               <button
                 onClick={() => {
                   // Handle create webhook logic here
+                  if (webhookUrl.trim()) {
+                    addWebhookAddedNotification(webhookUrl);
+                    
+                    // Show toast notification
+                    toast({
+                      title: "Webhook Added Successfully",
+                      description: `Webhook for URL "${webhookUrl}" has been added successfully`,
+                      duration: 5000,
+                    });
+                    
+                    // Reset form
+                    setWebhookUrl('');
+                    setWebhookName('');
+                    setWebhookSecret('');
+                    setWebhookTriggers([]);
+                  }
                   setShowAddWebhookModal(false);
                 }}
                 className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"

@@ -120,7 +120,7 @@ export default function DashboardLayout({
       </header>
       {isCollapsed !== undefined ? (
         <div className="flex flex-grow pt-16">
-          <div style={{ width: `${currentSidebarWidth}px` }} className="fixed left-0 top-16 h-[200vh] z-40 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-all duration-150 ease-in-out">
+          <div style={{ width: `${currentSidebarWidth}px` }} className="fixed left-0 top-16 bottom-0 z-40 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-all duration-150 ease-in-out">
             <Sidebar 
               width={currentSidebarWidth} 
               isCollapsed={isCollapsed} 

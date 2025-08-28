@@ -97,7 +97,7 @@ const ToastTitle = React.forwardRef<
     ref={ref}
     className={cn(
       "text-sm font-semibold",
-      variant === "voided" ? "text-red-600 dark:text-red-400" : "text-primary",
+      variant === "voided" || variant === "destructive" ? "text-red-600 dark:text-red-400" : "text-primary",
       className
     )}
     style={{ fontFamily: 'Avenir, sans-serif' }}

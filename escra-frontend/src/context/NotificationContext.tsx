@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Notification, NotificationType } from '../types/notifications';
 import { FaCheckCircle, FaExclamationTriangle, FaUserPlus, FaEdit, FaFileSignature, FaCommentDots, FaMoneyCheckAlt, FaTimesCircle, FaClock, FaLock, FaChartLine, FaCheck, FaSignature } from 'react-icons/fa';
-import { TbWritingSign, TbCloudUpload, TbFileText, TbFileDescription } from 'react-icons/tb';
+import { TbWritingSign, TbCloudUpload, TbFileText, TbFileDescription, TbApiApp, TbApiAppOff, TbWebhook, TbWebhookOff } from 'react-icons/tb';
 import { PiMoneyWavyBold } from 'react-icons/pi';
 import { AiOutlineFileDone } from 'react-icons/ai';
 import { HiOutlineClipboardCheck } from 'react-icons/hi';
@@ -39,6 +39,10 @@ const notificationIcons: Record<NotificationType, React.ReactNode> = {
   passkey_removed: <FaTimesCircle className="text-red-500 text-xl" />,
   wallet_added: <PiMoneyWavyBold className="text-primary text-2xl" />,
   wallet_removed: <FaTimesCircle className="text-red-500 text-xl" />,
+  api_token_added: <TbApiApp className="text-primary text-2xl" />,
+  api_token_removed: <TbApiAppOff className="text-red-500 text-2xl" />,
+  webhook_added: <TbWebhook className="text-primary text-2xl" />,
+  webhook_removed: <TbWebhookOff className="text-red-500 text-2xl" />,
 };
 
 // Start with empty notifications array
@@ -67,6 +71,10 @@ interface NotificationContextType {
   addPasskeyRemovedNotification: (passkeyName: string) => void;
   addWalletAddedNotification: (walletName: string) => void;
   addWalletRemovedNotification: (walletName: string) => void;
+  addApiTokenAddedNotification: (tokenName: string) => void;
+  addApiTokenRemovedNotification: (tokenName: string) => void;
+  addWebhookAddedNotification: (webhookUrl: string) => void;
+  addWebhookRemovedNotification: (webhookUrl: string) => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -100,7 +108,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     addNotification({
       type: 'contract_created',
       title: 'Contract Created Successfully',
-      message: `"${contractTitle}" has been created with Contract ID ${contractId}`,
+      message: `"${contractTitle}" has been created with Contract ID #${contractId}`,
       read: false,
       icon: 'contract_created',
       link: `/contracts`,
@@ -112,7 +120,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     addNotification({
       type: 'document_created',
       title: 'Document Created Successfully',
-      message: `"${documentName}" with Document ID ${documentId} has been created for Contract ID ${contractId} - ${contractTitle}`,
+      message: `"${documentName}" with Document ID #${documentId} has been created for Contract ID #${contractId} - ${contractTitle}`,
       read: false,
       icon: 'document_created',
       link: `/contracts`,
@@ -124,7 +132,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     addNotification({
       type: 'contract_voided',
       title: 'Contract Voided Successfully',
-      message: `"${contractTitle}" with Contract ID ${contractId} has been voided along with its associated documents`,
+      message: `"${contractTitle}" with Contract ID #${contractId} has been voided along with its associated documents`,
       read: false,
       icon: 'contract_voided',
       link: `/contracts`,
@@ -136,7 +144,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     addNotification({
       type: 'contract_deleted',
       title: 'Contract Deleted Successfully',
-      message: `"${contractTitle}" with Contract ID ${contractId} has been deleted along with its associated documents`,
+      message: `"${contractTitle}" with Contract ID #${contractId} has been deleted along with its associated documents`,
       read: false,
       icon: 'contract_deleted',
       link: `/contracts`,
@@ -148,7 +156,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     addNotification({
       type: 'document_deleted',
       title: 'Document Deleted Successfully',
-      message: `"${documentName}" with Document ID ${documentId} associated with Contract ID ${contractId} - ${contractTitle} has been deleted`,
+      message: `"${documentName}" with Document ID #${documentId} associated with Contract ID #${contractId} - ${contractTitle} has been deleted`,
       read: false,
       icon: 'document_deleted',
       link: `/contracts`,
@@ -160,7 +168,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     addNotification({
       type: 'task_created',
       title: 'Task Created Successfully',
-      message: `"${taskName}" with Task ID ${taskId} has been created for Contract ID ${contractId} - ${contractTitle}`,
+      message: `"${taskName}" with Task ID #${taskId} has been created for Contract ID #${contractId} - ${contractTitle}`,
       read: false,
       icon: 'task_created',
       link: `/workflows`,
@@ -172,7 +180,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     addNotification({
       type: 'task_deleted',
       title: 'Task Deleted Successfully',
-      message: `"${taskName}" with Task ID ${taskId} associated with Contract ID ${contractId} - ${contractTitle} has been deleted`,
+      message: `"${taskName}" with Task ID #${taskId} associated with Contract ID #${contractId} - ${contractTitle} has been deleted`,
       read: false,
       icon: 'task_deleted',
       link: `/workflows`,
@@ -230,8 +238,8 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
 
   const addDocumentSignedNotification = (documentId: string, documentName: string, contractId: string, contractName: string, signerName?: string) => {
     const message = signerName 
-      ? `${signerName} has successfully signed Document ID ${documentId} - ${documentName} for Contract ID ${contractId} - ${contractName}`
-      : `You have successfully signed Document ID ${documentId} - ${documentName} for Contract ID ${contractId} - ${contractName}`;
+      ? `${signerName} has successfully signed Document ID #${documentId} - ${documentName} for Contract ID #${contractId} - ${contractName}`
+      : `You have successfully signed Document ID #${documentId} - ${documentName} for Contract ID #${contractId} - ${contractName}`;
     
     const title = signerName 
       ? 'Recipient Signed Document Successfully'
@@ -296,6 +304,54 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const addApiTokenAddedNotification = (tokenName: string) => {
+    addNotification({
+      type: 'api_token_added',
+      title: 'API Token Added Successfully',
+      message: `"${tokenName}" has been added successfully to your account`,
+      read: false,
+      icon: 'api_token_added',
+      link: `/admin-settings`,
+      meta: { tokenName },
+    });
+  };
+
+  const addApiTokenRemovedNotification = (tokenName: string) => {
+    addNotification({
+      type: 'api_token_removed',
+      title: 'API Token Removed Successfully',
+      message: `"${tokenName}" has been removed successfully from your account`,
+      read: false,
+      icon: 'api_token_removed',
+      link: `/admin-settings`,
+      meta: { tokenName },
+    });
+  };
+
+  const addWebhookAddedNotification = (webhookUrl: string) => {
+    addNotification({
+      type: 'webhook_added',
+      title: 'Webhook Added Successfully',
+      message: `Webhook for URL "${webhookUrl}" has been added successfully`,
+      read: false,
+      icon: 'webhook_added',
+      link: `/admin-settings`,
+      meta: { webhookUrl },
+    });
+  };
+
+  const addWebhookRemovedNotification = (webhookUrl: string) => {
+    addNotification({
+      type: 'webhook_removed',
+      title: 'Webhook Removed Successfully',
+      message: `Webhook for URL "${webhookUrl}" has been removed successfully`,
+      read: false,
+      icon: 'webhook_removed',
+      link: `/admin-settings`,
+      meta: { webhookUrl },
+    });
+  };
+
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
@@ -321,7 +377,11 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       addPasskeyAddedNotification,
       addPasskeyRemovedNotification,
       addWalletAddedNotification,
-      addWalletRemovedNotification
+      addWalletRemovedNotification,
+      addApiTokenAddedNotification,
+      addApiTokenRemovedNotification,
+      addWebhookAddedNotification,
+      addWebhookRemovedNotification
     }}>
       {children}
     </NotificationContext.Provider>

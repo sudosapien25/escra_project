@@ -8,7 +8,7 @@ import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineEye, HiOutlineEyeOf
 import { HiOutlineViewBoards } from 'react-icons/hi';
 import { LuCalendarFold, LuCalendarClock, LuPen } from 'react-icons/lu';
 import { BiDotsHorizontal, BiCommentAdd } from 'react-icons/bi';
-import { TbWorldDollar, TbEdit, TbClockUp, TbCubeSend, TbClockPin, TbFilePlus, TbScript, TbCoins, TbFileText, TbClockEdit, TbUpload, TbDownload, TbSearch, TbFileSearch, TbLibrary, TbCalendarClock, TbLayoutGrid, TbMessage2Plus, TbChevronDown, TbEraser, TbTrash, TbChevronsLeft, TbChevronsRight, TbBusinessplan } from 'react-icons/tb';
+import { TbWorldDollar, TbEdit, TbClockUp, TbCubeSend, TbClockPin, TbFilePlus, TbScript, TbCoins, TbFileText, TbClockEdit, TbUpload, TbDownload, TbSearch, TbFileSearch, TbLibrary, TbCalendarClock, TbLayoutGrid, TbMessage2Plus, TbChevronDown, TbEraser, TbTrash, TbChevronsLeft, TbChevronsRight, TbBusinessplan, TbSquareCheck, TbSquareChevronLeft, TbSquareChevronRight } from 'react-icons/tb';
 import { Logo } from '@/components/common/Logo';
 import { mockContracts } from '@/data/mockContracts';
 import { useEditor } from '@tiptap/react';
@@ -301,7 +301,7 @@ const ContractsPage: React.FC = () => {
     // 1. Contract Created Successfully
     toast({
       title: "Contract Created Successfully",
-      description: `"${testContractTitle}" has been created with Contract ID ${testContractId}`,
+      description: `"${testContractTitle}" has been created with Contract ID #${testContractId}`,
       duration: 30000,
     });
     
@@ -327,7 +327,7 @@ const ContractsPage: React.FC = () => {
       setTimeout(() => {
         toast({
           title: "Document Created Successfully",
-          description: `"${docName}" with Document ID ${docId} has been created for Contract ID ${testContractId} - ${testContractTitle}`,
+          description: `"${docName}" with Document ID #${docId} has been created for Contract ID #${testContractId} - ${testContractTitle}`,
           duration: 30000,
         });
         
@@ -343,7 +343,7 @@ const ContractsPage: React.FC = () => {
       
       toast({
         title: "Contract Voided Successfully",
-        description: `"${voidedContractTitle}" with Contract ID ${voidedContractId} has been voided along with its associated documents`,
+        description: `"${voidedContractTitle}" with Contract ID #${voidedContractId} has been voided along with its associated documents`,
         variant: "voided",
         duration: 30000,
       });
@@ -359,7 +359,7 @@ const ContractsPage: React.FC = () => {
       
       toast({
         title: "Contract Deleted Successfully",
-        description: `"${deletedContractTitle}" with Contract ID ${deletedContractId} has been deleted along with its associated documents`,
+        description: `"${deletedContractTitle}" with Contract ID #${deletedContractId} has been deleted along with its associated documents`,
         variant: "voided",
         duration: 30000,
       });
@@ -377,7 +377,7 @@ const ContractsPage: React.FC = () => {
       
       toast({
         title: "Document Deleted Successfully",
-        description: `"${deletedDocumentName}" with Document ID ${deletedDocumentId} associated with Contract ID ${deletedDocumentContractId} - ${deletedDocumentContractTitle} has been deleted`,
+        description: `"${deletedDocumentName}" with Document ID #${deletedDocumentId} associated with Contract ID #${deletedDocumentContractId} - ${deletedDocumentContractTitle} has been deleted`,
         variant: "voided",
         duration: 30000,
       });
@@ -474,6 +474,10 @@ const ContractsPage: React.FC = () => {
     assignee: '',
     contract: '',
   });
+  const [documentConfirmationData, setDocumentConfirmationData] = useState<{
+    documents: Array<{ id: string; name: string; contractName: string; contractId: string }>;
+  } | null>(null);
+  const [documentCarouselPage, setDocumentCarouselPage] = useState(0);
   const [documentFormErrors, setDocumentFormErrors] = useState<Record<string, boolean>>({});
   const [documentUploadErrors, setDocumentUploadErrors] = useState<{
     files: boolean;
@@ -1176,6 +1180,134 @@ const ContractsPage: React.FC = () => {
     }
   };
 
+  const handleCloseConfirmationStep = () => {
+    setModalStep(1);
+    setConfirmationData(null);
+    setContractCarouselPage(0);
+    // Close modal and reset form
+    setShowNewContractForm(false);
+    resetForm();
+    setCountrySearchTerm('');
+    setStateSearchTerm('');
+    setUploadedFiles([]); // Clear uploaded files
+    setUploadedDocumentIds([]); // Clear uploaded document IDs
+    setStep4Documents([]); // Clear step 4 documents
+    setDocumentName(''); // Clear document name
+    setDocumentNameError(false); // Clear document name error
+  };
+
+  const handleTestConfirmationStep = () => {
+    // Only trigger if the new contract form is open and on step 4
+    if (showNewContractForm && modalStep === 4) {
+      const testData = {
+        contractName: "Luxury Villa Purchase Agreement",
+        contractId: "10001",
+        documents: [
+          { id: "8001", name: "Purchase Agreement.pdf" },
+          { id: "8002", name: "Wire Authorization Form.pdf" },
+          { id: "8003", name: "Closing Disclosure.pdf" },
+          { id: "8004", name: "Title Insurance Policy.pdf" },
+          { id: "8005", name: "Appraisal Report.pdf" },
+          { id: "8006", name: "Property Survey.pdf" },
+          { id: "8007", name: "Loan Estimate.pdf" },
+          { id: "8008", name: "Inspection Report.pdf" },
+          { id: "8009", name: "Final Walkthrough Checklist.pdf" },
+          { id: "8010", name: "Homeowners Insurance.pdf" },
+          { id: "8011", name: "Escrow Instructions.pdf" },
+          { id: "8012", name: "Property Tax Assessment.pdf" },
+          { id: "8013", name: "HOA Documents.pdf" },
+          { id: "8014", name: "Utility Transfer Forms.pdf" },
+          { id: "8015", name: "Home Warranty.pdf" },
+          { id: "8016", name: "Lead Paint Disclosure.pdf" },
+          { id: "8017", name: "Mold Inspection Report.pdf" },
+          { id: "8018", name: "Radon Test Results.pdf" },
+          { id: "8019", name: "Pest Inspection Report.pdf" },
+          { id: "8020", name: "Foundation Inspection.pdf" },
+          { id: "8021", name: "Roof Inspection Report.pdf" },
+          { id: "8022", name: "HVAC Inspection.pdf" },
+          { id: "8023", name: "Electrical Inspection.pdf" },
+          { id: "8024", name: "Plumbing Inspection.pdf" },
+          { id: "8025", name: "Pool Inspection Report.pdf" },
+          { id: "8026", name: "Landscaping Assessment.pdf" },
+          { id: "8027", name: "Security System Manual.pdf" },
+          { id: "8028", name: "Smart Home Setup Guide.pdf" },
+          { id: "8029", name: "Warranty Information.pdf" },
+          { id: "8030", name: "Maintenance Schedule.pdf" },
+          { id: "8031", name: "Emergency Contact List.pdf" },
+          { id: "8032", name: "Neighborhood Information.pdf" },
+          { id: "8033", name: "School District Information.pdf" },
+          { id: "8034", name: "Local Amenities Guide.pdf" },
+          { id: "8035", name: "Property Management Agreement.pdf" },
+          { id: "8036", name: "Home Inspection Checklist.pdf" },
+          { id: "8037", name: "Property Disclosure Statement.pdf" },
+          { id: "8038", name: "Financing Contingency.pdf" },
+          { id: "8039", name: "Appraisal Contingency.pdf" },
+          { id: "8040", name: "Home Sale Contingency.pdf" },
+          { id: "8041", name: "Property Tax Certificate.pdf" },
+          { id: "8042", name: "Utility Service Transfer.pdf" }
+        ]
+      };
+      
+      setConfirmationData(testData);
+      setModalStep(5); // Navigate to confirmation step
+    }
+  };
+
+  const handleTestDocumentConfirmationStep = () => {
+    // Only trigger if the new document modal is open and on step 2
+    if (showNewDocumentModal && documentModalStep === 2) {
+      const testData = {
+        documents: [
+          { id: "9001", name: "Purchase Agreement.pdf", contractName: "Luxury Villa Purchase Agreement", contractId: "10001" },
+          { id: "9002", name: "Wire Authorization Form.pdf", contractName: "Luxury Villa Purchase Agreement", contractId: "10001" },
+          { id: "9003", name: "Closing Disclosure.pdf", contractName: "Luxury Villa Purchase Agreement", contractId: "10001" },
+          { id: "9004", name: "Title Insurance Policy.pdf", contractName: "Luxury Villa Purchase Agreement", contractId: "10001" },
+          { id: "9005", name: "Appraisal Report.pdf", contractName: "Luxury Villa Purchase Agreement", contractId: "10001" },
+          { id: "9006", name: "Property Survey.pdf", contractName: "Luxury Villa Purchase Agreement", contractId: "10001" },
+          { id: "9007", name: "Loan Estimate.pdf", contractName: "Luxury Villa Purchase Agreement", contractId: "10001" },
+          { id: "9008", name: "Inspection Report.pdf", contractName: "Luxury Villa Purchase Agreement", contractId: "10001" },
+          { id: "9009", name: "Final Walkthrough Checklist.pdf", contractName: "Luxury Villa Purchase Agreement", contractId: "10001" },
+          { id: "9010", name: "Homeowners Insurance.pdf", contractName: "Luxury Villa Purchase Agreement", contractId: "10001" },
+          { id: "9011", name: "Escrow Instructions.pdf", contractName: "Luxury Villa Purchase Agreement", contractId: "10001" },
+          { id: "9012", name: "Property Tax Assessment.pdf", contractName: "Luxury Villa Purchase Agreement", contractId: "10001" },
+          { id: "9013", name: "HOA Documents.pdf", contractName: "Luxury Villa Purchase Agreement", contractId: "10001" },
+          { id: "9014", name: "Utility Transfer Forms.pdf", contractName: "Luxury Villa Purchase Agreement", contractId: "10001" },
+          { id: "9015", name: "Home Warranty.pdf", contractName: "Luxury Villa Purchase Agreement", contractId: "10001" },
+          { id: "9016", name: "Lead Paint Disclosure.pdf", contractName: "Luxury Villa Purchase Agreement", contractId: "10001" },
+          { id: "9017", name: "Mold Inspection Report.pdf", contractName: "Luxury Villa Purchase Agreement", contractId: "10001" },
+          { id: "9018", name: "Radon Test Results.pdf", contractName: "Luxury Villa Purchase Agreement", contractId: "10001" },
+          { id: "9019", name: "Pest Inspection Report.pdf", contractName: "Luxury Villa Purchase Agreement", contractId: "10001" },
+          { id: "9020", name: "Foundation Inspection.pdf", contractName: "Luxury Villa Purchase Agreement", contractId: "10001" },
+          { id: "9021", name: "Roof Inspection Report.pdf", contractName: "Luxury Villa Purchase Agreement", contractId: "10001" },
+          { id: "9022", name: "HVAC Inspection.pdf", contractName: "Luxury Villa Purchase Agreement", contractId: "10001" },
+          { id: "9023", name: "Electrical Inspection.pdf", contractName: "Luxury Villa Purchase Agreement", contractId: "10001" },
+          { id: "9024", name: "Plumbing Inspection.pdf", contractName: "Luxury Villa Purchase Agreement", contractId: "10001" },
+          { id: "9025", name: "Pool Inspection Report.pdf", contractName: "Luxury Villa Purchase Agreement", contractId: "10001" },
+          { id: "9026", name: "Landscaping Assessment.pdf", contractName: "Luxury Villa Purchase Agreement", contractId: "10001" },
+          { id: "9027", name: "Security System Manual.pdf", contractName: "Luxury Villa Purchase Agreement", contractId: "10001" },
+          { id: "9028", name: "Smart Home Setup Guide.pdf", contractName: "Luxury Villa Purchase Agreement", contractId: "10001" }
+        ]
+      };
+      
+      setDocumentConfirmationData(testData);
+      setDocumentModalStep(3); // Navigate to confirmation step
+    }
+  };
+
+  const handleCloseDocumentConfirmationStep = () => {
+    setShowNewDocumentModal(false);
+    setDocumentModalStep(1);
+    setDocumentConfirmationData(null);
+    setDocumentCarouselPage(0);
+    setDocumentModalForm({ name: '', type: '', description: '', assignee: '', contract: '' });
+    setDocumentFormErrors({});
+    setDocumentUploadErrors({ files: false });
+    setNewDocumentFormUploadedFiles([]);
+    setNewDocumentDocuments([]);
+    setSelectedNewDocumentFormFileSource('');
+    setShowNewDocumentUploadDropdown(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
@@ -1418,7 +1550,7 @@ const ContractsPage: React.FC = () => {
       console.log('Creating contract toast notification');
       toast({
         title: "Contract Created Successfully",
-        description: `"${newContract.title}" has been created with Contract ID ${newContract.id}`,
+        description: `"${newContract.title}" has been created with Contract ID #${newContract.id}`,
         duration: 30000, // 30 seconds
         onClick: () => {
           setSelectedContract(newContract);
@@ -1485,7 +1617,7 @@ const ContractsPage: React.FC = () => {
             console.log(`Creating toast for document ${index + 1}/${documentsToShow.length}: ${doc.name} (ID: ${doc.id})`);
             toast({
               title: "Document Created Successfully",
-              description: `"${doc.name}" with Document ID ${doc.id} has been created for Contract ID ${newContract.id} - ${newContract.title}`,
+              description: `"${doc.name}" with Document ID #${doc.id} has been created for Contract ID #${newContract.id} - ${newContract.title}`,
               duration: 30000, // 30 seconds
             });
             
@@ -1533,7 +1665,7 @@ const ContractsPage: React.FC = () => {
             console.log(`FALLBACK: Creating toast for document ${index + 1}/${documentsToShow.length}: ${docName}`);
             toast({
               title: "Document Created Successfully",
-              description: `"${docName}" with Document ID fallback-${index} has been created for Contract ID ${newContract.id} - ${newContract.title}`,
+              description: `"${docName}" with Document ID fallback-${index} has been created for Contract ID #${newContract.id} - ${newContract.title}`,
               duration: 30000, // 30 seconds
             });
             
@@ -1576,16 +1708,13 @@ const ContractsPage: React.FC = () => {
         }
       }
       
-      // Close modal and reset form AFTER all notifications are created
-      setShowNewContractForm(false);
-      resetForm();
-      setCountrySearchTerm('');
-      setStateSearchTerm('');
-      setUploadedFiles([]); // Clear uploaded files
-      setUploadedDocumentIds([]); // Clear uploaded document IDs
-      setStep4Documents([]); // Clear step 4 documents
-      setDocumentName(''); // Clear document name
-      setDocumentNameError(false); // Clear document name error
+      // Navigate to confirmation step instead of closing modal
+      setConfirmationData({
+        contractName: newContract.title,
+        contractId: newContract.id,
+        documents: createdDocuments
+      });
+      setModalStep(5); // Navigate to confirmation step
     } else {
       setShowNewContractForm(false);
       setModalStep(1);
@@ -2139,6 +2268,14 @@ const ContractsPage: React.FC = () => {
   const [inlineEditingStep4DocumentName, setInlineEditingStep4DocumentName] = useState('');
   const [inlineEditingStep4DocumentType, setInlineEditingStep4DocumentType] = useState('');
   const [inlineEditingStep4DocumentAssignee, setInlineEditingStep4DocumentAssignee] = useState('');
+  
+  // State for confirmation step
+  const [confirmationData, setConfirmationData] = useState<{
+    contractName: string;
+    contractId: string;
+    documents: Array<{id: string, name: string}>;
+  } | null>(null);
+  const [contractCarouselPage, setContractCarouselPage] = useState(0);
   const [showStep4DocumentAssigneeDropdown, setShowStep4DocumentAssigneeDropdown] = useState(false);
   const step4DocumentAssigneeDropdownRef = useRef<HTMLDivElement>(null);
   
@@ -2607,7 +2744,7 @@ const ContractsPage: React.FC = () => {
         
         toast({
           title: "Document Deleted Successfully",
-          description: `"${documentName}" with Document ID ${documentId} associated with Contract ID ${contractId} - ${contractName} has been deleted`,
+          description: `"${documentName}" with Document ID #${documentId} associated with Contract ID #${contractId} - ${contractName} has been deleted`,
           variant: "voided",
         });
         
@@ -2682,7 +2819,7 @@ const ContractsPage: React.FC = () => {
       // Show success message
       toast({
         title: "Contract Deleted Successfully",
-        description: `"${contractTitle}" with Contract ID ${contractId} has been deleted along with its associated documents`,
+        description: `"${contractTitle}" with Contract ID #${contractId} has been deleted along with its associated documents`,
         variant: "voided",
       });
       
@@ -4132,6 +4269,20 @@ const ContractsPage: React.FC = () => {
             >
               🧪 Test 12 Toasts
             </button>
+            <button 
+              onClick={handleTestConfirmationStep}
+              className="flex items-center justify-center px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm font-semibold w-full sm:w-auto cursor-pointer sm:ml-1"
+              style={{ fontFamily: 'Avenir, sans-serif' }}
+            >
+              🧪 Test Confirmation
+            </button>
+            <button 
+              onClick={handleTestDocumentConfirmationStep}
+              className="flex items-center justify-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-semibold w-full sm:w-auto cursor-pointer sm:ml-1"
+              style={{ fontFamily: 'Avenir, sans-serif' }}
+            >
+              🧪 Test Document Confirmation
+            </button>
           </div>
         </div>
 
@@ -4141,37 +4292,54 @@ const ContractsPage: React.FC = () => {
       <div className="overflow-y-auto max-h-[calc(100vh-300px)] [&::-webkit-scrollbar]:hidden">
         {/* Stat Boxes or New Contract Modal or New Document Modal */}
       {showNewContractForm ? (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-300 dark:border-gray-700 px-6 py-4 mb-6 select-none">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800">
-                <TbFilePlus size={20} className="text-teal-500 dark:text-teal-400" />
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-300 dark:border-gray-700 px-6 py-3 sm:pt-8 sm:pb-6 mb-6 select-none">
+          {modalStep !== 5 && (
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-4">
+                <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800">
+                  <TbFilePlus size={20} className="text-teal-500 dark:text-teal-400" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-black dark:text-white leading-tight">Create New Contract</h2>
+                  <p className="text-gray-500 text-xs leading-tight cursor-default select-none">Fill in the contract details to get started</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-lg font-bold text-black dark:text-white leading-tight">Create New Contract</h2>
-                <p className="text-gray-500 text-xs leading-tight cursor-default select-none">Fill in the contract details to get started</p>
-              </div>
+                <button
+                onClick={() => { setShowNewContractForm(false); setModalStep(1); setCountrySearchTerm(''); setStateSearchTerm(''); setRecipientErrors({}); resetForm(); }} 
+                className="text-gray-400 hover:text-gray-600 p-2 rounded-full -mt-3"
+                >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                </button>
             </div>
-              <button
-              onClick={() => { setShowNewContractForm(false); setModalStep(1); setCountrySearchTerm(''); setStateSearchTerm(''); setRecipientErrors({}); resetForm(); }} 
-              className="text-gray-400 hover:text-gray-600 p-2 rounded-full"
-              >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-              </button>
-          </div>
+          )}
+          
+          {modalStep === 5 && confirmationData && (
+            <div className="flex items-center justify-between mb-4">
+              <div></div>
+                <button
+                onClick={handleCloseConfirmationStep}
+                className="text-gray-400 hover:text-gray-600 p-2 rounded-full"
+                >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                </button>
+            </div>
+          )}
 
           {/* Stepper */}
-          <div className="w-full overflow-x-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
-            <div className="flex items-center justify-between mb-6 min-w-[340px] sm:min-w-0">
-              <div className="flex items-center space-x-2 w-full flex-nowrap">
-                {[1, 2, 3, 4].map((step, idx) => (
+          {modalStep !== 5 && (
+            <div className="w-full overflow-x-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
+              <div className="flex items-center justify-between mb-6 min-w-0">
+                <div className="flex items-center space-x-2 w-full flex-nowrap">
+                  {[1, 2, 3, 4].map((step, idx) => (
                   <React.Fragment key={step}>
                     <button
                       type="button"
                       onClick={() => setModalStep(step)}
-                      className={`flex items-center gap-2 rounded-xl font-semibold border transition-all duration-300 text-sm px-4 py-2 whitespace-nowrap
+                      className={`flex items-center gap-2 rounded-xl font-semibold border transition-all duration-300 text-sm px-3 sm:px-4 py-2 whitespace-nowrap flex-shrink-0
                         ${modalStep === step
                           ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 ring-1 ring-inset ring-gray-200 dark:ring-gray-600 shadow-sm'
                           : 'text-gray-500 dark:text-gray-400 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700'
@@ -4185,12 +4353,13 @@ const ContractsPage: React.FC = () => {
                       {step === 3 && 'Step 3: Details'}
                       {step === 4 && 'Step 4: Documents'}
                     </button>
-                    {idx < 3 && <div className="flex-1 h-0.5 bg-gray-200 dark:bg-gray-600 mx-2 min-w-[20px]" />}
+                    {idx < 3 && <div className="flex-1 h-0.5 bg-gray-200 dark:bg-gray-600 mx-1 sm:mx-2" />}
                   </React.Fragment>
-            ))}
-          </div>
+                ))}
+              </div>
             </div>
           </div>
+          )}
 
           {/* Form Content */}
           <div className="space-y-6 pt-4">
@@ -4237,7 +4406,7 @@ const ContractsPage: React.FC = () => {
                         type="text"
                         required
                         className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white dark:bg-gray-900 caret-transparent"
-                        placeholder="Select contract type"
+                        placeholder="Select contract type..."
                         value={CONTRACT_TYPES.find(t => t === modalForm.type) || ''}
                         readOnly
                         onKeyDown={(e) => {
@@ -4282,7 +4451,7 @@ const ContractsPage: React.FC = () => {
                       <input
                         type="text"
                         className={`w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white dark:bg-gray-900 caret-transparent`}
-                        placeholder="Select property type"
+                        placeholder="Select property type..."
                         value={PROPERTY_TYPES.find(t => t === modalForm.propertyType) || ''}
                         readOnly
                         onKeyDown={(e) => {
@@ -4323,7 +4492,7 @@ const ContractsPage: React.FC = () => {
                       <input
                         type="text"
                         className={`w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white dark:bg-gray-900 caret-transparent`}
-                        placeholder="Select milestone template"
+                        placeholder="Select milestone template..."
                         value={MILESTONE_TEMPLATES.find(t => t === modalForm.milestone) || ''}
                         readOnly
                         onKeyDown={(e) => {
@@ -4662,7 +4831,7 @@ const ContractsPage: React.FC = () => {
                   
                   {/* Render all recipient cards */}
                   {recipients.map((recipient, idx) => (
-                      <div key={idx} className="relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 shadow-sm" style={{ borderLeft: `3px solid ${getRecipientCardBorderColor(idx)}` }}>
+                      <div key={idx} className="relative bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 shadow-sm" style={{ borderLeft: `3px solid ${getRecipientCardBorderColor(idx)}` }}>
                         {/* Header with role controls and delete button */}
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                           <div className="flex flex-col sm:flex-row gap-1">
@@ -5526,40 +5695,145 @@ const ContractsPage: React.FC = () => {
                 </div>
               </form>
             )}
+
+            {modalStep === 5 && confirmationData && (
+              <div className="space-y-4">
+                <div className="text-center space-y-4 max-w-lg mx-auto px-6">
+                  {/* Success Icon */}
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center border-2 border-primary/20 mx-auto">
+                    <TbSquareCheck className="h-6 w-6 text-primary" />
+                  </div>
+                  
+                  {/* Main Title */}
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                      Contract Created Successfully
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap mb-8" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                      "{confirmationData.contractName}" has been created with Contract ID {confirmationData.contractId}
+                    </p>
+                  </div>
+                  
+                  {/* Documents List */}
+                  {confirmationData.documents.length > 0 && (
+                    <div className="text-left">
+                      <div className="flex justify-center mb-6">
+                        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                          The below supporting documents have also been created:
+                        </p>
+                      </div>
+                      <div className="flex justify-center">
+                        <div 
+                          className="grid gap-x-12 gap-y-2 mx-auto" 
+                          style={{ 
+                            gridTemplateColumns: `repeat(3, minmax(450px, 1fr))`,
+                            gridAutoFlow: 'column',
+                            gridTemplateRows: `repeat(7, auto)`
+                          }}
+                          onWheel={(e) => {
+                            e.preventDefault();
+                            if (confirmationData.documents.length > 21) {
+                              if (e.deltaY > 0 && contractCarouselPage < Math.ceil(confirmationData.documents.length / 21) - 1) {
+                                setContractCarouselPage(prev => prev + 1);
+                              } else if (e.deltaY < 0 && contractCarouselPage > 0) {
+                                setContractCarouselPage(prev => prev - 1);
+                              }
+                            }
+                          }}
+                        >
+                        {confirmationData.documents
+                          .slice(contractCarouselPage * 21, (contractCarouselPage + 1) * 21)
+                          .map((doc, index) => (
+                          <div key={index} className="text-sm text-gray-600 dark:text-gray-400 flex items-start whitespace-nowrap" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                            <span className="text-primary mr-2 mt-0.5 flex-shrink-0">•</span>
+                            <span>"{doc.name}" with Document ID {doc.id}</span>
+                          </div>
+                        ))}
+                        </div>
+                      </div>
+                      
+                      {/* Carousel Indicators */}
+                      {confirmationData.documents.length > 21 && (
+                        <div className="flex justify-center mt-6 space-x-2">
+                          {Array.from({ length: Math.ceil(confirmationData.documents.length / 21) }, (_, i) => (
+                            <button
+                              key={i}
+                              onClick={() => setContractCarouselPage(i)}
+                              className={`w-2 h-2 rounded-full transition-colors ${
+                                i === contractCarouselPage 
+                                  ? 'bg-primary' 
+                                  : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Close Button - positioned like Create Contract button */}
+                <div className="flex justify-end mt-6 mb-6">
+                  <button
+                    onClick={handleCloseConfirmationStep}
+                    className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm"
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       ) : showNewDocumentModal ? (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-300 dark:border-gray-700 px-6 py-4 mb-6 select-none">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800">
-                <TbLibraryPlus size={20} className="text-teal-500 dark:text-teal-400" />
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-300 dark:border-gray-700 px-6 py-3 sm:pt-8 sm:pb-6 mb-6 select-none">
+          {documentModalStep !== 3 && (
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-4">
+                <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800">
+                  <TbLibraryPlus size={20} className="text-teal-500 dark:text-teal-400" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-black dark:text-white leading-tight">Create New Document</h2>
+                  <p className="text-gray-500 text-xs leading-tight cursor-default select-none">Fill in the document details to get started</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-lg font-bold text-black dark:text-white leading-tight">Create New Document</h2>
-                <p className="text-gray-500 text-xs leading-tight cursor-default select-none">Fill in the document details to get started</p>
-              </div>
+              <button
+                onClick={() => { 
+                  setShowNewDocumentModal(false); 
+                  setDocumentModalStep(2); 
+                  setDocumentModalForm({ name: '', type: '', description: '', assignee: '', contract: '' }); 
+                  setDocumentFormErrors({});
+                  setDocumentUploadErrors({
+                    files: false
+                  });
+                  setNewDocumentFormUploadedFiles([]);
+                  setSelectedNewDocumentFormFileSource('');
+                  setShowNewDocumentUploadDropdown(false);
+                }} 
+                className="text-gray-400 hover:text-gray-600 p-2 rounded-full -mt-3"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
-            <button
-              onClick={() => { 
-                setShowNewDocumentModal(false); 
-                setDocumentModalStep(2); 
-                setDocumentModalForm({ name: '', type: '', description: '', assignee: '', contract: '' }); 
-                setDocumentFormErrors({});
-                setDocumentUploadErrors({
-                  files: false
-                });
-                setNewDocumentFormUploadedFiles([]);
-                setSelectedNewDocumentFormFileSource('');
-                setShowNewDocumentUploadDropdown(false);
-              }} 
-              className="text-gray-400 hover:text-gray-600 p-2 rounded-full"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
+          )}
+          
+          {documentModalStep === 3 && documentConfirmationData && (
+            <div className="flex items-center justify-between mb-4">
+              <div></div>
+              <button
+                onClick={handleCloseDocumentConfirmationStep}
+                className="text-gray-400 hover:text-gray-600 p-2 rounded-full"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          )}
 
 
 
@@ -6323,12 +6597,40 @@ const ContractsPage: React.FC = () => {
                             return;
                           }
                           
-                          // Show success feedback
-                          toast({
-                            title: "Document created successfully",
-                            description: `${finalDocumentIds.length > 1 ? 'Documents' : 'Document'} created with ID${finalDocumentIds.length > 1 ? 's' : ''} ${finalDocumentIds.join(', ')}`,
-                            duration: 5000,
+                          // Prepare confirmation data
+                          const confirmationDocuments = [];
+                          
+                          // Process newDocumentDocuments (documents added during document creation)
+                          if (newDocumentDocuments.length > 0) {
+                            for (const docInfo of newDocumentDocuments) {
+                              const contractId = docInfo.contract.includes(' - ') ? docInfo.contract.split(' - ')[0] : docInfo.contract;
+                              const contractTitle = docInfo.contract.includes(' - ') ? docInfo.contract.split(' - ')[1] : docInfo.contract;
+                              confirmationDocuments.push({
+                                id: finalDocumentIds[confirmationDocuments.length] || '8001',
+                                name: docInfo.name,
+                                contractName: contractTitle,
+                                contractId: contractId
+                              });
+                            }
+                          }
+                          
+                          // Process any previously uploaded files (from newDocumentFormUploadedFiles)
+                          if (newDocumentFormUploadedFiles.length > 0) {
+                            const contractId = documentModalForm.contract.includes(' - ') ? documentModalForm.contract.split(' - ')[0] : documentModalForm.contract;
+                            const contractTitle = documentModalForm.contract.includes(' - ') ? documentModalForm.contract.split(' - ')[1] : documentModalForm.contract;
+                            confirmationDocuments.push({
+                              id: finalDocumentIds[confirmationDocuments.length] || '8001',
+                              name: documentModalForm.name,
+                              contractName: contractTitle,
+                              contractId: contractId
+                            });
+                          }
+                          
+                          // Set confirmation data and navigate to confirmation step
+                          setDocumentConfirmationData({
+                            documents: confirmationDocuments
                           });
+                          setDocumentModalStep(3);
                           
                         } catch (error) {
                           console.error('Error creating documents:', error);
@@ -6338,19 +6640,6 @@ const ContractsPage: React.FC = () => {
                             duration: 5000,
                           });
                         }
-                        
-                        // Close modal and reset form
-                        setShowNewDocumentModal(false);
-                        setDocumentModalStep(1);
-                        setDocumentModalForm({ name: '', type: '', description: '', assignee: '', contract: '' });
-                        setDocumentFormErrors({});
-                        setDocumentUploadErrors({
-                          files: false
-                        });
-                        setNewDocumentFormUploadedFiles([]);
-                        setNewDocumentDocuments([]);
-                        setSelectedNewDocumentFormFileSource('');
-                        setShowNewDocumentUploadDropdown(false);
                       }}
                       className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm ml-1 disabled:opacity-50 disabled:cursor-not-allowed"
                       style={{ fontFamily: 'Avenir, sans-serif' }}
@@ -6358,6 +6647,94 @@ const ContractsPage: React.FC = () => {
                       {newDocumentDocuments.length > 1 ? 'Create Documents' : 'Create Document'}
                     </button>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {documentModalStep === 3 && documentConfirmationData && (
+              <div className="space-y-4">
+                <div className="text-center space-y-4 mx-auto px-6">
+                  {/* Success Icon */}
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center border-2 border-primary/20 mx-auto">
+                    <TbSquareCheck className="h-6 w-6 text-primary" />
+                  </div>
+                  
+                  {/* Main Title */}
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                      Document Created Successfully
+                    </h3>
+                  </div>
+                  
+                  
+                  
+                  {/* Documents List */}
+                  {documentConfirmationData.documents.length > 0 && (
+                    <div className="text-left">
+                      <div className="flex justify-center mb-6">
+                        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                          The below supporting documents have been created and associated with their respective contracts:
+                        </p>
+                      </div>
+                      <div className="flex justify-center">
+                        <div 
+                          className="grid gap-x-20 gap-y-2 mx-auto" 
+                          style={{ 
+                            gridTemplateColumns: `repeat(2, minmax(600px, 1fr))`,
+                            gridAutoFlow: 'column',
+                            gridTemplateRows: `repeat(7, auto)`
+                          }}
+                          onWheel={(e) => {
+                            e.preventDefault();
+                            if (documentConfirmationData.documents.length > 14) {
+                              if (e.deltaY > 0 && documentCarouselPage < Math.ceil(documentConfirmationData.documents.length / 14) - 1) {
+                                setDocumentCarouselPage(prev => prev + 1);
+                              } else if (e.deltaY < 0 && documentCarouselPage > 0) {
+                                setDocumentCarouselPage(prev => prev - 1);
+                              }
+                            }
+                          }}
+                        >
+                        {documentConfirmationData.documents
+                          .slice(documentCarouselPage * 14, (documentCarouselPage + 1) * 14)
+                          .map((doc, index) => (
+                          <div key={index} className="text-sm text-gray-600 dark:text-gray-400 flex items-start whitespace-nowrap" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                            <span className="text-primary mr-2 mt-0.5 flex-shrink-0">•</span>
+                            <span>"{doc.name}" with Document ID #{doc.id} for Contract ID #{doc.contractId} - {doc.contractName}</span>
+                          </div>
+                        ))}
+                        </div>
+                      </div>
+                      
+                      {/* Carousel Indicators */}
+                      {documentConfirmationData.documents.length > 14 && (
+                        <div className="flex justify-center mt-4 space-x-2">
+                          {Array.from({ length: Math.ceil(documentConfirmationData.documents.length / 14) }, (_, i) => (
+                            <button
+                              key={i}
+                              onClick={() => setDocumentCarouselPage(i)}
+                              className={`w-2 h-2 rounded-full transition-colors ${
+                                i === documentCarouselPage 
+                                  ? 'bg-primary' 
+                                  : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Close Button - positioned like Create Document button */}
+                <div className="flex justify-end mt-6 mb-6">
+                  <button
+                    onClick={handleCloseDocumentConfirmationStep}
+                    className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm"
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                  >
+                    Close
+                  </button>
                 </div>
               </div>
             )}
@@ -7723,7 +8100,7 @@ const ContractsPage: React.FC = () => {
                           <input
                             type="text"
                             className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white dark:bg-gray-900"
-                            placeholder="Select contract type"
+                            placeholder="Select contract type..."
                             value={selectedContract.type || ''}
                             readOnly
                             onKeyDown={(e) => {
@@ -7928,7 +8305,7 @@ const ContractsPage: React.FC = () => {
                               <input
                                 type="text"
                                 className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white dark:bg-gray-900"
-                                placeholder="Select property type"
+                                placeholder="Select property type..."
                                 value={selectedContract.propertyType || ''}
                                 readOnly
                                 onKeyDown={(e) => {
@@ -10208,7 +10585,7 @@ const ContractsPage: React.FC = () => {
           </div>
 
           {/* Footer */}
-          <div className="sticky bottom-0 z-40 bg-gray-50 dark:bg-gray-900 px-6 py-4 border-t border-gray-200 dark:border-gray-700 cursor-default select-none">
+          <div className="sticky bottom-0 z-40 bg-gray-50 dark:bg-gray-900 px-6 pt-4 pb-8 border-t border-gray-200 dark:border-gray-700 cursor-default select-none">
             <div className="flex justify-end gap-3 cursor-default select-none">
               <button
                 type="button"
@@ -10235,7 +10612,7 @@ const ContractsPage: React.FC = () => {
 
 
       </div>
-          <ContractsToaster />
+      <ContractsToaster />
     </>
   );
 }

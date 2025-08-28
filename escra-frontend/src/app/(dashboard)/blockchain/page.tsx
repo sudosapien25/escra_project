@@ -21,6 +21,7 @@ import { AiOutlineNodeExpand } from 'react-icons/ai';
 import { PiHandCoins } from 'react-icons/pi';
 import { useToast } from '@/components/ui/use-toast';
 import { Toaster } from '@/components/ui/toaster';
+import { useNotifications } from '@/context/NotificationContext';
 
 const BLOCK_HASH = "0x7ad9e3b8f2c1a4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9";
 const PROPOSER_HASH = "0xabc1234def5678fedcba9876543210abcdef1234567890fedcba0987654321ab";
@@ -263,6 +264,9 @@ export default function BlockchainPage() {
   
   // Toast notification system
   const { toast } = useToast();
+  
+  // Notification system
+  const { addContractCreatedNotification, addDocumentCreatedNotification } = useNotifications();
   const [selectedActivityContracts, setSelectedActivityContracts] = useState<string[]>([]);
   const [openActivityContractDropdown, setOpenActivityContractDropdown] = useState(false);
   const [activityContractSearch, setActivityContractSearch] = useState('');
@@ -481,10 +485,21 @@ export default function BlockchainPage() {
           addNewContract(newContract);
           // Show toast notification
           toast({
-            title: "Contract created successfully",
-            description: `"${newContract.title}" has been created with ID ${newContract.id}`,
-            duration: Infinity, // Make toast persistent - user must close it manually
+            title: "Contract Created Successfully",
+            description: `"${newContract.title}" has been created with Contract ID #${newContract.id}`,
+            duration: 30000, // Match contracts page duration
           });
+          
+          // Add notification for contract creation
+          addContractCreatedNotification(newContract.id, newContract.title);
+          
+          // Add notifications for documents if they exist
+          if (newContract.documentIds && newContract.documentIds.length > 0) {
+            // Note: In a real implementation, you would fetch document details here
+            // For now, we'll add a generic document notification
+            addDocumentCreatedNotification("doc_" + newContract.id, "Contract Documents", newContract.id, newContract.title);
+          }
+          
           // Clear the storage after reading
           localStorage.removeItem('newContract');
         } catch (error) {
@@ -495,7 +510,7 @@ export default function BlockchainPage() {
 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
-  }, [toast]);
+  }, [toast, addContractCreatedNotification, addDocumentCreatedNotification]);
 
   return (
     <>

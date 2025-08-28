@@ -1,12 +1,11 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { HiOutlineDocumentText, HiChevronDown, HiOutlineUpload, HiOutlineTrash, HiOutlineEye, HiOutlineEyeOff, HiOutlinePencil } from 'react-icons/hi';
-import { HiMiniChevronDown } from 'react-icons/hi2';
+import { HiOutlineDocumentText, HiOutlineUpload, HiOutlineTrash, HiOutlineEye, HiOutlineEyeOff, HiOutlinePencil } from 'react-icons/hi';
 import { Logo } from '@/components/common/Logo';
 import { FaCheck, FaPlus, FaSearch } from 'react-icons/fa';
 import { LuPen, LuCalendarFold } from 'react-icons/lu';
-import { TbMailPlus, TbEdit, TbFilePlus, TbDragDrop, TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive } from 'react-icons/tb';
+import { TbMailPlus, TbEdit, TbFilePlus, TbDragDrop, TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbSquareCheck, TbChevronDown, TbEraser } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
 import { TiUserAddOutline } from 'react-icons/ti';
@@ -14,6 +13,7 @@ import { useAssigneeStore } from '@/data/assigneeStore';
 import { useDocumentStore } from '@/data/documentNameStore';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
+import { useNotifications } from '@/context/NotificationContext';
 
 interface Contract {
   id: string;
@@ -364,6 +364,12 @@ type Recipient = {
 const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) => {
   const { allAssignees } = useAssigneeStore();
   const [modalStep, setModalStep] = useState(1);
+  const [confirmationData, setConfirmationData] = useState<{
+    contractName: string;
+    contractId: string;
+    documents: Array<{id: string, name: string}>;
+  } | null>(null);
+  const [contractCarouselPage, setContractCarouselPage] = useState(0);
   const [showContractTypeDropdown, setShowContractTypeDropdown] = useState(false);
   const [showPropertyTypeDropdown, setShowPropertyTypeDropdown] = useState(false);
   const [showMilestoneDropdown, setShowMilestoneDropdown] = useState(false);
@@ -460,6 +466,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
   const { addDocument } = useDocumentStore();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { addContractCreatedNotification, addDocumentCreatedNotification } = useNotifications();
   
   // Timeout refs for masking
   const buyerRoutingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -542,6 +549,45 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
   };
 
   // Reset form to initial state
+  const handleCloseConfirmationStep = () => {
+    onClose();
+    setModalStep(1);
+    setConfirmationData(null);
+    setContractCarouselPage(0);
+    resetForm();
+  };
+
+  const handleTestConfirmationStep = () => {
+    setConfirmationData({
+      contractName: "Test Contract - Residential Property Sale",
+      contractId: "CON-2024-001",
+      documents: [
+        { id: "doc_CON-2024-001_purchase_agreement", name: "Purchase Agreement" },
+        { id: "doc_CON-2024-001_property_disclosure", name: "Property Disclosure Statement" },
+        { id: "doc_CON-2024-001_inspection_report", name: "Home Inspection Report" },
+        { id: "doc_CON-2024-001_appraisal", name: "Property Appraisal" },
+        { id: "doc_CON-2024-001_title_report", name: "Title Report" },
+        { id: "doc_CON-2024-001_insurance_policy", name: "Homeowners Insurance Policy" },
+        { id: "doc_CON-2024-001_loan_documents", name: "Loan Application Documents" },
+        { id: "doc_CON-2024-001_earnest_money", name: "Earnest Money Receipt" },
+        { id: "doc_CON-2024-001_closing_statement", name: "Closing Statement" },
+        { id: "doc_CON-2024-001_warranty", name: "Home Warranty Certificate" },
+        { id: "doc_CON-2024-001_utility_transfer", name: "Utility Transfer Form" },
+        { id: "doc_CON-2024-001_final_walkthrough", name: "Final Walkthrough Checklist" },
+        { id: "doc_CON-2024-001_commission_agreement", name: "Real Estate Commission Agreement" },
+        { id: "doc_CON-2024-001_escrow_instructions", name: "Escrow Instructions" },
+        { id: "doc_CON-2024-001_survey", name: "Property Survey" },
+        { id: "doc_CON-2024-001_environmental_assessment", name: "Environmental Assessment" },
+        { id: "doc_CON-2024-001_lead_paint", name: "Lead Paint Disclosure" },
+        { id: "doc_CON-2024-001_radon_test", name: "Radon Test Results" },
+        { id: "doc_CON-2024-001_pest_inspection", name: "Pest Inspection Report" },
+        { id: "doc_CON-2024-001_hoa_documents", name: "HOA Governing Documents" },
+        { id: "doc_CON-2024-001_tax_assessment", name: "Property Tax Assessment" }
+      ]
+    });
+    setModalStep(5);
+  };
+
   const resetForm = () => {
     setModalForm({
       title: '',
@@ -1154,16 +1200,32 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
         console.error('Error saving new contract to localStorage:', error);
       }
       
-      // Close modal and reset form
-      onClose();
-      resetForm();
-      
-      // Show success feedback
-      toast({
-        title: "Contract created successfully",
-        description: `"${newContract.title}" has been created with ID ${newContract.id}`,
-        duration: Infinity, // Make toast persistent - user must close it manually
+      // Set confirmation data and navigate to confirmation step
+      setConfirmationData({
+        contractName: newContract.title,
+        contractId: newContract.id,
+        documents: [
+          ...step4Documents.map(docInfo => ({ id: "doc_" + newContract.id + "_" + docInfo.name, name: docInfo.name })),
+          ...uploadedFiles.map(file => ({ id: "doc_" + newContract.id + "_" + file.name, name: file.name }))
+        ]
       });
+      setModalStep(5);
+      
+      // Add notification for contract creation
+      addContractCreatedNotification(newContract.id, newContract.title);
+      
+      // Add notifications for each document created
+      if (step4Documents.length > 0) {
+        step4Documents.forEach((docInfo) => {
+          addDocumentCreatedNotification("doc_" + newContract.id + "_" + docInfo.name, docInfo.name, newContract.id, newContract.title);
+        });
+      }
+      
+      if (uploadedFiles.length > 0) {
+        uploadedFiles.forEach((file) => {
+          addDocumentCreatedNotification("doc_" + newContract.id + "_" + file.name, file.name, newContract.id, newContract.title);
+        });
+      }
     }
   };
 
@@ -1171,57 +1233,170 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl mx-auto px-4 sm:px-8 pb-8 font-sans max-h-[98vh] overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-[1400px] mx-auto px-4 sm:px-8 pb-6 font-sans max-h-[98vh] overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
         {/* Modal Header */}
-        <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between py-4 sm:pt-8 sm:pb-2 mb-4 gap-2">
-          <div className="flex items-center gap-4">
-            <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800">
-              <TbFilePlus size={20} className="text-teal-500 dark:text-teal-400" />
+        {modalStep !== 5 && (
+          <div className="relative flex items-center justify-between py-4 sm:pt-8 sm:pb-2 mb-4 gap-2">
+            <div className="flex items-center gap-4">
+              <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800">
+                <TbFilePlus size={20} className="text-teal-500 dark:text-teal-400" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-black dark:text-white leading-tight">Create New Contract</h2>
+                <p className="text-gray-500 text-xs leading-tight cursor-default select-none">Fill in the contract details to get started</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-lg font-bold text-black dark:text-white leading-tight">Create New Contract</h2>
-              <p className="text-gray-500 text-xs leading-tight cursor-default select-none">Fill in the contract details to get started</p>
-            </div>
+            <button onClick={() => { 
+              if (modalStep === 5) {
+                handleCloseConfirmationStep();
+              } else {
+                onClose(); 
+                setModalStep(1); 
+              }
+            }} className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none -mt-3 flex-shrink-0">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
-          <button onClick={() => { onClose(); setModalStep(1); }} className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+        )}
 
         {/* Stepper */}
-        <div className="w-full overflow-x-auto py-3 sm:pt-4 sm:pb-2">
-          <div className="flex items-center justify-between mb-6 min-w-[340px] sm:min-w-0">
-            <div className="flex items-center space-x-2 w-full flex-nowrap px-0">
-            {[1, 2, 3, 4].map((step, idx) => (
-              <React.Fragment key={step}>
-                <button
-                  type="button"
-                  onClick={() => setModalStep(step)}
-                  className={`flex items-center gap-2 rounded-xl font-semibold border transition-all duration-300 text-sm px-4 py-2 whitespace-nowrap
-                    ${modalStep === step
-                      ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 ring-1 ring-inset ring-gray-200 dark:ring-gray-600 shadow-sm'
-                      : 'text-gray-500 dark:text-gray-400 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700'}
-                  `}
-                >
-                  <span className={`inline-block transition-all duration-300 ${modalStep === step ? 'opacity-100 mr-2' : 'opacity-0 w-0 mr-0'}`} style={{width: modalStep === step ? 18 : 0}}>
-                    {modalStep === step && <Logo width={18} height={18} className="pointer-events-none" />}
-                  </span>
-                  {step === 1 && 'Step 1: General'}
-                  {step === 2 && 'Step 2: Parties'}
-                  {step === 3 && 'Step 3: Details'}
-                  {step === 4 && 'Step 4: Documents'}
-                </button>
-                {idx < 3 && <div className="flex-1 h-0.5 bg-gray-200 dark:bg-gray-600" />}
-              </React.Fragment>
-            ))}
+        {modalStep !== 5 && (
+          <div className="w-full overflow-x-auto py-3 sm:pt-4 sm:pb-2 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
+            <div className="flex items-center justify-between mb-6 min-w-0">
+              <div className="flex items-center space-x-2 w-full flex-nowrap px-0">
+              {[1, 2, 3, 4].map((step, idx) => (
+                <React.Fragment key={step}>
+                  <button
+                    type="button"
+                    onClick={() => setModalStep(step)}
+                    className={`flex items-center gap-2 rounded-xl font-semibold border transition-all duration-300 text-sm px-3 sm:px-4 py-2 whitespace-nowrap flex-shrink-0
+                      ${modalStep === step
+                        ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 ring-1 ring-inset ring-gray-200 dark:ring-gray-600 shadow-sm'
+                        : 'text-gray-500 dark:text-gray-400 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700'
+                      }`}
+                  >
+                    <span className={`inline-block transition-all duration-300 ${modalStep === step ? 'opacity-100 mr-2' : 'opacity-0 w-0 mr-0'}`} style={{width: modalStep === step ? 18 : 0}}>
+                      {step === modalStep && <Logo width={18} height={18} className="pointer-events-none" />}
+                    </span>
+                    {step === 1 && 'Step 1: General'}
+                    {step === 2 && 'Step 2: Parties'}
+                    {step === 3 && 'Step 3: Details'}
+                    {step === 4 && 'Step 4: Documents'}
+                  </button>
+                  {idx < 3 && <div className="flex-1 h-0.5 bg-gray-200 dark:bg-gray-600 mx-1 sm:mx-2" />}
+                </React.Fragment>
+              ))}
+            </div>
+            </div>
           </div>
-          </div>
-        </div>
+        )}
 
         {/* Form Content */}
         <div className="space-y-6 pt-4">
+        {modalStep === 5 && confirmationData && (
+          <>
+            {/* Close button for step 5 - positioned like header */}
+            <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-end py-3 pt-2 mb-4 gap-2">
+              <button onClick={handleCloseConfirmationStep} className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </>
+        )}
+        
+        {modalStep === 5 && confirmationData && (
+          <div className="space-y-4">
+            <div className="text-center space-y-4 max-w-lg mx-auto px-6">
+              {/* Success Icon */}
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center border-2 border-primary/20 mx-auto">
+                <TbSquareCheck className="h-6 w-6 text-primary" />
+              </div>
+              
+                                {/* Main Title */}
+                  <div className="flex flex-col items-center">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                      Contract Created Successfully
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap mb-6 text-center" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                      "{confirmationData.contractName}" has been created with Contract ID {confirmationData.contractId}
+                    </p>
+                  </div>
+              
+              {/* Documents List */}
+              {confirmationData.documents.length > 0 && (
+                <div className="text-left">
+                  <div className="flex justify-center mb-6">
+                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                      The below supporting documents have also been created:
+                    </p>
+                  </div>
+                  <div className="flex justify-center">
+                    <div 
+                      className="grid gap-x-12 gap-y-2 mx-auto" 
+                      style={{ 
+                        gridTemplateColumns: `repeat(2, minmax(600px, 1fr))`,
+                        gridAutoFlow: 'column',
+                        gridTemplateRows: `repeat(7, auto)`
+                      }}
+                      onWheel={(e) => {
+                        e.preventDefault();
+                        if (confirmationData.documents.length > 14) {
+                          if (e.deltaY > 0 && contractCarouselPage < Math.ceil(confirmationData.documents.length / 14) - 1) {
+                            setContractCarouselPage(prev => prev + 1);
+                          } else if (e.deltaY < 0 && contractCarouselPage > 0) {
+                            setContractCarouselPage(prev => prev - 1);
+                          }
+                        }
+                      }}
+                    >
+                    {confirmationData.documents
+                      .slice(contractCarouselPage * 14, (contractCarouselPage + 1) * 14)
+                      .map((doc, index) => (
+                      <div key={index} className="text-sm text-gray-600 dark:text-gray-400 flex items-start whitespace-nowrap" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                        <span className="text-primary mr-2 mt-0.5 flex-shrink-0">•</span>
+                        <span>"{doc.name}" with Document ID {doc.id}</span>
+                      </div>
+                    ))}
+                    </div>
+                  </div>
+                  
+                  {/* Carousel Indicators */}
+                  {confirmationData.documents.length > 14 && (
+                    <div className="flex justify-center mt-6 space-x-2">
+                      {Array.from({ length: Math.ceil(confirmationData.documents.length / 14) }, (_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setContractCarouselPage(i)}
+                          className={`w-2 h-2 rounded-full transition-colors ${
+                            i === contractCarouselPage 
+                              ? 'bg-primary' 
+                              : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            
+            {/* Close Button - positioned like Create Contract button */}
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={handleCloseConfirmationStep}
+                className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm"
+                style={{ fontFamily: 'Avenir, sans-serif' }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+        
         {modalStep === 1 && (
             <form onSubmit={handleSubmit} noValidate>
               <div className="grid grid-cols-2 gap-6">
@@ -1265,7 +1440,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                   type="text"
                       required
                       className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white dark:bg-gray-900 caret-transparent"
-                  placeholder="Select contract type"
+                                        placeholder="Select contract type..."
                   value={CONTRACT_TYPES.find(t => t === modalForm.type) || ''}
                   readOnly
                       onKeyDown={(e) => {
@@ -1279,7 +1454,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                       }}
                       onClick={(e) => handleDropdownClick(e, showContractTypeDropdown, setShowContractTypeDropdown, [setShowPropertyTypeDropdown, setShowMilestoneDropdown])}
                 />
-                <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                 {showContractTypeDropdown && (
                       <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                     {CONTRACT_TYPES.map(type => (
@@ -1309,7 +1484,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                     <input
                       type="text"
                       className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white dark:bg-gray-900 caret-transparent"
-                      placeholder="Select property type"
+                      placeholder="Select property type..."
                       value={PROPERTY_TYPES.find(t => t === modalForm.propertyType) || ''}
                       readOnly
                       onKeyDown={(e) => {
@@ -1323,7 +1498,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                       }}
                       onClick={(e) => handleDropdownClick(e, showPropertyTypeDropdown, setShowPropertyTypeDropdown, [setShowContractTypeDropdown, setShowMilestoneDropdown])}
                     />
-                    <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                     {showPropertyTypeDropdown && (
                       <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                         {PROPERTY_TYPES.map(type => (
@@ -1356,7 +1531,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                 <input
                   type="text"
                       className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white dark:bg-gray-900 caret-transparent"
-                  placeholder="Select milestone template"
+                  placeholder="Select milestone template..."
                   value={MILESTONE_TEMPLATES.find(t => t === modalForm.milestone) || ''}
                   readOnly
                       onKeyDown={(e) => {
@@ -1370,7 +1545,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                       }}
                       onClick={(e) => handleDropdownClick(e, showMilestoneDropdown, setShowMilestoneDropdown, [setShowContractTypeDropdown, setShowPropertyTypeDropdown])}
                 />
-                <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                 {showMilestoneDropdown && (
                       <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                     {MILESTONE_TEMPLATES.map(template => (
@@ -1495,7 +1670,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                         }
                       }}
                     />
-                    <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                     {showStateDropdown && (
                       <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-hidden overflow-y-auto [&::-webkit-scrollbar]:hidden">
                         {US_STATES
@@ -1566,7 +1741,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                         }
                       }}
                     />
-                    <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                     {showCountryDropdown && (
                       <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-hidden overflow-y-auto [&::-webkit-scrollbar]:hidden">
                         {COUNTRIES
@@ -1620,7 +1795,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
               <div className="space-y-4">
                 {/* Render all recipient cards */}
                 {recipients.map((recipient, idx) => (
-                  <div key={idx} className="relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 shadow-sm" style={{ borderLeft: `3px solid ${getRecipientCardBorderColor(idx)}` }}>
+                  <div key={idx} className="relative bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 shadow-sm" style={{ borderLeft: `3px solid ${getRecipientCardBorderColor(idx)}` }}>
                     {/* Header with role controls and delete button */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                       <div className="flex flex-col sm:flex-row gap-1">
@@ -1635,7 +1810,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                           >
                             <LuPen className="w-3 h-3 text-primary dark:text-white" />
                             <span>{recipient.signerRole || 'Signer Role'}</span>
-                            <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px]" />
+                            <TbChevronDown size={14} className="inline-block align-middle -mt-[1px] text-gray-400 dark:text-gray-500" />
                           </button>
                           {recipient.showSignerRoleDropdown && (
                             <div
@@ -1675,7 +1850,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                             tabIndex={0}
                           >
                             <span>{recipient.contractRole || 'Contract Role'}</span>
-                            <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px]" />
+                            <TbChevronDown size={14} className="inline-block align-middle -mt-[1px] text-gray-400 dark:text-gray-500" />
                           </button>
                           {recipient.showContractRoleDropdown && (
                             <div
@@ -1706,14 +1881,32 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                         </div>
                       </div>
                       
-                      {/* Delete button */}
-                      <button 
-                        className="self-end sm:self-auto text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1" 
-                        onClick={() => handleDeleteRecipient(idx)} 
-                        disabled={recipients.length === 1}
-                      >
-                        <HiOutlineTrash className="w-4 h-4" />
-                      </button>
+                      {/* Clear and Delete buttons */}
+                      <div className="flex items-center gap-1">
+                        <button 
+                          className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1 relative group" 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, name: '', email: '' } : r));
+                          }}
+                        >
+                          <TbEraser className="w-4 h-4" />
+                          <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                            Erase
+                          </span>
+                        </button>
+                        <button 
+                          className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1 relative group" 
+                          onClick={() => handleDeleteRecipient(idx)} 
+                          disabled={recipients.length === 1}
+                        >
+                          <HiOutlineTrash className="w-4 h-4" />
+                          <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                            Delete
+                          </span>
+                        </button>
+                      </div>
                     </div>
                     
                     {/* Form fields */}
@@ -2136,7 +2329,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                             style={{ fontFamily: 'Avenir, sans-serif' }}
                             autoComplete="off"
                           />
-                          <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                           
                           {showStep4AssigneeDropdown && (
                             <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:hidden" style={{ fontFamily: 'Avenir, sans-serif' }}>
@@ -2357,7 +2550,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                                          style={{ fontFamily: 'Avenir, sans-serif' }}
                                          autoComplete="off"
                                        />
-                                       <HiMiniChevronDown className="pointer-events-none absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                       <TbChevronDown className="pointer-events-none absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                                        
                                        {showStep4DocumentAssigneeDropdown && (
                                          <div className="fixed inset-0 z-[9999] pointer-events-none">
@@ -2460,6 +2653,14 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                       style={{ fontFamily: 'Avenir, sans-serif' }}
                     >
                       Add Document
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleTestConfirmationStep}
+                      className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold ml-1"
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                    >
+                      🧪 Test Confirmation
                     </button>
                     <button type="submit" className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm ml-1">Create Contract</button>
               </div>

@@ -138,7 +138,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                     handleNotificationClick(notification);
                   }}
                   className={`p-4 hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer transition-colors group ${
-                    !notification.read && (['contract_voided', 'contract_deleted', 'document_deleted', 'task_deleted', 'signature_voided', 'passkey_removed', 'wallet_removed'].includes(notification.type)
+                    !notification.read && (['contract_voided', 'contract_deleted', 'document_deleted', 'task_deleted', 'signature_voided', 'passkey_removed', 'wallet_removed', 'api_token_removed', 'webhook_removed'].includes(notification.type)
                       ? 'bg-red-50/70 dark:bg-red-900/25' 
                       : 'bg-gray-100 dark:bg-gray-700')
                   }`}
@@ -148,7 +148,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                       {!notification.read && (
                         <div 
                           className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                            ['contract_voided', 'contract_deleted', 'document_deleted', 'task_deleted', 'signature_voided', 'passkey_removed', 'wallet_removed'].includes(notification.type) ? 'bg-red-500' : 'bg-primary'
+                            ['contract_voided', 'contract_deleted', 'document_deleted', 'task_deleted', 'signature_voided', 'passkey_removed', 'wallet_removed', 'api_token_removed', 'webhook_removed'].includes(notification.type) ? 'bg-red-500' : 'bg-primary'
                           }`}
                         />
                       )}
@@ -156,9 +156,9 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <p className={`text-sm font-medium ${
-                          ['contract_voided', 'contract_deleted', 'document_deleted', 'task_deleted', 'signature_voided', 'passkey_removed', 'wallet_removed'].includes(notification.type)
+                          ['contract_voided', 'contract_deleted', 'document_deleted', 'task_deleted', 'signature_voided', 'passkey_removed', 'wallet_removed', 'api_token_removed', 'webhook_removed'].includes(notification.type)
                             ? 'text-red-600 dark:text-red-400'
-                            : !notification.read && (notification.type === 'signature_requested' || notification.type === 'task_created' || notification.type === 'document_created' || notification.type === 'contract_created' || notification.type === 'document_signed' || notification.type === 'passkey_added' || notification.type === 'wallet_added')
+                            : !notification.read && (notification.type === 'signature_requested' || notification.type === 'task_created' || notification.type === 'document_created' || notification.type === 'contract_created' || notification.type === 'document_signed' || notification.type === 'passkey_added' || notification.type === 'wallet_added' || notification.type === 'api_token_added' || notification.type === 'webhook_added')
                               ? 'text-primary'
                               : !notification.read 
                                 ? 'text-gray-900 dark:text-white' 
@@ -169,7 +169,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                         <div className="relative">
                           <button 
                             className={`rounded-md px-1 py-0.5 transition-colors ${
-                              ['contract_voided', 'contract_deleted', 'document_deleted', 'signature_voided', 'task_deleted', 'passkey_removed', 'wallet_removed'].includes(notification.type)
+                              ['contract_voided', 'contract_deleted', 'document_deleted', 'signature_voided', 'task_deleted', 'passkey_removed', 'wallet_removed', 'api_token_removed', 'webhook_removed'].includes(notification.type)
                                 ? !notification.read
                                   ? 'border border-transparent text-gray-700 dark:text-gray-300 group-hover:border-gray-300 dark:group-hover:border-gray-700'
                                   : 'border border-transparent text-gray-400 dark:text-gray-400 group-hover:border-gray-400 dark:group-hover:border-gray-400'

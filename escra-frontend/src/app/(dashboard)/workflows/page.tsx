@@ -87,7 +87,7 @@ export default function WorkflowsPage() {
     // 1. Task Created Successfully
     toast({
       title: "Task Created Successfully",
-      description: `"${testTaskTitle}" with Task ID ${testTaskId} has been created for Contract ID ${testContractId} - ${testContractTitle}`,
+              description: `"${testTaskTitle}" with Task ID #${testTaskId} has been created for Contract ID #${testContractId} - ${testContractTitle}`,
       duration: 30000,
     });
     
@@ -98,7 +98,7 @@ export default function WorkflowsPage() {
     setTimeout(() => {
       toast({
         title: "Task Deleted Successfully",
-        description: `"${testTaskTitle}" with Task ID ${testTaskId} associated with Contract ID ${testContractId} - ${testContractTitle} has been deleted`,
+        description: `"${testTaskTitle}" with Task ID #${testTaskId} associated with Contract ID #${testContractId} - ${testContractTitle} has been deleted`,
         variant: "voided",
         duration: 30000,
       });
@@ -1390,7 +1390,7 @@ export default function WorkflowsPage() {
         {/* Workflow Stats and Filters Section */}
       <div>
         {showNewTaskModal ? (
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-300 dark:border-gray-700 px-6 py-4 mb-6 select-none">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-300 dark:border-gray-700 px-6 py-4 sm:pt-8 sm:pb-6 mb-6 select-none">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-4">
                 <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800">
@@ -1417,7 +1417,7 @@ export default function WorkflowsPage() {
                         setShowNewSubtaskStatusDropdown(false);
                         setNewTaskUploadedFiles([]);
                 }} 
-                className="text-gray-400 hover:text-gray-600 p-2 rounded-full"
+                className="text-gray-400 hover:text-gray-600 p-2 rounded-full -mt-3"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -2446,7 +2446,7 @@ export default function WorkflowsPage() {
                           const selectedContract = contracts.find(c => c.id === contractId);
                           toast({
                             title: "Task Created Successfully",
-                            description: `"${newTask.title}" with Task ID ${newTask.taskNumber} has been created for Contract ID ${contractId} - ${selectedContract?.title || 'Unknown Contract'}`,
+                            description: `"${newTask.title}" with Task ID #${newTask.taskNumber} has been created for Contract ID #${contractId} - ${selectedContract?.title || 'Unknown Contract'}`,
                             duration: 30000, // 30 seconds
                           });
                           
@@ -3330,7 +3330,7 @@ export default function WorkflowsPage() {
                                             setOpenMenuTask(null);
                                             toast({
                                               title: "Task Deleted Successfully",
-                                              description: `"${task.title}" with Task ID ${task.taskNumber} associated with Contract ID ${task.contractId} - ${contracts.find(c => c.id === task.contractId)?.title || 'Unknown Contract'} has been deleted`,
+                                              description: `"${task.title}" with Task ID #${task.taskNumber} associated with Contract ID #${task.contractId} - ${contracts.find(c => c.id === task.contractId)?.title || 'Unknown Contract'} has been deleted`,
                                               variant: "voided",
                                               duration: 30000, // 30 seconds
                                             });

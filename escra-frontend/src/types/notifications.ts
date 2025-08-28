@@ -27,7 +27,11 @@ export type NotificationType =
   | 'passkey_added'
   | 'passkey_removed'
   | 'wallet_added'
-  | 'wallet_removed';
+  | 'wallet_removed'
+  | 'api_token_added'
+  | 'api_token_removed'
+  | 'webhook_added'
+  | 'webhook_removed';
 
 export interface NotificationMeta {
   contractId?: string;
