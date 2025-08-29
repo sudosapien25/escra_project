@@ -1,8 +1,8 @@
 'use client';
 import React, { useRef, useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { mockContracts } from '@/data/mockContracts';
 import { Task } from '@/types/task';
+import { ContractService } from '@/services/contractService';
 
 // Icons
 import { HiOutlineDocumentText, HiOutlineViewBoards, HiOutlineUpload, HiOutlineEye, HiOutlineDownload, HiOutlineTrash, HiPlus, HiChevronDown, HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight, HiOutlinePencil } from 'react-icons/hi';
@@ -93,8 +93,8 @@ export default function WorkflowsPage() {
   const [editedContractName, setEditedContractName] = React.useState('');
   const [editedDueDate, setEditedDueDate] = React.useState('');
   const [editedAssignee, setEditedAssignee] = React.useState('');
-  // Contracts state that includes both mock contracts and newly created contracts
-  const [contracts, setContracts] = useState(mockContracts);
+  // Contracts state that fetches from real API
+  const [contracts, setContracts] = useState<any[]>([]);
   
   const [contractSearch, setContractSearch] = useState('');
   const [showContractDropdown, setShowContractDropdown] = useState(false);
@@ -229,24 +229,34 @@ export default function WorkflowsPage() {
   const [newSubtaskStatus, setNewSubtaskStatus] = useState('To Do');
   const [newSubtaskDueDate, setNewSubtaskDueDate] = useState('');
   const [newSubtaskDescription, setNewSubtaskDescription] = useState('');
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   // Use the task store
   const {
     tasks,
-    selectedTask,
-    setSelectedTask,
+    columns,
+    editingTaskId,
+    setEditingTaskId,
     updateTask,
     moveTask,
-    getTasksByStatus,
     initializeTasks,
     addTask
   } = useTaskStore();
 
-  // Initialize tasks from storage
+  // Initialize tasks from storage and fetch contracts
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
       initializeTasks();
       console.log('Initialized tasks:', tasks);
+      
+      // Fetch contracts from API
+      ContractService.getContracts().then(response => {
+        if (response.contracts) {
+          setContracts(response.contracts);
+        }
+      }).catch(error => {
+        console.error('Failed to fetch contracts:', error);
+      });
     }
   }, []); // Remove initializeTasks from dependencies to prevent infinite loop
 
@@ -355,49 +365,49 @@ export default function WorkflowsPage() {
       title: 'To Do',
       color: 'bg-gray-100',
       icon: <LuListTodo className="text-xl mr-2 text-gray-500" />,
-      tasks: getTasksByStatus('To Do')
+      tasks: columns['To Do'] || []
     },
     {
       key: 'Blocked',
       title: 'Blocked',
       color: 'bg-red-100',
       icon: <CgPlayStopR className="text-xl mr-2 text-red-500" />,
-      tasks: getTasksByStatus('Blocked')
+      tasks: columns['Blocked'] || []
     },
     {
       key: 'On Hold',
       title: 'On Hold',
       color: 'bg-orange-100',
       icon: <CgPlayPauseR className="text-xl mr-2 text-orange-500" />,
-      tasks: getTasksByStatus('On Hold')
+      tasks: columns['On Hold'] || []
     },
     {
       key: 'In Progress',
       title: 'In Progress',
       color: 'bg-blue-100',
       icon: <FaRetweet className="text-xl mr-2 text-blue-500" />,
-      tasks: getTasksByStatus('In Progress')
+      tasks: columns['In Progress'] || []
     },
     {
       key: 'In Review',
       title: 'In Review',
       color: 'bg-yellow-100',
       icon: <PiListMagnifyingGlassBold className="text-xl mr-2 text-yellow-500" />,
-      tasks: getTasksByStatus('In Review')
+      tasks: columns['In Review'] || []
     },
     {
       key: 'Done',
       title: 'Done',
       color: 'bg-green-100',
       icon: <FaRegSquareCheck className="text-xl mr-2 text-green-600" />,
-      tasks: getTasksByStatus('Done')
+      tasks: columns['Done'] || []
     },
     {
       key: 'Canceled',
       title: 'Canceled',
       color: 'bg-purple-100',
       icon: <MdCancelPresentation className="text-xl mr-2 text-purple-500" />,
-      tasks: getTasksByStatus('Canceled')
+      tasks: columns['Canceled'] || []
     }
   ];
 

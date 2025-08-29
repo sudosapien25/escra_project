@@ -658,6 +658,158 @@ async def get_contract_tasks(contract_id: str, current_user: dict = Depends(get_
     
     return {"tasks": tasks}
 
+@router.post("/{contract_id}/tasks")
+async def create_contract_task(
+    contract_id: str,
+    task_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a new task for a contract - only if user has access"""
+    db = MongoDB.get_database()
+    contracts_collection = db.contracts
+    
+    # Check if contract exists and user has access
+    existing = await contracts_collection.find_one({
+        "id": contract_id,
+        "$or": [
+            {"created_by": current_user["user_id"]},
+            {"shared_with": current_user["user_id"]}
+        ]
+    })
+    if not existing:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    
+    # Generate task ID
+    task_id = f"TSK-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}-{contract_id[:4]}"
+    
+    # Create task with minimal structure
+    task = {
+        "id": task_id,
+        "code": task_id,
+        "title": task_data.get("title", ""),
+        "description": task_data.get("description", ""),
+        "status": task_data.get("status", "To Do"),
+        "type": task_data.get("type", "Task"),
+        "assignee": task_data.get("assignee", "Unassigned"),
+        "dueDate": task_data.get("dueDate"),
+        "subtasks": task_data.get("subtasks", []),
+        "progress": "0 of 0",
+        "createdAt": datetime.utcnow().isoformat(),
+        "updatedAt": datetime.utcnow().isoformat()
+    }
+    
+    # Add task to contract
+    tasks = existing.get("tasks", [])
+    tasks.append(task)
+    
+    # Update contract with new task
+    result = await contracts_collection.update_one(
+        {"id": contract_id},
+        {"$set": {"tasks": tasks, "updatedAt": datetime.utcnow()}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=400, detail="Failed to create task")
+    
+    return task
+
+@router.put("/{contract_id}/tasks/{task_id}")
+async def update_contract_task(
+    contract_id: str,
+    task_id: str,
+    task_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update a task for a contract - only if user has access"""
+    db = MongoDB.get_database()
+    contracts_collection = db.contracts
+    
+    # Check if contract exists and user has access
+    existing = await contracts_collection.find_one({
+        "id": contract_id,
+        "$or": [
+            {"created_by": current_user["user_id"]},
+            {"shared_with": current_user["user_id"]}
+        ]
+    })
+    if not existing:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    
+    # Find and update task
+    tasks = existing.get("tasks", [])
+    task_found = False
+    
+    for i, task in enumerate(tasks):
+        if task.get("id") == task_id:
+            # Update task fields
+            tasks[i].update({
+                "title": task_data.get("title", task.get("title")),
+                "description": task_data.get("description", task.get("description")),
+                "status": task_data.get("status", task.get("status")),
+                "type": task_data.get("type", task.get("type")),
+                "assignee": task_data.get("assignee", task.get("assignee")),
+                "dueDate": task_data.get("dueDate", task.get("dueDate")),
+                "subtasks": task_data.get("subtasks", task.get("subtasks")),
+                "updatedAt": datetime.utcnow().isoformat()
+            })
+            task_found = True
+            updated_task = tasks[i]
+            break
+    
+    if not task_found:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    # Update contract with modified tasks
+    result = await contracts_collection.update_one(
+        {"id": contract_id},
+        {"$set": {"tasks": tasks, "updatedAt": datetime.utcnow()}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=400, detail="Failed to update task")
+    
+    return updated_task
+
+@router.delete("/{contract_id}/tasks/{task_id}")
+async def delete_contract_task(
+    contract_id: str,
+    task_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Delete a task from a contract - only if user has access"""
+    db = MongoDB.get_database()
+    contracts_collection = db.contracts
+    
+    # Check if contract exists and user has access
+    existing = await contracts_collection.find_one({
+        "id": contract_id,
+        "$or": [
+            {"created_by": current_user["user_id"]},
+            {"shared_with": current_user["user_id"]}
+        ]
+    })
+    if not existing:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    
+    # Filter out the task to delete
+    tasks = existing.get("tasks", [])
+    original_count = len(tasks)
+    tasks = [task for task in tasks if task.get("id") != task_id]
+    
+    if len(tasks) == original_count:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    # Update contract with filtered tasks
+    result = await contracts_collection.update_one(
+        {"id": contract_id},
+        {"$set": {"tasks": tasks, "updatedAt": datetime.utcnow()}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=400, detail="Failed to delete task")
+    
+    return {"detail": "Task deleted successfully"}
+
 @router.post("/{contract_id}/documents")
 async def upload_contract_document(
     contract_id: str,

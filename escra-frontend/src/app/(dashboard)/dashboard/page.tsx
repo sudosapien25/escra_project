@@ -1,6 +1,7 @@
 "use client";
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Card } from '@/components/common/Card';
 import { FaFileContract, FaMoneyBillAlt, FaClock, FaPlus, FaArrowUp, FaDollarSign, FaCheckCircle, FaBox, FaChartLine, FaCheck } from 'react-icons/fa';
 import { IconBaseProps } from 'react-icons';
@@ -362,11 +363,20 @@ const parseParties = (partiesString: string): string[] => {
   };
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [showNewContractModal, setShowNewContractModal] = React.useState(false);
   const [activeRole, setActiveRole] = React.useState('creator');
   const [hoveredValue, setHoveredValue] = React.useState<number | null>(null);
   const [hoveredDate, setHoveredDate] = React.useState<string | null>(null);
   const [contracts, setContracts] = React.useState<Contract[]>([]);
+  const [dashboardStats, setDashboardStats] = React.useState({
+    totalContracts: 0,
+    totalValue: 0,
+    pendingSignatures: 0,
+    wirePending: 0,
+    averageCompletionTime: 0,
+    recentActivity: [] as any[]
+  });
   const [openRecentlyUpdatedDropdown, setOpenRecentlyUpdatedDropdown] = React.useState(false);
   const [selectedRecentlyUpdated, setSelectedRecentlyUpdated] = React.useState('Last 30 days');
   const recentlyUpdatedDropdownRef = React.useRef<HTMLDivElement>(null);
@@ -867,10 +877,11 @@ export default function DashboardPage() {
     }
   }, [openCompletionTimeDropdown]);
   
-  // Load contracts from API
+  // Load contracts and dashboard stats from API
   React.useEffect(() => {
-    const loadContracts = async () => {
+    const loadDashboardData = async () => {
       try {
+        // Load contracts
         const response = await ContractService.getContracts({ limit: 100 });
         if (response.contracts && response.contracts.length > 0) {
           // Transform the contract list response to match the dashboard Contract interface
@@ -880,13 +891,17 @@ export default function DashboardPage() {
             value: c.value || '$0'
           }));
           setContracts(transformedContracts as Contract[]);
+        
+        // Load dashboard stats
+        const stats = await ContractService.getDashboardStats();
+        setDashboardStats(stats);
         }
       } catch (error) {
         console.error('Error loading contracts:', error);
       }
     };
 
-    loadContracts();
+    loadDashboardData();
   }, []);
 
   // Load signatures - temporarily keep empty until we have a signatures API
@@ -1223,7 +1238,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex flex-col items-start cursor-default select-none">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Average Completion Time</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">3.2 days</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{dashboardStats.averageCompletionTime} days</p>
             <div className="relative cursor-default select-none">
               <button
                 ref={completionTimeButtonRef}
@@ -1267,7 +1282,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex flex-col items-start cursor-default select-none">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Pending Signatures</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">2</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{dashboardStats.pendingSignatures}</p>
             <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">Requires action</p>
           </div>
         </Card>
@@ -1279,7 +1294,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex flex-col items-start cursor-default select-none">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Wire Transfers Pending</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">3</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{dashboardStats.wirePending}</p>
             <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">Awaiting transfer</p>
           </div>
         </Card>
@@ -1439,6 +1454,7 @@ export default function DashboardPage() {
                   <tr
                     key={contract.id}
                     className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                    onClick={() => router.push(`/contracts?id=${contract.id}`)}
                   >
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs cursor-default select-none">
                       <span className="text-primary underline font-semibold cursor-pointer">{contract.id}</span>

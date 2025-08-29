@@ -25,6 +25,7 @@ interface TaskStore {
   updateSubtasks: (taskId: string, subtasks: Subtask[]) => Promise<void>;
   setEditingTaskId: (taskId: string | null) => void;
   moveTask: (taskId: string, sourceStatus: Task['status'], destStatus: Task['status']) => void;
+  getTasksByContract: (contractId: string) => Task[];
 }
 
 export const useTaskStore = create<TaskStore>((set, get) => ({
@@ -207,5 +208,10 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       // Update task status
       updateTaskStatus(taskId, destStatus);
     }
+  },
+
+  getTasksByContract: (contractId) => {
+    const { tasks } = get();
+    return tasks.filter(task => task.contractId === contractId);
   },
 }));
