@@ -10,7 +10,7 @@ import { LuCalendarFold, LuPen } from 'react-icons/lu';
 import { BiDotsHorizontal, BiCommentAdd } from 'react-icons/bi';
 import { TbWorldDollar, TbEdit, TbClockUp, TbCubeSend, TbClockPin, TbFilePlus, TbScript } from 'react-icons/tb';
 import { Logo } from '@/components/common/Logo';
-import { mockContracts } from '@/data/mockContracts';
+import { ContractService } from '@/services/contractService';
 import { useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -391,7 +391,10 @@ const ContractsPage: React.FC = () => {
   const [uploadedDocumentIds, setUploadedDocumentIds] = useState<string[]>([]);
   const [documentName, setDocumentName] = useState('');
   const [documentNameError, setDocumentNameError] = useState(false);
-  const [contracts, setContracts] = useState<Contract[]>(mockContracts);
+  const [contracts, setContracts] = useState<Contract[]>([]);
+  const [totalContracts, setTotalContracts] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
 
   // State for expanded parties rows
   const [expandedPartiesRows, setExpandedPartiesRows] = useState<Set<string>>(new Set());
@@ -1222,19 +1225,11 @@ const ContractsPage: React.FC = () => {
         documentIds: uploadedDocumentIds, // Store document IDs
       };
 
-      // Save the new contract to the mockContracts.ts file
+      // Save the new contract via API
       try {
-        const response = await fetch('/api/contracts', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(newContract),
-        });
-
-        if (!response.ok) {
-          console.error('Failed to save contract to file');
-        } else {
+        const createdContract = await ContractService.createContract(newContract);
+        
+        if (createdContract) {
           // Create documents with proper IDs and associate them with the new contract
           const finalDocumentIds: string[] = [];
           
@@ -2139,32 +2134,40 @@ const ContractsPage: React.FC = () => {
     }
   }, [selectedContract]);
 
-  // Load enhanced contracts (updates + additional) on component mount
+  // Load contracts from API
   useEffect(() => {
-    const loadEnhancedContracts = async () => {
+    const loadContracts = async () => {
+      setIsLoading(true);
       try {
-        const response = await fetch('/api/contracts');
-        if (response.ok) {
-          const data = await response.json();
-          // Only update if we got valid data that's different from initial mockContracts
-          if (data.contracts && data.contracts.length > 0) {
-            setContracts(data.contracts);
-          }
-        } else {
-          console.error('Failed to load enhanced contracts');
-          // Keep the initial mockContracts that are already loaded
+        const response = await ContractService.getContracts({ 
+          page: currentPage,
+          limit: 20
+        });
+        
+        if (response.contracts) {
+          // Transform the contract list response to match the Contract interface
+          const transformedContracts = response.contracts.map(c => ({
+            ...c,
+            // Ensure value is formatted as string with $
+            value: c.value || '$0'
+          }));
+          setContracts(transformedContracts as Contract[]);
+          setTotalContracts(response.pagination.total);
         }
       } catch (error) {
-        console.error('Error loading enhanced contracts:', error);
-        // Keep the initial mockContracts that are already loaded
+        console.error('Error loading contracts:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load contracts",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    // Small delay to let the initial render complete, then enhance with API data
-    const timeoutId = setTimeout(loadEnhancedContracts, 100);
-    
-    return () => clearTimeout(timeoutId);
-  }, []);
+    loadContracts();
+  }, [currentPage]);
 
   // Table resize handlers
   const handleResizeStart = (e: React.MouseEvent) => {
@@ -2322,18 +2325,8 @@ const ContractsPage: React.FC = () => {
         removeDocument(doc.id);
       });
 
-      // Delete the contract from the backend
-      const response = await fetch('/api/contracts', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ contractId }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete contract from backend');
-      }
+      // Delete the contract via API
+      await ContractService.deleteContract(contractId);
 
       // Remove the contract from the contracts array
       setContracts(prev => prev.filter(contract => contract.id !== contractId));
@@ -2362,30 +2355,20 @@ const ContractsPage: React.FC = () => {
   // Function to update contract field and persist to backend
   const updateContractField = async (contractId: string, field: string, value: string) => {
     try {
-      const response = await fetch('/api/contracts', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ contractId, field, value }),
-      });
-
-      if (response.ok) {
-        // Update the contract in local state
-        setContracts(prev => 
-          prev.map(contract => 
-            contract.id === contractId 
-              ? { ...contract, [field]: value }
-              : contract
-          )
-        );
-        
-        // Update the selected contract if it's the one being edited
-        if (selectedContract && selectedContract.id === contractId) {
-          setSelectedContract({ ...selectedContract, [field]: value });
-        }
-      } else {
-        console.error('Failed to update contract');
+      await ContractService.updateContractField(contractId, field, value);
+      
+      // Update the contract in local state
+      setContracts(prev => 
+        prev.map(contract => 
+          contract.id === contractId 
+            ? { ...contract, [field]: value }
+            : contract
+        )
+      );
+      
+      // Update the selected contract if it's the one being edited
+      if (selectedContract && selectedContract.id === contractId) {
+        setSelectedContract({ ...selectedContract, [field]: value });
       }
     } catch (error) {
       console.error('Error updating contract:', error);
@@ -2757,8 +2740,14 @@ const ContractsPage: React.FC = () => {
   // Calculate total contract value
   const calculateTotalValue = () => {
     const total = contracts.reduce((total, contract) => {
-      // Remove '$' and ',' from value string and convert to number
-      const value = parseFloat(contract.value?.replace(/[$,]/g, '') || '0');
+      // Handle both string and number values
+      let value = 0;
+      if (typeof contract.value === 'string') {
+        // Remove '$' and ',' from value string and convert to number
+        value = parseFloat(contract.value.replace(/[$,]/g, '') || '0');
+      } else if (typeof contract.value === 'number') {
+        value = contract.value;
+      }
       return total + value;
     }, 0);
     

@@ -2,18 +2,22 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import Cookies from 'js-cookie';
+import authService, { UserData, RegisterData } from '@/services/authService';
 
 interface User {
   id: string;
   email: string;
   name: string;
+  firstName: string;
+  lastName: string;
+  role: string;
 }
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  register: (userData: RegisterData) => Promise<void>;
   logout: () => void;
 }
 
@@ -26,30 +30,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Check for existing auth token and validate it
-    const token = Cookies.get('auth_token');
-    if (token) {
-      // TODO: Validate token with your backend
-      // For now, we'll just set a mock user
-      setUser({
-        id: '1',
-        email: 'user@example.com',
-        name: 'John Doe'
-      });
-    }
-    setIsLoading(false);
+    const checkAuth = async () => {
+      try {
+        if (authService.isAuthenticated()) {
+          const userData = await authService.getCurrentUser();
+          setUser({
+            id: userData.id,
+            email: userData.email,
+            name: `${userData.firstName} ${userData.lastName}`,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            role: userData.role
+          });
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        authService.logout();
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    checkAuth();
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
-      // TODO: Replace with actual API call
-      // Mock successful login
-      const mockToken = 'mock-jwt-token';
-      Cookies.set('auth_token', mockToken, { expires: 7 }); // Expires in 7 days
+      const response = await authService.login(email, password);
       
       setUser({
-        id: '1',
-        email,
-        name: 'John Doe'
+        id: response.user.id,
+        email: response.user.email,
+        name: `${response.user.firstName} ${response.user.lastName}`,
+        firstName: response.user.firstName,
+        lastName: response.user.lastName,
+        role: response.user.role
       });
 
       router.push('/dashboard');
@@ -59,14 +74,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => {
-    Cookies.remove('auth_token');
-    setUser(null);
-    router.push('/login');
+  const register = async (userData: RegisterData) => {
+    try {
+      const response = await authService.register(userData);
+      
+      setUser({
+        id: response.user.id,
+        email: response.user.email,
+        name: `${response.user.firstName} ${response.user.lastName}`,
+        firstName: response.user.firstName,
+        lastName: response.user.lastName,
+        role: response.user.role
+      });
+
+      router.push('/dashboard');
+    } catch (error) {
+      console.error('Registration failed:', error);
+      throw error;
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await authService.logout();
+    } finally {
+      setUser(null);
+      router.push('/login');
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

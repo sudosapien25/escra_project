@@ -13,8 +13,8 @@ import { HiOutlineDocumentText } from 'react-icons/hi';
 import { GrMoney } from 'react-icons/gr';
 import NewContractModal from '@/components/common/NewContractModal';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, BarChart, Bar } from 'recharts';
-import { mockContracts } from '@/data/mockContracts';
-import { SignatureDocument, mockSignatures } from '@/data/mockSignatures';
+import { ContractService } from '@/services/contractService';
+import { SignatureDocument } from '@/data/mockSignatures';
 import { useTaskStore } from '@/data/taskStore';
 import { Task } from '@/types/task';
 
@@ -366,7 +366,7 @@ export default function DashboardPage() {
   const [activeRole, setActiveRole] = React.useState('creator');
   const [hoveredValue, setHoveredValue] = React.useState<number | null>(null);
   const [hoveredDate, setHoveredDate] = React.useState<string | null>(null);
-  const [contracts, setContracts] = React.useState<Contract[]>(mockContracts);
+  const [contracts, setContracts] = React.useState<Contract[]>([]);
   const [openRecentlyUpdatedDropdown, setOpenRecentlyUpdatedDropdown] = React.useState(false);
   const [selectedRecentlyUpdated, setSelectedRecentlyUpdated] = React.useState('Last 30 days');
   const recentlyUpdatedDropdownRef = React.useRef<HTMLDivElement>(null);
@@ -413,7 +413,7 @@ export default function DashboardPage() {
   const [expandedRecipients, setExpandedRecipients] = React.useState<Set<string>>(new Set());
   
   // Signatures data state
-  const [signaturesData, setSignaturesData] = React.useState<SignatureDocument[]>(mockSignatures);
+  const [signaturesData, setSignaturesData] = React.useState<SignatureDocument[]>([]);
   
   // Tasks data state
   const { tasks, initializeTasks } = useTaskStore();
@@ -776,8 +776,8 @@ export default function DashboardPage() {
         return bStatus.localeCompare(aStatus);
       }
     } else if (taskContractSortDirection) {
-      const aContract = mockContracts.find(c => c.id === a.contractId)?.title || '';
-      const bContract = mockContracts.find(c => c.id === b.contractId)?.title || '';
+      const aContract = contracts.find(c => c.id === a.contractId)?.title || '';
+      const bContract = contracts.find(c => c.id === b.contractId)?.title || '';
       if (taskContractSortDirection === 'asc') {
         return aContract.localeCompare(bContract);
       } else {
@@ -867,58 +867,32 @@ export default function DashboardPage() {
     }
   }, [openCompletionTimeDropdown]);
   
-  // Load enhanced contracts (same as contracts page)
+  // Load contracts from API
   React.useEffect(() => {
-    const loadEnhancedContracts = async () => {
+    const loadContracts = async () => {
       try {
-        const response = await fetch('/api/contracts');
-        if (response.ok) {
-          const data = await response.json();
-          // Only update if we got valid data that's different from initial mockContracts
-          if (data.contracts && data.contracts.length > 0) {
-            setContracts(data.contracts);
-          }
-        } else {
-          console.error('Failed to load enhanced contracts');
-          // Keep the initial mockContracts that are already loaded
+        const response = await ContractService.getContracts({ limit: 100 });
+        if (response.contracts && response.contracts.length > 0) {
+          // Transform the contract list response to match the dashboard Contract interface
+          const transformedContracts = response.contracts.map(c => ({
+            ...c,
+            // Ensure value is a string with $ prefix for display
+            value: c.value || '$0'
+          }));
+          setContracts(transformedContracts as Contract[]);
         }
       } catch (error) {
-        console.error('Error loading enhanced contracts:', error);
-        // Keep the initial mockContracts that are already loaded
+        console.error('Error loading contracts:', error);
       }
     };
 
-    // Small delay to let the initial render complete, then enhance with API data
-    const timeoutId = setTimeout(loadEnhancedContracts, 100);
-    
-    return () => clearTimeout(timeoutId);
+    loadContracts();
   }, []);
 
-  // Load enhanced signatures (same as signatures page)
+  // Load signatures - temporarily keep empty until we have a signatures API
   React.useEffect(() => {
-    const loadEnhancedSignatures = async () => {
-      try {
-        const response = await fetch('/api/signatures');
-        if (response.ok) {
-          const data = await response.json();
-          // Only update if we got valid data that's different from initial mockSignatures
-          if (data.signatures && data.signatures.length > 0) {
-            setSignaturesData(data.signatures);
-          }
-        } else {
-          console.error('Failed to load enhanced signatures');
-          // Keep the initial mockSignatures that are already loaded
-        }
-      } catch (error) {
-        console.error('Error loading enhanced signatures:', error);
-        // Keep the initial mockSignatures that are already loaded
-      }
-    };
-
-    // Small delay to let the initial render complete, then enhance with API data
-    const timeoutId = setTimeout(loadEnhancedSignatures, 100);
-    
-    return () => clearTimeout(timeoutId);
+    // TODO: Load signatures from API when available
+    setSignaturesData([]);
   }, []);
 
   // Initialize tasks (same as workflows page)
@@ -1691,7 +1665,7 @@ export default function DashboardPage() {
                     </td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-sm cursor-default select-none">
                       <div className="text-xs font-bold text-gray-900 dark:text-white cursor-default select-none">
-                        {mockContracts.find(c => c.id === task.contractId)?.title || 'Unknown Contract'}
+                        {contracts.find(c => c.id === task.contractId)?.title || 'Unknown Contract'}
                       </div>
                     </td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs cursor-default select-none">

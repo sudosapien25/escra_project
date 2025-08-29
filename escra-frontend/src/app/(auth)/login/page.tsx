@@ -220,7 +220,7 @@ const COUNTRIES: SelectOption[] = [
 function AuthPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login } = useAuth();
+  const { login, register } = useAuth();
   const [tab, setTab] = useState<'login' | 'register'>(() => {
     return searchParams?.get('tab') === 'register' ? 'register' : 'login';
   });
@@ -335,13 +335,26 @@ function AuthPageContent() {
     return errors;
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     const errors = validateRegister();
     setRegErrors(errors);
     if (Object.keys(errors).length === 0) {
-      // TODO: register logic
-      router.push('/onboarding');
+      try {
+        setIsLoading(true);
+        await register({
+          firstName: regName,
+          lastName: regSurname,
+          email: regEmail,
+          password: regPassword,
+        });
+        toast.success('Account created successfully!');
+      } catch (error: any) {
+        toast.error(error.message || 'Registration failed. Please try again.');
+        console.error('Registration error:', error);
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -506,9 +519,10 @@ function AuthPageContent() {
                 </div>
                 <button
                   type="submit"
-                  className="w-full py-1.5 rounded-lg bg-primary text-white font-semibold text-sm shadow hover:bg-primary/90 transition-colors"
+                  disabled={isLoading}
+                  className="w-full py-1.5 rounded-lg bg-primary text-white font-semibold text-sm shadow hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Create Account
+                  {isLoading ? 'Creating Account...' : 'Create Account'}
                 </button>
               </form>
             )}
