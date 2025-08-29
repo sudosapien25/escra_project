@@ -521,13 +521,15 @@ export default function BlockchainPage() {
           <h1 className="text-[30px] font-bold text-black dark:text-white mb-0 cursor-default select-none">Blockchain</h1>
           <p className="text-gray-500 text-[16px] mt-0 cursor-default select-none">Review your smart contracts, on-chain activity & explorer integrations</p>
         </div>
-        <button
-          className="flex items-center justify-center w-full md:w-auto px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
-          onClick={() => setShowNewContractModal(true)}
-        >
-          <TbFilePlus className="mr-2 text-[22px]" />
-          New Contract
-        </button>
+        <div className="flex justify-end">
+          <button
+            className="flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+            onClick={() => setShowNewContractModal(true)}
+          >
+            <TbFilePlus className="mr-2 text-[22px]" />
+            New Contract
+          </button>
+        </div>
         <NewContractModal isOpen={showNewContractModal} onClose={() => setShowNewContractModal(false)} />
       </div>
 

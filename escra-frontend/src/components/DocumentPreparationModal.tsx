@@ -16,11 +16,11 @@ import {
   LuCopyPlus,
   LuBringToFront
 } from 'react-icons/lu';
-import { HiOutlineDocumentText, HiOutlineTrash } from 'react-icons/hi';
+import { HiOutlineDocumentText } from 'react-icons/hi';
 import { HiMiniChevronDown, HiMiniChevronUp } from 'react-icons/hi2';
 import { FaCheck } from 'react-icons/fa';
 import { MdOutlineAttachEmail } from 'react-icons/md';
-import { TbUnlink, TbMailBolt, TbLinkPlus, TbLink, TbLayersLinked, TbMailPlus, TbChevronDown, TbZoomIn, TbZoomOut, TbEye, TbRotateRectangle, TbZoomReset } from 'react-icons/tb';
+import { TbUnlink, TbMailBolt, TbLinkPlus, TbLink, TbLayersLinked, TbMailPlus, TbChevronDown, TbZoomIn, TbZoomOut, TbEye, TbRotateRectangle, TbZoomReset, TbTrash } from 'react-icons/tb';
 import { Logo } from '@/components/common/Logo';
 import { Listbox, Transition } from '@headlessui/react';
 
@@ -464,7 +464,7 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
               className="p-1.5 text-gray-600 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
               title="Remove"
             >
-              <HiOutlineTrash size={14} />
+                                      <TbTrash size={14} />
             </button>
           </div>
         )}
@@ -475,7 +475,7 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-2 sm:p-4">
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black bg-opacity-40 p-2 sm:p-4" style={{ paddingTop: '95px' }}>
       <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-[1600px] max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="sticky top-0 z-40 bg-gray-100 dark:bg-gray-900 px-6 py-4">
@@ -856,16 +856,7 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
                   </div>
                 </div>
 
-                {/* Previous Button in Left Sidebar */}
-                <div className="mt-auto pt-4">
-                  <button
-                    onClick={() => setCurrentStep('preparation')}
-                    className="px-4 sm:px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
-                    style={{ fontFamily: 'Avenir, sans-serif' }}
-                  >
-                    Previous
-                  </button>
-                </div>
+
               </div>
 
               {/* Center - Distribution Content */}
@@ -1207,33 +1198,7 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
                   </div>
                 </div>
 
-                {/* Fixed Action Buttons */}
-                <div className="bg-gray-100 dark:bg-gray-900 px-4 sm:px-6 pt-0 pb-6">
-                  <div className="flex justify-end gap-1">
-                    <button
-                      onClick={onClose}
-                      className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
-                      style={{ fontFamily: 'Avenir, sans-serif' }}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleDistributionSubmit}
-                      disabled={isSubmitting}
-                      className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-semibold"
-                      style={{ fontFamily: 'Avenir, sans-serif' }}
-                    >
-                      {isSubmitting ? (
-                        <div className="flex items-center justify-center gap-2">
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                          Sending...
-                        </div>
-                      ) : (
-                        'Send'
-                      )}
-                    </button>
-                  </div>
-                </div>
+
               </div>
 
 
@@ -1241,41 +1206,61 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
           )}
         </div>
 
-        {/* Vertical divider line that extends to bottom - only show on preparation step */}
-        {currentStep === 'preparation' && (
-          <div className="absolute left-80 top-0 bottom-0 w-px bg-gray-200 dark:bg-gray-700 pointer-events-none"></div>
-        )}
-        
-        {/* Sticky Footer - Only show on preparation step */}
-        {currentStep === 'preparation' && (
-          <div className="sticky bottom-0 bg-gray-100 dark:bg-gray-900 px-6 pt-4 pb-6">
-            {/* Vertical divider line in footer - same as main divider */}
-            <div className="absolute left-[319px] top-0 bottom-0 w-[2px] bg-gray-200 dark:bg-gray-700 pointer-events-none"></div>
+        {/* Sticky Footer - Show on both preparation and distribution steps */}
+        {(currentStep === 'preparation' || currentStep === 'distribution') && (
+          <div className={`sticky bottom-0 bg-gray-100 dark:bg-gray-900 px-6 pb-6 ${
+            currentStep === 'preparation' ? 'pt-6' : 'pt-0'
+          }`}>
+            {/* Horizontal divider line at top of footer - only show on preparation step */}
+            {currentStep === 'preparation' && (
+              <div className="absolute top-0 left-80 right-0 h-px bg-gray-200 dark:bg-gray-700 hidden lg:block"></div>
+            )}
             <div className="flex justify-between items-center relative z-10">
-                          <button
-              onClick={() => onBackToRequestSignature ? onBackToRequestSignature() : onClose()}
-              className="px-4 sm:px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
-              style={{ fontFamily: 'Avenir, sans-serif' }}
-            >
-              Previous
-            </button>
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-0">
+              <button
+                onClick={currentStep === 'preparation' 
+                  ? () => onBackToRequestSignature ? onBackToRequestSignature() : onClose()
+                  : () => setCurrentStep('preparation')
+                }
+                className="px-4 sm:px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
+                style={{ fontFamily: 'Avenir, sans-serif' }}
+              >
+                Previous
+              </button>
+              <div className="flex gap-1">
                 <button
                   onClick={onClose}
-                  className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold w-full sm:w-auto"
+                  className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
                   style={{ fontFamily: 'Avenir, sans-serif' }}
                 >
                   Cancel
                 </button>
-                <button
-                  onClick={() => {
-                    setCurrentStep('distribution');
-                  }}
-                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold w-full sm:w-auto sm:ml-1"
-                  style={{ fontFamily: 'Avenir, sans-serif' }}
-                >
-                  Continue
-                </button>
+                {currentStep === 'preparation' ? (
+                  <button
+                    onClick={() => {
+                      setCurrentStep('distribution');
+                    }}
+                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                  >
+                    Continue
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleDistributionSubmit}
+                    disabled={isSubmitting}
+                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-semibold"
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                  >
+                    {isSubmitting ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Sending...
+                      </div>
+                    ) : (
+                      'Send'
+                    )}
+                  </button>
+                )}
               </div>
             </div>
           </div>

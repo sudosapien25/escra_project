@@ -684,10 +684,11 @@ const billingPlans = [
   {
     name: 'Essential',
     monthlyPrice: 9,
-    yearlyPrice: 90,
+    yearlyPrice: 9,
     description: 'Tamper-proof essential signing tools',
     features: [
       '5 contracts per month',
+      '20 signers per month',
       '20 GB document storage',
       'Unlimited Recipients',
       '2FA Authentication',
@@ -702,6 +703,7 @@ const billingPlans = [
     description: 'Enhanced contract capacity, advanced security & granular auditability',
     features: [
       '50 contracts per month',
+      '200 signers per month',
       '5 custom templates',
       '100 GB document storage',
       'Complete audit trail',
@@ -716,7 +718,8 @@ const billingPlans = [
     yearlyPrice: 990,
     description: 'A shared workspace for your team',
     features: [
-      '500 contracts per month',
+      '250 contracts per month',
+      '1000 signers per month',
       'Up to 10 custom templates',
       '750 GB document storage',
       'Includes 3 members',
@@ -732,6 +735,7 @@ const billingPlans = [
     description: 'Signing solutions tailored for organizations at scale',
     features: [
       'Unlimited contracts',
+      'Scaled signing capacity',
       '1 TB+ document storage',
       'Multi-team support',
       'Flexible user licensing',
@@ -1305,20 +1309,17 @@ export default function AdminSettingsPage() {
           <hr className="my-3 sm:my-6 border-gray-300 cursor-default select-none" />
           
           {/* Navigation Tabs */}
-          <div className="hidden lg:flex gap-1 cursor-default select-none mb-6 -mt-2">
+          <div className="hidden lg:flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700 w-fit cursor-default select-none mb-6 -mt-2">
             {TABS.map(tab => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all duration-300 font-sans flex items-center justify-center ${
-                  activeTab === tab.key 
-                    ? 'bg-white dark:bg-gray-800 text-teal-500 dark:text-teal-400 min-w-[90px] border-2 border-gray-200 dark:border-gray-700' 
-                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 w-fit border border-gray-200 dark:border-gray-700'
+                className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                  activeTab === tab.key
+                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
                 }`}
               >
-                <span className={`inline-block transition-all duration-300 ${activeTab === tab.key ? 'opacity-100 mr-1.5' : 'opacity-0 w-0 mr-0'}`} style={{width: activeTab === tab.key ? 16 : 0}}>
-                  {activeTab === tab.key && <Logo width={16} height={16} className="pointer-events-none" />}
-                </span>
                 {tab.label}
               </button>
             ))}
@@ -2585,20 +2586,25 @@ export default function AdminSettingsPage() {
               {/* Pricing Plans */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {billingPlans.map((plan, index) => (
-                  <div key={index} className="bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-600 p-6 shadow-sm flex flex-col min-h-[550px]">
-                    <div className="text-center mb-6 h-24">
-                      <h3 className="text-lg font-bold text-black dark:text-white mb-2">{plan.name}</h3>
-                      <div className="mb-2">
+                  <div key={index} className="bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-600 p-6 shadow-sm flex flex-col min-h-[600px]">
+                    <div className="text-center mb-6 h-40 relative">
+                      <h3 className="text-lg font-bold text-black dark:text-white mb-1">{plan.name}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{plan.description}</p>
+                      <div className="absolute top-32 left-1/2 transform -translate-x-1/2">
                         {plan.monthlyPrice !== null ? (
                           <>
                             <span className="text-2xl font-bold text-black dark:text-white">${billingPeriod === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice}</span>
-                            <span className="text-sm text-gray-500 dark:text-gray-400 ml-1">USD per {billingPeriod === 'monthly' ? 'month' : 'year'}</span>
+                            <span className="text-sm text-gray-500 dark:text-gray-400 ml-1">/month</span>
+                            {billingPeriod === 'yearly' && (
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                *Billed annually
+                              </div>
+                            )}
                           </>
                         ) : (
                           <span className="text-2xl font-bold text-black dark:text-white">Custom</span>
                         )}
                       </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{plan.description}</p>
                     </div>
                     
                     <div className="mb-6 flex-grow flex flex-col">

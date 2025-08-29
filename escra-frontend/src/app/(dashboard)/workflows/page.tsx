@@ -5,7 +5,7 @@ import { mockContracts } from '@/data/mockContracts';
 import { Task } from '@/types/task';
 
 // Icons
-import { HiOutlineViewBoards, HiOutlineEye, HiPlus, HiOutlinePencil } from 'react-icons/hi';
+import { HiOutlineViewBoards, HiOutlinePencil } from 'react-icons/hi';
 import { CgPlayPauseR, CgPlayStopR } from 'react-icons/cg';
 import { BsPerson } from 'react-icons/bs';
 import { LuCalendarClock, LuSendHorizontal, LuCalendarFold, LuTable2, LuListTodo, LuListPlus } from 'react-icons/lu';
@@ -18,7 +18,7 @@ import { MdCancelPresentation, MdOutlineLibraryAddCheck } from 'react-icons/md';
 import { MdOutlineLightMode, MdOutlineDarkMode } from 'react-icons/md';
 import { RiUserSearchLine, RiKanbanView2 } from 'react-icons/ri';
 import { HiOutlineDocumentSearch } from 'react-icons/hi';
-import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbLibraryPlus, TbEdit, TbStatusChange, TbHistory, TbCategoryPlus, TbDragDrop, TbPencil, TbSubtask, TbSearch, TbFileSearch, TbDownload, TbCalendarClock, TbCancel, TbList, TbListSearch, TbUpload, TbLibrary, TbChevronDown, TbMessage2Plus, TbTrash, TbChevronsLeft, TbChevronsRight } from 'react-icons/tb';
+import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbLibraryPlus, TbEdit, TbStatusChange, TbHistory, TbCategoryPlus, TbDragDrop, TbPencil, TbSubtask, TbSearch, TbFileSearch, TbDownload, TbCalendarClock, TbCancel, TbList, TbListSearch, TbUpload, TbLibrary, TbChevronDown, TbMessage2Plus, TbTrash, TbChevronsLeft, TbChevronsRight, TbUserSearch, TbLayoutGrid, TbCategory2, TbEye, TbPlus } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
 
@@ -1455,7 +1455,7 @@ export default function WorkflowsPage() {
             </div>
 
             {/* Form Content */}
-            <div className="space-y-6 pt-4">
+            <div className="space-y-4 pt-4">
               {newTaskModalStep === 1 && (
                 <>
                   <div className="grid grid-cols-2 gap-6">
@@ -1732,7 +1732,7 @@ export default function WorkflowsPage() {
                       )}
                     </div>
                   </div>
-                  <div className="flex justify-end mt-6">
+                  <div className="flex justify-end">
                     <button 
                       onClick={() => {
                         const newErrors: Record<string, boolean> = {};
@@ -1961,7 +1961,7 @@ export default function WorkflowsPage() {
 
                   {/* Subtasks List Section */}
                   <div className="mt-6">
-                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Subtasks</h4>
+                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Added Subtasks</h4>
                     <div className="space-y-2 cursor-default select-none">
                       {newTaskSubtasks.map((subtask, idx) => (
                         <div key={subtask.id} className="bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-700 transition-colors">
@@ -2135,14 +2135,16 @@ export default function WorkflowsPage() {
                         </div>
                       ))}
                       {newTaskSubtasks.length === 0 && (
-                        <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-sm cursor-default select-none">
-                          No subtasks yet. Add a subtask by filling in its details.
+                        <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-xs cursor-default select-none">
+                          <TbCategory2 className="mx-auto mb-2 w-6 h-6 text-primary" />
+                          <div>No subtasks yet</div>
+                          <div>Add a subtask by filling in the details above and clicking the "Add Subtask" button</div>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex justify-between mt-6">
+                  <div className="flex flex-col sm:flex-row justify-between mt-6 gap-2 sm:gap-0">
                     <button 
                       onClick={() => setNewTaskModalStep(1)}
                       className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold" 
@@ -2150,7 +2152,7 @@ export default function WorkflowsPage() {
                     >
                       Previous
                     </button>
-                    <div className="flex">
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-0">
                       <button
                         onClick={() => {
                           if (newSubtaskTitle.trim()) {
@@ -2171,14 +2173,15 @@ export default function WorkflowsPage() {
                             setNewSubtaskDescription('');
                           }
                         }}
-                        className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm"
+                        className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold flex items-center justify-center"
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       >
+                        <TbPlus className="w-4 h-4 mr-2" />
                         Add Subtask
                       </button>
                       <button 
                         onClick={() => setNewTaskModalStep(3)}
-                        className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm ml-1"
+                        className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm sm:ml-1"
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       >
                         Continue
@@ -2513,44 +2516,35 @@ export default function WorkflowsPage() {
             {/* Tabs */}
             {/* Mobile: Stacked layout */}
             <div className="lg:hidden cursor-default select-none mb-6">
-              <div className="flex flex-col gap-2 cursor-default select-none">
+              <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700 w-fit">
                 {kanbanTabs.map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setKanbanTab(tab)}
-                    className={`flex items-center justify-between w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 font-medium text-xs shadow-sm whitespace-nowrap transition-all duration-300 ${
-                      kanbanTab === tab 
-                        ? 'bg-white dark:bg-gray-800 text-teal-500 dark:text-teal-400 border-2 border-gray-200 dark:border-gray-700' 
-                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
+                    className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                      kanbanTab === tab
+                        ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                        : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
                     }`}
-                    style={{ fontFamily: 'Avenir, sans-serif' }}
                   >
-                    <span className="flex items-center">
-                      <span className={`inline-block transition-all duration-300 ${kanbanTab === tab ? 'opacity-100 mr-1.5' : 'opacity-0 w-0 mr-0'}`} style={{width: kanbanTab === tab ? 16 : 0}}>
-                        {kanbanTab === tab && <Logo width={16} height={16} className="pointer-events-none" />}
-                      </span>
-                      {tab}
-                    </span>
+                    {tab}
                   </button>
                 ))}
               </div>
             </div>
 
             {/* Desktop: Horizontal layout */}
-            <div className="hidden lg:flex gap-1 cursor-default select-none mb-6">
+            <div className="hidden lg:flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700 w-fit cursor-default select-none mb-6">
               {kanbanTabs.map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setKanbanTab(tab)}
-                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all duration-300 font-sans flex items-center justify-center ${
-                    kanbanTab === tab 
-                      ? 'bg-white dark:bg-gray-800 text-teal-500 dark:text-teal-400 min-w-[90px] border-2 border-gray-200 dark:border-gray-700' 
-                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 w-fit border border-gray-200 dark:border-gray-700'
+                  className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                    kanbanTab === tab
+                      ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                      : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
                   }`}
                 >
-                  <span className={`inline-block transition-all duration-300 ${kanbanTab === tab ? 'opacity-100 mr-1.5' : 'opacity-0 w-0 mr-0'}`} style={{width: kanbanTab === tab ? 16 : 0}}>
-                    {kanbanTab === tab && <Logo width={16} height={16} className="pointer-events-none" />}
-                  </span>
                   {tab}
                 </button>
               ))}
@@ -2738,7 +2732,7 @@ export default function WorkflowsPage() {
                   }
                 }}
               >
-                <span className="flex items-center"><RiUserSearchLine className="text-gray-400 mr-2" size={17} />Assignee</span>
+                <span className="flex items-center"><TbUserSearch className="text-gray-400 mr-2" size={17} />Assignee</span>
                 <TbChevronDown className="text-gray-400 dark:text-gray-500" size={18} />
               </button>
               {openAssigneeDropdown && (
@@ -3031,7 +3025,7 @@ export default function WorkflowsPage() {
                 style={{ fontFamily: 'Avenir, sans-serif' }}
                 onClick={() => { setOpenAssigneeDropdown(v => !v); setOpenContractDropdown(false); setShowStatusDropdown(false); }}
               >
-                <RiUserSearchLine className="text-gray-400" size={18} />
+                <TbUserSearch className="text-gray-400" size={18} />
                 <span>Assignee</span>
                 <TbChevronDown className="ml-1 text-gray-400 dark:text-gray-500" size={18} />
               </button>
@@ -3307,7 +3301,7 @@ export default function WorkflowsPage() {
                                           Mark as Done
                                         </button>
                                         <button 
-                                          className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700"
+                                          className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center"
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             // Set the task for the subtask modal without triggering task details modal
@@ -3317,6 +3311,7 @@ export default function WorkflowsPage() {
                                             setOpenMenuTask(null);
                                           }}
                                         >
+                                          <TbPlus className="w-4 h-4 mr-2" />
                                           Add Subtask
                                         </button>
                                         <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700">Edit</button>
@@ -3590,7 +3585,7 @@ export default function WorkflowsPage() {
                             setSelectedTask(task);
                           }}
                         >
-                          <HiOutlineEye className="h-4 w-4 transition-colors" />
+                                                          <TbEye className="h-4 w-4 transition-colors" />
                           <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                             View
                           </span>
@@ -4107,7 +4102,7 @@ export default function WorkflowsPage() {
                             </div>
                             <div className="flex items-center gap-1 cursor-default select-none">
                               <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer">
-                                <HiOutlineEye className="h-4 w-4 transition-colors" />
+                                <TbEye className="h-4 w-4 transition-colors" />
                                 <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                   View
                                 </span>
@@ -4896,8 +4891,9 @@ export default function WorkflowsPage() {
                      setNewSubtaskForm({ title: '', assignee: '', status: 'To Do' as TaskStatus, dueDate: '', description: '' });
                      setNewSubtaskFormErrors({});
                    }}
-                   className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+                   className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold flex items-center justify-center"
                  >
+                   <TbPlus className="w-4 h-4 mr-2" />
                    Create Subtask
                  </button>
                </div>

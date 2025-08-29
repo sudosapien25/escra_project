@@ -3,16 +3,16 @@
 import React, { useState, useRef, useEffect, RefObject, createRef } from 'react';
 import { FaUser, FaFilter, FaSort, FaCheckCircle, FaPlus, FaTimes, FaChevronUp, FaCheck } from 'react-icons/fa';
 import { FaRegSquareCheck } from 'react-icons/fa6';
-import { HiOutlineEye, HiOutlineViewBoards, HiOutlineUpload, HiOutlineDocumentText, HiOutlineBell, HiOutlineCog, HiOutlineDuplicate, HiOutlineDocumentSearch, HiOutlineUserGroup, HiOutlineX } from 'react-icons/hi';
+import { HiOutlineViewBoards, HiOutlineDocumentText, HiOutlineBell, HiOutlineCog, HiOutlineDuplicate, HiOutlineDocumentSearch, HiOutlineUserGroup, HiOutlineX } from 'react-icons/hi';
 import { HiMiniChevronUpDown } from 'react-icons/hi2';
-import { LuPen, LuCalendarClock, LuBellRing, LuPenLine, LuCalendarFold } from 'react-icons/lu';
+import { LuCalendarClock, LuBellRing, LuPenLine, LuCalendarFold } from 'react-icons/lu';
 import { MdCancelPresentation } from 'react-icons/md';
 import { FaRegClock } from 'react-icons/fa';
 import { BsPerson } from 'react-icons/bs';
 import { PiWarningDiamondBold } from 'react-icons/pi';
 import clsx from 'clsx';
 import { IconBaseProps } from 'react-icons';
-import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbClockPin, TbPencilShare, TbPencilPlus, TbClockEdit, TbStatusChange, TbHistory, TbCalendarExclamation, TbPencilCheck, TbDownload, TbSearch, TbFileSearch, TbLibrary, TbEraser, TbTrash, TbChevronDown, TbChevronsLeft, TbChevronsRight, TbClockExclamation } from 'react-icons/tb';
+import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbClockPin, TbPencilShare, TbPencilPlus, TbClockEdit, TbStatusChange, TbHistory, TbCalendarExclamation, TbPencilCheck, TbDownload, TbSearch, TbFileSearch, TbLibrary, TbEraser, TbTrash, TbChevronDown, TbChevronsLeft, TbChevronsRight, TbClockExclamation, TbUserShare, TbUserSearch, TbCopyCheck, TbCopyMinus, TbLibraryMinus, TbEye, TbUpload, TbPencil, TbUserEdit } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
 import { TiUserAddOutline } from 'react-icons/ti';
@@ -82,6 +82,8 @@ export default function SignaturesPage() {
   const [showDocuSignModal, setShowDocuSignModal] = useState(false);
   const [showDocumentPreparationModal, setShowDocumentPreparationModal] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [collaborators, setCollaborators] = useState<Array<{name: string, email: string, contractRole: string}>>([]);
+  const [selectedCollaborators, setSelectedCollaborators] = useState<string[]>([]);
   const [docuSignUploadedFiles, setDocuSignUploadedFiles] = useState<File[]>([]);
   const [editingFileName, setEditingFileName] = useState<string | null>(null);
   const [editingDocuSignFileName, setEditingDocuSignFileName] = useState<string | null>(null);
@@ -159,6 +161,7 @@ export default function SignaturesPage() {
     signerRoleDropdownRef: RefObject<HTMLDivElement>;
     contractRoleButtonRef: RefObject<HTMLButtonElement>;
     contractRoleDropdownRef: RefObject<HTMLDivElement>;
+    collaboratorIndex?: number; // Index of the collaborator this recipient came from (for color matching)
   };
   const [recipients, setRecipients] = useState<Recipient[]>([
     {
@@ -1483,7 +1486,22 @@ export default function SignaturesPage() {
   };
 
   // Helper function to get distinct colors for signature cards
-  const getSignatureCardBorderColor = (index: number, isDocuSign: boolean = false) => {
+  const getSignatureCardBorderColor = (index: number, isDocuSign: boolean = false, recipient?: Recipient) => {
+    // If recipient has a collaboratorIndex, use the collaborator color
+    if (recipient?.collaboratorIndex !== undefined) {
+      const collaboratorColors = [
+        '#0d9488', // teal-600 (matches collaborator badge)
+        '#3b82f6', // blue-600 (matches collaborator badge)
+        '#8b5cf6', // violet-600 (matches collaborator badge)
+        '#ea580c', // orange-600 (matches collaborator badge)
+        '#16a34a', // green-600 (matches collaborator badge)
+        '#db2777', // pink-600 (matches collaborator badge)
+        '#4f46e5', // indigo-600 (matches collaborator badge)
+        '#ca8a04', // yellow-600 (matches collaborator badge)
+      ];
+      return collaboratorColors[recipient.collaboratorIndex % collaboratorColors.length];
+    }
+    
     if (index === 0) {
       // First card uses brand color
       return isDocuSign ? '#3b82f6' : '#0d9488'; // blue-500 for DocuSign, teal-600 for Escra
@@ -1504,9 +1522,214 @@ export default function SignaturesPage() {
     return colors[(index - 1) % colors.length];
   };
 
-  // Function to populate recipient cards when documents are selected
-  const populateRecipientCardsFromDocument = (documentId: string, isDocuSign: boolean = false) => {
-    console.log('populateRecipientCardsFromDocument called with:', { documentId, isDocuSign });
+  const getCollaboratorBadgeColor = (index: number) => {
+    const colors = [
+      { bg: 'bg-teal-50 dark:bg-teal-900/30', border: 'border-teal-200 dark:border-teal-800', text: 'text-teal-500 dark:text-teal-400' },
+      { bg: 'bg-blue-100 dark:bg-blue-900/30', border: 'border-blue-200 dark:border-blue-800', text: 'text-blue-500 dark:text-blue-400' },
+      { bg: 'bg-purple-100 dark:bg-purple-900/30', border: 'border-purple-200 dark:border-purple-800', text: 'text-purple-500 dark:text-purple-400' },
+      { bg: 'bg-orange-100 dark:bg-orange-900/30', border: 'border-orange-200 dark:border-orange-800', text: 'text-orange-500 dark:text-orange-400' },
+      { bg: 'bg-green-100 dark:bg-green-900/30', border: 'border-green-200 dark:border-green-800', text: 'text-green-500 dark:text-green-400' },
+      { bg: 'bg-pink-100 dark:bg-pink-900/30', border: 'border-pink-200 dark:border-pink-800', text: 'text-pink-500 dark:text-pink-400' },
+      { bg: 'bg-indigo-100 dark:bg-indigo-900/30', border: 'border-indigo-200 dark:border-indigo-800', text: 'text-indigo-500 dark:text-indigo-400' },
+      { bg: 'bg-yellow-100 dark:bg-yellow-900/30', border: 'border-yellow-200 dark:border-yellow-800', text: 'text-yellow-500 dark:text-yellow-400' }
+    ];
+    return colors[index % colors.length];
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const handleCollaboratorToggle = (collaboratorName: string) => {
+    console.log('=== handleCollaboratorToggle called for:', collaboratorName, '===');
+    
+    setSelectedCollaborators(prev => {
+      console.log('Previous selected collaborators:', prev);
+      
+      if (prev.includes(collaboratorName)) {
+        console.log('Removing collaborator:', collaboratorName);
+        // Remove collaborator from selection
+        const newSelection = prev.filter(name => name !== collaboratorName);
+        
+        // Remove the recipient card for this specific collaborator and ensure at least one empty card remains
+        setRecipients(prevRecipients => {
+          console.log('Removing recipient card for:', collaboratorName);
+          
+          // Remove the recipient card for this collaborator
+          const remainingRecipients = prevRecipients.filter(recipient => 
+            recipient.name !== collaboratorName
+          );
+          
+          // Always ensure at least one empty recipient card exists
+          if (remainingRecipients.length === 0) {
+            return [{
+              name: '',
+              email: '',
+              signerRole: 'Signer Role',
+              contractRole: 'Contract Role',
+              showSignerRoleDropdown: false,
+              showContractRoleDropdown: false,
+              signerRoleButtonRef: createRef<HTMLButtonElement>(),
+              signerRoleDropdownRef: createRef<HTMLDivElement>(),
+              contractRoleButtonRef: createRef<HTMLButtonElement>(),
+              contractRoleDropdownRef: createRef<HTMLDivElement>(),
+            }];
+          }
+          
+          return remainingRecipients;
+        });
+        
+        return newSelection;
+      } else {
+        console.log('Adding collaborator:', collaboratorName);
+        // Add collaborator to selection
+        const newSelection = [...prev, collaboratorName];
+        
+        // Find the collaborator data and index
+        const collaboratorIndex = collaborators.findIndex(c => c.name === collaboratorName);
+        const collaborator = collaborators[collaboratorIndex];
+        if (collaborator) {
+          console.log('Found collaborator data:', collaborator, 'at index:', collaboratorIndex);
+          
+          // Find the first available empty recipient card, or create a new one if none exist
+          setRecipients(prevRecipients => {
+            console.log('Current recipients before update:', prevRecipients);
+            
+            // Check if this collaborator already has a recipient card to prevent duplicates
+            const existingRecipientIndex = prevRecipients.findIndex(r => r.name === collaborator.name);
+            if (existingRecipientIndex !== -1) {
+              console.log('Collaborator already has a recipient card at index:', existingRecipientIndex, 'Skipping creation');
+              return prevRecipients;
+            }
+            
+            // Look for the first empty recipient card (prioritize index 0)
+            const emptyRecipientIndex = prevRecipients.findIndex(r => !r.name.trim());
+            console.log('Found empty recipient at index:', emptyRecipientIndex);
+            
+            if (emptyRecipientIndex !== -1) {
+              // Use the first available empty recipient card - populate with ONLY this collaborator's data
+              console.log('Using existing empty recipient card at index:', emptyRecipientIndex);
+              const updatedRecipients = prevRecipients.map((recipient, index) => 
+                index === emptyRecipientIndex 
+                  ? { ...recipient, name: collaborator.name, email: collaborator.email, signerRole: 'Needs to Sign', contractRole: collaborator.contractRole, collaboratorIndex }
+                  : recipient
+              );
+              console.log('Updated recipients after using existing card:', updatedRecipients);
+              return updatedRecipients;
+            } else {
+              // Create exactly ONE new recipient card if no empty ones exist
+              console.log('Creating new recipient card for:', collaborator.name);
+              const newRecipient: Recipient = {
+                name: collaborator.name,
+                email: collaborator.email,
+                signerRole: 'Needs to Sign',
+                contractRole: collaborator.contractRole,
+                collaboratorIndex,
+                showSignerRoleDropdown: false,
+                showContractRoleDropdown: false,
+                signerRoleButtonRef: createRef<HTMLButtonElement>(),
+                signerRoleDropdownRef: createRef<HTMLDivElement>(),
+                contractRoleButtonRef: createRef<HTMLButtonElement>(),
+                contractRoleDropdownRef: createRef<HTMLDivElement>(),
+              };
+              const updatedRecipients = [...prevRecipients, newRecipient];
+              console.log('Updated recipients after creating new card:', updatedRecipients);
+              return updatedRecipients;
+            }
+          });
+        }
+        
+        return newSelection;
+      }
+    });
+  };
+
+  const handleSelectAllCollaborators = () => {
+    if (selectedCollaborators.length === collaborators.length) {
+      // If all are selected, deselect all
+      setSelectedCollaborators([]);
+      
+      // Remove all collaborator-based recipient cards and leave exactly one empty card
+      setRecipients(prevRecipients => {
+        // Keep only recipient cards that were NOT created from collaborators
+        const manualRecipients = prevRecipients.filter(recipient => 
+          !collaborators.some(c => c.name === recipient.name)
+        );
+        
+        // Always return exactly one empty recipient card
+        return [{
+          name: '',
+          email: '',
+          signerRole: 'Signer Role',
+          contractRole: 'Contract Role',
+          showSignerRoleDropdown: false,
+          showContractRoleDropdown: false,
+          signerRoleButtonRef: createRef<HTMLButtonElement>(),
+          signerRoleDropdownRef: createRef<HTMLDivElement>(),
+          contractRoleButtonRef: createRef<HTMLButtonElement>(),
+          contractRoleDropdownRef: createRef<HTMLDivElement>(),
+        }];
+      });
+    } else {
+      // Select all
+      setSelectedCollaborators(collaborators.map(c => c.name));
+      
+      // Populate existing empty recipient cards first, then create new ones as needed
+      setRecipients(prevRecipients => {
+        const manualRecipients = prevRecipients.filter(recipient => 
+          !collaborators.some(c => c.name === recipient.name)
+        );
+        
+        // Find empty recipient cards to populate
+        const emptyRecipients = manualRecipients.filter(r => !r.name.trim());
+        const filledRecipients = manualRecipients.filter(r => r.name.trim());
+        
+        // Populate empty cards first
+        const populatedRecipients = emptyRecipients.map((recipient, index) => {
+          if (index < collaborators.length) {
+            const collaborator = collaborators[index];
+            return {
+              ...recipient,
+              name: collaborator.name,
+              email: collaborator.email,
+              signerRole: 'Needs to Sign',
+              contractRole: collaborator.contractRole,
+              collaboratorIndex: index,
+            };
+          }
+          return recipient;
+        });
+        
+        // Create new cards for remaining collaborators
+        const remainingCollaborators = collaborators.slice(emptyRecipients.length);
+        const newRecipients: Recipient[] = remainingCollaborators.map((collaborator, index) => ({
+          name: collaborator.name,
+          email: collaborator.email,
+          signerRole: 'Needs to Sign',
+          contractRole: collaborator.contractRole,
+          collaboratorIndex: emptyRecipients.length + index,
+          showSignerRoleDropdown: false,
+          showContractRoleDropdown: false,
+          signerRoleButtonRef: createRef<HTMLButtonElement>(),
+          signerRoleDropdownRef: createRef<HTMLDivElement>(),
+          contractRoleButtonRef: createRef<HTMLButtonElement>(),
+          contractRoleDropdownRef: createRef<HTMLDivElement>(),
+        }));
+        
+        return [...filledRecipients, ...populatedRecipients, ...newRecipients];
+      });
+    }
+  };
+
+  // Function to populate collaborators when documents are selected
+  const populateCollaboratorsFromDocument = (documentId: string, isDocuSign: boolean = false) => {
+    console.log('populateCollaboratorsFromDocument called with:', { documentId, isDocuSign });
+    console.log('Current collaborators state before:', collaborators);
     
     // Find the document
     const document = allDocuments.find(doc => doc.id === documentId);
@@ -1527,7 +1750,7 @@ export default function SignaturesPage() {
           
           if (fullContract) {
             console.log('Found full contract data:', fullContract);
-            createRecipientsFromFullContract(fullContract, isDocuSign);
+            createCollaboratorsFromFullContract(fullContract, isDocuSign);
             return;
           }
         }
@@ -1540,112 +1763,68 @@ export default function SignaturesPage() {
       console.log('Fallback to mockContracts:', contract);
       
       if (contract) {
-        createRecipientsFromBasicContract(contract, isDocuSign);
+        createCollaboratorsFromBasicContract(contract, isDocuSign);
       }
     };
 
     fetchContractData();
   };
 
-  // Function to create recipients from full contract data (with emails and roles)
-  const createRecipientsFromFullContract = (contract: any, isDocuSign: boolean) => {
-    const recipients: Recipient[] = [];
+  // Function to create collaborators from full contract data (with emails and roles)
+  const createCollaboratorsFromFullContract = (contract: any, isDocuSign: boolean) => {
+    const collaborators: Array<{name: string, email: string, contractRole: string}> = [];
     
     // Add first party (buyer) - typically needs to sign
     if (contract.buyer) {
-      recipients.push({
+      collaborators.push({
         name: contract.buyer,
         email: contract.buyerEmail || '',
-        signerRole: 'Needs to Sign', // Default for buyer
         contractRole: contract.party1Role || 'Buyer',
-        showSignerRoleDropdown: false,
-        showContractRoleDropdown: false,
-        signerRoleButtonRef: createRef<HTMLButtonElement>(),
-        signerRoleDropdownRef: createRef<HTMLDivElement>(),
-        contractRoleButtonRef: createRef<HTMLButtonElement>(),
-        contractRoleDropdownRef: createRef<HTMLDivElement>(),
       });
     }
     
     // Add second party (seller) - typically needs to sign
     if (contract.seller) {
-      recipients.push({
+      collaborators.push({
         name: contract.seller,
         email: contract.sellerEmail || '',
-        signerRole: 'Needs to Sign', // Default for seller
         contractRole: contract.party2Role || 'Seller',
-        showSignerRoleDropdown: false,
-        showContractRoleDropdown: false,
-        signerRoleButtonRef: createRef<HTMLButtonElement>(),
-        signerRoleDropdownRef: createRef<HTMLDivElement>(),
-        contractRoleButtonRef: createRef<HTMLButtonElement>(),
-        contractRoleDropdownRef: createRef<HTMLDivElement>(),
       });
     }
     
-    // Add additional parties with appropriate signer roles based on their contract roles
+    // Add additional parties
     if (contract.additionalParties && contract.additionalParties.length > 0) {
       contract.additionalParties.forEach((party: any) => {
-        // Determine signer role based on contract role
-        let signerRole = 'Needs to Sign'; // Default
-        if (party.role === 'Buyer Agent' || party.role === 'Seller Agent') {
-          signerRole = 'Receives a Copy'; // Agents typically receive copies
-        } else if (party.role === 'Closing Agent') {
-          signerRole = 'Needs to Sign'; // Closing agents need to sign
-        } else if (party.role === 'Inspector' || party.role === 'Appraiser') {
-          signerRole = 'Receives a Copy'; // Inspectors/appraisers typically receive copies
-        }
-        
-        recipients.push({
+        collaborators.push({
           name: party.name,
           email: party.email || '',
-          signerRole: signerRole,
           contractRole: party.role || 'Standard',
-          showSignerRoleDropdown: false,
-          showContractRoleDropdown: false,
-          signerRoleButtonRef: createRef<HTMLButtonElement>(),
-          signerRoleDropdownRef: createRef<HTMLDivElement>(),
-          contractRoleButtonRef: createRef<HTMLButtonElement>(),
-          contractRoleDropdownRef: createRef<HTMLDivElement>(),
         });
       });
     }
     
-    console.log('Created recipients from full contract:', recipients);
+    console.log('Created collaborators from full contract:', collaborators);
     
-    // Update the appropriate recipient state
-    if (isDocuSign) {
-      setDocuSignRecipients(recipients);
-    } else {
-      setRecipients(recipients);
-    }
+    // Update the collaborators state
+    setCollaborators(collaborators);
+    console.log('Collaborators state updated to:', collaborators);
   };
 
-  // Function to create recipients from basic contract data (fallback)
-  const createRecipientsFromBasicContract = (contract: any, isDocuSign: boolean) => {
+  // Function to create collaborators from basic contract data (fallback)
+  const createCollaboratorsFromBasicContract = (contract: any, isDocuSign: boolean) => {
     const parties = contract.parties ? contract.parties.split(' & ').map((p: string) => p.trim()) : [];
     
-    const recipients: Recipient[] = parties.map((party: string, index: number) => ({
+    const collaborators: Array<{name: string, email: string, contractRole: string}> = parties.map((party: string, index: number) => ({
       name: party,
       email: '', // Will be empty since basic contracts don't have email data
-      signerRole: 'Needs to Sign',
       contractRole: index === 0 ? 'Buyer' : index === 1 ? 'Seller' : 'Standard',
-      showSignerRoleDropdown: false,
-      showContractRoleDropdown: false,
-      signerRoleButtonRef: createRef<HTMLButtonElement>(),
-      signerRoleDropdownRef: createRef<HTMLDivElement>(),
-      contractRoleButtonRef: createRef<HTMLButtonElement>(),
-      contractRoleDropdownRef: createRef<HTMLDivElement>(),
     }));
     
-    console.log('Created recipients from basic contract:', recipients);
+    console.log('Created collaborators from basic contract:', collaborators);
     
-    // Update the appropriate recipient state
-    if (isDocuSign) {
-      setDocuSignRecipients(recipients);
-    } else {
-      setRecipients(recipients);
-    }
+    // Update the collaborators state
+    setCollaborators(collaborators);
+    console.log('Collaborators state updated to:', collaborators);
   };
 
   // Function to handle document selection and populate recipients
@@ -1662,10 +1841,25 @@ export default function SignaturesPage() {
         
         console.log('DocuSign new selection:', newSelection);
         
-        // If this is the first document being selected, populate recipients
+        // If this is the first document being selected, populate collaborators
         if (newSelection.length === 1 && !prev.includes(docId)) {
-          console.log('Populating DocuSign recipients for first document');
-          populateRecipientCardsFromDocument(docId, true);
+          console.log('Populating DocuSign collaborators for first document');
+          populateCollaboratorsFromDocument(docId, true);
+        }
+        
+        // Clear collaborators if all documents are removed
+        if (newSelection.length === 0) {
+          setCollaborators([]);
+          setSelectedCollaborators([]);
+          
+          // Clear recipient card data from collaborators (but keep the card structure)
+          setRecipients(prevRecipients => 
+            prevRecipients.map(recipient => 
+              collaborators.some(c => c.name === recipient.name)
+                ? { ...recipient, name: '', email: '', signerRole: 'Signer Role', contractRole: 'Contract Role' }
+                : recipient
+            )
+          );
         }
         
         return newSelection;
@@ -1684,10 +1878,25 @@ export default function SignaturesPage() {
           setDocumentError(false);
         }
         
-        // If this is the first document being selected, populate recipients
+        // If this is the first document being selected, populate collaborators
         if (newSelection.length === 1 && !prev.includes(docId)) {
-          console.log('Populating Escra recipients for first document');
-          populateRecipientCardsFromDocument(docId, false);
+          console.log('Populating Escra collaborators for first document');
+          populateCollaboratorsFromDocument(docId, false);
+        }
+        
+        // Clear collaborators if all documents are removed
+        if (newSelection.length === 0) {
+          setCollaborators([]);
+          setSelectedCollaborators([]);
+          
+          // Clear recipient card data from collaborators (but keep the card structure)
+          setRecipients(prevRecipients => 
+            prevRecipients.map(recipient => 
+              collaborators.some(c => c.name === recipient.name)
+                ? { ...recipient, name: '', email: '', signerRole: 'Signer Role', contractRole: 'Contract Role' }
+                : recipient
+            )
+          );
         }
         
         return newSelection;
@@ -1806,7 +2015,11 @@ export default function SignaturesPage() {
     setDocumentSearch('');
     setDocuSignDocumentSearch('');
     
-    // Reset recipients
+    // Reset collaborators
+    setCollaborators([]);
+    setSelectedCollaborators([]);
+    
+    // Reset recipients (this will clear all, including those from collaborators)
     setRecipients([{
       name: '',
       email: '',
@@ -2292,46 +2505,18 @@ export default function SignaturesPage() {
       {/* Scrollable Content Area */}
       <div className="overflow-y-auto max-h-[calc(100vh-300px)] [&::-webkit-scrollbar]:hidden">
         {/* Signature Filter Tabs */}
-      {/* Mobile: Stacked layout */}
-      <div className="lg:hidden cursor-default select-none mb-6">
-        <div className="flex flex-col gap-2 cursor-default select-none">
-          {signatureFilterTabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setSignatureFilterTab(tab)}
-              className={`flex items-center justify-between w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 font-medium text-xs shadow-sm whitespace-nowrap transition-all duration-300 ${
-                signatureFilterTab === tab 
-                  ? 'bg-white dark:bg-gray-800 text-teal-500 dark:text-teal-400 border-2 border-gray-200 dark:border-gray-700' 
-                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
-              }`}
-              style={{ fontFamily: 'Avenir, sans-serif' }}
-            >
-              <span className="flex items-center">
-                <span className={`inline-block transition-all duration-300 ${signatureFilterTab === tab ? 'opacity-100 mr-1.5' : 'opacity-0 w-0 mr-0'}`} style={{width: signatureFilterTab === tab ? 16 : 0}}>
-                  {signatureFilterTab === tab && <Logo width={16} height={16} className="pointer-events-none" />}
-                </span>
-                {tab}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Desktop: Horizontal layout */}
-      <div className="hidden lg:flex gap-1 cursor-default select-none mb-6">
+      {/* Signature Filter Tabs */}
+      <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700 w-fit mb-6">
         {signatureFilterTabs.map((tab) => (
           <button
             key={tab}
             onClick={() => setSignatureFilterTab(tab)}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all duration-300 font-sans flex items-center justify-center ${
-              signatureFilterTab === tab 
-                ? 'bg-white dark:bg-gray-800 text-teal-500 dark:text-teal-400 min-w-[90px] border-2 border-gray-200 dark:border-gray-700' 
-                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 w-fit border border-gray-200 dark:border-gray-700'
+            className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+              signatureFilterTab === tab
+                ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
             }`}
           >
-            <span className={`inline-block transition-all duration-300 ${signatureFilterTab === tab ? 'opacity-100 mr-1.5' : 'opacity-0 w-0 mr-0'}`} style={{width: signatureFilterTab === tab ? 16 : 0}}>
-              {signatureFilterTab === tab && <Logo width={16} height={16} className="pointer-events-none" />}
-            </span>
             {tab}
           </button>
         ))}
@@ -2581,7 +2766,7 @@ export default function SignaturesPage() {
                   }
                 }}
               >
-                <span className="flex items-center"><RiUserSharedLine className="text-gray-400 mr-2" size={17} />Sender</span>
+                <span className="flex items-center"><TbUserShare className="text-gray-400 mr-2" size={17} />Sender</span>
                 <TbChevronDown className="text-gray-400 dark:text-gray-500" size={18} />
               </button>
               {showSenderDropdown && (
@@ -2630,7 +2815,7 @@ export default function SignaturesPage() {
                   }
                 }}
               >
-                <span className="flex items-center"><RiUserSearchLine className="text-gray-400 mr-2" size={17} />Assignee</span>
+                <span className="flex items-center"><TbUserSearch className="text-gray-400 mr-2" size={17} />Assignee</span>
                 <TbChevronDown className="text-gray-400 dark:text-gray-500" size={18} />
               </button>
               {showAssigneeDropdown && (
@@ -2937,7 +3122,7 @@ export default function SignaturesPage() {
               }
             }}
           >
-                <RiUserSharedLine className="text-gray-400" size={18} />
+                <TbUserShare className="text-gray-400" size={18} />
                 <span>Sender</span>
                 <TbChevronDown className="ml-1 text-gray-400 dark:text-gray-500" size={18} />
               </button>
@@ -2986,7 +3171,7 @@ export default function SignaturesPage() {
             }
           }}
         >
-                <RiUserSearchLine className="text-gray-400" size={18} />
+                <TbUserSearch className="text-gray-400" size={18} />
                 <span>Assignee</span>
                 <TbChevronDown className="ml-1 text-gray-400 dark:text-gray-500" size={18} />
               </button>
@@ -3426,7 +3611,7 @@ export default function SignaturesPage() {
                                 openPdfViewer(row.document, row.id);
                               }}
                             >
-                              <HiOutlineEye className="text-sm sm:text-base transition-colors" />
+                              <TbEye className="text-sm sm:text-base transition-colors" />
                               <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                 View
                               </span>
@@ -3973,7 +4158,7 @@ export default function SignaturesPage() {
                         setUploadedFiles(prev => [...prev, ...files]);
                       }}
                     >
-                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 relative z-10" style={{ fontFamily: 'Avenir, sans-serif' }}>Add Documents</h3>
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 relative z-10" style={{ fontFamily: 'Avenir, sans-serif' }}>Select Documents</h3>
                         
                         {/* Upload interface - moved down vertically */}
                       <div className="flex flex-col items-center justify-center h-full -mt-8">
@@ -3986,7 +4171,7 @@ export default function SignaturesPage() {
                             <div className="h-full w-full flex flex-col items-center justify-center bg-white/95 dark:bg-gray-800/95 rounded-lg" style={{ marginTop: '1px' }}>
                               <div className="-mt-4">
                                 <div className="h-11 w-11 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800 mb-1.5 mx-auto">
-                                  <HiOutlineUpload size={22} className="text-teal-500 dark:text-teal-400" />
+                                  <TbUpload size={22} className="text-teal-500 dark:text-teal-400" />
                                 </div>
                                 <div className="text-xs text-gray-700 dark:text-gray-300 font-semibold text-center" style={{ fontFamily: 'Avenir, sans-serif' }}>
                                   Supported Formats: PDF, DOC, DOCX, OR JPG (max. 10 MB each)
@@ -4055,7 +4240,7 @@ export default function SignaturesPage() {
                               className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors"
                             style={{ fontFamily: 'Avenir, sans-serif' }}
                           >
-                            <HiOutlineUpload className="text-base text-primary" /> Upload
+                            <TbUpload className="text-base text-primary" /> Upload
                           </button>
                           {showUploadDropdown && (
                               <div className="absolute z-50 mt-1 w-[200px] bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:hidden">
@@ -4108,7 +4293,7 @@ export default function SignaturesPage() {
 
                       {/* Right Column: Documents Box */}
                       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 h-[440px]">
-                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>Documents</h3>
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>Review Documents</h3>
                         
                         {/* Show document thumbnails when documents are selected */}
                         {(selectedDocuments.length > 0 || uploadedFiles.length > 0) ? (
@@ -4132,7 +4317,7 @@ export default function SignaturesPage() {
                                   </div>
                                   <div className="flex items-center justify-center space-x-1">
                                     <button type="button" className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
-                                      <HiOutlineEye className="h-4 w-4 transition-colors" />
+                                      <TbEye className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                         View
                                       </span>
@@ -4165,6 +4350,36 @@ export default function SignaturesPage() {
                                       type="button"
                                       onClick={() => {
                                         setSelectedDocuments(prev => prev.filter(id => id !== docId));
+                                        // Clear collaborators when documents are removed
+                                        setCollaborators([]);
+                                        setSelectedCollaborators([]);
+                                        
+                                        // Clear recipient card data from collaborators (but keep the card structure)
+                                        setRecipients(prevRecipients => {
+                                          const clearedRecipients = prevRecipients.map(recipient => 
+                                            collaborators.some(c => c.name === recipient.name)
+                                              ? { ...recipient, name: '', email: '', signerRole: 'Signer Role', contractRole: 'Contract Role' }
+                                              : recipient
+                                          );
+                                          
+                                          // Ensure at least one empty recipient card exists
+                                          if (clearedRecipients.length === 0) {
+                                            return [{
+                                              name: '',
+                                              email: '',
+                                              signerRole: 'Signer Role',
+                                              contractRole: 'Contract Role',
+                                              showSignerRoleDropdown: false,
+                                              showContractRoleDropdown: false,
+                                              signerRoleButtonRef: createRef<HTMLButtonElement>(),
+                                              signerRoleDropdownRef: createRef<HTMLDivElement>(),
+                                              contractRoleButtonRef: createRef<HTMLButtonElement>(),
+                                              contractRoleDropdownRef: createRef<HTMLDivElement>(),
+                                            }];
+                                          }
+                                          
+                                          return clearedRecipients;
+                                        });
                                         // Clear all recipient cards and reset first card when documents are removed
                                         setRecipients([{
                                           name: '',
@@ -4181,9 +4396,9 @@ export default function SignaturesPage() {
                                       }}
                                       className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group"
                                     >
-                                      <TbTrash className="h-4 w-4 transition-colors" />
+                                      <TbLibraryMinus className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                                        Delete
+                                        Remove
                                       </span>
                                     </button>
                                   </div>
@@ -4254,7 +4469,7 @@ export default function SignaturesPage() {
                                             onClick={() => handleStartEditFileName(file, idx)}
                                             className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-primary transition-all p-1 flex-shrink-0"
                                           >
-                                            <LuPen className="w-3 h-3" />
+                                            <TbPencil size={16} />
                                           </button>
                                         </div>
                                       )}
@@ -4273,7 +4488,7 @@ export default function SignaturesPage() {
                                   </div>
                                   <div className="flex items-center justify-center space-x-1">
                                     <button type="button" className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
-                                      <HiOutlineEye className="h-4 w-4 transition-colors" />
+                                      <TbEye className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                         View
                                       </span>
@@ -4293,12 +4508,44 @@ export default function SignaturesPage() {
                                     </button>
                                     <button
                                       type="button"
-                                      onClick={() => setUploadedFiles(prev => prev.filter((_, i) => i !== idx))}
+                                      onClick={() => {
+                                        setUploadedFiles(prev => prev.filter((_, i) => i !== idx));
+                                        // Clear collaborators when uploaded files are removed
+                                        setCollaborators([]);
+                                        setSelectedCollaborators([]);
+                                        
+                                        // Clear recipient card data from collaborators (but keep the card structure)
+                                        setRecipients(prevRecipients => {
+                                          const clearedRecipients = prevRecipients.map(recipient => 
+                                            collaborators.some(c => c.name === recipient.name)
+                                              ? { ...recipient, name: '', email: '', signerRole: 'Signer Role', contractRole: 'Contract Role' }
+                                              : recipient
+                                          );
+                                          
+                                          // Ensure at least one empty recipient card exists
+                                          if (clearedRecipients.length === 0) {
+                                            return [{
+                                              name: '',
+                                              email: '',
+                                              signerRole: 'Signer Role',
+                                              contractRole: 'Contract Role',
+                                              showSignerRoleDropdown: false,
+                                              showContractRoleDropdown: false,
+                                              signerRoleButtonRef: createRef<HTMLButtonElement>(),
+                                              signerRoleDropdownRef: createRef<HTMLDivElement>(),
+                                              contractRoleButtonRef: createRef<HTMLButtonElement>(),
+                                              contractRoleDropdownRef: createRef<HTMLDivElement>(),
+                                            }];
+                                          }
+                                          
+                                          return clearedRecipients;
+                                        });
+                                      }}
                                       className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group"
                                     >
-                                      <TbTrash className="h-4 w-4 transition-colors" />
+                                      <TbLibraryMinus className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                                        Delete
+                                        Remove
                                       </span>
                                     </button>
                                   </div>
@@ -4318,7 +4565,7 @@ export default function SignaturesPage() {
 
                     {/* Add Recipients Box */}
                     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>Add Recipients</h3>
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-6" style={{ fontFamily: 'Avenir, sans-serif' }}>Select Recipients</h3>
                       <div className="space-y-4">
                         {/* I am the only signer checkbox */}
                         <div className="flex items-center gap-2">
@@ -4368,6 +4615,57 @@ export default function SignaturesPage() {
                           </label>
                         </div>
                         
+                        {/* Collaborator badges container - like email To field */}
+                        {/* Debug: collaborators.length = {collaborators.length} */}
+                        {collaborators.length > 0 && (
+                          <div className="mt-4 p-3 bg-white dark:bg-gray-800 rounded-lg">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs font-semibold text-gray-700 dark:text-gray-300" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                Collaborators {selectedCollaborators.length > 0 && `(${selectedCollaborators.length} selected)`}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={handleSelectAllCollaborators}
+                                className="text-xs font-semibold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors flex items-center gap-1"
+                                style={{ fontFamily: 'Avenir, sans-serif' }}
+                              >
+                                {selectedCollaborators.length === collaborators.length ? (
+                                  <TbCopyMinus className="h-5 w-5 text-primary" />
+                                ) : (
+                                  <TbCopyCheck className="h-5 w-5" />
+                                )}
+                                <span className={selectedCollaborators.length === collaborators.length ? 'text-primary' : ''}>
+                                  {selectedCollaborators.length === collaborators.length ? 'Deselect All' : 'Select All'}
+                                </span>
+                              </button>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {collaborators.map((collaborator, idx) => (
+                                <div
+                                  key={idx}
+                                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${getCollaboratorBadgeColor(idx).border} ${getCollaboratorBadgeColor(idx).bg} shadow-sm cursor-pointer hover:shadow-md transition-all`}
+                                  onClick={() => handleCollaboratorToggle(collaborator.name)}
+                                >
+                                  {/* Checkbox */}
+                                  <div className={`w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center ${selectedCollaborators.includes(collaborator.name) ? 'bg-primary' : 'border border-gray-300'}`}>
+                                    {selectedCollaborators.includes(collaborator.name) && (
+                                      <FaCheck className="text-white" size={8} />
+                                    )}
+                                  </div>
+                                  {/* Initials */}
+                                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-semibold ${getCollaboratorBadgeColor(idx).text}`}>
+                                    {getInitials(collaborator.name)}
+                                  </div>
+                                  {/* Name and email */}
+                                  <span className={`text-xs font-medium ${getCollaboratorBadgeColor(idx).text}`} style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                    {collaborator.name} ({collaborator.email})
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
                         {/* Render all recipient cards */}
                         {recipients.map((recipient, idx) => (
                           <div key={idx} className="flex items-start gap-3">
@@ -4387,7 +4685,7 @@ export default function SignaturesPage() {
                                 />
                               </div>
                             )}
-                            <div className="flex-1 relative bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 shadow-sm" style={{ borderLeft: `3px solid ${getSignatureCardBorderColor(idx, false)}` }}>
+                            <div className="flex-1 relative bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 shadow-sm" style={{ borderLeft: `3px solid ${getSignatureCardBorderColor(idx, false, recipient)}` }}>
                             {/* Header with role controls and delete button */}
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                               <div className="flex flex-col sm:flex-row gap-1">
@@ -4400,7 +4698,7 @@ export default function SignaturesPage() {
                                     onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showSignerRoleDropdown: !r.showSignerRoleDropdown } : r))}
                                     tabIndex={0}
                                   >
-                                    <LuPen className="w-3 h-3 text-white" />
+                                    <TbPencil size={16} className="text-white" />
                                     <span>{recipient.signerRole || 'Signer Role'}</span>
                                     <TbChevronDown size={14} className="inline-block align-middle -mt-[1px] text-white" />
                                   </button>
@@ -4441,6 +4739,7 @@ export default function SignaturesPage() {
                                     onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showContractRoleDropdown: !r.showContractRoleDropdown } : r))}
                                     tabIndex={0}
                                   >
+                                    <TbUserEdit size={16} className="text-white" />
                                     <span>{recipient.contractRole || 'Contract Role'}</span>
                                     <TbChevronDown size={14} className="inline-block align-middle -mt-[1px] text-white" />
                                   </button>
@@ -4583,16 +4882,16 @@ export default function SignaturesPage() {
                     </div>
 
                     {/* Signature Details Box */}
-                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6">
                       <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>Signature Details</h3>
                       
                       <div className="space-y-4">
                         {/* Assignee and Due Date Row */}
-                        <div className="flex gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {/* Assignee Field */}
-                          <div>
+                          <div className="min-w-0">
                             <div className="text-gray-500 dark:text-gray-400 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Assignee <span className="text-red-500">*</span></div>
-                            <div className="relative" style={{ width: '200px', minWidth: '200px' }} ref={signatureAssigneeDropdownRef}>
+                            <div className="relative w-full" ref={signatureAssigneeDropdownRef}>
                               <input
                                 type="text"
                                 className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs transition-colors cursor-text focus:ring-2 focus:ring-primary focus:border-primary pr-10"
@@ -4669,9 +4968,9 @@ export default function SignaturesPage() {
                           </div>
 
                           {/* Due Date Field */}
-                          <div>
+                          <div className="min-w-0">
                             <div className="text-gray-500 dark:text-gray-400 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Due Date <span className="text-red-500">*</span></div>
-                            <div className="relative flex items-center" style={{ width: '200px', minWidth: '200px' }}>
+                            <div className="relative flex items-center w-full">
                               <input
                                 type="date"
                                 className="w-full px-4 py-2 pr-10 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs text-black dark:text-white bg-white dark:bg-gray-900 [&::-webkit-calendar-picker-indicator]:hidden"
@@ -4707,7 +5006,7 @@ export default function SignaturesPage() {
               </div>
 
               {/* Sticky Footer */}
-              <div className="sticky bottom-0 bg-gray-50 dark:bg-gray-900 px-6 pt-4 pb-6">
+              <div className="sticky bottom-0 bg-gray-50 dark:bg-gray-900 px-6 pt-0 pb-6">
                 <div className="flex justify-end gap-1">
                   <button
                     type="button"
@@ -4829,7 +5128,7 @@ export default function SignaturesPage() {
                           setDocuSignUploadedFiles(prev => [...prev, ...files]);
                         }}
                       >
-                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 relative z-10" style={{ fontFamily: 'Avenir, sans-serif' }}>Add Documents</h3>
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 relative z-10" style={{ fontFamily: 'Avenir, sans-serif' }}>Select Documents</h3>
                         
                         {/* Upload interface - always visible */}
                         <div className="flex flex-col items-center mb-4">
@@ -4842,7 +5141,7 @@ export default function SignaturesPage() {
                               <div className="h-full w-full flex flex-col items-center justify-center bg-white/95 dark:bg-gray-800/95 rounded-lg" style={{ marginTop: '1px' }}>
                                 <div className="-mt-4">
                                   <div className="h-11 w-11 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center border-2 border-blue-200 dark:border-blue-800 mb-1.5 mx-auto">
-                                    <HiOutlineUpload size={22} className="text-blue-500 dark:text-blue-400" />
+                                    <TbUpload size={22} className="text-blue-500 dark:text-blue-400" />
                                   </div>
                                   <div className="text-xs text-gray-700 dark:text-gray-300 font-semibold text-center" style={{ fontFamily: 'Avenir, sans-serif' }}>
                                     Supported Formats: PDF, DOC, DOCX, OR JPG (max. 10 MB each)
@@ -4923,7 +5222,7 @@ export default function SignaturesPage() {
                               className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors"
                               style={{ fontFamily: 'Avenir, sans-serif' }}
                             >
-                              <HiOutlineUpload className="text-base text-blue-500" /> Upload
+                              <TbUpload className="text-base text-blue-500" /> Upload
                             </button>
                             {showDocuSignUploadDropdown && (
                               <div className="absolute z-50 mt-1 w-[200px] bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:hidden">
@@ -4968,7 +5267,7 @@ export default function SignaturesPage() {
 
                       {/* Right Column: Documents Box */}
                       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>Documents</h3>
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>Review Documents</h3>
                         
                         {/* Show document thumbnails when documents are selected */}
                         {(docuSignSelectedDocuments.length > 0 || docuSignUploadedFiles.length > 0) ? (
@@ -4992,7 +5291,7 @@ export default function SignaturesPage() {
                                   </div>
                                   <div className="flex items-center justify-center space-x-1">
                                     <button type="button" className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
-                                      <HiOutlineEye className="h-4 w-4 transition-colors" />
+                                      <TbEye className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                         View
                                       </span>
@@ -5041,9 +5340,9 @@ export default function SignaturesPage() {
                                       }}
                                       className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group"
                                     >
-                                      <TbTrash className="h-4 w-4 transition-colors" />
+                                      <TbLibraryMinus className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                                        Delete
+                                        Remove
                                       </span>
                                     </button>
                                   </div>
@@ -5114,7 +5413,7 @@ export default function SignaturesPage() {
                                             onClick={() => handleStartEditFileName(file, idx, true)}
                                             className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-blue-500 transition-all p-1 flex-shrink-0"
                                           >
-                                            <LuPen className="w-3 h-3" />
+                                            <TbPencil size={16} />
                                           </button>
                                         </div>
                                       )}
@@ -5133,7 +5432,7 @@ export default function SignaturesPage() {
                                   </div>
                                   <div className="flex items-center justify-center space-x-1">
                                     <button type="button" className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
-                                      <HiOutlineEye className="h-4 w-4 transition-colors" />
+                                      <TbEye className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                         View
                                       </span>
@@ -5156,9 +5455,9 @@ export default function SignaturesPage() {
                                       onClick={() => setDocuSignUploadedFiles(prev => prev.filter((_, i) => i !== idx))}
                                       className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group"
                                     >
-                                      <TbTrash className="h-4 w-4 transition-colors" />
+                                      <TbLibraryMinus className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                                        Delete
+                                        Remove
                                       </span>
                                     </button>
                                   </div>
@@ -5178,7 +5477,7 @@ export default function SignaturesPage() {
 
                     {/* Add Recipients Box */}
                     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>Add Recipients</h3>
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-6" style={{ fontFamily: 'Avenir, sans-serif' }}>Select Recipients</h3>
                       <div className="space-y-4">
                         {/* I am the only signer checkbox */}
                         <div className="flex items-center gap-2">
@@ -5247,7 +5546,7 @@ export default function SignaturesPage() {
                                 />
                               </div>
                             )}
-                            <div className="flex-1 relative bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 shadow-sm" style={{ borderLeft: `3px solid ${getSignatureCardBorderColor(idx, true)}` }}>
+                            <div className="flex-1 relative bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 shadow-sm" style={{ borderLeft: `3px solid ${getSignatureCardBorderColor(idx, true, recipient)}` }}>
                             {/* Header with role controls and delete button */}
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                               <div className="flex flex-col sm:flex-row gap-1">
@@ -5260,7 +5559,7 @@ export default function SignaturesPage() {
                                     onClick={() => setDocuSignRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showSignerRoleDropdown: !r.showSignerRoleDropdown } : r))}
                                     tabIndex={0}
                                   >
-                                    <LuPen className="w-3 h-3 text-white" />
+                                    <TbPencil size={16} className="text-white" />
                                     <span>{recipient.signerRole || 'Signer Role'}</span>
                                     <TbChevronDown size={14} className="inline-block align-middle -mt-[1px] text-white" />
                                   </button>
@@ -5293,6 +5592,7 @@ export default function SignaturesPage() {
                                     onClick={() => setDocuSignRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showContractRoleDropdown: !r.showContractRoleDropdown } : r))}
                                     tabIndex={0}
                                   >
+                                    <TbUserEdit size={16} className="text-white" />
                                     <span>{recipient.contractRole || 'Contract Role'}</span>
                                     <TbChevronDown size={14} className="inline-block align-middle -mt-[1px] text-white" />
                                   </button>

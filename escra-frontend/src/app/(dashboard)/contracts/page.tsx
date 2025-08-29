@@ -2,13 +2,14 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { FaClock, FaSort, FaPlus, FaDollarSign, FaTimes, FaRegClock, FaCheck } from 'react-icons/fa';
 import { FaArrowUpRightFromSquare } from 'react-icons/fa6';
 import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineEye, HiOutlineEyeOff, HiOutlineClipboardList, HiOutlineExclamation, HiOutlineDocumentSearch, HiOutlineDocumentAdd, HiOutlineX, HiOutlinePencil } from 'react-icons/hi';
 import { HiOutlineViewBoards } from 'react-icons/hi';
 import { LuCalendarFold, LuCalendarClock, LuPen } from 'react-icons/lu';
 import { BiDotsHorizontal, BiCommentAdd } from 'react-icons/bi';
-import { TbWorldDollar, TbEdit, TbClockUp, TbCubeSend, TbClockPin, TbFilePlus, TbScript, TbCoins, TbFileText, TbClockEdit, TbUpload, TbDownload, TbSearch, TbFileSearch, TbLibrary, TbCalendarClock, TbLayoutGrid, TbMessage2Plus, TbChevronDown, TbEraser, TbTrash, TbChevronsLeft, TbChevronsRight, TbBusinessplan, TbSquareCheck, TbSquareChevronLeft, TbSquareChevronRight } from 'react-icons/tb';
+import { TbWorldDollar, TbEdit, TbClockUp, TbCubeSend, TbClockPin, TbFilePlus, TbScript, TbCoins, TbFileText, TbClockEdit, TbUpload, TbDownload, TbSearch, TbFileSearch, TbLibrary, TbCalendarClock, TbLayoutGrid, TbMessage2Plus, TbChevronDown, TbEraser, TbTrash, TbChevronsLeft, TbChevronsRight, TbBusinessplan, TbSquareCheck, TbSquareChevronLeft, TbSquareChevronRight, TbUserPlus, TbUserSearch, TbUsersPlus, TbUsers, TbUsersGroup } from 'react-icons/tb';
 import { Logo } from '@/components/common/Logo';
 import { mockContracts } from '@/data/mockContracts';
 import { useEditor } from '@tiptap/react';
@@ -575,18 +576,19 @@ const ContractsPage: React.FC = () => {
     setModalStep(1);
     setFormErrors({});
     setRecipientErrors({});
+    setAddedCollaborators([]);
     // Reset recipients to initial state
     setRecipients([{
       name: '',
       email: '',
-      signerRole: '',
       contractRole: '',
-      showSignerRoleDropdown: false,
       showContractRoleDropdown: false,
-      signerRoleButtonRef: React.createRef<HTMLButtonElement>(),
-      signerRoleDropdownRef: React.createRef<HTMLDivElement>(),
+      showNamesDropdown: false,
       contractRoleButtonRef: React.createRef<HTMLButtonElement>(),
       contractRoleDropdownRef: React.createRef<HTMLDivElement>(),
+      namesInputRef: React.createRef<HTMLInputElement>(),
+      contractRoleInputRef: React.createRef<HTMLInputElement>(),
+      namesDropdownRef: React.createRef<HTMLDivElement>(),
     }]);
     setIsOnlySigner(false);
     // Clear uploaded files and document IDs
@@ -783,58 +785,139 @@ const ContractsPage: React.FC = () => {
 
   // Recipients state for Step 2
   type Recipient = {
-    name: string;
-    email: string;
-    signerRole: string;
-    contractRole: string;
-    showSignerRoleDropdown: boolean;
-    showContractRoleDropdown: boolean;
-    signerRoleButtonRef: React.RefObject<HTMLButtonElement>;
-    signerRoleDropdownRef: React.RefObject<HTMLDivElement>;
-    contractRoleButtonRef: React.RefObject<HTMLButtonElement>;
-    contractRoleDropdownRef: React.RefObject<HTMLDivElement>;
-  };
+  name: string;
+  email: string;
+  contractRole: string;
+  showContractRoleDropdown: boolean;
+  showNamesDropdown: boolean;
+  contractRoleButtonRef: React.RefObject<HTMLButtonElement>;
+  contractRoleDropdownRef: React.RefObject<HTMLDivElement>;
+  namesInputRef: React.RefObject<HTMLInputElement>;
+  contractRoleInputRef: React.RefObject<HTMLInputElement>;
+  namesDropdownRef: React.RefObject<HTMLDivElement>;
+};
 
   const [isOnlySigner, setIsOnlySigner] = useState(false);
   const [recipients, setRecipients] = useState<Recipient[]>([
     {
       name: '',
       email: '',
-      signerRole: '',
       contractRole: '',
-      showSignerRoleDropdown: false,
       showContractRoleDropdown: false,
-      signerRoleButtonRef: React.createRef<HTMLButtonElement>(),
-      signerRoleDropdownRef: React.createRef<HTMLDivElement>(),
+      showNamesDropdown: false,
       contractRoleButtonRef: React.createRef<HTMLButtonElement>(),
       contractRoleDropdownRef: React.createRef<HTMLDivElement>(),
+      namesInputRef: React.createRef<HTMLInputElement>(),
+      contractRoleInputRef: React.createRef<HTMLInputElement>(),
+      namesDropdownRef: React.createRef<HTMLDivElement>(),
     },
   ]);
 
-  // Handler to add a new recipient card
-  const handleAddRecipient = () => {
-    setRecipients(prev => {
-      return [
-        ...prev,
-        {
+  const [namesDropdownPosition, setNamesDropdownPosition] = useState<{top: number, left: number, width: number} | null>(null);
+  const [inlineContractRoleDropdownPosition, setInlineContractRoleDropdownPosition] = useState<{top: number, left: number, width: number} | null>(null);
+
+  // Effect to recalculate dropdown position when names dropdown is shown
+  useEffect(() => {
+    if (recipients[0].showNamesDropdown && recipients[0].namesInputRef.current) {
+      const rect = recipients[0].namesInputRef.current.getBoundingClientRect();
+      setNamesDropdownPosition({
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: rect.width
+      });
+    }
+  }, [recipients[0].showNamesDropdown]);
+
+  // Effect to recalculate contract role dropdown position when shown
+  useEffect(() => {
+    if (recipients[0].showContractRoleDropdown && recipients[0].contractRoleInputRef.current) {
+      const rect = recipients[0].contractRoleInputRef.current.getBoundingClientRect();
+      setInlineContractRoleDropdownPosition({
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: rect.width
+      });
+    }
+  }, [recipients[0].showContractRoleDropdown]);
+
+  // Effect to handle window resize for dropdown positioning
+  useEffect(() => {
+    const handleResize = () => {
+      if (recipients[0].showNamesDropdown && recipients[0].namesInputRef.current) {
+        const rect = recipients[0].namesInputRef.current.getBoundingClientRect();
+        setNamesDropdownPosition({
+          top: rect.bottom + 4,
+          left: rect.left,
+          width: rect.width
+        });
+      }
+      if (recipients[0].showContractRoleDropdown && recipients[0].contractRoleInputRef.current) {
+        const rect = recipients[0].contractRoleInputRef.current.getBoundingClientRect();
+        setInlineContractRoleDropdownPosition({
+          top: rect.bottom + 4,
+          left: rect.left,
+          width: rect.width
+        });
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [recipients[0].showNamesDropdown, recipients[0].showContractRoleDropdown]);
+
+  // Effect to handle scroll for dropdown positioning
+  useEffect(() => {
+    const handleScroll = () => {
+      if (recipients[0].showNamesDropdown && recipients[0].namesInputRef.current) {
+        const rect = recipients[0].namesInputRef.current.getBoundingClientRect();
+        setNamesDropdownPosition({
+          top: rect.bottom + 4,
+          left: rect.left,
+          width: rect.width
+        });
+      }
+      if (recipients[0].showContractRoleDropdown && recipients[0].contractRoleInputRef.current) {
+        const rect = recipients[0].contractRoleInputRef.current.getBoundingClientRect();
+        setInlineContractRoleDropdownPosition({
+          top: rect.bottom + 4,
+          left: rect.left,
+          width: rect.width
+        });
+      }
+    };
+
+    // Add scroll listener to the page container
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [recipients[0].showNamesDropdown, recipients[0].showContractRoleDropdown]);
+
+  // Handler to add a collaborator
+  const handleAddCollaborator = () => {
+    // Check if current form has valid data
+    const currentRecipient = recipients[0];
+    if (currentRecipient.name.trim() && currentRecipient.contractRole.trim() && currentRecipient.email.trim()) {
+      // Add current form data to added collaborators list
+      setAddedCollaborators(prev => [...prev, {
+        name: currentRecipient.name.trim(),
+        email: currentRecipient.email.trim(),
+        contractRole: currentRecipient.contractRole.trim(),
+        isEditingEmail: false
+      }]);
+      
+      // Clear the form fields
+      setRecipients([{
           name: '',
           email: '',
-          signerRole: '',
           contractRole: '',
-          showSignerRoleDropdown: false,
           showContractRoleDropdown: false,
-          signerRoleButtonRef: React.createRef<HTMLButtonElement>(),
-          signerRoleDropdownRef: React.createRef<HTMLDivElement>(),
+          showNamesDropdown: false,
           contractRoleButtonRef: React.createRef<HTMLButtonElement>(),
           contractRoleDropdownRef: React.createRef<HTMLDivElement>(),
-        },
-      ];
-    });
-  };
-
-  // Handler to delete a recipient card
-  const handleDeleteRecipient = (idx: number) => {
-    setRecipients(prev => prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev);
+          namesInputRef: React.createRef<HTMLInputElement>(),
+          contractRoleInputRef: React.createRef<HTMLInputElement>(),
+          namesDropdownRef: React.createRef<HTMLDivElement>(),
+      }]);
+    }
   };
 
   const CONTRACT_TYPES = [
@@ -1121,6 +1204,9 @@ const ContractsPage: React.FC = () => {
 
   const [formErrors, setFormErrors] = useState<Record<string, boolean>>({});
   const [recipientErrors, setRecipientErrors] = useState<Record<string, boolean>>({});
+  const [addedCollaborators, setAddedCollaborators] = useState<Array<{name: string, email: string, contractRole: string, showRoleDropdown?: boolean, isEditingEmail?: boolean}>>([]);
+  const [dropdownPosition, setDropdownPosition] = useState<{top: number, left: number} | null>(null);
+  const [activeDropdownIndex, setActiveDropdownIndex] = useState<number | null>(null);
   const [onlySignerError, setOnlySignerError] = useState(false);
 
   const handleModalChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -1308,6 +1394,21 @@ const ContractsPage: React.FC = () => {
     setShowNewDocumentUploadDropdown(false);
   };
 
+  // Handle clicking outside dropdowns to close them
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.role-dropdown')) {
+        setAddedCollaborators(prev => prev.map(c => ({ ...c, showRoleDropdown: false })));
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
@@ -1341,17 +1442,8 @@ const ContractsPage: React.FC = () => {
           newRecipientErrors[`name-${index}`] = true;
           hasErrors = true;
         }
-        if (!recipient.email || recipient.email.trim() === '') {
-          newRecipientErrors[`email-${index}`] = true;
-          hasErrors = true;
-        } else if (!validateEmail(recipient.email)) {
-          newRecipientErrors[`email-${index}`] = true;
-          hasErrors = true;
-        }
-        if (!recipient.signerRole || recipient.signerRole.trim() === '') {
-          newRecipientErrors[`signerRole-${index}`] = true;
-          hasErrors = true;
-        }
+
+
         if (!recipient.contractRole || recipient.contractRole.trim() === '') {
           newRecipientErrors[`contractRole-${index}`] = true;
           hasErrors = true;
@@ -2225,6 +2317,7 @@ const ContractsPage: React.FC = () => {
 
   // Add state for document upload modal
   const [showDocumentUploadModal, setShowDocumentUploadModal] = useState(false);
+  const [showManageCollaboratorsModal, setShowManageCollaboratorsModal] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [documentUploadName, setDocumentUploadName] = useState('');
   const [documentUploadAssignee, setDocumentUploadAssignee] = useState('');
@@ -2961,6 +3054,29 @@ const ContractsPage: React.FC = () => {
       '#3b82f6', // blue-500
     ];
     return colors[(index - 1) % colors.length];
+  };
+
+  const getCollaboratorBadgeColor = (index: number) => {
+    const colors = [
+      { bg: 'bg-teal-50 dark:bg-teal-900/30', border: 'border-teal-200 dark:border-teal-800', text: 'text-teal-500 dark:text-teal-400' },
+      { bg: 'bg-blue-100 dark:bg-blue-900/30', border: 'border-blue-200 dark:border-blue-800', text: 'text-blue-500 dark:text-blue-400' },
+      { bg: 'bg-purple-100 dark:bg-purple-900/30', border: 'border-purple-200 dark:border-purple-800', text: 'text-purple-500 dark:text-purple-400' },
+      { bg: 'bg-orange-100 dark:bg-orange-900/30', border: 'border-orange-200 dark:border-orange-800', text: 'text-orange-500 dark:text-orange-400' },
+      { bg: 'bg-green-100 dark:bg-green-900/30', border: 'border-green-200 dark:border-green-800', text: 'text-green-500 dark:text-green-400' },
+      { bg: 'bg-pink-100 dark:bg-pink-900/30', border: 'border-pink-200 dark:border-pink-800', text: 'text-pink-500 dark:text-pink-400' },
+      { bg: 'bg-indigo-100 dark:bg-indigo-900/30', border: 'border-indigo-200 dark:border-indigo-800', text: 'text-indigo-500 dark:text-indigo-400' },
+      { bg: 'bg-yellow-100 dark:bg-yellow-900/30', border: 'border-yellow-200 dark:border-yellow-800', text: 'text-yellow-500 dark:text-yellow-400' }
+    ];
+    return colors[index % colors.length];
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   // Add state for tooltip for contract details and table
@@ -3912,16 +4028,7 @@ const ContractsPage: React.FC = () => {
     function handleClickOutside(event: MouseEvent) {
       recipients.forEach((recipient, idx) => {
         const target = event.target as Node;
-        if (
-          recipient.signerRoleButtonRef.current?.contains(target) ||
-          recipient.signerRoleDropdownRef.current?.contains(target)
-        ) {
-          // Click inside signer role button or dropdown: do nothing
-          return;
-        }
-        if (recipient.showSignerRoleDropdown) {
-          setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showSignerRoleDropdown: false } : r));
-        }
+
         if (
           recipient.contractRoleButtonRef.current?.contains(target) ||
           recipient.contractRoleDropdownRef.current?.contains(target)
@@ -4157,6 +4264,31 @@ const ContractsPage: React.FC = () => {
     };
   }, [showInlineEditingNewDocumentContractDropdown]);
 
+  // Click-off behavior for inline form dropdowns
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+
+      if (
+        recipients[0].contractRoleInputRef.current?.contains(target) ||
+        recipients[0].contractRoleDropdownRef.current?.contains(target) ||
+        recipients[0].namesInputRef.current?.contains(target) ||
+        recipients[0].namesDropdownRef.current?.contains(target)
+      ) {
+        // Click inside contract role input, dropdown, or names input: do nothing
+        return;
+      }
+      if (recipients[0].showContractRoleDropdown) {
+        setRecipients(prev => prev.map((r, i) => i === 0 ? { ...r, showContractRoleDropdown: false } : r));
+      }
+      if (recipients[0].showNamesDropdown) {
+        setRecipients(prev => prev.map((r, i) => i === 0 ? { ...r, showNamesDropdown: false } : r));
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [recipients]);
+
   // Click outside handler for upload modal inline editing assignee dropdown
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -4297,7 +4429,7 @@ const ContractsPage: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-4">
                 <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800">
-                  <TbFilePlus size={20} className="text-teal-500 dark:text-teal-400" />
+                  <TbFilePlus size={21} className="text-teal-500 dark:text-teal-400" />
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-black dark:text-white leading-tight">Create New Contract</h2>
@@ -4349,7 +4481,7 @@ const ContractsPage: React.FC = () => {
                         {modalStep === step && <Logo width={18} height={18} className="pointer-events-none" />}
                       </span>
                       {step === 1 && 'Step 1: General'}
-                      {step === 2 && 'Step 2: Parties'}
+                      {step === 2 && 'Step 2: Collaborators'}
                       {step === 3 && 'Step 3: Details'}
                       {step === 4 && 'Step 4: Documents'}
                     </button>
@@ -4743,7 +4875,7 @@ const ContractsPage: React.FC = () => {
                     style={{ resize: 'none' }}
                   />
                 </div>
-                <div className="flex justify-end mt-6">
+                <div className="flex justify-end mt-4">
                   <button type="submit" className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm">Continue</button>
         </div>
               </form>
@@ -4754,156 +4886,198 @@ const ContractsPage: React.FC = () => {
             {modalStep === 2 && (
               <form onSubmit={handleSubmit} noValidate>
                 <div className="space-y-4">
-                  {/* Only Signer Checkbox */}
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-5 h-5 border border-gray-300 rounded flex items-center justify-center cursor-pointer" onClick={() => {
-                      const newValue = !isOnlySigner;
-                      
-                      if (newValue) {
-                        // Check if first recipient is complete before checking and advancing
-                        const firstRecipient = recipients[0];
-                        const isComplete = 
-                          firstRecipient.name && firstRecipient.name.trim() !== '' &&
-                          firstRecipient.email && firstRecipient.email.trim() !== '' &&
-                          validateEmail(firstRecipient.email) &&
-                          firstRecipient.signerRole && firstRecipient.signerRole.trim() !== '' &&
-                          firstRecipient.contractRole && firstRecipient.contractRole.trim() !== '';
 
-                        if (isComplete) {
-                          // All conditions met - check box and clear error
-                          setIsOnlySigner(true);
-                          setOnlySignerError(false);
-                        } else {
-                          // Conditions not met - show error, don't check box
-                          setOnlySignerError(true);
-                        }
-                      } else {
-                        // Unchecking - allow it and clear error
-                        setIsOnlySigner(false);
-                        setOnlySignerError(false);
-                      }
-                    }}>
-                      {isOnlySigner && (
-                        <div className="w-4 h-4 bg-primary rounded-sm flex items-center justify-center">
-                          <FaCheck className="text-white" size={10} />
-                        </div>
-                      )}
-                    </div>
-                    <label 
-                      className="text-xs font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
-                      style={{ fontFamily: 'Avenir, sans-serif' }}
-                      onClick={() => {
-                        const newValue = !isOnlySigner;
-                        
-                        if (newValue) {
-                          // Check if first recipient is complete before checking and advancing
-                          const firstRecipient = recipients[0];
-                          const isComplete = 
-                            firstRecipient.name && firstRecipient.name.trim() !== '' &&
-                            firstRecipient.email && firstRecipient.email.trim() !== '' &&
-                            validateEmail(firstRecipient.email) &&
-                            firstRecipient.signerRole && firstRecipient.signerRole.trim() !== '' &&
-                            firstRecipient.contractRole && firstRecipient.contractRole.trim() !== '';
-
-                          if (isComplete) {
-                            // All conditions met - check box and clear error
-                            setIsOnlySigner(true);
-                            setOnlySignerError(false);
-                          } else {
-                            // Conditions not met - show error, don't check box
-                            setOnlySignerError(true);
-                          }
-                        } else {
-                          // Unchecking - allow it and clear error
-                          setIsOnlySigner(false);
-                          setOnlySignerError(false);
-                        }
-                      }}
-                    >
-                      I am the only signer
-                    </label>
-                  </div>
-                  {onlySignerError && (
-                    <p className="text-red-600 text-xs mt-1 mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                      Add your details below to proceed
-                    </p>
-                  )}
                   
-                  {/* Render all recipient cards */}
-                  {recipients.map((recipient, idx) => (
-                      <div key={idx} className="relative bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 shadow-sm" style={{ borderLeft: `3px solid ${getRecipientCardBorderColor(idx)}` }}>
-                        {/* Header with role controls and delete button */}
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                          <div className="flex flex-col sm:flex-row gap-1">
-                            {/* Signer Role selection button */}
+                  {/* Single form fields */}
+                  <div className="relative mb-4">
+                    {/* Form fields */}
+                    <div className="flex gap-6">
+                      <div className="w-1/2">
+                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                          Name <span className="text-red-500">*</span>
+                    </label>
                             <div className="relative">
-                              <button
-                                ref={recipient.signerRoleButtonRef}
-                                type="button"
-                                className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-700 dark:text-white border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-primary rounded-md hover:bg-gray-200 dark:hover:bg-primary-dark transition-colors"
-                                onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showSignerRoleDropdown: !r.showSignerRoleDropdown } : r))}
-                                tabIndex={0}
-                              >
-                                <LuPen className="w-3 h-3 text-primary dark:text-white" />
-                                <span>{recipient.signerRole || 'Signer Role'}</span>
-                                <TbChevronDown size={16} className="inline-block align-middle -mt-[1px] text-gray-400 dark:text-white" />
-                              </button>
-                              {recipient.showSignerRoleDropdown && (
-                                <div
-                                  ref={recipient.signerRoleDropdownRef}
-                                  className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[160px]"
+                          
+                          <input
+                            ref={recipients[0].namesInputRef}
+                            type="text"
+                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white pr-10"
+                            placeholder="i.e. John or john@company.com..."
                                   style={{ fontFamily: 'Avenir, sans-serif' }}
-                                >
-                                  {['Needs to Sign', 'In Person Signer', 'Receives a Copy', 'Needs to View'].map((role) => (
-                                    <button
-                                      key={role}
-                                      className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${recipient.signerRole === role ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
-                                      style={{ background: 'none', border: 'none', boxShadow: 'none' }}
-                                      onClick={() => {
-                                        setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, signerRole: role, showSignerRoleDropdown: false } : r));
-                                        setRecipientErrors(prev => ({ ...prev, [`signerRole-${idx}`]: false }));
-                                        if (idx === 0) setOnlySignerError(false); // Clear checkbox error when first party selects signer role
-                                      }}
-                                    >
-                                      {role}
-                                    </button>
-                                  ))}
+                            value={recipients[0].name}
+                            onChange={e => {
+                              setRecipients(prev => prev.map((r, i) => i === 0 ? { ...r, name: e.target.value } : r));
+                              setRecipientErrors(prev => ({ ...prev, [`name-0`]: false }));
+                            }}
+                            onClick={() => setRecipients(prev => prev.map((r, i) => i === 0 ? { ...r, showNamesDropdown: !r.showNamesDropdown } : r))}
+                            autoComplete="off"
+                          />
+                          <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
+                          
+                          {/* Names/Emails Autocomplete Dropdown */}
+                          {recipients[0].showNamesDropdown && (
+                            <div 
+                              ref={recipients[0].namesDropdownRef}
+                              className="fixed bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-[9999] py-0.5 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500"
+                              style={{
+                                position: 'fixed',
+                                top: namesDropdownPosition ? namesDropdownPosition.top : 'auto',
+                                left: namesDropdownPosition ? namesDropdownPosition.left : 'auto',
+                                width: namesDropdownPosition ? namesDropdownPosition.width : 'auto',
+                                zIndex: 9999,
+                              }}
+                            >
+                              {/* Assignees Section */}
+                              {allAssignees
+                                .filter(assignee => 
+                                  assignee.toLowerCase().includes(recipients[0].name.toLowerCase())
+                                )
+                                .sort()
+                                .map((assignee) => (
+                                  <button
+                                    key={`assignee-${assignee}`}
+                                    className="w-full text-left px-3 py-0.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                    onClick={() => {
+                                      setRecipients(prev => prev.map((r, i) => i === 0 ? { ...r, name: assignee, showNamesDropdown: false } : r));
+                                      setRecipientErrors(prev => ({ ...prev, [`name-0`]: false }));
+                                    }}
+                                  >
+                                    {assignee}
+                                  </button>
+                                ))}
+                              
+                              {/* Contract Parties Section */}
+                              {(() => {
+                                const mockContracts = [
+                                  'Robert Chen', 'Eastside Properties', 'GreenSpace Developers', 'BuildRight Construction',
+                                  'TechCorp', 'Property Holdings', 'Smith Family', 'Real Estate Co', 'InvestPro', 
+                                  'Property Group', 'Johnson Family', 'Home Sales', 'Office Solutions', 'Property Co',
+                                  'Corporate Holdings', 'Real Estate', 'Retail Corp', 'Marketing Solutions Inc', 'Legal Advisory LLC'
+                                ];
+                                
+                                const filteredParties = mockContracts
+                                  .filter(party => 
+                                    party.toLowerCase().includes(recipients[0].name.toLowerCase()) &&
+                                    !allAssignees.includes(party)
+                                  )
+                                  .sort();
+                                
+                                return filteredParties.length > 0 ? (
+                                  <>
+                                    {filteredParties.map((party) => (
+                                      <button
+                                        key={`party-${party}`}
+                                        className="w-full text-left px-3 py-0.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                        onClick={() => {
+                                          setRecipients(prev => prev.map((r, i) => i === 0 ? { ...r, name: party, showNamesDropdown: false } : r));
+                                          setRecipientErrors(prev => ({ ...prev, [`name-0`]: false }));
+                                        }}
+                                      >
+                                        {party}
+                                      </button>
+                                    ))}
+                                  </>
+                                ) : null;
+                              })()}
+                              
+                              {/* No Matches Message */}
+                              {(() => {
+                                const allAssigneesFiltered = allAssignees.filter(assignee => 
+                                  assignee.toLowerCase().includes(recipients[0].name.toLowerCase())
+                                );
+                                const mockContracts = [
+                                  'Robert Chen', 'Eastside Properties', 'GreenSpace Developers', 'BuildRight Construction',
+                                  'TechCorp', 'Property Holdings', 'Smith Family', 'Real Estate Co', 'InvestPro', 
+                                  'Property Group', 'Johnson Family', 'Home Sales', 'Office Solutions', 'Property Co',
+                                  'Corporate Holdings', 'Real Estate', 'Retail Corp', 'Marketing Solutions Inc', 'Legal Advisory LLC'
+                                ];
+                                const filteredParties = mockContracts.filter(party => 
+                                  party.toLowerCase().includes(recipients[0].name.toLowerCase()) &&
+                                  !allAssignees.includes(party)
+                                );
+                                
+                                return allAssigneesFiltered.length === 0 && filteredParties.length === 0 && recipients[0].name.length > 0 ? (
+                                  <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
+                                    No matches found
+                                  </div>
+                                ) : null;
+                              })()}
+                            </div>
+                          )}
                                 </div>
-                              )}
-                              {recipientErrors[`signerRole-${idx}`] && (
-                                <p className="text-red-600 text-xs mt-1.5" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                                  Select signer role
+                        {recipientErrors[`name-0`] && (
+                          <p className="text-red-600 text-xs mt-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                            Name is required
                                 </p>
                               )}
+                        
+                        {/* Email Field */}
+                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 mt-6" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                          Email <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="email"
+                          className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white"
+                          placeholder="Enter email address..."
+                          style={{ fontFamily: 'Avenir, sans-serif' }}
+                          value={recipients[0].email || ''}
+                          onChange={e => {
+                            setRecipients(prev => prev.map((r, i) => i === 0 ? { ...r, email: e.target.value } : r));
+                            setRecipientErrors(prev => ({ ...prev, [`email-0`]: false }));
+                          }}
+                        />
+                        {recipientErrors[`email-0`] && (
+                          <p className="text-red-600 text-xs mt-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                            Email is required
+                          </p>
+                        )}
                             </div>
-                            
-                            {/* Contract Role button */}
-                            <div className="relative">
-                              <button
-                                ref={recipient.contractRoleButtonRef}
-                                type="button"
-                                className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-700 dark:text-white border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-primary rounded-md hover:bg-gray-200 dark:hover:bg-primary-dark transition-colors whitespace-nowrap"
-                                onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showContractRoleDropdown: !r.showContractRoleDropdown } : r))}
-                                tabIndex={0}
-                              >
-                                <span>{recipient.contractRole || 'Contract Role'}</span>
-                                <TbChevronDown size={16} className="inline-block align-middle -mt-[1px] text-gray-400 dark:text-white" />
-                              </button>
-                              {recipient.showContractRoleDropdown && (
-                                <div
-                                  ref={recipient.contractRoleDropdownRef}
-                                  className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[160px]"
-                                  style={{ fontFamily: 'Avenir, sans-serif' }}
-                                >
-                                  {['Standard', 'Buyer', 'Seller', 'Buyer Agent', 'Seller Agent', 'Closing Agent', 'Inspector', 'Appraiser'].map((contractRole) => (
+                      <div className="w-1/2">
+                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                          Contract Role <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative w-full" ref={recipients[0].contractRoleDropdownRef}>
+                          <input
+                            ref={recipients[0].contractRoleInputRef}
+                            type="text"
+                            className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white dark:bg-gray-900 caret-transparent"
+                            placeholder="Select contract role..."
+                            value={recipients[0].contractRole || ''}
+                            readOnly
+                            onKeyDown={(e) => {
+                              if (e.key === 'Backspace') {
+                                e.preventDefault();
+                                setRecipients(prev => prev.map((r, i) => i === 0 ? { ...r, contractRole: '' } : r));
+                              }
+                            }}
+                            onFocus={(e) => {
+                              e.target.setSelectionRange(e.target.value.length, e.target.value.length);
+                            }}
+                            onClick={() => setRecipients(prev => prev.map((r, i) => i === 0 ? { ...r, showContractRoleDropdown: !r.showContractRoleDropdown } : r))}
+                          />
+                          <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
+                          {recipients[0].showContractRoleDropdown && (
+                            <div
+                              ref={recipients[0].contractRoleDropdownRef}
+                              className="fixed bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-[9999] py-0.5"
+                              style={{ 
+                                fontFamily: 'Avenir, sans-serif', 
+                                maxHeight: '200px', 
+                                overflowY: 'auto',
+                                position: 'fixed',
+                                top: inlineContractRoleDropdownPosition ? inlineContractRoleDropdownPosition.top : 'auto',
+                                left: inlineContractRoleDropdownPosition ? inlineContractRoleDropdownPosition.left : 'auto',
+                                width: inlineContractRoleDropdownPosition ? inlineContractRoleDropdownPosition.width : 'auto',
+                                zIndex: 9999,
+                              }}
+                            >
+                              {['Editor', 'Contributor', 'Viewer'].map((contractRole) => (
                                     <button
                                       key={contractRole}
-                                      className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${recipient.contractRole === contractRole ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
-                                      style={{ background: 'none', border: 'none', boxShadow: 'none' }}
+                                  className={`w-full text-left px-3 py-0.5 text-xs font-medium ${recipients[0].contractRole === contractRole ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                                       onClick={() => {
-                                        setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, contractRole, showContractRoleDropdown: false } : r));
-                                        setRecipientErrors(prev => ({ ...prev, [`contractRole-${idx}`]: false }));
-                                        if (idx === 0) setOnlySignerError(false); // Clear checkbox error when first party selects contract role
+                                    setRecipients(prev => prev.map((r, i) => i === 0 ? { ...r, contractRole, showContractRoleDropdown: false } : r));
+                                    setRecipientErrors(prev => ({ ...prev, [`contractRole-0`]: false }));
                                       }}
                                                                           >
                                         {contractRole}
@@ -4911,114 +5085,81 @@ const ContractsPage: React.FC = () => {
                                   ))}
                                 </div>
                               )}
-                              {recipientErrors[`contractRole-${idx}`] && (
-                                <p className="text-red-600 text-xs mt-1.5" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                          {recipientErrors[`contractRole-0`] && (
+                            <p className="text-red-600 text-xs mt-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
                                   Select contract role
                                 </p>
                               )}
+                        </div>
+                      </div>
                             </div>
                           </div>
                           
-                          {/* Clear and Delete buttons */}
-                          <div className="flex items-center gap-1">
-                            <button 
-                              className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1 relative group" 
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, name: '', email: '' } : r));
-                              }}
-                            >
-                              <TbEraser className="w-4 h-4" />
-                              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                                Erase
-                              </span>
-                            </button>
-                            <button 
-                              className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1 relative group" 
-                              onClick={() => handleDeleteRecipient(idx)} 
-                              disabled={recipients.length === 1}
-                            >
-                              <TbTrash className="w-4 h-4" />
-                              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                                Delete
-                              </span>
-                            </button>
-                          </div>
-                        </div>
-                        
-                        {/* Form fields */}
-                        <div className="space-y-4">
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                              Name <span className="text-red-500">*</span>
-                            </label>
-                            <div className="relative">
-                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                              </span>
-                              <input
-                                type="text"
-                                className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white"
-                                placeholder="Enter party name..."
-                                style={{ fontFamily: 'Avenir, sans-serif' }}
-                                value={recipient.name}
-                                onChange={e => {
-                                  setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, name: e.target.value } : r));
-                                  setRecipientErrors(prev => ({ ...prev, [`name-${idx}`]: false }));
-                                  if (idx === 0) setOnlySignerError(false); // Clear checkbox error when first party fills name
-                                }}
-                              />
-                            </div>
-                            {recipientErrors[`name-${idx}`] && (
-                              <p className="text-red-600 text-xs mt-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                                Name is required
-                              </p>
-                            )}
-                          </div>
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                              Email <span className="text-red-500">*</span>
-                            </label>
-                            <div className="relative">
-                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                                <TbMailPlus className="w-4 h-4" />
-                              </span>
-                              <input
-                                type="email"
-                                className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white"
-                                placeholder="Enter party email address..."
-                                style={{ fontFamily: 'Avenir, sans-serif' }}
-                                value={recipient.email}
-                                onChange={e => {
-                                  setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, email: e.target.value } : r));
-                                  setRecipientErrors(prev => ({ ...prev, [`email-${idx}`]: false }));
-                                  if (idx === 0) setOnlySignerError(false); // Clear checkbox error when first party fills email
-                                }}
-                              />
-                            </div>
-                            {recipientErrors[`email-${idx}`] && (
-                              <p className="text-red-600 text-xs mt-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                                {!recipient.email || recipient.email.trim() === '' ? 'Email is required' : 'Please enter a valid email address'}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-xs sm:text-sm font-semibold mt-2"
-                      style={{ fontFamily: 'Avenir, sans-serif' }}
-                      onClick={handleAddRecipient}
-                    >
-                      <TiUserAddOutline className="text-base sm:text-lg" />
-                      <span className="mt-[1px]">Add Party</span>
-                    </button>
                   </div>
+
+                  {/* Added Collaborators Display */}
+                  <div className="mt-6 min-h-[120px]">
+                    {addedCollaborators.length > 0 ? (
+                      <>
+                        <button 
+                          className="flex items-center gap-2 mb-3 bg-white dark:bg-gray-800 rounded-lg px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-0 active:transform-none transition-colors cursor-pointer"
+                          onClick={() => setShowManageCollaboratorsModal(true)}
+                          style={{ fontFamily: 'Avenir, sans-serif' }}
+                        >
+                          <TbUsers className="h-4 w-4" />
+                          <span className="text-xs font-semibold">Manage</span>
+                        </button>
+                        <div className="flex flex-wrap gap-1">
+                          {addedCollaborators.map((collaborator, idx) => {
+                            const colorScheme = getCollaboratorBadgeColor(idx);
+                            return (
+                              <div 
+                                key={idx} 
+                                className={`h-10 w-10 rounded-lg ${colorScheme.bg} flex items-center justify-center border-2 ${colorScheme.border} relative group cursor-pointer`}
+                                onClick={() => setShowManageCollaboratorsModal(true)}
+                              >
+                                <span className={`text-sm font-semibold ${colorScheme.text}`} style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                  {getInitials(collaborator.name)}
+                                </span>
+                                
+                                {/* X button for removal - only visible on hover */}
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setAddedCollaborators(prev => prev.filter((_, i) => i !== idx));
+                                  }}
+                                  className="absolute -top-2 -right-2 w-5 h-5 bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 rounded-lg flex items-center justify-center text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100 dark:hover:bg-red-900/30 border-2 border-red-200 dark:border-red-800"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-xs cursor-default select-none">
+                        <TbUsersPlus className="mx-auto mb-2 w-6 h-6 text-primary" />
+                        <div>No collaborators yet</div>
+                        <div>Add a collaborator by filling in the details above and clicking the "Add Collaborator" button</div>
+                      </div>
+                    )}
+                  </div>
+
                 <div className="flex justify-between mt-6">
                   <button type="button" onClick={() => { setModalStep(1); setCountrySearchTerm(''); setStateSearchTerm(''); }} className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Previous</button>
-                  <button type="submit" className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm" style={{ fontFamily: 'Avenir, sans-serif' }}>Continue</button>
+                  <div className="flex">
+                    <button
+                      type="button"
+                      onClick={handleAddCollaborator}
+                                              disabled={!recipients[0].name.trim() || !recipients[0].contractRole.trim() || !recipients[0].email.trim()}
+                      className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                    >
+                      Add Collaborator
+                    </button>
+                    <button type="submit" className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm ml-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Continue</button>
+                  </div>
                 </div>
               </form>
             )}
@@ -5322,7 +5463,7 @@ const ContractsPage: React.FC = () => {
                     style={{ resize: 'none' }}
                   />
                 </div>
-                <div className="flex justify-between mt-6">
+                <div className="flex justify-between mt-4">
                   <button type="button" onClick={() => { setModalStep(2); setCountrySearchTerm(''); setStateSearchTerm(''); }} className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold" style={{ fontFamily: 'Avenir, sans-serif' }}>Previous</button>
                   <button type="submit" className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm" style={{ fontFamily: 'Avenir, sans-serif' }}>Continue</button>
                 </div>
@@ -5677,9 +5818,9 @@ const ContractsPage: React.FC = () => {
                        </div>
                      )}
                   </div>
-                  <div className="flex justify-between mt-12">
-                    <button type="button" onClick={() => setModalStep(3)} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm cursor-default select-none">Previous</button>
-                    <div className="flex">
+                  <div className="flex flex-col sm:flex-row justify-between mt-12 gap-2 sm:gap-0">
+                    <button type="button" onClick={() => setModalStep(3)} className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm cursor-default select-none">Previous</button>
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-0">
                       <button
                         type="button"
                         onClick={handleAddStep4Document}
@@ -5689,7 +5830,7 @@ const ContractsPage: React.FC = () => {
                       >
                         Add Document
                       </button>
-                      <button type="submit" className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm ml-1">Create Contract</button>
+                      <button type="submit" className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm sm:ml-1">Create Contract</button>
                     </div>
                   </div>
                 </div>
@@ -5705,69 +5846,122 @@ const ContractsPage: React.FC = () => {
                   </div>
                   
                   {/* Main Title */}
-                  <div>
+                  <div className="text-center">
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2" style={{ fontFamily: 'Avenir, sans-serif' }}>
                       Contract Created Successfully
                     </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap mb-8" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 text-center mb-8 lg:whitespace-nowrap lg:break-normal break-words" style={{ fontFamily: 'Avenir, sans-serif' }}>
                       "{confirmationData.contractName}" has been created with Contract ID {confirmationData.contractId}
                     </p>
                   </div>
                   
-                  {/* Documents List */}
+                  {/* Documents List - Responsive with Carousel */}
                   {confirmationData.documents.length > 0 && (
                     <div className="text-left">
                       <div className="flex justify-center mb-6">
-                        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 text-center px-4" style={{ fontFamily: 'Avenir, sans-serif' }}>
                           The below supporting documents have also been created:
                         </p>
                       </div>
-                      <div className="flex justify-center">
-                        <div 
-                          className="grid gap-x-12 gap-y-2 mx-auto" 
+                      
+                      {/* Mobile Layout - Single Column with Carousel */}
+                      <div className="lg:hidden">
+                        <div className="flex justify-center">
+                          <div className="grid grid-cols-1 gap-y-2 max-w-md mx-auto px-4" 
+                            style={{ 
+                              gridAutoFlow: 'column',
+                              gridTemplateRows: `repeat(5, auto)`
+                            }}
+                            onWheel={(e) => {
+                              e.preventDefault();
+                              if (confirmationData.documents.length > 5) {
+                                if (e.deltaY > 0 && contractCarouselPage < Math.ceil(confirmationData.documents.length / 5) - 1) {
+                                  setContractCarouselPage(prev => prev + 1);
+                                } else if (e.deltaY < 0 && contractCarouselPage > 0) {
+                                  setContractCarouselPage(prev => prev - 1);
+                                }
+                              }
+                            }}>
+                            {confirmationData.documents
+                              .slice(contractCarouselPage * 5, (contractCarouselPage + 1) * 5)
+                              .map((doc, index) => (
+                              <div key={index} className="text-sm text-gray-600 dark:text-gray-400" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                <div className="flex items-start">
+                                  <span className="text-primary font-medium mr-3 flex-shrink-0">{contractCarouselPage * 5 + index + 1}.</span>
+                                  <span className="break-words">"{doc.name}" with Document ID {doc.id}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {/* Mobile Carousel Indicators */}
+                        {confirmationData.documents.length > 5 && (
+                          <div className="flex justify-center mt-4 space-x-2">
+                            {Array.from({ length: Math.ceil(confirmationData.documents.length / 5) }, (_, i) => (
+                              <button
+                                key={i}
+                                onClick={() => setContractCarouselPage(i)}
+                                className={`w-2 h-2 rounded-full transition-colors ${
+                                  i === contractCarouselPage 
+                                    ? 'bg-primary' 
+                                    : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Desktop Layout - 2 Columns with Carousel */}
+                      <div className="hidden lg:flex justify-center">
+                        <div className="grid grid-cols-2 gap-x-0 gap-y-2 ml-32" 
                           style={{ 
-                            gridTemplateColumns: `repeat(3, minmax(450px, 1fr))`,
                             gridAutoFlow: 'column',
-                            gridTemplateRows: `repeat(7, auto)`
+                            gridTemplateRows: `repeat(5, auto)`,
+                            gridTemplateColumns: `repeat(2, minmax(500px, 1fr))`
                           }}
                           onWheel={(e) => {
                             e.preventDefault();
-                            if (confirmationData.documents.length > 21) {
-                              if (e.deltaY > 0 && contractCarouselPage < Math.ceil(confirmationData.documents.length / 21) - 1) {
+                            if (confirmationData.documents.length > 10) {
+                              if (e.deltaY > 0 && contractCarouselPage < Math.ceil(confirmationData.documents.length / 10) - 1) {
                                 setContractCarouselPage(prev => prev + 1);
                               } else if (e.deltaY < 0 && contractCarouselPage > 0) {
                                 setContractCarouselPage(prev => prev - 1);
                               }
                             }
-                          }}
-                        >
-                        {confirmationData.documents
-                          .slice(contractCarouselPage * 21, (contractCarouselPage + 1) * 21)
-                          .map((doc, index) => (
-                          <div key={index} className="text-sm text-gray-600 dark:text-gray-400 flex items-start whitespace-nowrap" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                            <span className="text-primary mr-2 mt-0.5 flex-shrink-0">•</span>
-                            <span>"{doc.name}" with Document ID {doc.id}</span>
-                          </div>
-                        ))}
+                          }}>
+                          {confirmationData.documents
+                            .slice(contractCarouselPage * 10, (contractCarouselPage + 1) * 10)
+                            .map((doc, index) => (
+                            <div key={index} className="text-sm text-gray-600 dark:text-gray-400" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                              <div className="flex items-start">
+                                <span className="text-primary font-medium mr-3 flex-shrink-0">{contractCarouselPage * 10 + index + 1}.</span>
+                                <span className="break-words">"{doc.name}" with Document ID {doc.id}</span>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
                       
-                      {/* Carousel Indicators */}
-                      {confirmationData.documents.length > 21 && (
-                        <div className="flex justify-center mt-6 space-x-2">
-                          {Array.from({ length: Math.ceil(confirmationData.documents.length / 21) }, (_, i) => (
-                            <button
-                              key={i}
-                              onClick={() => setContractCarouselPage(i)}
-                              className={`w-2 h-2 rounded-full transition-colors ${
-                                i === contractCarouselPage 
-                                  ? 'bg-primary' 
-                                  : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                      )}
+                      {/* Desktop Carousel Indicators */}
+                      <div className="hidden lg:block">
+                        {confirmationData.documents.length > 10 && (
+                          <div className="flex justify-center mt-4 space-x-2">
+                            {Array.from({ length: Math.ceil(confirmationData.documents.length / 10) }, (_, i) => (
+                              <button
+                                key={i}
+                                onClick={() => setContractCarouselPage(i)}
+                                className={`w-2 h-2 rounded-full transition-colors ${
+                                  i === contractCarouselPage 
+                                    ? 'bg-primary' 
+                                    : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -6668,60 +6862,126 @@ const ContractsPage: React.FC = () => {
                   
                   
                   
-                  {/* Documents List */}
+                  {/* Documents List - Responsive with Carousel */}
                   {documentConfirmationData.documents.length > 0 && (
                     <div className="text-left">
                       <div className="flex justify-center mb-6">
-                        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 text-center px-4" style={{ fontFamily: 'Avenir, sans-serif' }}>
                           The below supporting documents have been created and associated with their respective contracts:
                         </p>
                       </div>
-                      <div className="flex justify-center">
-                        <div 
-                          className="grid gap-x-20 gap-y-2 mx-auto" 
+                      
+                      {/* Mobile Layout - Single Column with Carousel */}
+                      <div className="lg:hidden">
+                        <div className="flex justify-center">
+                          <div className="grid grid-cols-1 gap-y-2 max-w-md mx-auto px-4" 
+                            style={{ 
+                              gridAutoFlow: 'column',
+                              gridTemplateRows: `repeat(5, auto)`
+                            }}
+                            onWheel={(e) => {
+                              e.preventDefault();
+                              if (documentConfirmationData.documents.length > 5) {
+                                if (e.deltaY > 0 && documentCarouselPage < Math.ceil(documentConfirmationData.documents.length / 5) - 1) {
+                                  setDocumentCarouselPage(prev => prev + 1);
+                                } else if (e.deltaY < 0 && documentCarouselPage > 0) {
+                                  setDocumentCarouselPage(prev => prev - 1);
+                                }
+                              }
+                            }}>
+                            {documentConfirmationData.documents
+                              .slice(documentCarouselPage * 5, (documentCarouselPage + 1) * 5)
+                              .map((doc, index) => (
+                              <div key={index} className="text-sm text-gray-600 dark:text-gray-400" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                <div className="flex items-start">
+                                  <span className="text-primary font-medium mr-3 flex-shrink-0">{documentCarouselPage * 5 + index + 1}.</span>
+                                  <span className="break-words">"{doc.name}" with Document ID #{doc.id}</span>
+                                </div>
+                                <div className="flex items-start ml-6">
+                                  <span className="text-gray-500 dark:text-gray-400">for Contract ID #{doc.contractId} - {doc.contractName}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {/* Mobile Carousel Indicators */}
+                        {documentConfirmationData.documents.length > 5 && (
+                          <div className="flex justify-center mt-4 space-x-2">
+                            {Array.from({ length: Math.ceil(documentConfirmationData.documents.length / 5) }, (_, i) => (
+                              <button
+                                key={i}
+                                onClick={() => setDocumentCarouselPage(i)}
+                                className={`w-2 h-2 rounded-full transition-colors ${
+                                  i === documentCarouselPage 
+                                    ? 'bg-primary' 
+                                    : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Desktop Layout - 2 Columns with Carousel */}
+                      <div className="hidden lg:flex justify-center">
+                        <div className="grid grid-cols-2 gap-x-0 gap-y-2 ml-32" 
                           style={{ 
-                            gridTemplateColumns: `repeat(2, minmax(600px, 1fr))`,
                             gridAutoFlow: 'column',
-                            gridTemplateRows: `repeat(7, auto)`
+                            gridTemplateRows: `repeat(5, auto)`,
+                            gridTemplateColumns: `repeat(2, minmax(500px, 1fr))`
                           }}
                           onWheel={(e) => {
                             e.preventDefault();
-                            if (documentConfirmationData.documents.length > 14) {
-                              if (e.deltaY > 0 && documentCarouselPage < Math.ceil(documentConfirmationData.documents.length / 14) - 1) {
+                            if (documentConfirmationData.documents.length > 10) {
+                              if (e.deltaY > 0 && documentCarouselPage < Math.ceil(documentConfirmationData.documents.length / 10) - 1) {
                                 setDocumentCarouselPage(prev => prev + 1);
                               } else if (e.deltaY < 0 && documentCarouselPage > 0) {
                                 setDocumentCarouselPage(prev => prev - 1);
                               }
                             }
-                          }}
-                        >
-                        {documentConfirmationData.documents
-                          .slice(documentCarouselPage * 14, (documentCarouselPage + 1) * 14)
-                          .map((doc, index) => (
-                          <div key={index} className="text-sm text-gray-600 dark:text-gray-400 flex items-start whitespace-nowrap" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                            <span className="text-primary mr-2 mt-0.5 flex-shrink-0">•</span>
-                            <span>"{doc.name}" with Document ID #{doc.id} for Contract ID #{doc.contractId} - {doc.contractName}</span>
-                          </div>
-                        ))}
+                          }}>
+                          {documentConfirmationData.documents
+                            .slice(documentCarouselPage * 10, (documentCarouselPage + 1) * 10)
+                            .map((doc, index) => (
+                            <div key={index} className="text-sm text-gray-600 dark:text-gray-400" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                              <div className="flex items-start">
+                                <span className="text-primary font-medium mr-3 flex-shrink-0">{documentCarouselPage * 10 + index + 1}.</span>
+                                <span className="break-words">"{doc.name}" with Document ID #{doc.id}</span>
+                              </div>
+                              <div className="flex items-start ml-6">
+                                <span className="text-gray-500 dark:text-gray-400">for Contract ID #{doc.contractId} - {doc.contractName}</span>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
                       
-                      {/* Carousel Indicators */}
-                      {documentConfirmationData.documents.length > 14 && (
-                        <div className="flex justify-center mt-4 space-x-2">
-                          {Array.from({ length: Math.ceil(documentConfirmationData.documents.length / 14) }, (_, i) => (
-                            <button
-                              key={i}
-                              onClick={() => setDocumentCarouselPage(i)}
-                              className={`w-2 h-2 rounded-full transition-colors ${
-                                i === documentCarouselPage 
-                                  ? 'bg-primary' 
-                                  : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                      )}
+                      {/* Desktop Carousel Indicators */}
+                      <div className="hidden lg:block">
+                        {documentConfirmationData.documents.length > 10 && (
+                          <div className="flex justify-center mt-4 space-x-2">
+                            {Array.from({ length: Math.ceil(documentConfirmationData.documents.length / 10) }, (_, i) => (
+                              <button
+                                key={i}
+                                onClick={() => setDocumentCarouselPage(i)}
+                                className={`w-2 h-2 rounded-full transition-colors ${
+                                  i === documentCarouselPage 
+                                    ? 'bg-primary' 
+                                    : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Summary */}
+                      <div className="text-center mt-6">
+                        <p className="text-sm text-gray-500 dark:text-gray-400" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                          Total documents created: {documentConfirmationData.documents.length}
+                        </p>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -7002,7 +7262,7 @@ const ContractsPage: React.FC = () => {
                     style={{ fontFamily: 'Avenir, sans-serif' }}
                     onClick={() => { setOpenAssigneeDropdown(v => !v); setOpenContractDropdown(false); setShowStatusDropdown(false); }}
                   >
-                    <span className="flex items-center"><RiUserSearchLine className="text-gray-400 mr-2" size={17} />Assignee</span>
+                    <span className="flex items-center"><TbUserSearch className="text-gray-400 mr-2" size={17} />Assignee</span>
                     <TbChevronDown className="text-gray-400 dark:text-gray-500" size={18} />
                   </button>
                   {openAssigneeDropdown && (
@@ -7308,7 +7568,7 @@ const ContractsPage: React.FC = () => {
                     style={{ fontFamily: 'Avenir, sans-serif' }}
                     onClick={() => { setOpenAssigneeDropdown(v => !v); setOpenContractDropdown(false); setShowStatusDropdown(false); }}
                   >
-                    <RiUserSearchLine className="text-gray-400" size={18} />
+                    <TbUserSearch className="text-gray-400" size={18} />
                     <span>Assignee</span>
                     <TbChevronDown className="ml-1 text-gray-400 dark:text-gray-500" size={18} />
                   </button>
@@ -10609,7 +10869,182 @@ const ContractsPage: React.FC = () => {
       </div>
     )}
 
+    {/* Manage Collaborators Modal - Separate overlay modal */}
+    {showManageCollaboratorsModal && (
+      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-40 cursor-default select-none">
+        <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[700px] mx-4 my-8 flex flex-col overflow-hidden cursor-default select-none" style={{ 
+          height: Math.max(400, Math.min(800, 200 + (addedCollaborators.length * 100)))
+        }}>
+          {/* Header */}
+          <div className="sticky top-0 z-40 bg-gray-50 dark:bg-gray-900 px-6 py-4 cursor-default select-none">
+            <div className="flex items-center justify-between cursor-default select-none">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white cursor-default select-none">Manage Collaborators</h2>
+              <button
+                className="text-gray-400 hover:text-gray-600 p-2 rounded-full cursor-pointer"
+                onClick={() => setShowManageCollaboratorsModal(false)}
+                aria-label="Close"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
 
+          {/* Modal Content */}
+          <div 
+            className="overflow-y-auto p-6 pb-20 flex-1 bg-gray-50 dark:bg-gray-900 cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500"
+
+          >
+            <div className="space-y-3 cursor-default select-none">
+              {/* Collaborator List */}
+              {addedCollaborators.map((collaborator, idx) => {
+                const colorScheme = getCollaboratorBadgeColor(idx);
+                return (
+                  <div key={idx}>
+                    <div className="flex items-center justify-between py-3 px-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-default select-none">
+                      <div className="flex items-start gap-3 cursor-default select-none flex-1">
+                        <div className={`h-8 w-8 rounded-lg ${colorScheme.bg} flex items-center justify-center border-2 ${colorScheme.border} flex-shrink-0 mt-0.5`}>
+                          <span className={`text-xs font-semibold ${colorScheme.text}`} style={{ fontFamily: 'Avenir, sans-serif' }}>
+                            {getInitials(collaborator.name)}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-1 flex-1">
+                          <span className="font-medium text-sm text-gray-900 dark:text-white cursor-default select-none">{collaborator.name}</span>
+                          {collaborator.isEditingEmail ? (
+                            <input
+                              type="email"
+                              value={collaborator.email || ''}
+                              onChange={(e) => {
+                                setAddedCollaborators(prev => prev.map((c, i) => 
+                                  i === idx ? { ...c, email: e.target.value } : c
+                                ));
+                              }}
+                              onBlur={() => {
+                                setAddedCollaborators(prev => prev.map((c, i) => 
+                                  i === idx ? { ...c, isEditingEmail: false } : c
+                                ));
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  setAddedCollaborators(prev => prev.map((c, i) => 
+                                    i === idx ? { ...c, isEditingEmail: false } : c
+                                  ));
+                                }
+                                if (e.key === 'Escape') {
+                                  setAddedCollaborators(prev => prev.map((c, i) => 
+                                    i === idx ? { ...c, isEditingEmail: false } : c
+                                  ));
+                                }
+                              }}
+                              className="text-xs text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors w-full"
+                              placeholder="Enter email..."
+                              autoFocus
+                            />
+                          ) : (
+                            <span 
+                              className="text-xs text-gray-600 dark:text-gray-400 cursor-pointer hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                              onClick={() => {
+                                setAddedCollaborators(prev => prev.map((c, i) => 
+                                  i === idx ? { ...c, isEditingEmail: true } : c
+                                ));
+                              }}
+                            >
+                              {collaborator.email || 'Click to add email'}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 cursor-default select-none ml-4">
+                                              <div className="relative cursor-pointer role-dropdown">
+                          <button
+                            data-collaborator-index={idx}
+                            type="button"
+                            className="flex items-center justify-between px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors w-[120px]"
+                            onClick={() => {
+                              // Toggle dropdown for this specific collaborator
+                              setAddedCollaborators(prev => prev.map((c, i) => 
+                                i === idx ? { ...c, showRoleDropdown: !c.showRoleDropdown } : { ...c, showRoleDropdown: false }
+                              ));
+                            }}
+                          >
+                            <span className="flex-1 text-center">{collaborator.contractRole}</span>
+                            <TbChevronDown size={18} className="text-gray-400 dark:text-gray-500 flex-shrink-0" />
+                          </button>
+                          {collaborator.showRoleDropdown && (
+                            <div className="absolute top-full right-0 mt-1 w-[120px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-[9999] py-0.5">
+                              {['Editor', 'Contributor', 'Viewer'].map((role) => (
+                                <button
+                                  key={role}
+                                  className={`w-full px-3 py-2 text-left text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                                    collaborator.contractRole === role ? 'text-primary bg-primary/10' : 'text-gray-700 dark:text-gray-300'
+                                  }`}
+                                  onClick={() => {
+                                    setAddedCollaborators(prev => prev.map((c, i) => 
+                                      i === idx ? { ...c, contractRole: role, showRoleDropdown: false } : c
+                                    ));
+                                  }}
+                                >
+                                  {role}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      <button
+                        onClick={() => {
+                          const newCollaborators = addedCollaborators.filter((_, i) => i !== idx);
+                          setAddedCollaborators(newCollaborators);
+                          // Close modal only if no collaborators left
+                          if (newCollaborators.length === 0) {
+                            setShowManageCollaboratorsModal(false);
+                          }
+                        }}
+                        className="text-gray-400 hover:text-red-500 p-1 rounded cursor-pointer flex-shrink-0"
+                      >
+                        <TbTrash className="w-4 h-4" />
+                      </button>
+                    </div>
+                    </div>
+                    {idx < addedCollaborators.length - 1 && (
+                      <hr className="border-gray-200 dark:border-gray-700 my-2" />
+                    )}
+                  </div>
+                );
+              })}
+              
+              {addedCollaborators.length === 0 && (
+                <div className="text-center py-8 cursor-default select-none">
+                  <p className="text-gray-500 dark:text-gray-400 text-sm">No collaborators added yet</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+                      {/* Footer */}
+            <div className="sticky bottom-0 z-40 bg-gray-50 dark:bg-gray-900 px-6 pt-4 pb-6 cursor-default select-none">
+              <div className="flex justify-between items-center gap-3 cursor-default select-none">
+                <button
+                  type="button"
+                  onClick={() => setShowManageCollaboratorsModal(false)}
+                  className="px-4 py-2 text-sm font-medium border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer rounded-lg"
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowManageCollaboratorsModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-white bg-primary border border-primary rounded-lg hover:bg-primary/90 transition-colors cursor-pointer"
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+        </div>
+      </div>
+    )}
 
       </div>
       <ContractsToaster />

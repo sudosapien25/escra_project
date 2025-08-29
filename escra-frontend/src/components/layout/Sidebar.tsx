@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { HiOutlineDocumentText, HiOutlineBell } from 'react-icons/hi';
 import { RiLayoutColumnLine, RiDashboardLine, RiBox3Line } from 'react-icons/ri';
 import { FaSignature } from 'react-icons/fa';
-import { TbSubtask, TbCubeSpark, TbLayoutDashboard, TbScript, TbLayoutBoard, TbWritingSign, TbFileText, TbTimeline, TbLogout2, TbSettingsCog, TbSunHigh, TbMoon, TbChevronsLeft, TbChevronsRight, TbDoorExit } from 'react-icons/tb';
+import { TbSubtask, TbCubeSpark, TbLayoutDashboard, TbScript, TbLayoutBoard, TbWritingSign, TbFileText, TbTimeline, TbLogout2, TbSettingsCog, TbSunHigh, TbMoon, TbChevronsLeft, TbChevronsRight, TbDoorExit, TbTransferOut, TbSettings, TbMoonStars } from 'react-icons/tb';
 import { IconBaseProps } from 'react-icons';
 import clsx from 'clsx';
 
@@ -81,7 +81,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
 
   const bottomNavItems: NavItem[] = [
     { name: 'Activity Monitor', href: '/activity-monitor', icon: TbTimeline },
-    { name: 'Settings', href: '/admin-settings', icon: TbSettingsCog },
+    { name: 'Settings', href: '/admin-settings', icon: TbSettings },
   ];
 
   return (
@@ -192,7 +192,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
                 {theme.isDark ? (
                   <IconWrapper icon={TbSunHigh} className="w-6 h-6 flex-shrink-0" />
                 ) : (
-                  <IconWrapper icon={TbMoon} className="w-6 h-6 flex-shrink-0" />
+                  <IconWrapper icon={TbMoonStars} className="w-6 h-6 flex-shrink-0" />
                 )}
               </div>
               {!isCollapsed && <span className="text-base font-medium">{theme.isDark ? 'Light Mode' : 'Dark Mode'}</span>}

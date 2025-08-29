@@ -5,6 +5,7 @@ import { NotificationProvider, useNotifications, getNotificationIcon } from '@/c
 import { FaCheck } from 'react-icons/fa';
 import { HiOutlineCog } from 'react-icons/hi';
 import { MdOutlineCheckBox } from 'react-icons/md';
+import { TbActivityHeartbeat } from 'react-icons/tb';
 import clsx from 'clsx';
 
 const notificationTabs = [
@@ -78,7 +79,10 @@ function NotificationPageContent() {
       {/* Notification List */}
       <div className="rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden">
         {filtered.length === 0 && (
-          <div className="p-8 text-center text-gray-400 dark:text-gray-500 text-xs">No activity found.</div>
+          <div className="p-8 text-center text-gray-400 dark:text-gray-500 text-xs">
+            <TbActivityHeartbeat className="mx-auto mb-2 w-6 h-6 text-primary" />
+            No activity found
+          </div>
         )}
         {filtered.map((n, index) => (
           <div

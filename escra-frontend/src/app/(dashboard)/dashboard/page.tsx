@@ -7,7 +7,7 @@ import { IconBaseProps } from 'react-icons';
 import { LuPen } from 'react-icons/lu';
 import { PiMoneyWavyBold } from 'react-icons/pi';
 import { MdOutlineAddToPhotos } from 'react-icons/md';
-import { TbClockPin, TbClockUp, TbCoins, TbTransactionDollar, TbPencilExclamation, TbTransfer, TbFileText, TbClockShare, TbClockDown, TbArrowsExchange, TbClockEdit, TbFilePlus, TbBusinessplan } from 'react-icons/tb';
+import { TbClockPin, TbClockUp, TbCoins, TbTransactionDollar, TbPencilExclamation, TbTransfer, TbFileText, TbClockShare, TbClockDown, TbArrowsExchange, TbClockEdit, TbFilePlus, TbBusinessplan, TbTrash } from 'react-icons/tb';
 import { TbChevronDown, TbArrowsHorizontal } from 'react-icons/tb';
 import { HiOutlineDocumentText } from 'react-icons/hi';
 import { GrMoney } from 'react-icons/gr';
@@ -1066,7 +1066,7 @@ export default function DashboardPage() {
             New Contract
           </button>
           <button
-            className="flex items-center justify-center w-full md:w-auto px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-semibold"
+            className="flex items-center justify-center w-full md:w-auto px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-semibold ml-2"
             onClick={() => {
               // Test contract created notification
               const testContractId = "TEST1234";
@@ -1095,7 +1095,7 @@ export default function DashboardPage() {
               }, 2000); // 2 second delay
             }}
           >
-            🧪 Test Notifications
+            🧪 Test Confirmation
           </button>
         </div>
         <NewContractModal isOpen={showNewContractModal} onClose={() => setShowNewContractModal(false)} />

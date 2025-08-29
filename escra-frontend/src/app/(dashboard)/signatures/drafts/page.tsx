@@ -2,9 +2,9 @@
 
 import React, { useState } from 'react';
 import { FaSearch } from 'react-icons/fa';
-import { HiOutlineEye, HiOutlineTrash } from 'react-icons/hi';
+import { HiOutlineEye } from 'react-icons/hi';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
-import { TbEdit, TbPencilShare } from 'react-icons/tb';
+import { TbEdit, TbPencilShare, TbTrash } from 'react-icons/tb';
 
 export default function DraftsPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -111,7 +111,7 @@ export default function DraftsPage() {
                       className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 hover:border-primary hover:text-primary transition-colors"
                       title="Delete"
                     >
-                      <HiOutlineTrash className="h-4 w-4" />
+                      <TbTrash className="h-4 w-4" />
                     </button>
                   </div>
                 </td>
