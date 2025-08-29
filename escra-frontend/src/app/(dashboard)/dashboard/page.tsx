@@ -1,6 +1,7 @@
 "use client";
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Card } from '@/components/common/Card';
 import { FaFileContract, FaMoneyBillAlt, FaClock, FaPlus, FaArrowUp, FaDollarSign, FaCheckCircle, FaBox, FaChartLine, FaCheck } from 'react-icons/fa';
 import { IconBaseProps } from 'react-icons';
@@ -13,10 +14,21 @@ import { HiOutlineDocumentText } from 'react-icons/hi';
 import { GrMoney } from 'react-icons/gr';
 import NewContractModal from '@/components/common/NewContractModal';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, BarChart, Bar } from 'recharts';
-import { mockContracts } from '@/data/mockContracts';
-import { SignatureDocument, mockSignatures } from '@/data/mockSignatures';
+import { ContractService } from '@/services/contractService';
 import { useTaskStore } from '@/data/taskStore';
 import { Task } from '@/types/task';
+
+// Define SignatureDocument interface
+interface SignatureDocument {
+  id: string;
+  documentName: string;
+  signerName: string;
+  signerEmail: string;
+  status: 'pending' | 'signed' | 'rejected' | 'expired';
+  sentDate: string;
+  signedDate?: string;
+  contractId?: string;
+}
 
 // Define Contract interface to match contracts page
 interface Contract {
@@ -362,11 +374,20 @@ const parseParties = (partiesString: string): string[] => {
   };
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [showNewContractModal, setShowNewContractModal] = React.useState(false);
   const [activeRole, setActiveRole] = React.useState('creator');
   const [hoveredValue, setHoveredValue] = React.useState<number | null>(null);
   const [hoveredDate, setHoveredDate] = React.useState<string | null>(null);
-  const [contracts, setContracts] = React.useState<Contract[]>(mockContracts);
+  const [contracts, setContracts] = React.useState<Contract[]>([]);
+  const [dashboardStats, setDashboardStats] = React.useState({
+    totalContracts: 0,
+    totalValue: 0,
+    pendingSignatures: 0,
+    wirePending: 0,
+    averageCompletionTime: 0,
+    recentActivity: [] as any[]
+  });
   const [openRecentlyUpdatedDropdown, setOpenRecentlyUpdatedDropdown] = React.useState(false);
   const [selectedRecentlyUpdated, setSelectedRecentlyUpdated] = React.useState('Last 30 days');
   const recentlyUpdatedDropdownRef = React.useRef<HTMLDivElement>(null);
@@ -413,7 +434,7 @@ export default function DashboardPage() {
   const [expandedRecipients, setExpandedRecipients] = React.useState<Set<string>>(new Set());
   
   // Signatures data state
-  const [signaturesData, setSignaturesData] = React.useState<SignatureDocument[]>(mockSignatures);
+  const [signaturesData, setSignaturesData] = React.useState<SignatureDocument[]>([]);
   
   // Tasks data state
   const { tasks, initializeTasks } = useTaskStore();
@@ -776,8 +797,8 @@ export default function DashboardPage() {
         return bStatus.localeCompare(aStatus);
       }
     } else if (taskContractSortDirection) {
-      const aContract = mockContracts.find(c => c.id === a.contractId)?.title || '';
-      const bContract = mockContracts.find(c => c.id === b.contractId)?.title || '';
+      const aContract = contracts.find(c => c.id === a.contractId)?.title || '';
+      const bContract = contracts.find(c => c.id === b.contractId)?.title || '';
       if (taskContractSortDirection === 'asc') {
         return aContract.localeCompare(bContract);
       } else {
@@ -867,58 +888,37 @@ export default function DashboardPage() {
     }
   }, [openCompletionTimeDropdown]);
   
-  // Load enhanced contracts (same as contracts page)
+  // Load contracts and dashboard stats from API
   React.useEffect(() => {
-    const loadEnhancedContracts = async () => {
+    const loadDashboardData = async () => {
       try {
-        const response = await fetch('/api/contracts');
-        if (response.ok) {
-          const data = await response.json();
-          // Only update if we got valid data that's different from initial mockContracts
-          if (data.contracts && data.contracts.length > 0) {
-            setContracts(data.contracts);
-          }
-        } else {
-          console.error('Failed to load enhanced contracts');
-          // Keep the initial mockContracts that are already loaded
+        // Load contracts
+        const response = await ContractService.getContracts({ limit: 100 });
+        if (response.contracts && response.contracts.length > 0) {
+          // Transform the contract list response to match the dashboard Contract interface
+          const transformedContracts = response.contracts.map(c => ({
+            ...c,
+            // Ensure value is a string with $ prefix for display
+            value: c.value || '$0'
+          }));
+          setContracts(transformedContracts as Contract[]);
+        
+        // Load dashboard stats
+        const stats = await ContractService.getDashboardStats();
+        setDashboardStats(stats);
         }
       } catch (error) {
-        console.error('Error loading enhanced contracts:', error);
-        // Keep the initial mockContracts that are already loaded
+        console.error('Error loading contracts:', error);
       }
     };
 
-    // Small delay to let the initial render complete, then enhance with API data
-    const timeoutId = setTimeout(loadEnhancedContracts, 100);
-    
-    return () => clearTimeout(timeoutId);
+    loadDashboardData();
   }, []);
 
-  // Load enhanced signatures (same as signatures page)
+  // Load signatures - temporarily keep empty until we have a signatures API
   React.useEffect(() => {
-    const loadEnhancedSignatures = async () => {
-      try {
-        const response = await fetch('/api/signatures');
-        if (response.ok) {
-          const data = await response.json();
-          // Only update if we got valid data that's different from initial mockSignatures
-          if (data.signatures && data.signatures.length > 0) {
-            setSignaturesData(data.signatures);
-          }
-        } else {
-          console.error('Failed to load enhanced signatures');
-          // Keep the initial mockSignatures that are already loaded
-        }
-      } catch (error) {
-        console.error('Error loading enhanced signatures:', error);
-        // Keep the initial mockSignatures that are already loaded
-      }
-    };
-
-    // Small delay to let the initial render complete, then enhance with API data
-    const timeoutId = setTimeout(loadEnhancedSignatures, 100);
-    
-    return () => clearTimeout(timeoutId);
+    // TODO: Load signatures from API when available
+    setSignaturesData([]);
   }, []);
 
   // Initialize tasks (same as workflows page)
@@ -1249,7 +1249,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex flex-col items-start cursor-default select-none">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Average Completion Time</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">3.2 days</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{dashboardStats.averageCompletionTime} days</p>
             <div className="relative cursor-default select-none">
               <button
                 ref={completionTimeButtonRef}
@@ -1293,7 +1293,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex flex-col items-start cursor-default select-none">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Pending Signatures</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">2</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{dashboardStats.pendingSignatures}</p>
             <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">Requires action</p>
           </div>
         </Card>
@@ -1305,7 +1305,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex flex-col items-start cursor-default select-none">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Wire Transfers Pending</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">3</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{dashboardStats.wirePending}</p>
             <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">Awaiting transfer</p>
           </div>
         </Card>
@@ -1330,56 +1330,56 @@ export default function DashboardPage() {
           {/* Vertical timeline line */}
           <div className="absolute left-[23px] top-0 bottom-0 w-px bg-gray-300 dark:bg-gray-600 z-0 cursor-default select-none"></div>
           <div className="space-y-4 cursor-default select-none">
-            {/* Timeline entries will go here */}
-            <div className="flex items-center cursor-default select-none">
-              <div className="flex-shrink-0 relative -left-3 z-10 bg-white dark:bg-gray-800 rounded-full p-1 flex items-center justify-center w-6 h-6 cursor-default select-none">
-                {React.createElement(FaCheckCircle, { className: "text-green-500 dark:text-green-400 text-base" } as IconBaseProps)}
+            {dashboardStats.recentActivity.length > 0 ? (
+              dashboardStats.recentActivity.map((activity, index) => {
+                // Determine icon and color based on action
+                let IconComponent = FaFileContract;
+                let iconColor = "text-orange-500 dark:text-orange-400";
+                
+                if (activity.action.toLowerCase().includes('sign')) {
+                  IconComponent = LuPen;
+                  iconColor = "text-blue-500 dark:text-blue-400";
+                } else if (activity.action.toLowerCase().includes('wire') || activity.action.toLowerCase().includes('transfer')) {
+                  IconComponent = FaBox;
+                  iconColor = "text-purple-500 dark:text-purple-400";
+                } else if (activity.action.toLowerCase().includes('complete') || activity.action.toLowerCase().includes('done')) {
+                  IconComponent = FaCheckCircle;
+                  iconColor = "text-green-500 dark:text-green-400";
+                } else if (activity.action.toLowerCase().includes('inspect') || activity.action.toLowerCase().includes('review')) {
+                  IconComponent = FaChartLine;
+                  iconColor = "text-red-500 dark:text-red-400";
+                }
+                
+                const activityDate = new Date(activity.timestamp);
+                const formattedDate = activityDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const formattedTime = activityDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+                
+                return (
+                  <div key={activity.id || index} className="flex items-center cursor-default select-none">
+                    <div className="flex-shrink-0 relative -left-3 z-10 bg-white dark:bg-gray-800 rounded-full p-1 flex items-center justify-center w-6 h-6 cursor-default select-none">
+                      {React.createElement(IconComponent, { className: `${iconColor} text-base` } as IconBaseProps)}
+                    </div>
+                    <div className="flex-1 cursor-default select-none">
+                      <p className="text-sm text-gray-700 dark:text-gray-300 cursor-default select-none">
+                        {activity.contractTitle && (
+                          <span className="font-semibold">{activity.contractTitle}</span>
+                        )}
+                        {activity.contractTitle && ' - '}
+                        {activity.action}
+                        {activity.user && activity.user !== 'System' && (
+                          <span> by <span className="font-semibold">{activity.user}</span></span>
+                        )}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 cursor-default select-none">{formattedDate} · {formattedTime}</p>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-sm text-gray-500 dark:text-gray-400">No recent activity</p>
               </div>
-              <div className="flex-1 cursor-default select-none">
-                <p className="text-sm text-gray-700 dark:text-gray-300 cursor-default select-none"><span className="font-semibold">Contract #8423</span> moved to 'Wire Details'</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 cursor-default select-none">May 18, 2025 · 14:32</p>
-              </div>
-            </div>
-
-            <div className="flex items-center cursor-default select-none">
-              <div className="flex-shrink-0 relative -left-3 z-10 bg-white dark:bg-gray-800 rounded-full p-1 flex items-center justify-center w-6 h-6 cursor-default select-none">
-                {React.createElement(LuPen, { className: "text-blue-500 dark:text-blue-400 text-base" } as IconBaseProps)}
-              </div>
-              <div className="flex-1 cursor-default select-none">
-                <p className="text-sm text-gray-700 dark:text-gray-300 cursor-default select-none"><span className="font-semibold">Sarah Johnson</span> signed Contract #9102</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 cursor-default select-none">May 18, 2025 · 10:15</p>
-              </div>
-            </div>
-
-            <div className="flex items-center cursor-default select-none">
-              <div className="flex-shrink-0 relative -left-3 z-10 bg-white dark:bg-gray-800 rounded-full p-1 flex items-center justify-center w-6 h-6 cursor-default select-none">
-                {React.createElement(FaBox, { className: "text-purple-500 dark:text-purple-400 text-base" } as IconBaseProps)}
-              </div>
-              <div className="flex-1 cursor-default select-none">
-                <p className="text-sm text-gray-700 dark:text-gray-300 cursor-default select-none">Wire transfer of <span className="font-semibold">$42,500</span> received for <span className="text-teal-600 dark:text-teal-400 font-semibold">#7650</span></p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 cursor-default select-none">May 17, 2025 · 16:48</p>
-              </div>
-            </div>
-
-            <div className="flex items-center cursor-default select-none">
-              <div className="flex-shrink-0 relative -left-3 z-10 bg-white dark:bg-gray-800 rounded-full p-1 flex items-center justify-center w-6 h-6 cursor-default select-none">
-                {React.createElement(FaFileContract, { className: "text-orange-500 dark:text-orange-400 text-base" } as IconBaseProps)}
-              </div>
-              <div className="flex-1 cursor-default select-none">
-                <p className="text-sm text-gray-700 dark:text-gray-300 cursor-default select-none"><span className="font-semibold">Contract #8901</span> created</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 cursor-default select-none">May 17, 2025 · 11:20</p>
-              </div>
-            </div>
-
-            <div className="flex items-center cursor-default select-none">
-              <div className="flex-shrink-0 relative -left-3 z-10 bg-white dark:bg-gray-800 rounded-full p-1 flex items-center justify-center w-6 h-6 cursor-default select-none">
-                {React.createElement(FaChartLine, { className: "text-red-500 dark:text-red-400 text-base" } as IconBaseProps)}
-              </div>
-              <div className="flex-1 cursor-default select-none">
-                <p className="text-sm text-gray-700 dark:text-gray-300 cursor-default select-none">Inspection completed for <span className="font-semibold">Contract #8423</span></p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 cursor-default select-none">May 16, 2025 · 15:05</p>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </Card>
@@ -1465,6 +1465,7 @@ export default function DashboardPage() {
                   <tr
                     key={contract.id}
                     className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                    onClick={() => router.push(`/contracts?id=${contract.id}`)}
                   >
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs cursor-default select-none">
                       <span className="text-primary underline font-semibold cursor-pointer">{contract.id}</span>
@@ -1691,7 +1692,7 @@ export default function DashboardPage() {
                     </td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-sm cursor-default select-none">
                       <div className="text-xs font-bold text-gray-900 dark:text-white cursor-default select-none">
-                        {mockContracts.find(c => c.id === task.contractId)?.title || 'Unknown Contract'}
+                        {contracts.find(c => c.id === task.contractId)?.title || 'Unknown Contract'}
                       </div>
                     </td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs cursor-default select-none">
