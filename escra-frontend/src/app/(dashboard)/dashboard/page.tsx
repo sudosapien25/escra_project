@@ -15,9 +15,20 @@ import { GrMoney } from 'react-icons/gr';
 import NewContractModal from '@/components/common/NewContractModal';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, BarChart, Bar } from 'recharts';
 import { ContractService } from '@/services/contractService';
-import { SignatureDocument } from '@/data/mockSignatures';
 import { useTaskStore } from '@/data/taskStore';
 import { Task } from '@/types/task';
+
+// Define SignatureDocument interface
+interface SignatureDocument {
+  id: string;
+  documentName: string;
+  signerName: string;
+  signerEmail: string;
+  status: 'pending' | 'signed' | 'rejected' | 'expired';
+  sentDate: string;
+  signedDate?: string;
+  contractId?: string;
+}
 
 // Define Contract interface to match contracts page
 interface Contract {
@@ -1319,56 +1330,56 @@ export default function DashboardPage() {
           {/* Vertical timeline line */}
           <div className="absolute left-[23px] top-0 bottom-0 w-px bg-gray-300 dark:bg-gray-600 z-0 cursor-default select-none"></div>
           <div className="space-y-4 cursor-default select-none">
-            {/* Timeline entries will go here */}
-            <div className="flex items-center cursor-default select-none">
-              <div className="flex-shrink-0 relative -left-3 z-10 bg-white dark:bg-gray-800 rounded-full p-1 flex items-center justify-center w-6 h-6 cursor-default select-none">
-                {React.createElement(FaCheckCircle, { className: "text-green-500 dark:text-green-400 text-base" } as IconBaseProps)}
+            {dashboardStats.recentActivity.length > 0 ? (
+              dashboardStats.recentActivity.map((activity, index) => {
+                // Determine icon and color based on action
+                let IconComponent = FaFileContract;
+                let iconColor = "text-orange-500 dark:text-orange-400";
+                
+                if (activity.action.toLowerCase().includes('sign')) {
+                  IconComponent = LuPen;
+                  iconColor = "text-blue-500 dark:text-blue-400";
+                } else if (activity.action.toLowerCase().includes('wire') || activity.action.toLowerCase().includes('transfer')) {
+                  IconComponent = FaBox;
+                  iconColor = "text-purple-500 dark:text-purple-400";
+                } else if (activity.action.toLowerCase().includes('complete') || activity.action.toLowerCase().includes('done')) {
+                  IconComponent = FaCheckCircle;
+                  iconColor = "text-green-500 dark:text-green-400";
+                } else if (activity.action.toLowerCase().includes('inspect') || activity.action.toLowerCase().includes('review')) {
+                  IconComponent = FaChartLine;
+                  iconColor = "text-red-500 dark:text-red-400";
+                }
+                
+                const activityDate = new Date(activity.timestamp);
+                const formattedDate = activityDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const formattedTime = activityDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+                
+                return (
+                  <div key={activity.id || index} className="flex items-center cursor-default select-none">
+                    <div className="flex-shrink-0 relative -left-3 z-10 bg-white dark:bg-gray-800 rounded-full p-1 flex items-center justify-center w-6 h-6 cursor-default select-none">
+                      {React.createElement(IconComponent, { className: `${iconColor} text-base` } as IconBaseProps)}
+                    </div>
+                    <div className="flex-1 cursor-default select-none">
+                      <p className="text-sm text-gray-700 dark:text-gray-300 cursor-default select-none">
+                        {activity.contractTitle && (
+                          <span className="font-semibold">{activity.contractTitle}</span>
+                        )}
+                        {activity.contractTitle && ' - '}
+                        {activity.action}
+                        {activity.user && activity.user !== 'System' && (
+                          <span> by <span className="font-semibold">{activity.user}</span></span>
+                        )}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 cursor-default select-none">{formattedDate} · {formattedTime}</p>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-sm text-gray-500 dark:text-gray-400">No recent activity</p>
               </div>
-              <div className="flex-1 cursor-default select-none">
-                <p className="text-sm text-gray-700 dark:text-gray-300 cursor-default select-none"><span className="font-semibold">Contract #8423</span> moved to 'Wire Details'</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 cursor-default select-none">May 18, 2025 · 14:32</p>
-              </div>
-            </div>
-
-            <div className="flex items-center cursor-default select-none">
-              <div className="flex-shrink-0 relative -left-3 z-10 bg-white dark:bg-gray-800 rounded-full p-1 flex items-center justify-center w-6 h-6 cursor-default select-none">
-                {React.createElement(LuPen, { className: "text-blue-500 dark:text-blue-400 text-base" } as IconBaseProps)}
-              </div>
-              <div className="flex-1 cursor-default select-none">
-                <p className="text-sm text-gray-700 dark:text-gray-300 cursor-default select-none"><span className="font-semibold">Sarah Johnson</span> signed Contract #9102</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 cursor-default select-none">May 18, 2025 · 10:15</p>
-              </div>
-            </div>
-
-            <div className="flex items-center cursor-default select-none">
-              <div className="flex-shrink-0 relative -left-3 z-10 bg-white dark:bg-gray-800 rounded-full p-1 flex items-center justify-center w-6 h-6 cursor-default select-none">
-                {React.createElement(FaBox, { className: "text-purple-500 dark:text-purple-400 text-base" } as IconBaseProps)}
-              </div>
-              <div className="flex-1 cursor-default select-none">
-                <p className="text-sm text-gray-700 dark:text-gray-300 cursor-default select-none">Wire transfer of <span className="font-semibold">$42,500</span> received for <span className="text-teal-600 dark:text-teal-400 font-semibold">#7650</span></p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 cursor-default select-none">May 17, 2025 · 16:48</p>
-              </div>
-            </div>
-
-            <div className="flex items-center cursor-default select-none">
-              <div className="flex-shrink-0 relative -left-3 z-10 bg-white dark:bg-gray-800 rounded-full p-1 flex items-center justify-center w-6 h-6 cursor-default select-none">
-                {React.createElement(FaFileContract, { className: "text-orange-500 dark:text-orange-400 text-base" } as IconBaseProps)}
-              </div>
-              <div className="flex-1 cursor-default select-none">
-                <p className="text-sm text-gray-700 dark:text-gray-300 cursor-default select-none"><span className="font-semibold">Contract #8901</span> created</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 cursor-default select-none">May 17, 2025 · 11:20</p>
-              </div>
-            </div>
-
-            <div className="flex items-center cursor-default select-none">
-              <div className="flex-shrink-0 relative -left-3 z-10 bg-white dark:bg-gray-800 rounded-full p-1 flex items-center justify-center w-6 h-6 cursor-default select-none">
-                {React.createElement(FaChartLine, { className: "text-red-500 dark:text-red-400 text-base" } as IconBaseProps)}
-              </div>
-              <div className="flex-1 cursor-default select-none">
-                <p className="text-sm text-gray-700 dark:text-gray-300 cursor-default select-none">Inspection completed for <span className="font-semibold">Contract #8423</span></p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 cursor-default select-none">May 16, 2025 · 15:05</p>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </Card>

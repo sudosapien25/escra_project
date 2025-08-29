@@ -449,20 +449,104 @@ export class ContractService {
       const pendingSignatures = contracts.filter(c => c.status === 'Signatures').length;
       const wirePending = contracts.filter(c => c.status === 'Wire Details').length;
       
-      // Mock average completion time for now
-      const averageCompletionTime = 3.2;
+      // Calculate average completion time based on completed contracts
+      const completedContracts = contracts.filter(c => c.status === 'Completed' || c.status === 'Closed');
+      let averageCompletionTime = 0;
       
-      // Mock recent activity for now
-      const recentActivity = [
-        {
-          id: '1',
-          action: 'Contract created',
-          contractId: contracts[0]?.id,
-          contractTitle: contracts[0]?.title,
+      if (completedContracts.length > 0) {
+        const completionTimes = completedContracts.map(c => {
+          const created = new Date(c.createdAt || c.updatedAt);
+          const closed = new Date(c.updatedAt);
+          const daysDiff = Math.floor((closed.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
+          return daysDiff;
+        }).filter(days => days > 0);
+        
+        if (completionTimes.length > 0) {
+          averageCompletionTime = completionTimes.reduce((sum, days) => sum + days, 0) / completionTimes.length;
+        }
+      }
+      
+      // Generate recent activity from contract data
+      const recentActivity: any[] = [];
+      
+      // Sort contracts by update time to get recent changes
+      const sortedContracts = [...contracts].sort((a, b) => {
+        const dateA = new Date(a.updatedAt || a.createdAt || '').getTime();
+        const dateB = new Date(b.updatedAt || b.createdAt || '').getTime();
+        return dateB - dateA;
+      });
+      
+      // Generate activities based on contract status and updates
+      sortedContracts.slice(0, 5).forEach((contract, index) => {
+        const timestamp = contract.updatedAt || contract.createdAt || new Date().toISOString();
+        const contractTitle = `Contract ${contract.id}`;
+        
+        // Generate action based on status
+        let action = '';
+        let user = 'System';
+        
+        switch (contract.status) {
+          case 'Wire Details':
+            action = `moved to 'Wire Details'`;
+            break;
+          case 'Signatures':
+            action = `is pending signatures`;
+            user = contract.buyer || 'Party';
+            break;
+          case 'In Progress':
+            action = `is now in progress`;
+            break;
+          case 'Completed':
+            action = `has been completed`;
+            break;
+          case 'Draft':
+            action = `created`;
+            break;
+          case 'Under Review':
+            action = `is under review`;
+            break;
+          default:
+            action = `status changed to '${contract.status}'`;
+        }
+        
+        // Check if this is a new contract (created within last 24 hours)
+        const createdDate = new Date(contract.createdAt || contract.updatedAt);
+        const now = new Date();
+        const hoursSinceCreation = (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60);
+        
+        if (hoursSinceCreation < 24 && contract.status === 'Draft') {
+          action = 'created';
+        }
+        
+        // Add value-based activities for high-value contracts
+        if (contract.value && parseFloat(contract.value.replace(/[$,]/g, '') || '0') > 100000) {
+          if (contract.status === 'Wire Details' && index < 3) {
+            const value = parseFloat(contract.value.replace(/[$,]/g, '') || '0');
+            action = `Wire transfer of $${value.toLocaleString()} pending`;
+          }
+        }
+        
+        recentActivity.push({
+          id: `activity-${contract.id}-${index}`,
+          action,
+          contractId: contract.id,
+          contractTitle,
+          timestamp,
+          user
+        });
+      });
+      
+      // If no contracts, add a default activity
+      if (recentActivity.length === 0) {
+        recentActivity.push({
+          id: 'default-1',
+          action: 'No recent activity',
+          contractId: '',
+          contractTitle: '',
           timestamp: new Date().toISOString(),
           user: 'System'
-        }
-      ];
+        });
+      }
       
       return {
         totalContracts,
