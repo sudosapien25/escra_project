@@ -565,10 +565,71 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
         return;
       }
 
-      // Create new contract logic would go here
+      // Create new contract via API
       console.log('Creating contract:', modalForm, recipients, uploadedFiles);
-        onClose();
-        setModalStep(1);
+      
+      // Import ContractService and create the contract
+      import('@/services/contractService').then(async ({ ContractService }) => {
+        try {
+          // Get buyer and seller from recipients
+          const buyer = recipients.find(r => r.contractRole === 'Buyer');
+          const seller = recipients.find(r => r.contractRole === 'Seller');
+          
+          // Map UI contract types to API contract types
+          const typeMapping: Record<string, string> = {
+            'Standard Agreement': 'Property Sale',
+            'Residential – Cash': 'Property Sale',
+            'Residential – Financed': 'Property Sale',
+            'Commercial – Cash or Financed': 'Commercial Lease',
+            'Assignment / Wholesale': 'Investment Property',
+            'Installment / Lease-to-Own': 'Investment Property',
+          };
+          
+          // Create the contract data matching API expectations
+          // API expects simple field names: title, type, buyer, seller, etc.
+          const contractData = {
+            title: modalForm.title,
+            type: typeMapping[modalForm.type] || 'Property Sale',
+            status: 'Initiation', // API expects 'Initiation' not 'draft'
+            buyer: buyer?.name || recipients[0]?.name || 'Default Buyer',
+            buyerEmail: buyer?.email || recipients[0]?.email || 'buyer@example.com',
+            seller: seller?.name || recipients[1]?.name || 'Default Seller', 
+            sellerEmail: seller?.email || recipients[1]?.email || 'seller@example.com',
+            propertyAddress: modalForm.propertyAddress || '',
+            propertyType: modalForm.propertyType || null,
+            value: modalForm.value ? parseFloat(modalForm.value.replace(/[^0-9.-]+/g, '')) : 0,
+            earnestMoney: modalForm.earnestMoney ? (parseFloat(modalForm.earnestMoney.replace(/[^0-9.-]+/g, '')) || null) : null,
+            downPayment: modalForm.downPayment ? (parseFloat(modalForm.downPayment.replace(/[^0-9.-]+/g, '')) || null) : null,
+            loanAmount: modalForm.loanAmount ? (parseFloat(modalForm.loanAmount.replace(/[^0-9.-]+/g, '')) || null) : null,
+            interestRate: modalForm.interestRate ? (parseFloat(modalForm.interestRate) || null) : null,
+            loanTerm: modalForm.loanTerm ? (parseInt(modalForm.loanTerm) || null) : null,
+            inspectionPeriod: modalForm.inspectionPeriod || null,
+            closingDate: modalForm.dueDate || null,
+            dueDate: modalForm.dueDate || null,
+            escrowNumber: modalForm.escrowNumber || null,
+            titleCompany: modalForm.titleCompany || null,
+            insuranceCompany: modalForm.insuranceCompany || null,
+            lenderName: modalForm.lenderName || null,
+            notes: modalForm.notes || null,
+            contingencies: modalForm.contingencies || null
+          };
+          
+          console.log('Sending contract data to API:', contractData);
+          const newContract = await ContractService.createContract(contractData);
+          
+          if (newContract) {
+            console.log('Contract created successfully:', newContract);
+            // Refresh the page or update the contract list
+            window.location.reload();
+          }
+        } catch (error) {
+          console.error('Failed to create contract:', error);
+          alert('Failed to create contract. Please check all required fields and try again.');
+        }
+      });
+      
+      onClose();
+      setModalStep(1);
               setModalForm({
           title: '',
           escrowNumber: '',

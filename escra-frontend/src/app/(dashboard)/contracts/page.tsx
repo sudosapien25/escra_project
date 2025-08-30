@@ -172,7 +172,7 @@ interface Document {
   documentType?: string;
 }
 
-// Sample data
+// Sample data - DEPRECATED: Using API data instead
 const sampleDocuments: Document[] = [
   {
     id: '1234',
@@ -1177,6 +1177,15 @@ const ContractsPage: React.FC = () => {
         role: r.contractRole || 'Standard',
       }));
 
+      // Map UI contract types to API contract types
+      const typeMapping: Record<string, string> = {
+        'Standard Agreement': 'Property Sale',
+        'Residential – Cash': 'Property Sale',
+        'Residential – Financed': 'Property Sale',
+        'Commercial – Cash or Financed': 'Commercial Lease',
+        'Assignment / Wholesale': 'Investment Property',
+        'Installment / Lease-to-Own': 'Investment Property',
+      };
       
       const newContract: Contract = {
         id: newContractId,
@@ -1186,24 +1195,24 @@ const ContractsPage: React.FC = () => {
         updated: 'Just now',
         value: formatCurrency(modalForm.value), // Format value as currency
         documents: uploadedFiles.length, // Count uploaded files
-        type: modalForm.type,
+        type: typeMapping[modalForm.type] || modalForm.type,
         buyer: buyerRecipient?.name || '',
         seller: sellerRecipient?.name || '',
         // Include all form data
         milestone: modalForm.milestone,
         notes: modalForm.notes,
-        closingDate: modalForm.closingDate,
-        dueDate: modalForm.dueDate,
+        closingDate: modalForm.closingDate || null,
+        dueDate: modalForm.dueDate || null,
         propertyAddress: modalForm.propertyAddress,
         propertyType: modalForm.propertyType,
         escrowNumber: modalForm.escrowNumber,
         buyerEmail: buyerRecipient?.email || '',
         sellerEmail: sellerRecipient?.email || '',
-        earnestMoney: formatCurrency(modalForm.earnestMoney),
-        downPayment: formatCurrency(modalForm.downPayment),
-        loanAmount: formatCurrency(modalForm.loanAmount),
-        interestRate: modalForm.interestRate,
-        loanTerm: modalForm.loanTerm,
+        earnestMoney: modalForm.earnestMoney ? (parseFloat(modalForm.earnestMoney.toString().replace(/[^0-9.-]+/g, '')) || null) : null,
+        downPayment: modalForm.downPayment ? (parseFloat(modalForm.downPayment.toString().replace(/[^0-9.-]+/g, '')) || null) : null,
+        loanAmount: modalForm.loanAmount ? (parseFloat(modalForm.loanAmount.toString().replace(/[^0-9.-]+/g, '')) || null) : null,
+        interestRate: modalForm.interestRate ? (parseFloat(modalForm.interestRate) || null) : null,
+        loanTerm: modalForm.loanTerm ? (parseInt(modalForm.loanTerm) || null) : null,
         lenderName: modalForm.lenderName,
         sellerFinancialInstitution: modalForm.sellerFinancialInstitution,
         buyerFinancialInstitution: modalForm.buyerFinancialInstitution,
@@ -1237,8 +1246,18 @@ const ContractsPage: React.FC = () => {
           if (step4Documents.length > 0) {
             try {
               for (const docInfo of step4Documents) {
-                // Create document with proper ID and contract association
-                const documentId = await addDocument(docInfo.file, newContractId, newContract.title, currentUserName);
+                // Upload document to API and store locally
+                let documentId = '';
+                try {
+                  const apiDoc = await ContractService.uploadDocument(newContractId, docInfo.file);
+                  documentId = apiDoc.id;
+                  // Also store locally for offline access
+                  await addDocument(docInfo.file, newContractId, newContract.title, currentUserName);
+                } catch (error) {
+                  console.error('Error uploading document to API:', error);
+                  // Fall back to local storage
+                  documentId = await addDocument(docInfo.file, newContractId, newContract.title, currentUserName);
+                }
                 
                 // Update the document name and assignee
                 const { updateDocumentName } = useDocumentStore.getState();
@@ -1259,8 +1278,18 @@ const ContractsPage: React.FC = () => {
           if (uploadedFiles.length > 0) {
             try {
               for (const file of uploadedFiles) {
-                // Create document with proper ID and contract association
-                const documentId = await addDocument(file, newContractId, newContract.title, currentUserName);
+                // Upload document to API and store locally
+                let documentId = '';
+                try {
+                  const apiDoc = await ContractService.uploadDocument(newContractId, file);
+                  documentId = apiDoc.id;
+                  // Also store locally for offline access
+                  await addDocument(file, newContractId, newContract.title, currentUserName);
+                } catch (error) {
+                  console.error('Error uploading document to API:', error);
+                  // Fall back to local storage
+                  documentId = await addDocument(file, newContractId, newContract.title, currentUserName);
+                }
               
                 // Set the assignee in the assignee store (using current user as default)
                 const { setAssignee } = useAssigneeStore.getState();
@@ -1312,6 +1341,8 @@ const ContractsPage: React.FC = () => {
         duration: Infinity, // Make toast persistent - user must close it manually
         onClick: () => {
           setSelectedContract(newContract);
+          // New contracts don't have documents yet
+          setSelectedContractDocuments([]);
         },
       });
     } else {
@@ -1438,39 +1469,11 @@ const ContractsPage: React.FC = () => {
     };
   };
 
-  // Get stored documents and convert them to Document interface
-  const { getAllDocuments } = useDocumentStore.getState();
-  const storedDocuments = getAllDocuments();
-  const convertedStoredDocuments = storedDocuments.map(storedDoc => {
-    // Use the stored contractName if available, otherwise try to find it in contracts
-    const contractTitle = storedDoc.contractName || contracts.find(c => c.id === storedDoc.contractId)?.title || 'Unknown Contract';
-    return convertStoredToDocument(storedDoc, contractTitle);
-  });
-
-  // Combine sample documents with stored documents
-  const allDocuments = [...sampleDocuments, ...convertedStoredDocuments];
-
-  // Filter documents based on search term
-  const filteredDocuments = allDocuments.filter(doc => {
-    const matchesSearch = searchTerm === '' || 
-      doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.uploadedBy?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              doc.contractName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.contractId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.assignee?.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesContract = selectedContracts.length === 0 || 
-      (doc.contractId && selectedContracts.includes(doc.contractId));
-
-    const matchesAssignee = selectedAssignees.length === 0 || 
-      (selectedAssignees.includes('__ME__') ? 
-        (doc.assignee === currentUserName) : 
-        (doc.assignee && selectedAssignees.includes(doc.assignee)));
-
-    return matchesSearch && matchesContract && matchesAssignee;
-  });
+  // These will be computed after state declarations
+  let storedDocuments: any[] = [];
+  let convertedStoredDocuments: Document[] = [];
+  let allDocuments: Document[] = [];
+  let filteredDocuments: Document[] = [];
 
   // Get unique statuses from contracts
   const availableStatuses = [
@@ -1541,6 +1544,8 @@ const ContractsPage: React.FC = () => {
   };
 
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
+  const [selectedContractDocuments, setSelectedContractDocuments] = useState<Document[]>([]);
+  const [allContractDocuments, setAllContractDocuments] = useState<Document[]>([]);
   const [selectedTask, setSelectedTask] = useState<string | null>(null);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editableTitle, setEditableTitle] = useState('');
@@ -2089,6 +2094,40 @@ const ContractsPage: React.FC = () => {
     };
   }, [showUploadDropdown]);
 
+  // Compute document-related values after state declarations
+  const { getAllDocuments } = useDocumentStore.getState();
+  storedDocuments = getAllDocuments();
+  convertedStoredDocuments = storedDocuments.map(storedDoc => {
+    // Use the stored contractName if available, otherwise try to find it in contracts
+    const contractTitle = storedDoc.contractName || contracts.find(c => c.id === storedDoc.contractId)?.title || 'Unknown Contract';
+    return convertStoredToDocument(storedDoc, contractTitle);
+  });
+
+  // Combine all API documents with stored documents
+  allDocuments = [...allContractDocuments, ...convertedStoredDocuments];
+
+  // Filter documents based on search term
+  filteredDocuments = allDocuments.filter(doc => {
+    const matchesSearch = searchTerm === '' || 
+      doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.uploadedBy?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.contractName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.contractId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.assignee?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesContract = selectedContracts.length === 0 || 
+      (doc.contractId && selectedContracts.includes(doc.contractId));
+
+    const matchesAssignee = selectedAssignees.length === 0 || 
+      (selectedAssignees.includes('__ME__') ? 
+        (doc.assignee === currentUserName) : 
+        (doc.assignee && selectedAssignees.includes(doc.assignee)));
+
+    return matchesSearch && matchesContract && matchesAssignee;
+  });
+
   // Update editableTitle and selectedType when a contract is selected
   useEffect(() => {
     if (selectedContract) {
@@ -2153,6 +2192,33 @@ const ContractsPage: React.FC = () => {
           }));
           setContracts(transformedContracts as Contract[]);
           setTotalContracts(response.pagination.total);
+          
+          // Fetch full details for each contract to get documents
+          const allDocs: Document[] = [];
+          await Promise.all(transformedContracts.map(async (contract) => {
+            try {
+              const fullContract = await ContractService.getContract(contract.id);
+              if (fullContract.documentsList) {
+                // Convert API documents to UI Document format
+                const convertedDocs = fullContract.documentsList.map((doc: any) => ({
+                  id: doc.id,
+                  name: doc.name,
+                  type: doc.type || 'PDF',
+                  size: doc.size ? `${(doc.size / (1024 * 1024)).toFixed(1)} MB` : '0 MB',
+                  date: doc.uploadedAt || new Date().toISOString(),
+                  uploadedBy: doc.uploadedBy || 'System',
+                  dateUploaded: doc.uploadedAt || new Date().toISOString(),
+                  contractName: fullContract.title,
+                  contractId: fullContract.id,
+                  assignee: doc.assignee || fullContract.buyer || 'Unassigned'
+                }));
+                allDocs.push(...convertedDocs);
+              }
+            } catch (error) {
+              console.error(`Error fetching contract ${contract.id} details:`, error);
+            }
+          }));
+          setAllContractDocuments(allDocs);
         }
       } catch (error) {
         console.error('Error loading contracts:', error);
@@ -2334,6 +2400,7 @@ const ContractsPage: React.FC = () => {
       // If the deleted contract was selected, clear the selection
       if (selectedContract && selectedContract.id === contractId) {
         setSelectedContract(null);
+        setSelectedContractDocuments([]);
       }
 
       // Show success message
@@ -2682,8 +2749,13 @@ const ContractsPage: React.FC = () => {
           const customFileName = `${doc.documentName.trim()}.${fileExtension}`;
           const customFile = new File([file], customFileName, { type: file.type });
           
-          // Add document to the store
-          const documentId = await addDocument(
+          // Upload document to API and store locally
+          let documentId = '';
+          try {
+            const apiDoc = await ContractService.uploadDocument(uploadContractId!, customFile);
+            documentId = apiDoc.id;
+            // Also store locally for offline access
+            await addDocument(
             customFile, 
             uploadContractId!, 
             contractName, 
@@ -2691,6 +2763,18 @@ const ContractsPage: React.FC = () => {
             doc.assignee,
             doc.documentType
           );
+          } catch (error) {
+            console.error('Error uploading document to API:', error);
+            // Fall back to local storage
+            documentId = await addDocument(
+              customFile, 
+              uploadContractId!, 
+              contractName, 
+              currentUserName,
+              doc.assignee,
+              doc.documentType
+            );
+          }
           
           createdDocumentIds.push(documentId);
           
@@ -5892,8 +5976,18 @@ const ContractsPage: React.FC = () => {
                               const contractId = docInfo.contract.includes(' - ') ? docInfo.contract.split(' - ')[0] : docInfo.contract;
                               const contractTitle = docInfo.contract.includes(' - ') ? docInfo.contract.split(' - ')[1] : docInfo.contract;
                               
-                              // Create document with proper ID and contract association
-                              const documentId = await addDocument(docInfo.file, contractId, contractTitle, currentUserName, docInfo.assignee, docInfo.type);
+                              // Upload document to API and store locally
+                              let documentId = '';
+                              try {
+                                const apiDoc = await ContractService.uploadDocument(contractId, docInfo.file);
+                                documentId = apiDoc.id;
+                                // Also store locally for offline access
+                                await addDocument(docInfo.file, contractId, contractTitle, currentUserName, docInfo.assignee, docInfo.type);
+                              } catch (error) {
+                                console.error('Error uploading document to API:', error);
+                                // Fall back to local storage
+                                documentId = await addDocument(docInfo.file, contractId, contractTitle, currentUserName, docInfo.assignee, docInfo.type);
+                              }
                               
                               // Update the document name
                               const { updateDocumentName } = useDocumentStore.getState();
@@ -5910,8 +6004,18 @@ const ContractsPage: React.FC = () => {
                               const contractId = documentModalForm.contract.includes(' - ') ? documentModalForm.contract.split(' - ')[0] : documentModalForm.contract;
                               const contractTitle = documentModalForm.contract.includes(' - ') ? documentModalForm.contract.split(' - ')[1] : documentModalForm.contract;
                               
-                              // Create document with proper ID and contract association
-                              const documentId = await addDocument(file, contractId, contractTitle, currentUserName, documentModalForm.assignee, documentModalForm.type);
+                              // Upload document to API and store locally
+                              let documentId = '';
+                              try {
+                                const apiDoc = await ContractService.uploadDocument(contractId, file);
+                                documentId = apiDoc.id;
+                                // Also store locally for offline access
+                                await addDocument(file, contractId, contractTitle, currentUserName, documentModalForm.assignee, documentModalForm.type);
+                              } catch (error) {
+                                console.error('Error uploading document to API:', error);
+                                // Fall back to local storage
+                                documentId = await addDocument(file, contractId, contractTitle, currentUserName, documentModalForm.assignee, documentModalForm.type);
+                              }
                             
 
                               finalDocumentIds.push(documentId);
@@ -6778,10 +6882,73 @@ const ContractsPage: React.FC = () => {
                   <tr
                     key={contract.id}
                     className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer select-none"
-                    onClick={() => setSelectedContract(contract)}
+                    onClick={async () => {
+                      setSelectedContract(contract);
+                      // Fetch full contract details including documents
+                      try {
+                        const fullContract = await ContractService.getContract(contract.id);
+                        if (fullContract.documentsList) {
+                          // Convert API documents to UI Document format
+                          const convertedDocs = fullContract.documentsList.map((doc: any) => ({
+                            id: doc.id,
+                            name: doc.name,
+                            type: doc.type || 'PDF',
+                            size: doc.size ? `${(doc.size / (1024 * 1024)).toFixed(1)} MB` : '0 MB',
+                            date: doc.uploadedAt || new Date().toISOString(),
+                            uploadedBy: doc.uploadedBy || 'System',
+                            dateUploaded: doc.uploadedAt || new Date().toISOString(),
+                            contractName: fullContract.title,
+                            contractId: fullContract.id,
+                            assignee: doc.assignee || fullContract.buyer || 'Unassigned'
+                          }));
+                          setSelectedContractDocuments(convertedDocs);
+                          
+                          // Update allContractDocuments with these documents
+                          setAllContractDocuments(prev => {
+                            // Remove old documents for this contract and add new ones
+                            const otherDocs = prev.filter(d => d.contractId !== fullContract.id);
+                            return [...otherDocs, ...convertedDocs];
+                          });
+                        }
+                      } catch (error) {
+                        console.error('Error fetching contract details:', error);
+                      }
+                    }}
                   >
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
-                      <span className="text-primary underline font-semibold cursor-pointer" onClick={e => { e.stopPropagation(); setSelectedContract(contract); }}>{contract.id}</span>
+                      <span className="text-primary underline font-semibold cursor-pointer" onClick={async e => { 
+                        e.stopPropagation(); 
+                        setSelectedContract(contract);
+                        // Fetch full contract details including documents
+                        try {
+                          const fullContract = await ContractService.getContract(contract.id);
+                          if (fullContract.documentsList) {
+                            // Convert API documents to UI Document format
+                            const convertedDocs = fullContract.documentsList.map((doc: any) => ({
+                              id: doc.id,
+                              name: doc.name,
+                              type: doc.type || 'PDF',
+                              size: doc.size ? `${(doc.size / (1024 * 1024)).toFixed(1)} MB` : '0 MB',
+                              date: doc.uploadedAt || new Date().toISOString(),
+                              uploadedBy: doc.uploadedBy || 'System',
+                              dateUploaded: doc.uploadedAt || new Date().toISOString(),
+                              contractName: fullContract.title,
+                              contractId: fullContract.id,
+                              assignee: doc.assignee || fullContract.buyer || 'Unassigned'
+                            }));
+                            setSelectedContractDocuments(convertedDocs);
+                            
+                            // Update allContractDocuments with these documents
+                            setAllContractDocuments(prev => {
+                              // Remove old documents for this contract and add new ones
+                              const otherDocs = prev.filter(d => d.contractId !== fullContract.id);
+                              return [...otherDocs, ...convertedDocs];
+                            });
+                          }
+                        } catch (error) {
+                          console.error('Error fetching contract details:', error);
+                        }
+                      }}>{contract.id}</span>
                     </td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-sm">
                       <div className="text-xs font-bold text-gray-900 dark:text-white">{contract.title}</div>
@@ -7140,7 +7307,10 @@ const ContractsPage: React.FC = () => {
               {/* Right: Close Button (original, now sticky) */}
               <button
                 className="text-gray-400 hover:text-gray-600 p-2 rounded-full ml-4 mt-1 cursor-pointer"
-                onClick={() => setSelectedContract(null)}
+                onClick={() => {
+                  setSelectedContract(null);
+                  setSelectedContractDocuments([]);
+                }}
                 aria-label="Close"
               >
                 <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -8914,7 +9084,10 @@ const ContractsPage: React.FC = () => {
               </button>
               <button
                 className="flex items-center justify-center px-5 py-2 rounded-lg bg-primary text-white font-semibold text-sm hover:bg-primary-dark transition-colors cursor-pointer"
-                onClick={() => setSelectedContract(null)}
+                onClick={() => {
+                  setSelectedContract(null);
+                  setSelectedContractDocuments([]);
+                }}
               >
                 Close
               </button>

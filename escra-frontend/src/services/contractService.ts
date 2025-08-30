@@ -262,10 +262,15 @@ export class ContractService {
 
   static async createContract(contractData: any): Promise<Contract> {
     try {
-      // Convert value to number if it's a string
+      // Convert value to number if it's a string (handle both value and contract_value fields)
       if (contractData.value && typeof contractData.value === 'string') {
         contractData.value = parseFloat(contractData.value.replace(/[$,]/g, '') || '0');
       }
+      if (contractData.contract_value && typeof contractData.contract_value === 'string') {
+        contractData.contract_value = parseFloat(contractData.contract_value.replace(/[$,]/g, '') || '0');
+      }
+      
+      console.log('ContractService - Sending to API:', contractData);
       
       const response = await fetch(`${API_BASE_URL}/api/contracts`, {
         method: 'POST',
@@ -273,12 +278,27 @@ export class ContractService {
         body: JSON.stringify(contractData),
       });
 
+      const responseText = await response.text();
+      console.log('API Response:', response.status, responseText);
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to create contract');
+        let errorDetail = 'Failed to create contract';
+        try {
+          const errorData = JSON.parse(responseText);
+          if (errorData.detail) {
+            if (typeof errorData.detail === 'string') {
+              errorDetail = errorData.detail;
+            } else if (Array.isArray(errorData.detail)) {
+              errorDetail = errorData.detail.map((err: any) => err.msg || err).join(', ');
+            }
+          }
+        } catch (e) {
+          errorDetail = responseText || 'Failed to create contract';
+        }
+        throw new Error(errorDetail);
       }
 
-      return await response.json();
+      return JSON.parse(responseText);
     } catch (error) {
       console.error('Create contract error:', error);
       throw error;
