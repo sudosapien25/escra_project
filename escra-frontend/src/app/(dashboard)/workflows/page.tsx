@@ -3432,13 +3432,13 @@ export default function WorkflowsPage() {
                                     </div>
                                   </div>
                                   
-                                  {/* Expanded Subtasks */}
+                                  {/* Expanded Subtasks - Sorted with completed at bottom */}
                                   {expandedSubtaskCards.has(task.code) && task.subtasks && task.subtasks.length > 0 && (
                                     <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
                                       <div className="space-y-1">
                                         {task.subtasks
                                           .sort((a: any, b: any) => {
-                                            // Move completed subtasks to the end
+                                            // Move completed subtasks to the bottom
                                             if (a.completed && !b.completed) return 1;
                                             if (!a.completed && b.completed) return -1;
                                             return 0;
@@ -3683,7 +3683,23 @@ export default function WorkflowsPage() {
                 {/* Right: Close Button */}
                 <button
                   className="text-gray-400 hover:text-gray-600 p-2 rounded-full ml-4 mt-1"
-                  onClick={() => setSelectedTask(null)}
+                  onClick={() => {
+                    // Sort subtasks when closing the modal
+                    if (selectedTask && selectedTask.subtasks && selectedTask.subtasks.length > 0) {
+                      const sortedSubtasks = [...selectedTask.subtasks].sort((a, b) => {
+                        // Move completed subtasks to the bottom
+                        if (a.completed && !b.completed) return 1;
+                        if (!a.completed && b.completed) return -1;
+                        return 0;
+                      });
+                      
+                      // Update the task in the store with sorted subtasks
+                      updateTask(selectedTask.code, { subtasks: sortedSubtasks });
+                    }
+                    
+                    // Close the modal
+                    setSelectedTask(null);
+                  }}
                   aria-label="Close"
                 >
                   <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3908,14 +3924,8 @@ export default function WorkflowsPage() {
                       </button>
                     </div>
                     <div className="space-y-3 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ height: 'calc(440px - 100px)', minHeight: '280px' }}>
-                      {selectedTask?.subtasks
-                        ?.sort((a, b) => {
-                          // Move completed subtasks to the end
-                          if (a.completed && !b.completed) return 1;
-                          if (!a.completed && b.completed) return -1;
-                          return 0;
-                        })
-                        .map((subtask) => (
+                      {/* Subtasks maintain their visual positions while modal is open - sorting happens when modal closes */}
+                      {selectedTask?.subtasks?.map((subtask) => (
                         <div 
                           key={subtask.id} 
                           className="flex items-center gap-3 px-4 py-3 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors relative"
@@ -3955,17 +3965,23 @@ export default function WorkflowsPage() {
                             className="w-5 h-5 border border-gray-300 rounded flex items-center justify-center cursor-pointer" 
                             onClick={(e) => {
                               e.stopPropagation(); // Prevent opening edit modal when clicking checkbox
-                              const fullTask = tasks.find(t => t.code === selectedTask.code);
-                              if (fullTask) {
-                                const updatedSubtasks = fullTask.subtasks.map(st =>
-                                  st.id === subtask.id ? { ...st, completed: !st.completed } : st
-                                );
-                                updateTask(fullTask.code, { subtasks: updatedSubtasks });
-                                // After updating, get the latest task from the store and set it as selected
-                                setTimeout(() => {
-                                  const refreshedTask = useTaskStore.getState().tasks.find(t => t.code === fullTask.code);
-                                  setSelectedTask(refreshedTask || { ...fullTask, subtasks: updatedSubtasks });
-                                }, 0);
+                              
+                              // Get the current task from the store to ensure we have the latest data
+                              const currentTask = tasks.find(t => t.code === selectedTask.code);
+                              if (currentTask) {
+                                // Find the specific subtask by ID and toggle its completed status
+                                const updatedSubtasks = currentTask.subtasks.map(st => {
+                                  if (st.id === subtask.id) {
+                                    return { ...st, completed: !st.completed };
+                                  }
+                                  return st;
+                                });
+                                
+                                // Update the task in the store
+                                updateTask(currentTask.code, { subtasks: updatedSubtasks });
+                                
+                                // Update the selected task immediately to reflect the change
+                                setSelectedTask({ ...selectedTask, subtasks: updatedSubtasks });
                               }
                             }}
                           >
