@@ -8,7 +8,7 @@ import { LuPen } from 'react-icons/lu';
 import { PiMoneyWavyBold } from 'react-icons/pi';
 import { MdOutlineAddToPhotos } from 'react-icons/md';
 import { TbClockPin, TbClockUp, TbCoins, TbTransactionDollar, TbPencilExclamation, TbTransfer, TbFileText, TbClockShare, TbClockDown, TbArrowsExchange, TbClockEdit, TbFilePlus, TbBusinessplan, TbTrash } from 'react-icons/tb';
-import { TbChevronDown, TbArrowsHorizontal } from 'react-icons/tb';
+import { TbChevronDown, TbArrowsHorizontal, TbArrowAutofitWidth } from 'react-icons/tb';
 import { HiOutlineDocumentText } from 'react-icons/hi';
 import { GrMoney } from 'react-icons/gr';
 import NewContractModal from '@/components/common/NewContractModal';
@@ -1185,7 +1185,7 @@ export default function DashboardPage() {
                   (document.documentElement as any).msRequestFullscreen();
                 }
               }}>
-                <TbArrowsHorizontal className="w-8 h-8 text-gray-400 dark:text-gray-500 mx-auto mb-2 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
+                <TbArrowAutofitWidth className="w-8 h-8 text-gray-400 dark:text-gray-500 mx-auto mb-2 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
                 <p className="text-sm text-gray-500 dark:text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">Expand to view graph</p>
               </div>
             </div>
@@ -1325,7 +1325,7 @@ export default function DashboardPage() {
                   (document.documentElement as any).msRequestFullscreen();
                 }
               }}>
-                <TbArrowsHorizontal className="w-8 h-8 text-gray-400 dark:text-gray-500 mx-auto mb-2 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
+                <TbArrowAutofitWidth className="w-8 h-8 text-gray-400 dark:text-gray-500 mx-auto mb-2 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
                 <p className="text-sm text-gray-500 dark:text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">Expand to view chart</p>
               </div>
             </div>

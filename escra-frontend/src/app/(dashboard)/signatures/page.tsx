@@ -6,13 +6,13 @@ import { FaRegSquareCheck } from 'react-icons/fa6';
 import { HiOutlineViewBoards, HiOutlineDocumentText, HiOutlineBell, HiOutlineCog, HiOutlineDuplicate, HiOutlineDocumentSearch, HiOutlineUserGroup, HiOutlineX } from 'react-icons/hi';
 import { HiMiniChevronUpDown } from 'react-icons/hi2';
 import { LuCalendarClock, LuBellRing, LuPenLine, LuCalendarFold } from 'react-icons/lu';
-import { MdCancelPresentation } from 'react-icons/md';
+
 import { FaRegClock } from 'react-icons/fa';
 import { BsPerson } from 'react-icons/bs';
 import { PiWarningDiamondBold } from 'react-icons/pi';
 import clsx from 'clsx';
 import { IconBaseProps } from 'react-icons';
-import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbClockPin, TbPencilShare, TbPencilPlus, TbClockEdit, TbStatusChange, TbHistory, TbCalendarExclamation, TbPencilCheck, TbDownload, TbSearch, TbFileSearch, TbLibrary, TbEraser, TbTrash, TbChevronDown, TbChevronsLeft, TbChevronsRight, TbClockExclamation, TbUserShare, TbUserSearch, TbCopyCheck, TbCopyMinus, TbLibraryMinus, TbEye, TbUpload, TbPencil, TbUserEdit } from 'react-icons/tb';
+import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbClockPin, TbPencilShare, TbPencilPlus, TbClockEdit, TbStatusChange, TbHistory, TbCalendarExclamation, TbPencilCheck, TbDownload, TbSearch, TbFileSearch, TbLibrary, TbEraser, TbTrash, TbChevronDown, TbChevronsLeft, TbChevronsRight, TbClockExclamation, TbUserShare, TbUserSearch, TbCopyCheck, TbCopyMinus, TbLibraryMinus, TbEye, TbUpload, TbPencil, TbUserEdit, TbSquareX } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
 import { TiUserAddOutline } from 'react-icons/ti';
@@ -3650,7 +3650,7 @@ export default function SignaturesPage() {
                                 deleteSignature(row.id, row.document);
                               }}
                             >
-                              <MdCancelPresentation className="text-sm sm:text-base transition-colors" />
+                              <TbSquareX className="h-4 w-4 transition-colors" />
                               <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                 Void
                               </span>
