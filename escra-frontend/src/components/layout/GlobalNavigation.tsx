@@ -380,14 +380,14 @@ export default function GlobalNavigation() {
                               <a href="#" className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-blue-50 transition-colors group">
                                 <LuLinkedin className="w-4 h-4 text-gray-600 group-hover:text-blue-600" />
                               </a>
-                              <a href="#" className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-red-50 transition-colors group">
-                                <TbBrandYoutube className="w-4 h-4 text-gray-600 group-hover:text-red-600" />
-                              </a>
                               <a href="#" className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-blue-50 transition-colors group">
                                 <TbBrandDiscord className="w-4 h-4 text-gray-600 group-hover:text-blue-600" />
                               </a>
                               <a href="#" className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-blue-50 transition-colors group">
                                 <RiTelegram2Line className="w-4 h-4 text-gray-600 group-hover:text-blue-600" />
+                              </a>
+                              <a href="#" className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-red-50 transition-colors group">
+                                <TbBrandYoutube className="w-4 h-4 text-gray-600 group-hover:text-red-600" />
                               </a>
                               <a href="#" className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gradient-to-br hover:from-pink-50 hover:to-orange-50 transition-colors group">
                                 <SiInstagram className="w-4 h-4 text-gray-600 group-hover:text-orange-500" />

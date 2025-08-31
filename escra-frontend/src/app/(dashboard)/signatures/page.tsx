@@ -12,7 +12,7 @@ import { BsPerson } from 'react-icons/bs';
 import { PiWarningDiamondBold } from 'react-icons/pi';
 import clsx from 'clsx';
 import { IconBaseProps } from 'react-icons';
-import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbClockPin, TbPencilShare, TbPencilPlus, TbClockEdit, TbStatusChange, TbHistory, TbCalendarExclamation, TbPencilCheck, TbDownload, TbSearch, TbFileSearch, TbLibrary, TbEraser, TbTrash, TbChevronDown, TbChevronsLeft, TbChevronsRight, TbClockExclamation, TbUserShare, TbUserSearch, TbCopyCheck, TbCopyMinus, TbLibraryMinus, TbEye, TbUpload, TbPencil, TbUserEdit, TbSquareX } from 'react-icons/tb';
+import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbClockPin, TbPencilShare, TbPencilPlus, TbClockEdit, TbStatusChange, TbHistory, TbCalendarExclamation, TbPencilCheck, TbDownload, TbSearch, TbFileSearch, TbLibrary, TbEraser, TbTrash, TbChevronDown, TbChevronsLeft, TbChevronsRight, TbClockExclamation, TbUserShare, TbUserSearch, TbUserUp, TbCopyCheck, TbCopyMinus, TbLibraryMinus, TbEye, TbUpload, TbPencil, TbUserEdit, TbSquareX } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
 import { TiUserAddOutline } from 'react-icons/ti';
@@ -2506,7 +2506,7 @@ export default function SignaturesPage() {
       <div className="overflow-y-auto max-h-[calc(100vh-300px)] [&::-webkit-scrollbar]:hidden">
         {/* Signature Filter Tabs */}
       {/* Signature Filter Tabs */}
-      <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700 w-fit mb-6">
+      <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700 w-fit mb-4">
         {signatureFilterTabs.map((tab) => (
           <button
             key={tab}
@@ -3122,7 +3122,7 @@ export default function SignaturesPage() {
               }
             }}
           >
-                <TbUserShare className="text-gray-400" size={18} />
+                <TbUserUp className="text-gray-400" size={18} />
                 <span>Sender</span>
                 <TbChevronDown className="ml-1 text-gray-400 dark:text-gray-500" size={18} />
               </button>

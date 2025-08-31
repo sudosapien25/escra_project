@@ -2534,7 +2534,7 @@ export default function WorkflowsPage() {
             </div>
 
             {/* Desktop: Horizontal layout */}
-            <div className="hidden lg:flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700 w-fit cursor-default select-none mb-6">
+            <div className="hidden lg:flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700 w-fit cursor-default select-none mb-4">
               {kanbanTabs.map((tab) => (
                 <button
                   key={tab}
@@ -2551,7 +2551,7 @@ export default function WorkflowsPage() {
             </div>
 
             {/* Stat Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               {/* Tasks in Progress */}
               <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
                 <div className="h-10 w-10 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center border-2 border-blue-200 dark:border-blue-800 cursor-default select-none">
@@ -3301,7 +3301,7 @@ export default function WorkflowsPage() {
                                           Mark as Done
                                         </button>
                                         <button 
-                                          className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center"
+                                          className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700"
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             // Set the task for the subtask modal without triggering task details modal
@@ -3311,7 +3311,6 @@ export default function WorkflowsPage() {
                                             setOpenMenuTask(null);
                                           }}
                                         >
-                                          <TbPlus className="w-4 h-4 mr-2" />
                                           Add Subtask
                                         </button>
                                         <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700">Edit</button>

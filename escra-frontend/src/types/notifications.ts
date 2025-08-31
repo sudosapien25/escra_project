@@ -22,6 +22,7 @@ export type NotificationType =
   | 'task_created'
   | 'task_deleted'
   | 'signature_requested'
+  | 'signature_rejected'
   | 'signature_voided'
   | 'document_signed'
   | 'passkey_added'

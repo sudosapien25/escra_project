@@ -683,7 +683,7 @@ const webhooksData = [
 const billingPlans = [
   {
     name: 'Essential',
-    monthlyPrice: 9,
+    monthlyPrice: 12,
     yearlyPrice: 9,
     description: 'Tamper-proof essential signing tools',
     features: [
@@ -698,8 +698,8 @@ const billingPlans = [
   },
   {
     name: 'Pro',
-    monthlyPrice: 29,
-    yearlyPrice: 290,
+    monthlyPrice: 115,
+    yearlyPrice: 99,
     description: 'Enhanced contract capacity, advanced security & granular auditability',
     features: [
       '50 contracts per month',
@@ -714,8 +714,8 @@ const billingPlans = [
   },
   {
     name: 'Growth',
-    monthlyPrice: 99,
-    yearlyPrice: 990,
+    monthlyPrice: 350,
+    yearlyPrice: 299,
     description: 'A shared workspace for your team',
     features: [
       '250 contracts per month',
@@ -1309,7 +1309,7 @@ export default function AdminSettingsPage() {
           <hr className="my-3 sm:my-6 border-gray-300 cursor-default select-none" />
           
           {/* Navigation Tabs */}
-          <div className="hidden lg:flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700 w-fit cursor-default select-none mb-6 -mt-2">
+          <div className="hidden lg:flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700 w-fit cursor-default select-none mb-4 -mt-2">
             {TABS.map(tab => (
               <button
                 key={tab.key}
@@ -2621,8 +2621,8 @@ export default function AdminSettingsPage() {
                     
                     {plan.name === 'Essential' ? (
                       <div className="mt-auto space-y-1">
-                        <button className="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-semibold border border-gray-200 dark:border-gray-600">
-                          30-day Free Trial
+                        <button className="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-semibold">
+                          30-day free trial
                         </button>
                         <button className="w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold">
                           Subscribe

@@ -101,9 +101,7 @@ export default function DashboardLayout({
             </div>
             {showAvatarDropdown && (
               <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" style={{ minWidth: '180px', fontFamily: 'Avenir, sans-serif' }}>
-                <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 dark:text-gray-300 hover:bg-primary/10 hover:text-primary transition-colors" onClick={() => { setShowAvatarDropdown(false); router.push('/activity-monitor'); }}>
-                  Inbox
-                </button>
+
                 <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 dark:text-gray-300 hover:bg-primary/10 hover:text-primary transition-colors" onClick={() => { setShowAvatarDropdown(false); router.push('/admin-settings'); }}>
                   Settings
                 </button>

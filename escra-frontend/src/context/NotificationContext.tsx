@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Notification, NotificationType } from '../types/notifications';
 import { FaCheckCircle, FaExclamationTriangle, FaUserPlus, FaEdit, FaFileSignature, FaCommentDots, FaMoneyCheckAlt, FaTimesCircle, FaClock, FaLock, FaChartLine, FaCheck, FaSignature } from 'react-icons/fa';
-import { TbWritingSign, TbCloudUpload, TbFileText, TbFileDescription, TbApiApp, TbApiAppOff, TbWebhook, TbWebhookOff } from 'react-icons/tb';
+import { TbWritingSign, TbCloudUpload, TbFileText, TbFileDescription, TbApiApp, TbApiAppOff, TbWebhook, TbWebhookOff, TbTrash, TbCopyX, TbFileX, TbFilePlus, TbWalletOff, TbKeyOff, TbKey, TbWallet, TbSignature, TbSignatureOff, TbPlus, TbLibrary, TbSubtask, TbWritingSignOff } from 'react-icons/tb';
 import { PiMoneyWavyBold } from 'react-icons/pi';
 import { AiOutlineFileDone } from 'react-icons/ai';
 import { HiOutlineClipboardCheck } from 'react-icons/hi';
@@ -10,39 +10,40 @@ import { HiOutlineKey } from 'react-icons/hi';
 
 // Map notification type to icon component
 const notificationIcons: Record<NotificationType, React.ReactNode> = {
-  contract_signed: <TbWritingSign className="text-primary text-2xl" />,
-  comment_added: <TbCloudUpload className="text-primary text-2xl" />,
-  wire_info_submitted: <PiMoneyWavyBold className="text-primary text-2xl" />,
+  contract_signed: <TbWritingSign className="text-primary text-xl" />,
+  comment_added: <TbCloudUpload className="text-primary text-xl" />,
+  wire_info_submitted: <PiMoneyWavyBold className="text-primary text-xl" />,
   contract_modified: <FaEdit className="text-primary text-xl" />,
   invited: <FaUserPlus className="text-primary text-xl" />,
   action_required: <FaExclamationTriangle className="text-yellow-500 text-xl" />,
   contract_rejected: <FaTimesCircle className="text-red-500 text-xl" />,
   role_change: <FaUserPlus className="text-primary text-xl" />,
-  all_signatures_complete: <HiOutlineClipboardCheck className="text-primary text-2xl" />,
-  funds_received: <PiMoneyWavyBold className="text-primary text-2xl" />,
+  all_signatures_complete: <HiOutlineClipboardCheck className="text-primary text-xl" />,
+  funds_received: <PiMoneyWavyBold className="text-primary text-xl" />,
   transaction_complete: <FaCheckCircle className="text-green-500 text-xl" />,
   transaction_cancelled: <FaTimesCircle className="text-red-500 text-xl" />,
-  approaching_deadline: <LuCalendarPlus className="text-primary text-2xl" />,
+  approaching_deadline: <LuCalendarPlus className="text-primary text-xl" />,
   overdue_action: <FaExclamationTriangle className="text-red-500 text-xl" />,
   security_alert: <FaLock className="text-red-500 text-xl" />,
-  contract_created: <TbFileText className="text-primary text-2xl" />,
-  document_created: <TbFileDescription className="text-primary text-2xl" />,
-  contract_voided: <FaTimesCircle className="text-red-500 text-xl" />,
+  contract_created: <TbFileText className="text-primary text-xl" />,
+  document_created: <TbLibrary className="text-primary text-xl" />,
+  contract_voided: <TbFileX className="text-red-500 text-xl" />,
   contract_deleted: <FaTimesCircle className="text-red-500 text-xl" />,
-  document_deleted: <FaTimesCircle className="text-red-500 text-xl" />,
-  task_created: <TbFileDescription className="text-primary text-2xl" />,
+  document_deleted: <TbCopyX className="text-red-500 text-xl" />,
+  task_created: <TbSubtask className="text-primary text-xl" />,
   task_deleted: <FaTimesCircle className="text-red-500 text-xl" />,
-  signature_requested: <FaSignature className="text-primary text-2xl" />,
+  signature_requested: <TbWritingSign className="text-primary text-xl" />,
+  signature_rejected: <TbWritingSignOff className="text-red-500 text-xl" />,
   signature_voided: <FaTimesCircle className="text-red-500 text-xl" />,
-  document_signed: <FaSignature className="text-primary text-2xl" />,
-  passkey_added: <HiOutlineKey className="text-primary text-2xl" />,
-  passkey_removed: <FaTimesCircle className="text-red-500 text-xl" />,
-  wallet_added: <PiMoneyWavyBold className="text-primary text-2xl" />,
-  wallet_removed: <FaTimesCircle className="text-red-500 text-xl" />,
-  api_token_added: <TbApiApp className="text-primary text-2xl" />,
-  api_token_removed: <TbApiAppOff className="text-red-500 text-2xl" />,
-  webhook_added: <TbWebhook className="text-primary text-2xl" />,
-  webhook_removed: <TbWebhookOff className="text-red-500 text-2xl" />,
+  document_signed: <FaSignature className="text-primary text-xl" />,
+  passkey_added: <TbKey className="text-primary text-xl" />,
+  passkey_removed: <TbKeyOff className="text-red-500 text-xl" />,
+  wallet_added: <TbWallet className="text-primary text-xl" />,
+  wallet_removed: <TbWalletOff className="text-red-500 text-xl" />,
+  api_token_added: <TbApiApp className="text-primary text-xl" />,
+  api_token_removed: <TbApiAppOff className="text-red-500 text-xl" />,
+  webhook_added: <TbWebhook className="text-primary text-xl" />,
+  webhook_removed: <TbWebhookOff className="text-red-500 text-xl" />,
 };
 
 // Start with empty notifications array
@@ -65,6 +66,7 @@ interface NotificationContextType {
   addTaskCreatedNotification: (taskId: string, taskName: string, contractId: string, contractTitle: string) => void;
   addTaskDeletedNotification: (taskId: string, taskName: string, contractId: string, contractTitle: string) => void;
   addSignatureRequestedNotification: (signatureId: string, documentName: string, recipients: Array<{name: string, email: string}>) => void;
+  addSignatureRejectedNotification: (signatureId: string, documentName: string, recipients: Array<{name: string, email: string}>) => void;
   addSignatureVoidedNotification: (signatureId: string, documentName: string, recipients: Array<{name: string, email: string}>) => void;
   addDocumentSignedNotification: (documentId: string, documentName: string, contractId: string, contractName: string, signerName?: string) => void;
   addPasskeyAddedNotification: (passkeyName: string) => void;
@@ -207,6 +209,30 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       message: message,
       read: false,
       icon: 'signature_requested',
+      link: `/signatures`,
+      meta: { signatureId, documentName, recipientCount: validRecipients.length },
+    });
+  };
+
+  const addSignatureRejectedNotification = (signatureId: string, documentName: string, recipients: Array<{name: string, email: string}>) => {
+    // Filter out recipients with empty names
+    const validRecipients = recipients.filter(recipient => recipient.name && recipient.name.trim() !== '');
+    
+    // Create bulleted list of recipients
+    const recipientsList = validRecipients.map(recipient => 
+      `• ${recipient.name} at ${recipient.email}`
+    ).join('\n');
+    
+    const message = validRecipients.length > 0 
+      ? `Request for signature to the following individuals has been rejected:\n${recipientsList}`
+      : `"${documentName}" signature request has been rejected`;
+    
+    addNotification({
+      type: 'signature_rejected',
+      title: 'Signature Request Rejected',
+      message: message,
+      read: false,
+      icon: 'signature_rejected',
       link: `/signatures`,
       meta: { signatureId, documentName, recipientCount: validRecipients.length },
     });
@@ -372,6 +398,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       addTaskCreatedNotification,
       addTaskDeletedNotification,
       addSignatureRequestedNotification,
+      addSignatureRejectedNotification,
       addSignatureVoidedNotification,
       addDocumentSignedNotification,
       addPasskeyAddedNotification,

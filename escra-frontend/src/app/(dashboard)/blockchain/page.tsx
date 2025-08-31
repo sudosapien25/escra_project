@@ -514,7 +514,7 @@ export default function BlockchainPage() {
 
   return (
     <>
-      <div className="space-y-4 cursor-default select-none">
+      <div className="space-y-2 cursor-default select-none">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0 mb-3 sm:mb-6 cursor-default select-none">
         <div className="pb-1 cursor-default select-none">
@@ -569,7 +569,7 @@ export default function BlockchainPage() {
       </div>
 
       {/* Desktop: Horizontal layout */}
-      <div className="hidden lg:flex gap-1 cursor-default select-none mb-6">
+      <div className="hidden lg:flex gap-1 cursor-default select-none mb-0 mt-2">
         {[
           { key: 'smart-contracts', label: 'Smart Contracts' },
           { key: 'on-chain-activity', label: 'On-Chain Activity' },
@@ -593,7 +593,7 @@ export default function BlockchainPage() {
         ))}
       </div>
 
-      <hr className="my-3 md:my-6 border-gray-300 cursor-default select-none" />
+      <hr className="my-3 md:my-4 border-gray-300 cursor-default select-none" />
 
       {/* Tab Content */}
       {activeTab === 'smart-contracts' && (
