@@ -3,28 +3,63 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NotificationProvider, useNotifications, getNotificationIcon } from '@/context/NotificationContext';
 import { FaCheck } from 'react-icons/fa';
-import { TbSettingsCog, TbFlag, TbFlagCheck, TbActivityHeartbeat, TbNotification, TbChevronDown, TbReload, TbDotsVertical, TbChevronLeft, TbChevronRight, TbSearch } from 'react-icons/tb';
+import { TbSettingsCog, TbFlag, TbFlagCheck, TbActivityHeartbeat, TbNotification, TbChevronDown, TbReload, TbDotsVertical, TbChevronLeft, TbChevronRight, TbSearch, TbArchive, TbTrash, TbMailOpened, TbFlagExclamation } from 'react-icons/tb';
 import clsx from 'clsx';
 import { useToast } from '@/components/ui/use-toast';
 
 const notificationTabs = [
   { key: 'all', label: 'All' },
   { key: 'unread', label: 'Unread' },
+  { key: 'read', label: 'Read' },
+  { key: 'archive', label: 'Archived' },
 ];
 
 function NotificationPageContent() {
-  const { notifications, markAsRead, markAllAsRead, unreadCount, filter, setFilter, addContractCreatedNotification, addDocumentCreatedNotification, addSignatureRequestedNotification, addSignatureRejectedNotification, addTaskCreatedNotification, addContractVoidedNotification, addDocumentDeletedNotification, addPasskeyRemovedNotification, addWalletRemovedNotification, addApiTokenRemovedNotification, addWebhookRemovedNotification } = useNotifications();
+  const { notifications, markAsRead, markAsUnread, markAllAsRead, unreadCount, filter, setFilter, addContractCreatedNotification, addDocumentCreatedNotification, addSignatureRequestedNotification, addSignatureRejectedNotification, addSignatureCompletedNotification, addTaskCreatedNotification, addContractVoidedNotification, addDocumentDeletedNotification, addPasskeyRemovedNotification, addWalletRemovedNotification, addApiTokenRemovedNotification, addWebhookRemovedNotification } = useNotifications();
   const [markAllReadClicked, setMarkAllReadClicked] = useState(false);
   const [allSelected, setAllSelected] = useState(false);
   const [selectedNotifications, setSelectedNotifications] = useState<Set<string>>(new Set());
   const [showDropdown, setShowDropdown] = useState(false);
   const [showDotsDropdown, setShowDotsDropdown] = useState(false);
+  const [showIndividualDropdown, setShowIndividualDropdown] = useState<string | null>(null);
   const [selectionFilter, setSelectionFilter] = useState<'all' | 'unread' | 'read'>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+  const [importantNotifications, setImportantNotifications] = useState<Set<string>>(new Set());
   const dropdownRef = useRef<HTMLDivElement>(null);
   const dotsDropdownRef = useRef<HTMLDivElement>(null);
+  const individualDropdownRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  // Function to mark notifications as important
+  const markAsImportant = (notificationIds: string[]) => {
+    const newImportant = new Set(importantNotifications);
+    notificationIds.forEach(id => {
+      newImportant.add(id);
+    });
+    setImportantNotifications(newImportant);
+    
+    toast({
+      title: "Notifications flagged as important",
+      description: `${notificationIds.length} notification${notificationIds.length > 1 ? 's' : ''} marked as important`,
+      duration: 3000,
+    });
+  };
+
+  // Function to unflag notifications
+  const unflagAsImportant = (notificationIds: string[]) => {
+    const newImportant = new Set(importantNotifications);
+    notificationIds.forEach(id => {
+      newImportant.delete(id);
+    });
+    setImportantNotifications(newImportant);
+    
+    toast({
+      title: "Notifications unflagged",
+      description: `${notificationIds.length} notification${notificationIds.length > 1 ? 's' : ''} unflagged`,
+      duration: 3000,
+    });
+  };
 
   // Handle click outside to close dropdowns
   useEffect(() => {
@@ -50,16 +85,26 @@ function NotificationPageContent() {
           setShowDotsDropdown(false);
         }
       }
+      
+      // Handle individual dropdown
+      if (showIndividualDropdown) {
+        const isInsideDropdown = individualDropdownRef.current?.contains(target);
+        const isInsideButton = target.closest('[data-individual-dots-button]');
+        
+        if (!isInsideDropdown && !isInsideButton) {
+          setShowIndividualDropdown(null);
+        }
+      }
     };
 
-    if (showDropdown || showDotsDropdown) {
+    if (showDropdown || showDotsDropdown || showIndividualDropdown) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showDropdown, showDotsDropdown]);
+  }, [showDropdown, showDotsDropdown, showIndividualDropdown]);
 
   // Filtering logic
   const filtered = notifications.filter((n) => {
@@ -68,6 +113,8 @@ function NotificationPageContent() {
       // For 'all' tab, only apply search filter
     } else if (filter === 'unread') {
       if (n.read) return false; // Must be unread
+    } else if (filter === 'read') {
+      if (!n.read) return false; // Must be read
     }
     
     // Then apply search filter if search term exists
@@ -105,6 +152,9 @@ function NotificationPageContent() {
     // Signature requested notification
     addSignatureRequestedNotification('SIG-2024-001', 'Software Development Agreement', [{name: 'John Doe', email: 'john.doe@company.com'}]);
     
+    // Signature completed notification
+    addSignatureCompletedNotification('John Doe', 'USR-2024-001', 'Software Development Agreement', 'DOC-2024-001', 'CON-2024-001', 'Software Development Agreement');
+    
     // Task created notification
     addTaskCreatedNotification('TASK-2024-001', 'Review Contract Terms', 'CON-2024-001', 'Software Development Agreement');
     
@@ -131,7 +181,7 @@ function NotificationPageContent() {
     
     toast({
       title: "Example notifications created",
-      description: "Added 11 sample notifications to demonstrate the activity monitor",
+      description: "Added 12 sample notifications to demonstrate the activity monitor",
       duration: 3000,
     });
   };
@@ -174,7 +224,7 @@ function NotificationPageContent() {
 
       {/* Tabs/Filters and Search Container */}
       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 mb-6 mt-6">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1">
           {/* Tabs/Filters */}
           <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700 w-fit">
             {notificationTabs.map((tab) => (
@@ -185,7 +235,11 @@ function NotificationPageContent() {
                     ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
                     : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
                 }`}
-                onClick={() => setFilter(tab.key)}
+                onClick={() => {
+                  setFilter(tab.key);
+                  setSelectedNotifications(new Set());
+                  setAllSelected(false);
+                }}
               >
                 <span className="flex items-center">
                   {tab.label}
@@ -215,23 +269,25 @@ function NotificationPageContent() {
       </div>
 
       {/* Notification Icon */}
-      <div className="flex items-center mt-4 relative">
+      <div className="flex items-center mt-4 relative ml-[2px]">
         <div 
-          className={`w-4 h-4 border border-gray-300 rounded flex items-center justify-center cursor-pointer ml-7 hover:border-gray-400 dark:hover:border-gray-500 transition-colors ${
+          className={`w-[17px] h-4 border border-gray-300 rounded flex items-center justify-center cursor-pointer ml-7 ${
             allSelected ? 'border-primary' : 'border-gray-300'
           }`}
           onClick={() => {
             const newAllSelected = !allSelected;
             setAllSelected(newAllSelected);
             if (newAllSelected) {
-              // Select notifications based on filter
+              // Select notifications based on current filter tab
               let notificationsToSelect;
-              if (selectionFilter === 'all') {
+              if (filter === 'all') {
                 notificationsToSelect = filtered;
-              } else if (selectionFilter === 'unread') {
+              } else if (filter === 'unread') {
                 notificationsToSelect = filtered.filter(n => !n.read);
-              } else if (selectionFilter === 'read') {
+              } else if (filter === 'read') {
                 notificationsToSelect = filtered.filter(n => n.read);
+              } else if (filter === 'archive') {
+                notificationsToSelect = filtered;
               }
               setSelectedNotifications(new Set(notificationsToSelect.map(n => n.id)));
             } else {
@@ -251,27 +307,189 @@ function NotificationPageContent() {
           className="ml-2 text-gray-600 dark:text-gray-300 w-4 h-4 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
           onClick={() => setShowDropdown(v => !v)}
         />
-        <TbReload 
-          className="ml-2 text-gray-600 dark:text-gray-300 w-5 h-5 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
-        />
-        <TbDotsVertical 
-          data-dots-button
-          className="ml-2 text-gray-600 dark:text-gray-300 w-4 h-4 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
-          onClick={() => setShowDotsDropdown(v => !v)}
-        />
+        {selectedNotifications.size === 0 ? (
+          <>
+            <TbReload 
+              className="ml-2 text-gray-600 dark:text-gray-300 w-5 h-5 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
+            />
+            <TbDotsVertical 
+              data-dots-button
+              className="ml-2 text-gray-600 dark:text-gray-300 w-4 h-4 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
+              onClick={() => setShowDotsDropdown(v => !v)}
+            />
+          </>
+        ) : (
+          <>
+            <TbArchive 
+              className="ml-2 text-gray-600 dark:text-gray-300 w-5 h-5 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
+            />
+            <TbTrash 
+              className="ml-2 text-gray-600 dark:text-gray-300 w-5 h-5 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
+            />
+            <div className="ml-2 w-px h-5 bg-gray-300 dark:bg-gray-600"></div>
+            <TbMailOpened 
+              className="ml-2 text-gray-600 dark:text-gray-300 w-5 h-5 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
+            />
+            <TbDotsVertical 
+              data-dots-button
+              className="ml-2 text-gray-600 dark:text-gray-300 w-4 h-4 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
+              onClick={() => setShowDotsDropdown(v => !v)}
+            />
+          </>
+        )}
         
         {/* Dots Dropdown */}
         {showDotsDropdown && (
-          <div ref={dotsDropdownRef} className="absolute top-full mt-2 ml-24 w-32 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
-            <button
-              className="w-full text-left px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-              onClick={() => {
-                markAllAsRead();
-                setShowDotsDropdown(false);
-              }}
-            >
-              Mark all as Read
-            </button>
+          <div ref={dotsDropdownRef} className={`absolute top-full mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50 ${
+            selectedNotifications.size > 0 ? 'ml-44 w-40' : 'ml-28 w-32'
+          }`}>
+            {selectedNotifications.size > 0 ? (
+              <>
+                {(() => {
+                  // Check if all selected notifications are unread
+                  const selectedNotificationObjects = notifications.filter(n => selectedNotifications.has(n.id));
+                  const allUnread = selectedNotificationObjects.every(n => !n.read);
+                  const allRead = selectedNotificationObjects.every(n => n.read);
+                  
+                                     if (allUnread) {
+                     return (
+                       <>
+                         <button
+                           className="w-full text-left px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                           onClick={() => {
+                             // Mark only selected notifications as read
+                             selectedNotifications.forEach(id => markAsRead(id));
+                             setShowDotsDropdown(false);
+                           }}
+                         >
+                           Mark as Read
+                         </button>
+                         <button
+                           className="w-full text-left px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                           onClick={() => {
+                             markAsImportant(Array.from(selectedNotifications));
+                             setShowDotsDropdown(false);
+                           }}
+                         >
+                           Flag as Important
+                         </button>
+                         <button
+                           className="w-full text-left px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                           onClick={() => {
+                             // TODO: Implement archive functionality
+                             setShowDotsDropdown(false);
+                           }}
+                         >
+                           Archive
+                         </button>
+                       </>
+                     );
+                   } else if (allRead) {
+                     return (
+                       <>
+                         <button
+                           className="w-full text-left px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                           onClick={() => {
+                             // Mark only selected notifications as unread
+                             selectedNotifications.forEach(id => markAsUnread(id));
+                             setShowDotsDropdown(false);
+                           }}
+                         >
+                           Mark as Unread
+                         </button>
+                         <button
+                           className="w-full text-left px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                           onClick={() => {
+                             markAsImportant(Array.from(selectedNotifications));
+                             setShowDotsDropdown(false);
+                           }}
+                         >
+                           Flag as Important
+                         </button>
+                         <button
+                           className="w-full text-left px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                           onClick={() => {
+                             // TODO: Implement archive functionality
+                             setShowDotsDropdown(false);
+                           }}
+                         >
+                           Archive
+                         </button>
+                       </>
+                     );
+                   } else {
+                     // Mixed read/unread - show appropriate options
+                     return (
+                       <>
+                         {(() => {
+                           // Check if any selected notifications are unread
+                           const hasUnread = selectedNotificationObjects.some(n => !n.read);
+                           // Check if any selected notifications are read
+                           const hasRead = selectedNotificationObjects.some(n => n.read);
+                           
+                           return (
+                             <>
+                               {hasUnread && (
+                                 <button
+                                   className="w-full text-left px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                   onClick={() => {
+                                     // Mark only unread selected notifications as read
+                                     selectedNotificationObjects.filter(n => !n.read).forEach(n => markAsRead(n.id));
+                                     setShowDotsDropdown(false);
+                                   }}
+                                 >
+                                   Mark as Read
+                                 </button>
+                               )}
+                               {hasRead && (
+                                 <button
+                                   className="w-full text-left px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                   onClick={() => {
+                                     // Mark only read selected notifications as unread
+                                     selectedNotificationObjects.filter(n => n.read).forEach(n => markAsUnread(n.id));
+                                     setShowDotsDropdown(false);
+                                   }}
+                                 >
+                                   Mark as Unread
+                                 </button>
+                               )}
+                               <button
+                                 className="w-full text-left px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                 onClick={() => {
+                                   markAsImportant(Array.from(selectedNotifications));
+                                   setShowDotsDropdown(false);
+                                 }}
+                               >
+                                 Flag as Important
+                               </button>
+                               <button
+                                 className="w-full text-left px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                 onClick={() => {
+                                   // TODO: Implement archive functionality
+                                   setShowDotsDropdown(false);
+                                 }}
+                               >
+                                 Archive
+                               </button>
+                             </>
+                           );
+                         })()}
+                       </>
+                     );
+                   }
+                })()}
+              </>
+            ) : (
+              <button
+                className="w-full text-left px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                onClick={() => {
+                  markAllAsRead();
+                  setShowDotsDropdown(false);
+                }}
+              >
+                Mark all as Read
+              </button>
+            )}
           </div>
         )}
         
@@ -305,13 +523,17 @@ function NotificationPageContent() {
         
         {/* Dropdown */}
         {showDropdown && (
-          <div ref={dropdownRef} className="absolute top-full mt-2 left-7 w-32 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
+          <div ref={dropdownRef} className="absolute top-full mt-1 left-[60px] w-32 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
             <button
               className={`w-full text-left px-4 py-2 text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
                 selectionFilter === 'all' ? 'text-primary bg-primary/10' : 'text-gray-700 dark:text-gray-300'
               }`}
               onClick={() => {
                 setSelectionFilter('all');
+                // Clear current selection and select all notifications on the current page
+                const currentPageNotificationIds = currentNotifications.map(n => n.id);
+                setSelectedNotifications(new Set(currentPageNotificationIds));
+                setAllSelected(currentPageNotificationIds.length > 0);
                 setShowDropdown(false);
               }}
             >
@@ -323,6 +545,10 @@ function NotificationPageContent() {
               }`}
               onClick={() => {
                 setSelectionFilter('unread');
+                // Clear current selection and select only unread notifications on the current page
+                const unreadNotificationIds = currentNotifications.filter(n => !n.read).map(n => n.id);
+                setSelectedNotifications(new Set(unreadNotificationIds));
+                setAllSelected(unreadNotificationIds.length > 0);
                 setShowDropdown(false);
               }}
             >
@@ -334,6 +560,10 @@ function NotificationPageContent() {
               }`}
               onClick={() => {
                 setSelectionFilter('read');
+                // Clear current selection and select only read notifications on the current page
+                const readNotificationIds = currentNotifications.filter(n => n.read).map(n => n.id);
+                setSelectedNotifications(new Set(readNotificationIds));
+                setAllSelected(readNotificationIds.length > 0);
                 setShowDropdown(false);
               }}
             >
@@ -347,9 +577,9 @@ function NotificationPageContent() {
       <div className="rounded-lg overflow-hidden mt-4">
         <div className="max-h-[calc(100vh-400px)] overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
           {currentNotifications.length === 0 && (
-            <div className="p-8 text-center text-gray-400 dark:text-gray-500 text-xs">
-              <TbActivityHeartbeat className="mx-auto mb-2 w-6 h-6 text-primary" />
-              No activity found
+            <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400 mt-48">
+              <TbActivityHeartbeat className="w-6 h-6 mb-2 text-primary" />
+              <p className="text-sm" style={{ fontFamily: 'Avenir, sans-serif' }}>No activity found</p>
             </div>
           )}
           {currentNotifications.map((n, index) => (
@@ -361,8 +591,10 @@ function NotificationPageContent() {
               markAsRead(n.id);
             }}
                           className={clsx(
-                'flex items-start gap-4 p-6 mx-1 sm:mx-2 my-5 rounded cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600',
-                !n.read && (['contract_voided', 'contract_deleted', 'document_deleted', 'task_deleted', 'signature_voided', 'signature_rejected', 'passkey_removed', 'wallet_removed', 'api_token_removed', 'webhook_removed'].includes(n.type) ? 'bg-red-50/50 dark:bg-red-900/10 shadow-[0_0_0_1px_rgba(220,38,38,0.3)] dark:shadow-[0_0_0_1px_rgba(248,113,113,0.3)]' : 'bg-gray-100 dark:bg-gray-700 shadow-[0_0_0_1px_rgba(20,184,166,0.3)] dark:shadow-none'),
+                'flex items-start gap-4 p-6 mx-1 sm:mx-2 my-5 rounded cursor-pointer hover:shadow-lg transition-shadow relative',
+                selectedNotifications.has(n.id) && 'bg-gray-100 dark:bg-gray-700',
+                !n.read && !selectedNotifications.has(n.id) && (['contract_voided', 'contract_deleted', 'document_deleted', 'task_deleted', 'signature_voided', 'signature_rejected', 'passkey_removed', 'wallet_removed', 'api_token_removed', 'webhook_removed'].includes(n.type) ? 'bg-red-50/50 dark:bg-red-900/20 shadow-[0_0_0_1px_rgba(220,38,38,0.3)] dark:shadow-[0_0_0_1px_rgba(248,113,113,0.3)]' : 'bg-gray-100/70 dark:bg-gray-700/25 shadow-[0_0_0_1px_rgba(20,184,166,0.3)] dark:shadow-[0_0_0_1px_rgba(20,184,166,0.3)]'),
+                n.read && !selectedNotifications.has(n.id) && 'border border-gray-200 dark:border-gray-700',
                 index > 0 && 'border-t border-gray-100 dark:border-gray-700',
                 'transition-colors'
               )}
@@ -370,7 +602,7 @@ function NotificationPageContent() {
             <div className="flex-shrink-0 mt-1">
               {/* Selection Checkbox */}
               <div 
-                className={`w-4 h-4 border border-gray-300 rounded flex items-center justify-center cursor-pointer ${
+                className={`w-[17px] h-4 border border-gray-300 rounded flex items-center justify-center cursor-pointer ${
                   selectedNotifications.has(n.id) ? 'border-primary' : 'border-gray-300'
                 }`}
                 onClick={(e) => {
@@ -394,30 +626,127 @@ function NotificationPageContent() {
               </div>
             </div>
             <div className="flex-1">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 relative">
                 {getNotificationIcon(n.type)}
                 <span className={`font-semibold text-sm ${
                   ['contract_voided', 'contract_deleted', 'document_deleted', 'task_deleted', 'signature_voided', 'signature_rejected', 'passkey_removed', 'wallet_removed', 'api_token_removed', 'webhook_removed'].includes(n.type)
                     ? 'text-red-600 dark:text-red-400' 
-                    : 'text-gray-900 dark:text-white'
+                    : ['signature_completed', 'task_created', 'signature_requested', 'document_created', 'contract_created'].includes(n.type)
+                      ? 'text-primary'
+                      : 'text-gray-900 dark:text-white'
                 }`}>{n.title}</span>
                 {!n.read && (
-                  <span className="ml-2 px-2 py-0.5 text-xs font-semibold rounded bg-primary text-white border border-primary">Unread</span>
+                  <span className="ml-2 px-2 py-0.5 text-xs font-semibold rounded bg-gray-600 text-white border border-gray-600">Unread</span>
                 )}
+                <div className="relative">
+                  <TbDotsVertical 
+                    data-individual-dots-button
+                    className="ml-[1px] text-gray-600 dark:text-gray-300 w-4 h-4 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setShowIndividualDropdown(showIndividualDropdown === n.id ? null : n.id);
+                    }}
+                  />
+                
+                  {/* Individual Notification Dropdown */}
+                  {showIndividualDropdown === n.id && (
+                    <div 
+                      ref={individualDropdownRef} 
+                      className="absolute top-full left-2 mt-1 w-40 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50"
+                    >
+                      {!n.read ? (
+                        <>
+                          <button
+                            className="w-full text-left px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              markAsRead(n.id);
+                              setShowIndividualDropdown(null);
+                            }}
+                          >
+                            Mark as Read
+                          </button>
+                          <button
+                            className="w-full text-left px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              if (importantNotifications.has(n.id)) {
+                                unflagAsImportant([n.id]);
+                              } else {
+                                markAsImportant([n.id]);
+                              }
+                              setShowIndividualDropdown(null);
+                            }}
+                          >
+                            {importantNotifications.has(n.id) ? 'Unflag' : 'Flag as Important'}
+                          </button>
+                          <button
+                            className="w-full text-left px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              // TODO: Implement archive functionality
+                              setShowIndividualDropdown(null);
+                            }}
+                          >
+                            Archive
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            className="w-full text-left px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              markAsUnread(n.id);
+                              setShowIndividualDropdown(null);
+                            }}
+                          >
+                            Mark as Unread
+                          </button>
+                          <button
+                            className="w-full text-left px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              if (importantNotifications.has(n.id)) {
+                                unflagAsImportant([n.id]);
+                              } else {
+                                markAsImportant([n.id]);
+                              }
+                              setShowIndividualDropdown(null);
+                            }}
+                          >
+                            {importantNotifications.has(n.id) ? 'Unflag' : 'Flag as Important'}
+                          </button>
+                          <button
+                            className="w-full text-left px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              // TODO: Implement archive functionality
+                              setShowIndividualDropdown(null);
+                            }}
+                          >
+                            Archive
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="text-gray-600 dark:text-gray-400 text-xs mt-1 mb-2">{n.message}</div>
+              <div className="text-gray-600 dark:text-gray-400 text-xs mt-4 mb-2">{n.message}</div>
               <a href={n.link || '#'} className="text-primary text-xs font-medium hover:underline">View Details</a>
             </div>
             <div className="flex flex-col items-end gap-2 min-w-[100px]">
               <span className="text-xs text-gray-900 dark:text-white mb-2 whitespace-nowrap">{formatTimeAgo(n.timestamp)}</span>
-              {!n.read && (
-                <button
-                  className="flex items-center gap-1 text-primary text-xs font-semibold hover:underline"
-                  onClick={() => markAsRead(n.id)}
-                >
-                  <FaCheck className="text-primary" />
-                  Mark as read
-                </button>
+              {importantNotifications.has(n.id) && (
+                <TbFlagExclamation className="text-yellow-500 text-xl" />
               )}
             </div>
           </div>

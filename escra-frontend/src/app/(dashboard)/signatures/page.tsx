@@ -3122,7 +3122,7 @@ export default function SignaturesPage() {
               }
             }}
           >
-                <TbUserUp className="text-gray-400" size={18} />
+                <TbUserShare className="text-gray-400" size={18} />
                 <span>Sender</span>
                 <TbChevronDown className="ml-1 text-gray-400 dark:text-gray-500" size={18} />
               </button>

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Notification, NotificationType } from '../types/notifications';
 import { FaCheckCircle, FaExclamationTriangle, FaUserPlus, FaEdit, FaFileSignature, FaCommentDots, FaMoneyCheckAlt, FaTimesCircle, FaClock, FaLock, FaChartLine, FaCheck, FaSignature } from 'react-icons/fa';
-import { TbWritingSign, TbCloudUpload, TbFileText, TbFileDescription, TbApiApp, TbApiAppOff, TbWebhook, TbWebhookOff, TbTrash, TbCopyX, TbFileX, TbFilePlus, TbWalletOff, TbKeyOff, TbKey, TbWallet, TbSignature, TbSignatureOff, TbPlus, TbLibrary, TbSubtask, TbWritingSignOff } from 'react-icons/tb';
+import { TbWritingSign, TbCloudUpload, TbFileText, TbFileDescription, TbApiApp, TbApiAppOff, TbWebhook, TbWebhookOff, TbTrash, TbCopyX, TbFileX, TbFilePlus, TbWalletOff, TbKeyOff, TbKey, TbWallet, TbSignature, TbSignatureOff, TbPlus, TbLibrary, TbSubtask, TbWritingSignOff, TbWand, TbPencilShare } from 'react-icons/tb';
 import { PiMoneyWavyBold } from 'react-icons/pi';
 import { AiOutlineFileDone } from 'react-icons/ai';
 import { HiOutlineClipboardCheck } from 'react-icons/hi';
@@ -32,9 +32,10 @@ const notificationIcons: Record<NotificationType, React.ReactNode> = {
   document_deleted: <TbCopyX className="text-red-500 text-xl" />,
   task_created: <TbSubtask className="text-primary text-xl" />,
   task_deleted: <FaTimesCircle className="text-red-500 text-xl" />,
-  signature_requested: <TbWritingSign className="text-primary text-xl" />,
+  signature_requested: <TbPencilShare className="text-primary text-xl" />,
   signature_rejected: <TbWritingSignOff className="text-red-500 text-xl" />,
   signature_voided: <FaTimesCircle className="text-red-500 text-xl" />,
+  signature_completed: <TbSignature className="text-primary text-xl" />,
   document_signed: <FaSignature className="text-primary text-xl" />,
   passkey_added: <TbKey className="text-primary text-xl" />,
   passkey_removed: <TbKeyOff className="text-red-500 text-xl" />,
@@ -53,6 +54,7 @@ interface NotificationContextType {
   notifications: Notification[];
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
+  markAsUnread: (id: string) => void;
   deleteNotification: (id: string) => void;
   unreadCount: number;
   filter: string;
@@ -68,6 +70,7 @@ interface NotificationContextType {
   addSignatureRequestedNotification: (signatureId: string, documentName: string, recipients: Array<{name: string, email: string}>) => void;
   addSignatureRejectedNotification: (signatureId: string, documentName: string, recipients: Array<{name: string, email: string}>) => void;
   addSignatureVoidedNotification: (signatureId: string, documentName: string, recipients: Array<{name: string, email: string}>) => void;
+  addSignatureCompletedNotification: (userName: string, userId: string, documentName: string, documentId: string, contractId: string, contractName: string) => void;
   addDocumentSignedNotification: (documentId: string, documentName: string, contractId: string, contractName: string, signerName?: string) => void;
   addPasskeyAddedNotification: (passkeyName: string) => void;
   addPasskeyRemovedNotification: (passkeyName: string) => void;
@@ -93,6 +96,10 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
+  const markAsUnread = (id: string) => {
+    setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: false } : n));
+  };
+
   const deleteNotification = (id: string) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
@@ -100,7 +107,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   const addNotification = (notification: Omit<Notification, 'id' | 'timestamp'>) => {
     const newNotification: Notification = {
       ...notification,
-      id: Date.now().toString(),
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       timestamp: new Date().toISOString(),
     };
     setNotifications((prev) => [newNotification, ...prev]);
@@ -262,6 +269,18 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const addSignatureCompletedNotification = (userName: string, userId: string, documentName: string, documentId: string, contractId: string, contractName: string) => {
+    addNotification({
+      type: 'signature_completed',
+      title: 'Signature Completed',
+      message: `"${userName}" with User ID #${userId} has successfully signed "${documentName}" with Document ID #${documentId} for Contract ID #${contractId} - ${contractName}`,
+      read: false,
+      icon: 'signature_completed',
+      link: `/signatures`,
+      meta: { userName, userId, documentName, documentId, contractId, contractName },
+    });
+  };
+
   const addDocumentSignedNotification = (documentId: string, documentName: string, contractId: string, contractName: string, signerName?: string) => {
     const message = signerName 
       ? `${signerName} has successfully signed Document ID #${documentId} - ${documentName} for Contract ID #${contractId} - ${contractName}`
@@ -385,6 +404,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       notifications, 
       markAsRead, 
       markAllAsRead, 
+      markAsUnread,
       deleteNotification,
       unreadCount, 
       filter, 
@@ -400,6 +420,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       addSignatureRequestedNotification,
       addSignatureRejectedNotification,
       addSignatureVoidedNotification,
+      addSignatureCompletedNotification,
       addDocumentSignedNotification,
       addPasskeyAddedNotification,
       addPasskeyRemovedNotification,

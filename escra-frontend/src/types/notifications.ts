@@ -24,6 +24,7 @@ export type NotificationType =
   | 'signature_requested'
   | 'signature_rejected'
   | 'signature_voided'
+  | 'signature_completed'
   | 'document_signed'
   | 'passkey_added'
   | 'passkey_removed'
