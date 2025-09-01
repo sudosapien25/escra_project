@@ -7374,7 +7374,7 @@ const ContractsPage: React.FC = () => {
             <TbSearch className="text-gray-400 mr-2" size={18} />
             <input
               type="text"
-              placeholder="Search contracts, parties, documents or IDs"
+              placeholder="Search contracts, parties, documents or IDs..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 dark:text-white placeholder-gray-400 font-medium"
@@ -7676,7 +7676,7 @@ const ContractsPage: React.FC = () => {
             <TbSearch className="text-gray-400 mr-2" size={18} />
             <input
               type="text"
-              placeholder="Search contracts, parties, documents or IDs"
+              placeholder="Search contracts, parties, documents or IDs..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 dark:text-white placeholder-gray-400 font-medium min-w-0"

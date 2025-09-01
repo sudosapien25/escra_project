@@ -55,6 +55,7 @@ interface NotificationContextType {
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
   markAsUnread: (id: string) => void;
+  markAllAsUnread: () => void;
   deleteNotification: (id: string) => void;
   unreadCount: number;
   filter: string;
@@ -71,7 +72,7 @@ interface NotificationContextType {
   addSignatureRejectedNotification: (signatureId: string, documentName: string, recipients: Array<{name: string, email: string}>) => void;
   addSignatureVoidedNotification: (signatureId: string, documentName: string, recipients: Array<{name: string, email: string}>) => void;
   addSignatureCompletedNotification: (userName: string, userId: string, documentName: string, documentId: string, contractId: string, contractName: string) => void;
-  addDocumentSignedNotification: (documentId: string, documentName: string, contractId: string, contractName: string, signerName?: string) => void;
+  addDocumentSignedNotification: (documentId: string, documentName: string, contractId: string, contractTitle: string, signerName?: string) => void;
   addPasskeyAddedNotification: (passkeyName: string) => void;
   addPasskeyRemovedNotification: (passkeyName: string) => void;
   addWalletAddedNotification: (walletName: string) => void;
@@ -98,6 +99,10 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
 
   const markAsUnread = (id: string) => {
     setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: false } : n));
+  };
+
+  const markAllAsUnread = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: false })));
   };
 
   const deleteNotification = (id: string) => {
@@ -405,6 +410,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       markAsRead, 
       markAllAsRead, 
       markAsUnread,
+      markAllAsUnread,
       deleteNotification,
       unreadCount, 
       filter, 

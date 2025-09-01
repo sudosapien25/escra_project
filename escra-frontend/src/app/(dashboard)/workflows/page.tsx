@@ -2521,7 +2521,7 @@ export default function WorkflowsPage() {
                   <button
                     key={tab}
                     onClick={() => setKanbanTab(tab)}
-                    className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center justify-center ${
                       kanbanTab === tab
                         ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
                         : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
@@ -2539,10 +2539,10 @@ export default function WorkflowsPage() {
                 <button
                   key={tab}
                   onClick={() => setKanbanTab(tab)}
-                  className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                    kanbanTab === tab
-                      ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                      : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center justify-center ${
+                      kanbanTab === tab
+                        ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                        : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
                   }`}
                 >
                   {tab}
@@ -2615,7 +2615,7 @@ export default function WorkflowsPage() {
             <TbSearch className="text-gray-400 mr-2" size={18} />
             <input
               type="text"
-              placeholder="Search tasks, assignees, contracts or IDs"
+              placeholder="Search tasks, assignees, contracts or IDs..."
               value={taskSearchTerm}
               onChange={(e) => setTaskSearchTerm(e.target.value)}
               className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 dark:text-white placeholder-gray-400 font-medium"
@@ -2920,7 +2920,7 @@ export default function WorkflowsPage() {
             <TbSearch className="text-gray-400 mr-2" size={18} />
             <input
               type="text"
-              placeholder="Search tasks, assignees, contracts or IDs"
+              placeholder="Search tasks, assignees, contracts or IDs..."
               value={taskSearchTerm}
               onChange={(e) => setTaskSearchTerm(e.target.value)}
               className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 dark:text-white placeholder-gray-400 font-medium min-w-0"

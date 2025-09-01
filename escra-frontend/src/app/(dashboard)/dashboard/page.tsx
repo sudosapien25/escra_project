@@ -1548,15 +1548,15 @@ export default function DashboardPage() {
       {/* Active Contracts Table */}
       <Card className="rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden cursor-default select-none">
         {/* Tabs Row with Divider */}
-        <div className="border-b border-gray-200 dark:border-gray-700 cursor-default select-none">
-          <div className="flex space-x-4 overflow-x-auto w-full cursor-default select-none [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
+        <div className="cursor-default select-none">
+          <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700 w-fit cursor-default select-none">
             {DASHBOARD_TABS.map((tab) => (
               <button
                 key={tab.key}
-                className={`pb-2 text-sm font-semibold whitespace-nowrap border-b-2 cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center justify-center ${
                   activeTab === tab.key
-                    ? 'text-primary border-primary'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 border-transparent'
+                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
                 }`}
                 onClick={() => setActiveTab(tab.key)}
               >

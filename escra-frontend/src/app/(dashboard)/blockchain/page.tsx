@@ -606,7 +606,7 @@ export default function BlockchainPage() {
                 <TbSearch className="text-gray-400 mr-2" size={18} />
                 <input
                   type="text"
-                  placeholder="Search contracts, parties, or IDs"
+                  placeholder="Search contracts, parties, or IDs..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 dark:text-white placeholder-gray-400 font-medium"
@@ -780,7 +780,7 @@ export default function BlockchainPage() {
                 <TbSearch className="text-gray-400 mr-2" size={18} />
                 <input
                   type="text"
-                  placeholder="Search contracts, parties, or IDs"
+                  placeholder="Search contracts, parties, or IDs..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 dark:text-white placeholder-gray-400 font-medium min-w-0"
@@ -1043,7 +1043,7 @@ export default function BlockchainPage() {
                 <TbSearch className="text-gray-400 mr-2" size={18} />
                 <input
                   type="text"
-                  placeholder="Search transactions, descriptions, or IDs"
+                  placeholder="Search transactions, descriptions, or IDs..."
                   value={activitySearchTerm}
                   onChange={(e) => setActivitySearchTerm(e.target.value)}
                   className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 dark:text-white placeholder-gray-400 font-medium"
@@ -1217,7 +1217,7 @@ export default function BlockchainPage() {
                 <TbSearch className="text-gray-400 mr-2" size={18} />
                 <input
                   type="text"
-                  placeholder="Search transactions, descriptions, or IDs"
+                  placeholder="Search transactions, descriptions, or IDs..."
                   value={activitySearchTerm}
                   onChange={(e) => setActivitySearchTerm(e.target.value)}
                   className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 dark:text-white placeholder-gray-400 font-medium min-w-0"
