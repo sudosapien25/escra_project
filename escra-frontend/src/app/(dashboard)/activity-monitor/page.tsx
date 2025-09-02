@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NotificationProvider, useNotifications, getNotificationIcon } from '@/context/NotificationContext';
 import { FaCheck } from 'react-icons/fa';
-import { TbSettingsCog, TbFlag, TbFlagCheck, TbFlagOff, TbActivityHeartbeat, TbNotification, TbChevronDown, TbReload, TbDotsVertical, TbChevronLeft, TbChevronRight, TbSearch, TbArchive, TbTrash, TbMailOpened, TbMail, TbFlagExclamation, TbFileSearch } from 'react-icons/tb';
+import { TbSettingsCog, TbFlag, TbFlagCheck, TbFlagOff, TbActivityHeartbeat, TbNotification, TbChevronDown, TbReload, TbDotsVertical, TbChevronLeft, TbChevronRight, TbSearch, TbArchive, TbArchiveOff, TbTrash, TbMailOpened, TbMail, TbFlagExclamation, TbFileSearch } from 'react-icons/tb';
 import clsx from 'clsx';
 import { useToast } from '@/components/ui/use-toast';
 import { mockContracts } from '@/data/mockContracts';
@@ -319,9 +319,35 @@ function NotificationPageContent() {
     addDocumentCreatedNotification('DOC-2024-006', 'Investment Analysis', contract6.id, contract6.title);
     addSignatureCompletedNotification('InvestPro Team', 'USR-2024-002', contract6.title, 'DOC-2024-006', contract6.id, contract6.title);
     
+    // Add examples of all the red notification types (rejected/removed/deleted)
+    addSignatureRejectedNotification('SIG-2024-005', contract4.title, [{name: 'LeaseCorp Legal', email: 'legal@leasecorp.com'}]);
+    addSignatureRejectedNotification('SIG-2024-006', contract5.title, [{name: 'PropertyView Inc', email: 'info@propertyview.com'}]);
+    
+    addContractVoidedNotification(contract4.id, contract4.title);
+    addContractVoidedNotification(contract5.id, contract5.title);
+    
+    addDocumentDeletedNotification('DOC-2024-007', 'Outdated Lease Terms', contract4.id, contract4.title);
+    addDocumentDeletedNotification('DOC-2024-008', 'Expired Inspection Report', contract5.id, contract5.title);
+    
+    addTaskCreatedNotification('TASK-2024-003', 'Review Voided Contract', contract4.id, contract4.title);
+    addTaskCreatedNotification('TASK-2024-004', 'Update Deleted Documents', contract5.id, contract5.title);
+    
+    // Add more removal notifications
+    addPasskeyRemovedNotification('passkey-002');
+    addPasskeyRemovedNotification('passkey-003');
+    
+    addWalletRemovedNotification('wallet-002');
+    addWalletRemovedNotification('wallet-003');
+    
+    addApiTokenRemovedNotification('api-token-002');
+    addApiTokenRemovedNotification('api-token-003');
+    
+    addWebhookRemovedNotification('webhook-002');
+    addWebhookRemovedNotification('webhook-003');
+    
     toast({
       title: "Additional test notifications created",
-      description: `Added 6 more notifications using contracts: ${contract4.title}, ${contract5.title}, and ${contract6.title}`,
+      description: `Added 24 more notifications covering all types including rejected, voided, deleted, and removed notifications`,
       duration: 3000,
     });
   };
@@ -521,55 +547,105 @@ function NotificationPageContent() {
             </div>
           )}
         </div>
-        <TbChevronDown 
-          data-chevron-button
-          className="ml-2 text-gray-600 dark:text-gray-300 w-4 h-4 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
-          onClick={() => setShowDropdown(v => !v)}
-        />
+        <div className="relative group ml-2">
+          <TbChevronDown 
+            data-chevron-button
+            className="text-gray-600 dark:text-gray-300 w-4 h-4 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
+            onClick={() => setShowDropdown(v => !v)}
+          />
+          <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+            Select
+          </span>
+        </div>
         {selectedNotifications.size === 0 ? (
           <>
-            <TbReload 
-              className="ml-2 text-gray-600 dark:text-gray-300 w-5 h-5 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
-            />
-            <TbDotsVertical 
-              data-dots-button
-              className="ml-2 text-gray-600 dark:text-gray-300 w-4 h-4 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
-              onClick={() => setShowDotsDropdown(v => !v)}
-            />
-            <TbSettingsCog 
-              className="ml-2 text-gray-600 dark:text-gray-300 w-5 h-5 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
-            />
+            <div className="relative group ml-2">
+              <TbReload 
+                className="text-gray-600 dark:text-gray-300 w-5 h-5 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
+              />
+              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                Refresh
+              </span>
+            </div>
+            <div className="relative group ml-2">
+              <TbDotsVertical 
+                data-dots-button
+                className="text-gray-600 dark:text-gray-300 w-4 h-4 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
+                onClick={() => setShowDotsDropdown(v => !v)}
+              />
+              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                More Options
+              </span>
+            </div>
+            <div className="relative group ml-2">
+              <TbSettingsCog 
+                className="text-gray-600 dark:text-gray-300 w-5 h-5 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
+              />
+              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                Notification Settings
+              </span>
+            </div>
           </>
         ) : (
           <>
-            <TbArchive 
-              className="ml-2 text-gray-600 dark:text-gray-300 w-5 h-5 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
-              onClick={() => {
-                if (selectedNotifications.size > 0) {
-                  const selectedNotificationObjects = notifications.filter(n => selectedNotifications.has(n.id));
-                  const allArchived = selectedNotificationObjects.every(n => archivedNotifications.has(n.id));
-                  
-                  if (allArchived) {
-                    unarchiveNotifications(Array.from(selectedNotifications));
-                    toast({
-                      title: "Notifications unarchived",
-                      description: `${selectedNotifications.size} notification${selectedNotifications.size > 1 ? 's' : ''} unarchived`,
-                      duration: 3000,
-                    });
-                  } else {
-                    archiveNotifications(Array.from(selectedNotifications));
-                    toast({
-                      title: "Notifications archived",
-                      description: `${selectedNotifications.size} notification${selectedNotifications.size > 1 ? 's' : ''} archived`,
-                      duration: 3000,
-                    });
-                  }
-                }
-              }}
-            />
-            <TbTrash 
-              className="ml-2 text-gray-600 dark:text-gray-300 w-5 h-5 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
-            />
+            {(() => {
+              const selectedNotificationObjects = notifications.filter(n => selectedNotifications.has(n.id));
+              const allArchived = selectedNotificationObjects.every(n => archivedNotifications.has(n.id));
+              
+              if (allArchived) {
+                // All selected are archived - show unarchive icon
+                return (
+                  <div className="relative group ml-2">
+                    <TbArchiveOff 
+                      className="text-gray-600 dark:text-gray-300 w-5 h-5 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
+                      onClick={() => {
+                        if (selectedNotifications.size > 0) {
+                          unarchiveNotifications(Array.from(selectedNotifications));
+                          toast({
+                            title: "Notifications unarchived",
+                            description: `${selectedNotifications.size} notification${selectedNotifications.size > 1 ? 's' : ''} unarchived`,
+                            duration: 3000,
+                          });
+                        }
+                      }}
+                    />
+                    <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                      Unarchive
+                    </span>
+                  </div>
+                );
+              } else {
+                // Some or none are archived - show archive icon
+                return (
+                  <div className="relative group ml-2">
+                    <TbArchive 
+                      className="text-gray-600 dark:text-gray-300 w-5 h-5 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
+                      onClick={() => {
+                        if (selectedNotifications.size > 0) {
+                          archiveNotifications(Array.from(selectedNotifications));
+                          toast({
+                            title: "Notifications archived",
+                            description: `${selectedNotifications.size} notification${selectedNotifications.size > 1 ? 's' : ''} archived`,
+                            duration: 3000,
+                          });
+                        }
+                      }}
+                    />
+                    <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                      Archive
+                    </span>
+                  </div>
+                );
+              }
+            })()}
+            <div className="relative group ml-2">
+              <TbTrash 
+                className="text-gray-600 dark:text-gray-300 w-5 h-5 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
+              />
+              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                Delete
+              </span>
+            </div>
             <div className="ml-2 w-px h-5 bg-gray-300 dark:bg-gray-600"></div>
             {(() => {
               const selectedNotificationObjects = notifications.filter(n => selectedNotifications.has(n.id));
@@ -580,53 +656,68 @@ function NotificationPageContent() {
               if (allUnread) {
                 // All selected are unread - show open mail icon, mark as read
                 return (
-                  <TbMailOpened 
-                    className="ml-2 text-gray-600 dark:text-gray-300 w-5 h-5 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
-                    onClick={() => {
-                      if (selectedNotifications.size > 0) {
-                        selectedNotifications.forEach(id => markAsRead(id));
-                        toast({
-                          title: "Notifications marked as read",
-                          description: `${selectedNotifications.size} notification${selectedNotifications.size > 1 ? 's' : ''} marked as read`,
-                          duration: 3000,
-                        });
-                      }
-                    }}
-                  />
+                  <div className="relative group ml-2">
+                    <TbMailOpened 
+                      className="text-gray-600 dark:text-gray-300 w-5 h-5 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
+                      onClick={() => {
+                        if (selectedNotifications.size > 0) {
+                          selectedNotifications.forEach(id => markAsRead(id));
+                          toast({
+                            title: "Notifications marked as read",
+                            description: `${selectedNotifications.size} notification${selectedNotifications.size > 1 ? 's' : ''} marked as read`,
+                            duration: 3000,
+                          });
+                        }
+                      }}
+                    />
+                    <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                      Mark all as Read
+                    </span>
+                  </div>
                 );
               } else if (allRead) {
                 // All selected are read - show closed mail icon, mark as unread
                 return (
-                  <TbMail 
-                    className="ml-2 text-gray-600 dark:text-gray-300 w-5 h-5 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
-                    onClick={() => {
-                      if (selectedNotifications.size > 0) {
-                        selectedNotifications.forEach(id => markAsUnread(id));
-                        toast({
-                          title: "Notifications marked as unread",
-                          description: `${selectedNotifications.size} notification${selectedNotifications.size > 1 ? 's' : ''} marked as unread`,
-                          duration: 3000,
-                        });
-                      }
-                    }}
-                  />
+                  <div className="relative group ml-2">
+                    <TbMail 
+                      className="text-gray-600 dark:text-gray-300 w-5 h-5 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
+                      onClick={() => {
+                        if (selectedNotifications.size > 0) {
+                          selectedNotifications.forEach(id => markAsUnread(id));
+                          toast({
+                            title: "Notifications marked as unread",
+                            description: `${selectedNotifications.size} notification${selectedNotifications.size > 1 ? 's' : ''} marked as unread`,
+                            duration: 3000,
+                          });
+                        }
+                      }}
+                    />
+                    <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                      Mark all as Unread
+                    </span>
+                  </div>
                 );
               } else {
                 // Mixed read/unread state - show open mail icon, mark as read
                 return (
-                  <TbMailOpened 
-                    className="ml-2 text-gray-600 dark:text-gray-300 w-5 h-5 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
-                    onClick={() => {
-                      if (selectedNotifications.size > 0) {
-                        selectedNotifications.forEach(id => markAsRead(id));
-                        toast({
-                          title: "Notifications marked as read",
-                          description: `${selectedNotifications.size} notification${selectedNotifications.size > 1 ? 's' : ''} marked as read`,
-                          duration: 3000,
-                        });
-                      }
-                    }}
-                  />
+                  <div className="relative group ml-2">
+                    <TbMailOpened 
+                      className="text-gray-600 dark:text-gray-300 w-5 h-5 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
+                      onClick={() => {
+                        if (selectedNotifications.size > 0) {
+                          selectedNotifications.forEach(id => markAsRead(id));
+                          toast({
+                            title: "Notifications marked as read",
+                            description: `${selectedNotifications.size} notification${selectedNotifications.size > 1 ? 's' : ''} marked as read`,
+                            duration: 3000,
+                          });
+                        }
+                      }}
+                    />
+                    <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                      Mark all as Read
+                    </span>
+                  </div>
                 );
               }
             })()}
@@ -641,67 +732,92 @@ function NotificationPageContent() {
               if (allFlagged) {
                 // All selected are flagged - show flag off icon, unflag all
                 return (
-                  <TbFlagOff 
-                    className="ml-2 text-gray-600 dark:text-gray-300 w-5 h-5 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
-                    onClick={() => {
-                      if (selectedNotifications.size > 0) {
-                        unflagAsImportant(Array.from(selectedNotifications));
-                        toast({
-                          title: "Notifications unflagged",
-                          description: `${selectedNotifications.size} notification${selectedNotifications.size > 1 ? 's' : ''} unflagged`,
-                          duration: 3000,
-                        });
-                      }
-                    }}
-                  />
+                  <div className="relative group ml-2">
+                    <TbFlagOff 
+                      className="text-gray-600 dark:text-gray-300 w-5 h-5 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
+                      onClick={() => {
+                        if (selectedNotifications.size > 0) {
+                          unflagAsImportant(Array.from(selectedNotifications));
+                          toast({
+                            title: "Notifications unflagged",
+                            description: `${selectedNotifications.size} notification${selectedNotifications.size > 1 ? 's' : ''} unflagged`,
+                            duration: 3000,
+                          });
+                        }
+                      }}
+                    />
+                    <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                      Unflag All
+                    </span>
+                  </div>
                 );
               } else if (allUnflagged) {
                 // All selected are unflagged - show flag icon, flag all
                 return (
-                  <TbFlag 
-                    className="ml-2 text-gray-600 dark:text-gray-300 w-5 h-5 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
-                    onClick={() => {
-                      if (selectedNotifications.size > 0) {
-                        markAsImportant(Array.from(selectedNotifications));
-                        toast({
-                          title: "Notifications flagged as important",
-                          description: `${selectedNotifications.size} notification${selectedNotifications.size > 1 ? 's' : ''} flagged as important`,
-                          duration: 3000,
-                        });
-                      }
-                    }}
-                  />
+                  <div className="relative group ml-2">
+                    <TbFlag 
+                      className="text-gray-600 dark:text-gray-300 w-5 h-5 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
+                      onClick={() => {
+                        if (selectedNotifications.size > 0) {
+                          markAsImportant(Array.from(selectedNotifications));
+                          toast({
+                            title: "Notifications flagged as important",
+                            description: `${selectedNotifications.size} notification${selectedNotifications.size > 1 ? 's' : ''} flagged as important`,
+                            duration: 3000,
+                          });
+                        }
+                      }}
+                    />
+                    <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                      Flag All as Important
+                    </span>
+                  </div>
                 );
               } else {
                 // Mixed flagged/unflagged state - show flag icon, flag unflagged ones
                 return (
-                  <TbFlag 
-                    className="ml-2 text-gray-600 dark:text-gray-300 w-5 h-5 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
-                    onClick={() => {
-                      if (selectedNotifications.size > 0) {
-                        const unflaggedIds = selectedNotificationObjects
-                          .filter(n => !importantNotifications.has(n.id))
-                          .map(n => n.id);
-                        markAsImportant(unflaggedIds);
-                        toast({
-                          title: "Notifications flagged as important",
-                          description: `${unflaggedIds.length} notification${unflaggedIds.length > 1 ? 's' : ''} flagged as important`,
-                          duration: 3000,
-                        });
-                      }
-                    }}
-                  />
+                  <div className="relative group ml-2">
+                    <TbFlag 
+                      className="text-gray-600 dark:text-gray-300 w-5 h-5 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
+                      onClick={() => {
+                        if (selectedNotifications.size > 0) {
+                          const unflaggedIds = selectedNotificationObjects
+                            .filter(n => !importantNotifications.has(n.id))
+                            .map(n => n.id);
+                          markAsImportant(unflaggedIds);
+                          toast({
+                            title: "Notifications flagged as important",
+                            description: `${unflaggedIds.length} notification${unflaggedIds.length > 1 ? 's' : ''} flagged as important`,
+                            duration: 3000,
+                          });
+                        }
+                      }}
+                    />
+                    <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                      Flag All as Important
+                    </span>
+                  </div>
                 );
               }
             })()}
-            <TbDotsVertical 
-              data-dots-button
-              className="ml-2 text-gray-600 dark:text-gray-300 w-4 h-4 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
-              onClick={() => setShowDotsDropdown(v => !v)}
-            />
-            <TbSettingsCog 
-              className="ml-2 text-gray-600 dark:text-gray-300 w-5 h-5 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
-            />
+            <div className="relative group ml-2">
+              <TbDotsVertical 
+                data-dots-button
+                className="text-gray-600 dark:text-gray-300 w-4 h-4 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
+                onClick={() => setShowDotsDropdown(v => !v)}
+              />
+              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                More Options
+              </span>
+            </div>
+            <div className="relative group ml-2">
+              <TbSettingsCog 
+                className="text-gray-600 dark:text-gray-300 w-5 h-5 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors" 
+              />
+              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                Notification Settings
+              </span>
+            </div>
           </>
         )}
         
@@ -1023,44 +1139,54 @@ function NotificationPageContent() {
             <div className="flex items-center gap-3">
               {/* Read Count */}
               <div className="flex items-center gap-1">
-                <span className="text-green-600 dark:text-green-400">Read: {filtered.filter(n => n.read).length}</span>
+                <span className="text-green-600 dark:text-green-400 font-bold">Read: {filtered.filter(n => n.read).length}</span>
               </div>
               
               {/* Unread Count */}
               <div className="flex items-center gap-1">
-                <span className="text-blue-600 dark:text-blue-400">Unread: {filtered.filter(n => !n.read).length}</span>
+                <span className="text-blue-600 dark:text-blue-400 font-bold">Unread: {filtered.filter(n => !n.read).length}</span>
               </div>
               
               {/* Flagged Count */}
               <div className="flex items-center gap-1">
-                <span className="text-yellow-600 dark:text-yellow-400">Flagged: {filtered.filter(n => importantNotifications.has(n.id)).length}</span>
+                <span className="text-yellow-600 dark:text-yellow-400 font-bold">Flagged: {filtered.filter(n => importantNotifications.has(n.id)).length}</span>
               </div>
             </div>
             
             {/* Pagination Count */}
-            <div>
+            <div className="font-bold">
               {filtered.length > 0 ? `${startIndex + 1}-${endIndex} of ${filtered.length}` : '0 of 0'}
             </div>
           </div>
           
           {/* Navigation Chevrons */}
           <div className="flex items-center gap-2">
-            <TbChevronLeft 
-              className={`w-5 h-5 cursor-pointer transition-colors ${
-                currentPage > 1 
-                  ? 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' 
-                  : 'text-gray-600 dark:text-gray-300 cursor-not-allowed'
-              }`}
-              onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
-            />
-            <TbChevronRight 
-              className={`w-5 h-5 cursor-pointer transition-colors ${
-                currentPage < totalPages 
-                  ? 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' 
-                  : 'text-gray-600 dark:text-gray-300 cursor-not-allowed'
-              }`}
-              onClick={() => currentPage < totalPages && setCurrentPage(currentPage + 1)}
-            />
+            <div className="relative group">
+              <TbChevronLeft 
+                className={`w-5 h-5 cursor-pointer transition-colors ${
+                  currentPage > 1 
+                    ? 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' 
+                    : 'text-gray-600 dark:text-gray-300 cursor-not-allowed'
+                }`}
+                onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
+              />
+              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                Newer
+              </span>
+            </div>
+            <div className="relative group">
+              <TbChevronRight 
+                className={`w-5 h-5 cursor-pointer transition-colors ${
+                  currentPage < totalPages 
+                    ? 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white' 
+                    : 'text-gray-600 dark:text-gray-300 cursor-not-allowed'
+                }`}
+                onClick={() => currentPage < totalPages && setCurrentPage(currentPage + 1)}
+              />
+              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                Older
+              </span>
+            </div>
           </div>
         </div>
         

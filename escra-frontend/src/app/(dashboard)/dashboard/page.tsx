@@ -951,6 +951,9 @@ export default function DashboardPage() {
 
   // Listen for new contract creation from modal
   React.useEffect(() => {
+    // Clear any existing newContract data on page load to prevent automatic toasts
+    localStorage.removeItem('newContract');
+    
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === 'newContract' && event.newValue) {
         try {
@@ -974,6 +977,9 @@ export default function DashboardPage() {
           
           // Update contracts list
           setContracts(prev => [newContract, ...prev]);
+          
+          // Clear the storage after processing to prevent re-triggering on page reloads
+          localStorage.removeItem('newContract');
         } catch (error) {
           console.error('Error parsing new contract from storage:', error);
         }
