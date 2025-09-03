@@ -5,12 +5,13 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { FaUser } from 'react-icons/fa';
 import { IoMailOutline } from 'react-icons/io5';
 import { RxLockClosed } from 'react-icons/rx';
-import { HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
+import { TbEye, TbEyeOff, TbUserCheck, TbPassword, TbAt } from 'react-icons/tb';
 import { Input } from '@/components/common/Input';
 import { Logo } from '@/components/common/Logo';
 import { Select, SelectOption } from '@/components/common/Select';
 import { useAuth } from '@/context/AuthContext';
-import toast from 'react-hot-toast';
+import { useToast } from '@/components/ui/use-toast';
+import { Toaster } from '@/components/ui/toaster';
 
 declare global {
   interface Window {
@@ -221,6 +222,7 @@ function AuthPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();
+  const { toast } = useToast();
   const [tab, setTab] = useState<'login' | 'register'>(() => {
     return searchParams?.get('tab') === 'register' ? 'register' : 'login';
   });
@@ -252,6 +254,9 @@ function AuthPageContent() {
   });
 
   useEffect(() => {
+    // Force light mode for login page
+    document.documentElement.classList.remove('dark');
+    
     // Load Vanta.js scripts
     const threeScript = document.createElement('script');
     threeScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js';
@@ -314,9 +319,41 @@ function AuthPageContent() {
       try {
         setIsLoading(true);
         await login(email, password);
-        toast.success('Successfully logged in!');
+        
+        // Show toast on login page
+        console.log('Showing login success toast...');
+        toast({
+          title: "Successfully Signed In",
+          description: (
+            <div className="flex items-center gap-2">
+              <TbUserCheck className="text-primary text-xl" />
+              <span>Welcome back to Escra</span>
+            </div>
+          ),
+          duration: 15000, // 15 seconds
+        });
+        
+        // Wait for toast to be visible, then redirect to dashboard
+        setTimeout(() => {
+          console.log('Storing toast data and redirecting...');
+          // Store the success toast data to persist across page navigation
+          localStorage.setItem('loginSuccessToast', JSON.stringify({
+            title: "Successfully Signed In",
+            description: "Welcome back to Escra",
+            timestamp: Date.now()
+          }));
+          
+          // Redirect to dashboard
+          router.push('/dashboard');
+        }, 2000); // 2 second delay to ensure toast is visible
       } catch (error) {
-        toast.error('Failed to login. Please try again.');
+        toast({
+          title: "Login Failed",
+          description: "Failed to login. Please try again.",
+          duration: 5000,
+          variant: "destructive",
+          className: "bg-white border-red-200 text-red-900 shadow-lg",
+        });
         console.error('Login error:', error);
       } finally {
         setIsLoading(false);
@@ -357,24 +394,24 @@ function AuthPageContent() {
               <Logo width={60} height={60} targetUrl="/" />
             </div>
           </div>
-          <div className="w-full max-w-md bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-8 space-y-6" style={{ boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
+          <div className="w-full max-w-md bg-white rounded-2xl p-8 space-y-6" style={{ boxShadow: '0 0 15px rgba(0, 0, 0, 0.1)' }}>
             <div className="mb-2">
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2 text-center">Welcome</h1>
-              <p className="text-gray-500 dark:text-gray-300 text-base text-center max-w-md">Your secure contract execution platform</p>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2 text-center">Welcome</h1>
+              <p className="text-gray-500 text-base text-center max-w-md">Your secure contract management platform</p>
             </div>
-            <div className="border-t border-gray-200 dark:border-gray-700 mb-6"></div>
+            <div className="border-t border-gray-200 mb-6"></div>
             <div className="mb-2">
-              <h2 className="text-xl font-bold text-center text-gray-900 dark:text-white mb-1">{tab === 'login' ? 'Sign in to Escra' : 'Create a new account'}</h2>
-              <p className="text-center text-gray-500 dark:text-gray-300 text-sm mb-4">Sign in to your account or create a new one</p>
-              <div className="flex rounded-lg bg-gray-100 dark:bg-gray-700 overflow-hidden mb-4 border border-gray-200 dark:border-gray-700">
+              <h2 className="text-xl font-bold text-center text-gray-900 mb-1">{tab === 'login' ? 'Sign in to Escra' : 'Create a new account'}</h2>
+              <p className="text-center text-gray-500 text-sm mb-4">Sign in to your account or create a new one</p>
+              <div className="flex rounded-lg bg-gray-100 overflow-hidden mb-4 border border-gray-200">
                 <button
-                  className={`flex-1 py-1.5 text-sm font-semibold transition-colors duration-150 ${tab === 'login' ? 'bg-white dark:bg-gray-800 text-primary shadow rounded-l-lg' : 'text-gray-500 dark:text-gray-300'}`}
+                  className={`flex-1 py-1.5 text-sm font-semibold transition-colors duration-150 ${tab === 'login' ? 'bg-white text-primary shadow rounded-l-lg' : 'text-gray-500'}`}
                   onClick={() => setTab('login')}
                 >
                   Login
                 </button>
                 <button
-                  className={`flex-1 py-1.5 text-sm font-semibold transition-colors duration-150 border-l border-gray-200 dark:border-gray-700 ${tab === 'register' ? 'bg-white dark:bg-gray-800 text-primary shadow border-r border-gray-200 dark:border-gray-700 rounded-r-lg' : 'text-gray-500 dark:text-gray-300'}`}
+                  className={`flex-1 py-1.5 text-sm font-semibold transition-colors duration-150 border-l border-gray-200 ${tab === 'register' ? 'bg-white text-primary shadow border-r border-gray-200 rounded-r-lg' : 'text-gray-500'}`}
                   onClick={() => setTab('register')}
                 >
                   Create Account
@@ -385,39 +422,51 @@ function AuthPageContent() {
               <form className="space-y-4" onSubmit={handleLogin} noValidate>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
-                  <Input
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
-                  />
+                  <div className="relative">
+                    <input
+                      type="email"
+                      placeholder="Enter email address..."
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      className="w-full px-4 py-2 pl-10 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white text-gray-900 login-input"
+                      style={{
+                        WebkitBackgroundClip: 'initial',
+                        WebkitAppearance: 'none'
+                      }}
+                    />
+                    <TbAt className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  </div>
                   {loginErrors.email && <p className="text-xs text-red-600 mt-1">{loginErrors.email}</p>}
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Password</label>
                   <div className="relative">
-                    <Input
+                    <input
                       type={showPassword ? 'text' : 'password'}
-                      placeholder="Enter your password"
+                      placeholder="Enter password..."
                       value={password}
                       onChange={e => setPassword(e.target.value)}
-                      className="pr-10 py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
+                      className="w-full px-4 py-2 pl-10 pr-10 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white text-gray-900 login-input"
+                      style={{
+                        WebkitBackgroundClip: 'initial',
+                        WebkitAppearance: 'none'
+                      }}
                     />
+                    <TbPassword className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <button
                       type="button"
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 focus:outline-none"
                       onClick={() => setShowPassword(v => !v)}
                       tabIndex={-1}
                     >
-                      {showPassword ? <HiOutlineEyeOff className="w-4 h-4" /> : <HiOutlineEye className="w-4 h-4" />}
+                      {showPassword ? <TbEyeOff className="w-4 h-4" /> : <TbEye className="w-4 h-4" />}
                     </button>
                   </div>
                   {loginErrors.password && <p className="text-xs text-red-600 mt-1">{loginErrors.password}</p>}
                 </div>
                 <div className="flex items-center justify-between mb-2">
                   <div />
-                  <a href="#" className="text-gray-900 dark:text-white text-xs font-medium hover:underline">Forgot password or email?</a>
+                  <a href="#" className="text-gray-400 text-xs font-medium hover:underline">Forgot password or email?</a>
                 </div>
                 <button
                   type="submit"
@@ -431,54 +480,74 @@ function AuthPageContent() {
               <form className="space-y-4" onSubmit={handleRegister} noValidate>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">First Name</label>
-                  <Input
+                  <input
                     type="text"
-                    placeholder="Enter your first name"
+                    placeholder="Enter first name..."
                     value={regName}
                     onChange={e => setRegName(e.target.value)}
-                    className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
+                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white text-gray-900 login-input"
+                    style={{
+                      WebkitBackgroundClip: 'initial',
+                      WebkitAppearance: 'none'
+                    }}
                   />
                   {regErrors.regName && <p className="text-xs text-red-600 mt-1">{regErrors.regName}</p>}
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Last Name</label>
-                  <Input
+                  <input
                     type="text"
-                    placeholder="Enter your last name"
+                    placeholder="Enter last name..."
                     value={regSurname}
                     onChange={e => setRegSurname(e.target.value)}
-                    className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
+                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white text-gray-900 login-input"
+                    style={{
+                      WebkitBackgroundClip: 'initial',
+                      WebkitAppearance: 'none'
+                    }}
                   />
                   {regErrors.regSurname && <p className="text-xs text-red-600 mt-1">{regErrors.regSurname}</p>}
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
-                  <Input
-                    type="email"
-                    placeholder="Enter your email"
-                    value={regEmail}
-                    onChange={e => setRegEmail(e.target.value)}
-                    className="py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
-                  />
+                  <div className="relative">
+                    <input
+                      type="email"
+                      placeholder="Enter email address..."
+                      value={regEmail}
+                      onChange={e => setRegEmail(e.target.value)}
+                      className="w-full px-4 py-2 pl-10 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white text-gray-900 login-input"
+                      style={{
+                        WebkitBackgroundClip: 'initial',
+                        WebkitAppearance: 'none'
+                      }}
+                    />
+                    <TbAt className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  </div>
                   {regErrors.regEmail && <p className="text-xs text-red-600 mt-1">{regErrors.regEmail}</p>}
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Password</label>
                   <div className="relative">
-                    <Input
+                    <input
                       type={showRegPassword ? 'text' : 'password'}
-                      placeholder="Create a password"
+                      placeholder="Create password..."
                       value={regPassword}
                       onChange={e => setRegPassword(e.target.value)}
-                      className="pr-10 py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
+                      className="w-full px-4 py-2 pl-10 pr-10 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white text-gray-900 login-input"
+                      style={{
+                        WebkitBackgroundClip: 'initial',
+                        WebkitAppearance: 'none'
+                      }}
                     />
+                    <TbPassword className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <button
                       type="button"
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 focus:outline-none"
                       onClick={() => setShowRegPassword(v => !v)}
                       tabIndex={-1}
                     >
-                      {showRegPassword ? <HiOutlineEyeOff className="w-4 h-4" /> : <HiOutlineEye className="w-4 h-4" />}
+                      {showRegPassword ? <TbEyeOff className="w-4 h-4" /> : <TbEye className="w-4 h-4" />}
                     </button>
                   </div>
                   {regErrors.regPassword && <p className="text-xs text-red-600 mt-1">{regErrors.regPassword}</p>}
@@ -486,20 +555,25 @@ function AuthPageContent() {
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Confirm Password</label>
                   <div className="relative">
-                    <Input
+                    <input
                       type={showRegConfirm ? 'text' : 'password'}
-                      placeholder="Confirm your password"
+                      placeholder="Confirm password..."
                       value={regConfirm}
                       onChange={e => setRegConfirm(e.target.value)}
-                      className="pr-10 py-0.5 text-sm bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500"
+                      className="w-full px-4 py-2 pl-10 pr-10 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs bg-white text-gray-900 login-input"
+                      style={{
+                        WebkitBackgroundClip: 'initial',
+                        WebkitAppearance: 'none'
+                      }}
                     />
+                    <TbPassword className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <button
                       type="button"
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 focus:outline-none"
                       onClick={() => setShowRegConfirm(v => !v)}
                       tabIndex={-1}
                     >
-                      {showRegConfirm ? <HiOutlineEyeOff className="w-4 h-4" /> : <HiOutlineEye className="w-4 h-4" />}
+                      {showRegConfirm ? <TbEyeOff className="w-4 h-4" /> : <TbEye className="w-4 h-4" />}
                     </button>
                   </div>
                   {regErrors.regConfirm && <p className="text-xs text-red-600 mt-1">{regErrors.regConfirm}</p>}
@@ -513,11 +587,12 @@ function AuthPageContent() {
               </form>
             )}
           </div>
-          <p className="mt-8 text-center text-xs text-gray-400 max-w-md">
+          <p className="mt-5 text-center text-xs text-gray-900 max-w-md">
             By continuing, you agree to Escra's <a href="#" className="underline hover:text-primary">Terms of Service</a> and <a href="#" className="underline hover:text-primary">Privacy Policy</a>
           </p>
         </div>
       </div>
+      <Toaster />
     </>
   );
 }

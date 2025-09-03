@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbContract, TbRouteSquare, TbUsersGroup, TbMessageQuestion, TbBrandDiscord, TbBrandYoutube, TbInfoSquare, TbBuildingCommunity, TbBallAmericanFootball, TbTool, TbCoins, TbShieldLock, TbShieldSearch, TbKey, TbStethoscope, TbCopy, TbBriefcase, TbBarrierBlock } from 'react-icons/tb';
+import { TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbContract, TbRouteSquare, TbUsersGroup, TbMessageQuestion, TbBrandDiscord, TbBrandYoutube, TbInfoSquare, TbBuildingCommunity, TbBallAmericanFootball, TbTool, TbCoins, TbShieldLock, TbShieldSearch, TbKey, TbStethoscope, TbCopy, TbBriefcase, TbBarrierBlock, TbTrophy } from 'react-icons/tb';
 import { HiOutlineDuplicate } from 'react-icons/hi';
 import { MdOutlineSportsFootball, MdOutlineMovieFilter, MdOutlineHealthAndSafety, MdOutlineGeneratingTokens } from 'react-icons/md';
 import { LuConstruction, LuBriefcaseBusiness, LuClipboardCheck, LuBrainCircuit, LuCircuitBoard, LuListEnd, LuVideo, LuBookOpenText, LuNewspaper, LuLinkedin, LuMic, LuContact, LuBuilding2, LuHardHat } from 'react-icons/lu';
@@ -32,7 +32,7 @@ const INDUSTRIES: IndustryOption[] = [
   { value: 'supply_chain', label: 'Logistics', icon: TbWorld, description: 'Transportation, supply-chain & warehousing agreements' },
   { value: 'labor', label: 'Labor', icon: LuHardHat, description: 'Dispute resolution, collective-bargaining & union agreements' },
   { value: 'entertainment', label: 'Entertainment', icon: MdOutlineMovieFilter, description: 'Media, artist & performance agreements' },
-      { value: 'athletics', label: 'Athletics', icon: TbBallAmericanFootball, description: 'Front-offices, leagues, player contracts & endorsements' },
+      { value: 'athletics', label: 'Athletics', icon: TbTrophy, description: 'Front-offices, leagues, player contracts & endorsements' },
   { value: 'construction', label: 'Construction', icon: TbBarrierBlock, description: 'Building, project & subcontractor agreements' },
   { value: 'healthcare', label: 'Healthcare', icon: TbStethoscope, description: 'Medical provider & health service agreements' },
       { value: 'manufacturing', label: 'Manufacturing', icon: TbTool, description: 'Production, supply & equipment agreements' },

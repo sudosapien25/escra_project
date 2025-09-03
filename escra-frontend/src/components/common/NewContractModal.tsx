@@ -6,7 +6,7 @@ import { HiOutlineDocumentText, HiOutlineUpload, HiOutlineEye, HiOutlineEyeOff, 
 import { Logo } from '@/components/common/Logo';
 import { FaCheck, FaPlus, FaSearch } from 'react-icons/fa';
 import { LuPen, LuCalendarFold } from 'react-icons/lu';
-import { TbMailPlus, TbEdit, TbFilePlus, TbDragDrop, TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbSquareCheck, TbChevronDown, TbEraser, TbTrash, TbUserPlus, TbUsersPlus, TbUsers, TbUsersGroup } from 'react-icons/tb';
+import { TbMailPlus, TbEdit, TbFilePlus, TbDragDrop, TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbSquareCheck, TbChevronDown, TbEraser, TbTrash, TbUserPlus, TbUsersPlus, TbUsers, TbUsersGroup, TbFileText, TbHomeDollar, TbHomeRibbon, TbBuildings, TbBuildingWarehouse, TbReceiptTax, TbTemplate, TbHome2, TbBuilding, TbBuildingSkyscraper, TbPhoto, TbBuildingFactory2, TbBuildingBridge, TbFileStar, TbTrophy } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
 import { TiUserAddOutline } from 'react-icons/ti';
@@ -15,6 +15,10 @@ import { useDocumentStore } from '@/data/documentNameStore';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { useNotifications } from '@/context/NotificationContext';
+import { TbBuildingCommunity, TbWorld, TbBarrierBlock, TbBriefcase, TbScale, TbBallAmericanFootball, TbTool, TbStethoscope, TbCoins } from 'react-icons/tb';
+import { LuHardHat } from 'react-icons/lu';
+import { MdOutlineMovieFilter } from 'react-icons/md';
+import { HiOutlineChip } from 'react-icons/hi';
 
 interface Contract {
   id: string;
@@ -58,6 +62,7 @@ interface Contract {
   state?: string;
   zipCode?: string;
   country?: string;
+  industry?: string;
   additionalParties?: { name: string; email: string; role: string }[];
   party1Role?: string;
   party2Role?: string;
@@ -76,16 +81,68 @@ const CONTRACT_TYPES = [
   'Commercial – Cash or Financed',
   'Assignment / Wholesale',
   'Installment / Lease-to-Own',
+  'Collective Bargaining Agreement',
+  'Player Contract',
 ];
 
 const PROPERTY_TYPES = [
-  'Single Family Home',
-  'Multi-Family',
+  'Single Family',
+  'Multi Family',
   'Commercial',
   'Land',
   'Industrial',
-  'Mixed Use',
+  'Other'
 ];
+
+const INDUSTRIES = [
+  'Real Estate',
+  'Logistics',
+  'Construction',
+  'Corporate',
+  'Labor',
+  'Healthcare',
+  'Finance',
+  'Entertainment',
+  'Manufacturing',
+  'Legal',
+  'Athletics',
+  'Technology'
+];
+
+const INDUSTRY_ICONS = {
+  'Real Estate': TbBuildingCommunity,
+  'Logistics': TbWorld,
+  'Construction': TbBarrierBlock,
+  'Corporate': TbBriefcase,
+  'Labor': LuHardHat,
+  'Healthcare': TbStethoscope,
+  'Finance': TbCoins,
+  'Entertainment': MdOutlineMovieFilter,
+  'Manufacturing': TbTool,
+  'Legal': TbScale,
+  'Athletics': TbTrophy,
+  'Technology': HiOutlineChip
+};
+
+const CONTRACT_TYPE_ICONS = {
+  'Standard Agreement': TbFileText,
+  'Residential – Cash': TbHomeDollar,
+  'Residential – Financed': TbHomeRibbon,
+  'Commercial – Cash or Financed': TbBuildings,
+  'Assignment / Wholesale': TbBuildingWarehouse,
+  'Installment / Lease-to-Own': TbReceiptTax,
+  'Collective Bargaining Agreement': TbUsersGroup,
+  'Player Contract': TbFileStar
+};
+
+const PROPERTY_TYPE_ICONS = {
+  'Single Family': TbHome2,
+  'Multi Family': TbBuilding,
+  'Commercial': TbBuildingSkyscraper,
+  'Land': TbPhoto,
+  'Industrial': TbBuildingFactory2,
+  'Other': TbBuildingBridge
+};
 
 const MILESTONE_TEMPLATES = [
   'Standard (6 milestones)',
@@ -383,15 +440,26 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
   const [showMilestoneDropdown, setShowMilestoneDropdown] = useState(false);
   const [showStateDropdown, setShowStateDropdown] = useState(false);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  const [showIndustryDropdown, setShowIndustryDropdown] = useState(false);
+  const [showBuyerDropdown, setShowBuyerDropdown] = useState(false);
+  const [showSellerDropdown, setShowSellerDropdown] = useState(false);
+  const [selectedBuyers, setSelectedBuyers] = useState<string[]>([]);
+  const [selectedSellers, setSelectedSellers] = useState<string[]>([]);
   
   const contractTypeDropdownRef = useRef<HTMLDivElement>(null);
   const propertyTypeDropdownRef = useRef<HTMLDivElement>(null);
   const milestoneDropdownRef = useRef<HTMLDivElement>(null);
+  const industryDropdownRef = useRef<HTMLDivElement>(null);
+  const buyerInputRef = useRef<HTMLDivElement>(null);
+  const buyerDropdownRef = useRef<HTMLDivElement>(null);
+  const sellerInputRef = useRef<HTMLDivElement>(null);
+  const sellerDropdownRef = useRef<HTMLDivElement>(null);
   const stateDropdownRef = useRef<HTMLDivElement>(null);
   const countryDropdownRef = useRef<HTMLDivElement>(null);
   
   const [modalForm, setModalForm] = useState({
     title: '',
+    industry: '',
     escrowNumber: '',
     type: '',
     propertyType: '',
@@ -732,6 +800,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
   const resetForm = () => {
     setModalForm({
       title: '',
+      industry: '',
       escrowNumber: '',
       type: '',
       propertyType: '',
@@ -769,6 +838,8 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
     setRecipientErrors({});
     setDuplicateCollaboratorError(false);
     setAddedCollaborators([]);
+    setSelectedBuyers([]);
+    setSelectedSellers([]);
     setRecipients([{
       name: '',
       email: '',
@@ -1046,28 +1117,35 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
       const contractTypeDropdown = contractTypeDropdownRef.current;
       const propertyTypeDropdown = propertyTypeDropdownRef.current;
       const milestoneDropdown = milestoneDropdownRef.current;
+      const industryDropdown = industryDropdownRef.current;
+      const buyerDropdown = buyerDropdownRef.current;
+      const sellerDropdown = sellerDropdownRef.current;
       const stateDropdown = stateDropdownRef.current;
       const countryDropdown = countryDropdownRef.current;
       
       if (!contractTypeDropdown?.contains(target) && !propertyTypeDropdown?.contains(target) && 
-          !milestoneDropdown?.contains(target) && !stateDropdown?.contains(target) && 
-          !countryDropdown?.contains(target)) {
+          !milestoneDropdown?.contains(target) && !industryDropdown?.contains(target) &&
+          !buyerDropdown?.contains(target) && !sellerDropdown?.contains(target) &&
+          !stateDropdown?.contains(target) && !countryDropdown?.contains(target)) {
         setShowContractTypeDropdown(false);
         setShowPropertyTypeDropdown(false);
         setShowMilestoneDropdown(false);
+        setShowIndustryDropdown(false);
+        setShowBuyerDropdown(false);
+        setShowSellerDropdown(false);
         setShowStateDropdown(false);
         setShowCountryDropdown(false);
       }
     }
 
     if (showContractTypeDropdown || showPropertyTypeDropdown || showMilestoneDropdown || 
-        showStateDropdown || showCountryDropdown) {
+        showIndustryDropdown || showBuyerDropdown || showSellerDropdown || showStateDropdown || showCountryDropdown) {
       document.addEventListener('mousedown', handleClickOutside);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showContractTypeDropdown, showPropertyTypeDropdown, showMilestoneDropdown, showStateDropdown, showCountryDropdown]);
+  }, [showContractTypeDropdown, showPropertyTypeDropdown, showMilestoneDropdown, showIndustryDropdown, showBuyerDropdown, showSellerDropdown, showStateDropdown, showCountryDropdown]);
 
   // Click-off behavior for each recipient role dropdown and names dropdown
   useEffect(() => {
@@ -1316,8 +1394,8 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
         value: modalForm.value,
         documents: step4Documents.length + uploadedFiles.length, // Count all uploaded files
         type: modalForm.type,
-        buyer: buyerRecipient?.name || '',
-        seller: sellerRecipient?.name || '',
+        buyer: selectedBuyers.length > 0 ? selectedBuyers.map((buyer, index) => `Buyer ${index + 1}: ${buyer}`).join(', ') : buyerRecipient?.name || '',
+        seller: selectedSellers.length > 0 ? selectedSellers.map((seller, index) => `Seller ${index + 1}: ${seller}`).join(', ') : sellerRecipient?.name || '',
         milestone: modalForm.milestone,
         notes: modalForm.notes,
         closingDate: modalForm.closingDate,
@@ -1347,6 +1425,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
         state: modalForm.state,
         zipCode: modalForm.zipCode,
         country: modalForm.country,
+        industry: modalForm.industry,
         additionalParties: additionalPartiesData,
         party1Role: party1ContractRole,
         party2Role: party2ContractRole,
@@ -1714,16 +1793,56 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
               )}
             </div>
                 <div>
-                  <label htmlFor="escrowNumber" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Escrow Number</label>
-                  <input
-                    type="text"
-                    id="escrowNumber"
-                    name="escrowNumber"
-                    value={modalForm.escrowNumber}
-                    onChange={handleModalChange}
-                    className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
-                    placeholder="Enter escrow number..."
-                  />
+                  <label htmlFor="industry" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Industry</label>
+                  <div className="relative w-full" ref={industryDropdownRef}>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 bg-white dark:bg-gray-900"
+                        placeholder="Select Industry..."
+                        value={modalForm.industry}
+                        readOnly
+                        style={{ paddingLeft: modalForm.industry ? '2.5rem' : '1rem' }}
+                        onFocus={(e) => {
+                          e.target.setSelectionRange(e.target.value.length, e.target.value.length);
+                        }}
+                        onClick={() => {
+                          setShowIndustryDropdown(!showIndustryDropdown);
+                          setShowContractTypeDropdown(false);
+                          setShowPropertyTypeDropdown(false);
+                          setShowMilestoneDropdown(false);
+                        }}
+                      />
+                      {modalForm.industry && (() => {
+                        const IconComponent = INDUSTRY_ICONS[modalForm.industry as keyof typeof INDUSTRY_ICONS];
+                        return IconComponent ? (
+                          <IconComponent className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+                        ) : null;
+                      })()}
+                      <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    </div>
+                    {showIndustryDropdown && (
+                      <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
+                        {INDUSTRIES.map(industry => {
+                          const IconComponent = INDUSTRY_ICONS[industry as keyof typeof INDUSTRY_ICONS];
+                          return (
+                            <button
+                              key={industry}
+                              className={`w-full text-left px-3 py-0.5 text-xs font-medium flex items-center gap-2 ${modalForm.industry === industry ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                              onClick={e => {
+                                e.preventDefault();
+                                setModalForm(prev => ({ ...prev, industry: industry }));
+                                setShowIndustryDropdown(false);
+                              }}
+                            >
+                              <IconComponent className="w-4 h-4 flex-shrink-0" />
+                              {industry}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label htmlFor="type" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Contract Type <span className="text-red-500">*</span></label>
@@ -1735,6 +1854,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                                         placeholder="Select contract type..."
                   value={CONTRACT_TYPES.find(t => t === modalForm.type) || ''}
                   readOnly
+                  style={{ paddingLeft: modalForm.type ? '2.5rem' : '0.75rem' }}
                       onKeyDown={(e) => {
                         if (e.key === 'Backspace') {
                           e.preventDefault();
@@ -1744,25 +1864,40 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                       onFocus={(e) => {
                         e.target.setSelectionRange(e.target.value.length, e.target.value.length);
                       }}
-                      onClick={(e) => handleDropdownClick(e, showContractTypeDropdown, setShowContractTypeDropdown, [setShowPropertyTypeDropdown, setShowMilestoneDropdown])}
+                      onClick={() => {
+                        setShowContractTypeDropdown(!showContractTypeDropdown);
+                        setShowPropertyTypeDropdown(false);
+                        setShowMilestoneDropdown(false);
+                        setShowIndustryDropdown(false);
+                      }}
                 />
+                {modalForm.type && (() => {
+                  const IconComponent = CONTRACT_TYPE_ICONS[modalForm.type as keyof typeof CONTRACT_TYPE_ICONS];
+                  return IconComponent ? (
+                    <IconComponent className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+                  ) : null;
+                })()}
                 <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                 {showContractTypeDropdown && (
                       <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                    {CONTRACT_TYPES.map(type => (
-                      <button
-                        key={type}
-                            className={`w-full text-left px-3 py-0.5 text-xs font-medium ${modalForm.type === type ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-                        onClick={e => {
-                          e.preventDefault();
-                          setModalForm(prev => ({ ...prev, type }));
-                          setShowContractTypeDropdown(false);
-                              setFormErrors(prev => ({ ...prev, type: false }));
-                        }}
-                      >
-                        {type}
-                      </button>
-                    ))}
+                    {CONTRACT_TYPES.map(type => {
+                      const IconComponent = CONTRACT_TYPE_ICONS[type as keyof typeof CONTRACT_TYPE_ICONS];
+                      return (
+                        <button
+                          key={type}
+                          className={`w-full text-left px-3 py-0.5 text-xs font-medium flex items-center gap-2 ${modalForm.type === type ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                          onClick={e => {
+                            e.preventDefault();
+                            setModalForm(prev => ({ ...prev, type }));
+                            setShowContractTypeDropdown(false);
+                            setFormErrors(prev => ({ ...prev, type: false }));
+                          }}
+                        >
+                          <IconComponent className="w-4 h-4 flex-shrink-0" />
+                          {type}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -1779,6 +1914,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                       placeholder="Select property type..."
                       value={PROPERTY_TYPES.find(t => t === modalForm.propertyType) || ''}
                       readOnly
+                      style={{ paddingLeft: modalForm.propertyType ? '2.5rem' : '0.75rem' }}
                       onKeyDown={(e) => {
                         if (e.key === 'Backspace') {
                           e.preventDefault();
@@ -1788,31 +1924,46 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                       onFocus={(e) => {
                         e.target.setSelectionRange(e.target.value.length, e.target.value.length);
                       }}
-                      onClick={(e) => handleDropdownClick(e, showPropertyTypeDropdown, setShowPropertyTypeDropdown, [setShowContractTypeDropdown, setShowMilestoneDropdown])}
+                      onClick={() => {
+                        setShowPropertyTypeDropdown(!showPropertyTypeDropdown);
+                        setShowContractTypeDropdown(false);
+                        setShowMilestoneDropdown(false);
+                        setShowIndustryDropdown(false);
+                      }}
                     />
+                    {modalForm.propertyType && (() => {
+                      const IconComponent = PROPERTY_TYPE_ICONS[modalForm.propertyType as keyof typeof PROPERTY_TYPE_ICONS];
+                      return IconComponent ? (
+                        <IconComponent className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+                      ) : null;
+                    })()}
                     <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                     {showPropertyTypeDropdown && (
                       <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                        {PROPERTY_TYPES.map(type => (
-                          <button
-                            key={type}
-                            className={`w-full text-left px-3 py-0.5 text-xs font-medium ${modalForm.propertyType === type ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-                            onClick={e => {
-                              e.preventDefault();
-                              console.log('Setting propertyType to:', type);
-                              console.log('Previous modalForm.propertyType:', modalForm.propertyType);
-                              setModalForm(prev => {
-                                const newForm = { ...prev, propertyType: type };
-                                console.log('New modalForm.propertyType will be:', newForm.propertyType);
-                                return newForm;
-                              });
-                              setShowPropertyTypeDropdown(false);
-                              setFormErrors(prev => ({ ...prev, propertyType: false }));
-                            }}
-                          >
-                            {type}
-                          </button>
-                        ))}
+                        {PROPERTY_TYPES.map(type => {
+                          const IconComponent = PROPERTY_TYPE_ICONS[type as keyof typeof PROPERTY_TYPE_ICONS];
+                          return (
+                            <button
+                              key={type}
+                              className={`w-full text-left px-3 py-0.5 text-xs font-medium flex items-center gap-2 ${modalForm.propertyType === type ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                              onClick={e => {
+                                e.preventDefault();
+                                console.log('Setting propertyType to:', type);
+                                console.log('Previous modalForm.propertyType:', modalForm.propertyType);
+                                setModalForm(prev => {
+                                  const newForm = { ...prev, propertyType: type };
+                                  console.log('New modalForm.propertyType will be:', newForm.propertyType);
+                                  return newForm;
+                                });
+                                setShowPropertyTypeDropdown(false);
+                                setFormErrors(prev => ({ ...prev, propertyType: false }));
+                              }}
+                            >
+                              <IconComponent className="w-4 h-4 flex-shrink-0" />
+                              {type}
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -1826,6 +1977,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                   placeholder="Select milestone template..."
                   value={MILESTONE_TEMPLATES.find(t => t === modalForm.milestone) || ''}
                   readOnly
+                  style={{ paddingLeft: modalForm.milestone ? '2.5rem' : '0.75rem' }}
                       onKeyDown={(e) => {
                         if (e.key === 'Backspace') {
                           e.preventDefault();
@@ -1835,21 +1987,30 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                       onFocus={(e) => {
                         e.target.setSelectionRange(e.target.value.length, e.target.value.length);
                       }}
-                      onClick={(e) => handleDropdownClick(e, showMilestoneDropdown, setShowMilestoneDropdown, [setShowContractTypeDropdown, setShowPropertyTypeDropdown])}
+                      onClick={() => {
+                        setShowMilestoneDropdown(!showMilestoneDropdown);
+                        setShowContractTypeDropdown(false);
+                        setShowPropertyTypeDropdown(false);
+                        setShowIndustryDropdown(false);
+                      }}
                 />
+                {modalForm.milestone && (
+                  <TbTemplate className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+                )}
                 <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                 {showMilestoneDropdown && (
                       <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                     {MILESTONE_TEMPLATES.map(template => (
                       <button
                         key={template}
-                            className={`w-full text-left px-3 py-0.5 text-xs font-medium ${modalForm.milestone === template ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                            className={`w-full text-left px-3 py-0.5 text-xs font-medium flex items-center gap-2 ${modalForm.milestone === template ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                         onClick={e => {
                           e.preventDefault();
                           setModalForm(prev => ({ ...prev, milestone: template }));
                           setShowMilestoneDropdown(false);
                         }}
                       >
+                        <TbTemplate className="w-4 h-4 flex-shrink-0" />
                         {template}
                       </button>
                     ))}
@@ -2407,7 +2568,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                         onClick={() => setShowManageCollaboratorsModal(true)}
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       >
-                        <TbUsersGroup className="h-5 w-5" />
+                        <TbUsers className="h-5 w-5" />
                         <span className="text-xs font-semibold">Manage</span>
                       </button>
                       <div className="flex flex-wrap gap-1">
@@ -2512,16 +2673,115 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                   />
                 </div>
                 <div>
-                  <label htmlFor="buyer" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Buyer</label>
-                  <input
-                    type="text"
-                    id="buyer"
-                    name="buyer"
-                    value={modalForm.buyer}
-                    onChange={handleModalChange}
-                    className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
-                    placeholder="Enter buyer name..."
-                  />
+                  <label htmlFor="buyer" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Buyer(s)</label>
+                  <div className="relative w-full">
+                    <div 
+                      ref={buyerInputRef}
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-gray-700 dark:text-gray-300 focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-colors bg-white dark:bg-gray-900 flex items-center justify-between cursor-pointer"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setShowBuyerDropdown(!showBuyerDropdown);
+                      }}
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                    >
+                      <div className="flex-1 flex items-center overflow-hidden">
+                        {selectedBuyers.length > 0 ? (
+                          <span className="text-gray-900 dark:text-white">
+                            {selectedBuyers.join(', ')}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">Select buyers from collaborators...</span>
+                        )}
+                      </div>
+                      <TbChevronDown 
+                        className="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0 ml-2" 
+                      />
+                    </div>
+                    
+                    {/* Buyer Dropdown */}
+                    {showBuyerDropdown && (
+                      <div
+                        ref={buyerDropdownRef}
+                        className="absolute top-full left-0 right-0 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2"
+                        style={{ 
+                          top: 'calc(100% + 4px)',
+                          fontFamily: 'Avenir, sans-serif'
+                        }}
+                      >
+                        {addedCollaborators.map((collaborator) => {
+                          const buyerIndex = selectedBuyers.indexOf(collaborator.name);
+                          const isSelected = buyerIndex !== -1;
+                          const isAlreadySeller = selectedSellers.includes(collaborator.name);
+                          const isDisabled = isAlreadySeller && !isSelected;
+                          
+                          return (
+                            <button
+                              key={collaborator.name}
+                              className={`w-full px-4 py-2 text-left text-xs flex items-center ${
+                                isSelected 
+                                  ? 'text-primary hover:bg-gray-50 dark:hover:bg-gray-700' 
+                                  : isDisabled 
+                                    ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' 
+                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                              }`}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                if (isDisabled) return;
+                                
+                                setSelectedBuyers(prev => {
+                                  if (prev.includes(collaborator.name)) {
+                                    return prev.filter(name => name !== collaborator.name);
+                                  } else {
+                                    // Remove from sellers if adding to buyers
+                                    setSelectedSellers(prevSellers => 
+                                      prevSellers.filter(name => name !== collaborator.name)
+                                    );
+                                    return [...prev, collaborator.name];
+                                  }
+                                });
+                                // Don't close the dropdown - allow multiple selections
+                              }}
+                              disabled={isDisabled}
+                            >
+                              <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                                {isSelected && (
+                                  <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                                    <FaCheck className="text-white" size={8} />
+                                  </div>
+                                )}
+                              </div>
+                              <span className="truncate">{collaborator.name}</span>
+                              {isSelected && (
+                                <span className="ml-auto text-xs text-primary font-medium">
+                                  Buyer {buyerIndex + 1}
+                                </span>
+                              )}
+                              {isDisabled && (
+                                <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">
+                                  Already Seller
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                        
+                        {/* Add Collaborator Button */}
+                        <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                        <div
+                          className="px-4 py-2 text-xs cursor-pointer text-primary hover:bg-primary/10 select-none flex items-center gap-2"
+                          onClick={() => {
+                            setShowBuyerDropdown(false);
+                            setModalStep(2);
+                          }}
+                        >
+                          <TbUserPlus className="text-base" />
+                          Add Collaborator
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label htmlFor="buyerFinancialInstitution" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Buyer Financial Institution</label>
@@ -2614,16 +2874,115 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
             </div>
                 </div>
                 <div>
-                  <label htmlFor="seller" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Seller</label>
-                  <input
-                    type="text"
-                    id="seller"
-                    name="seller"
-                    value={modalForm.seller}
-                    onChange={handleModalChange}
-                    className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
-                    placeholder="Enter seller name..."
-                  />
+                  <label htmlFor="seller" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Seller(s)</label>
+                  <div className="relative w-full">
+                    <div 
+                      ref={sellerInputRef}
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-gray-700 dark:text-gray-300 focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-colors bg-white dark:bg-gray-900 flex items-center justify-between cursor-pointer"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setShowSellerDropdown(!showSellerDropdown);
+                      }}
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                    >
+                      <div className="flex-1 flex items-center overflow-hidden">
+                        {selectedSellers.length > 0 ? (
+                          <span className="text-gray-900 dark:text-white">
+                            {selectedSellers.join(', ')}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">Select sellers from collaborators...</span>
+                        )}
+                      </div>
+                      <TbChevronDown 
+                        className="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0 ml-2" 
+                      />
+                    </div>
+                    
+                    {/* Seller Dropdown */}
+                    {showSellerDropdown && (
+                      <div
+                        ref={sellerDropdownRef}
+                        className="absolute top-full left-0 right-0 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2"
+                        style={{ 
+                          top: 'calc(100% + 4px)',
+                          fontFamily: 'Avenir, sans-serif'
+                        }}
+                      >
+                        {addedCollaborators.map((collaborator) => {
+                          const sellerIndex = selectedSellers.indexOf(collaborator.name);
+                          const isSelected = sellerIndex !== -1;
+                          const isAlreadyBuyer = selectedBuyers.includes(collaborator.name);
+                          const isDisabled = isAlreadyBuyer && !isSelected;
+                          
+                          return (
+                            <button
+                              key={collaborator.name}
+                              className={`w-full px-4 py-2 text-left text-xs flex items-center ${
+                                isSelected 
+                                  ? 'text-primary hover:bg-gray-50 dark:hover:bg-gray-700' 
+                                  : isDisabled 
+                                    ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' 
+                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                              }`}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                if (isDisabled) return;
+                                
+                                setSelectedSellers(prev => {
+                                  if (prev.includes(collaborator.name)) {
+                                    return prev.filter(name => name !== collaborator.name);
+                                  } else {
+                                    // Remove from buyers if adding to sellers
+                                    setSelectedBuyers(prevBuyers => 
+                                      prevBuyers.filter(name => name !== collaborator.name)
+                                    );
+                                    return [...prev, collaborator.name];
+                                  }
+                                });
+                                // Don't close the dropdown - allow multiple selections
+                              }}
+                              disabled={isDisabled}
+                            >
+                              <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                                {isSelected && (
+                                  <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                                    <FaCheck className="text-white" size={8} />
+                                  </div>
+                                )}
+                              </div>
+                              <span className="truncate">{collaborator.name}</span>
+                              {isSelected && (
+                                <span className="ml-auto text-xs text-primary font-medium">
+                                  Seller {sellerIndex + 1}
+                                </span>
+                              )}
+                              {isDisabled && (
+                                <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">
+                                  Already Buyer
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                        
+                        {/* Add Collaborator Button */}
+                        <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                        <div
+                          className="px-4 py-2 text-xs cursor-pointer text-primary hover:bg-primary/10 select-none flex items-center gap-2"
+                          onClick={() => {
+                            setShowSellerDropdown(false);
+                            setModalStep(2);
+                          }}
+                        >
+                          <TbUserPlus className="text-base" />
+                          Add Collaborator
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label htmlFor="sellerFinancialInstitution" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Seller Financial Institution</label>
@@ -2785,6 +3144,18 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                     }}
                     className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
                     placeholder="Enter earnest money amount..."
+                  />
+                </div>
+                <div>
+                  <label htmlFor="escrowNumber" className="block text-xs font-medium text-gray-500 dark:text-white mb-1 cursor-default select-none">Escrow Number</label>
+                  <input
+                    type="text"
+                    id="escrowNumber"
+                    name="escrowNumber"
+                    value={modalForm.escrowNumber}
+                    onChange={handleModalChange}
+                    className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs dark:bg-gray-900 dark:text-white"
+                    placeholder="Enter escrow number..."
                   />
                 </div>
                 <div>

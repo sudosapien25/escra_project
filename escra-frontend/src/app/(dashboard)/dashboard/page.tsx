@@ -7,7 +7,7 @@ import { IconBaseProps } from 'react-icons';
 import { LuPen } from 'react-icons/lu';
 import { PiMoneyWavyBold } from 'react-icons/pi';
 import { MdOutlineAddToPhotos } from 'react-icons/md';
-import { TbClockPin, TbClockUp, TbCoins, TbTransactionDollar, TbPencilExclamation, TbTransfer, TbFileText, TbClockShare, TbClockDown, TbArrowsExchange, TbClockEdit, TbFilePlus, TbBusinessplan, TbTrash } from 'react-icons/tb';
+import { TbClockPin, TbClockUp, TbCoins, TbTransactionDollar, TbPencilExclamation, TbTransfer, TbFileText, TbClockShare, TbClockDown, TbArrowsExchange, TbClockEdit, TbFilePlus, TbBusinessplan, TbTrash, TbUserCheck } from 'react-icons/tb';
 import { TbChevronDown, TbArrowsHorizontal, TbArrowAutofitWidth } from 'react-icons/tb';
 import { HiOutlineDocumentText } from 'react-icons/hi';
 import { GrMoney } from 'react-icons/gr';
@@ -988,6 +988,41 @@ export default function DashboardPage() {
 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
+  }, [toast]);
+
+  // Check for and display login success toast
+  React.useEffect(() => {
+    const loginSuccessToast = localStorage.getItem('loginSuccessToast');
+    if (loginSuccessToast) {
+      try {
+        const toastData = JSON.parse(loginSuccessToast);
+        const now = Date.now();
+        const timeDiff = now - toastData.timestamp;
+        
+        // Only show toast if it's less than 15 seconds old AND user navigated from login
+        // The 2 second delay ensures the login page toast was visible
+        if (timeDiff > 2000 && timeDiff < 15000) {
+          const remainingTime = 15000 - timeDiff;
+          
+          toast({
+            title: toastData.title,
+            description: (
+              <div className="flex items-center gap-2">
+                <TbUserCheck className="text-primary text-xl" />
+                <span>{toastData.description}</span>
+            </div>
+            ),
+            duration: remainingTime,
+          });
+        }
+        
+        // Clean up the stored toast data
+        localStorage.removeItem('loginSuccessToast');
+      } catch (error) {
+        console.error('Error parsing login success toast:', error);
+        localStorage.removeItem('loginSuccessToast');
+      }
+    }
   }, [toast]);
   
   const chartData = processContractDataForChart(contracts, selectedRecentlyUpdated);

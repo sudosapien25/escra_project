@@ -52,7 +52,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         name: 'John Doe'
       });
 
-      router.push('/dashboard');
+      // Don't redirect immediately - let the login page handle the redirect
+      // router.push('/dashboard');
     } catch (error) {
       console.error('Login failed:', error);
       throw error;
