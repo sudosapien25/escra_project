@@ -31,6 +31,10 @@ interface Contract {
   type: string;
   buyer?: string;
   seller?: string;
+  buyers?: string[];
+  sellers?: string[];
+  buyerEmails?: string[];
+  sellerEmails?: string[];
   agent?: string;
   milestone?: string;
   notes?: string;
@@ -64,6 +68,7 @@ interface Contract {
   country?: string;
   industry?: string;
   additionalParties?: { name: string; email: string; role: string }[];
+  collaborators?: { name: string; email: string; role: string }[];
   party1Role?: string;
   party2Role?: string;
   documentIds?: string[];
@@ -741,10 +746,28 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
 
   // Create parties string from form data
   const createPartiesString = (): string => {
-    const parties = recipients
-      .filter(recipient => recipient.name && recipient.name.trim() !== '')
-      .map(recipient => recipient.name.trim());
-    return parties.join(' & ');
+    // Use selectedBuyers and selectedSellers arrays instead of recipients
+    const allParties: string[] = [];
+    
+    // Add buyers if available
+    if (selectedBuyers && selectedBuyers.length > 0) {
+      allParties.push(...selectedBuyers);
+    }
+    
+    // Add sellers if available
+    if (selectedSellers && selectedSellers.length > 0) {
+      allParties.push(...selectedSellers);
+    }
+    
+    // Fallback to recipients if no buyers/sellers selected
+    if (allParties.length === 0) {
+      const parties = recipients
+        .filter(recipient => recipient.name && recipient.name.trim() !== '')
+        .map(recipient => recipient.name.trim());
+      return parties.join(' & ');
+    }
+    
+    return allParties.join(' & ');
   };
 
   // Reset form to initial state
@@ -1396,6 +1419,16 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
         type: modalForm.type,
         buyer: selectedBuyers.length > 0 ? selectedBuyers.map((buyer, index) => `Buyer ${index + 1}: ${buyer}`).join(', ') : buyerRecipient?.name || '',
         seller: selectedSellers.length > 0 ? selectedSellers.map((seller, index) => `Seller ${index + 1}: ${seller}`).join(', ') : sellerRecipient?.name || '',
+        buyers: selectedBuyers,
+        sellers: selectedSellers,
+        buyerEmails: selectedBuyers.map(buyerName => {
+          const collaborator = addedCollaborators.find(c => c.name === buyerName);
+          return collaborator?.email || '';
+        }),
+        sellerEmails: selectedSellers.map(sellerName => {
+          const collaborator = addedCollaborators.find(c => c.name === sellerName);
+          return collaborator?.email || '';
+        }),
         milestone: modalForm.milestone,
         notes: modalForm.notes,
         closingDate: modalForm.closingDate,
@@ -1427,6 +1460,11 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
         country: modalForm.country,
         industry: modalForm.industry,
         additionalParties: additionalPartiesData,
+        collaborators: addedCollaborators.map(r => ({
+          name: r.name,
+          email: r.email,
+          role: r.contractPermissions && r.contractPermissions.length > 0 ? r.contractPermissions.join(', ') : 'Standard',
+        })),
         party1Role: party1ContractRole,
         party2Role: party2ContractRole,
         documentIds: [] as string[],

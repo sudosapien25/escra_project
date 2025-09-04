@@ -9,7 +9,7 @@ import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineEye, HiOutlineEyeOf
 import { HiOutlineViewBoards } from 'react-icons/hi';
 import { LuCalendarFold, LuCalendarClock, LuPen, LuHardHat } from 'react-icons/lu';
 import { BiDotsHorizontal, BiCommentAdd } from 'react-icons/bi';
-import { TbWorldDollar, TbEdit, TbClockUp, TbCubeSend, TbClockPin, TbFilePlus, TbScript, TbCoins, TbFileText, TbClockEdit, TbUpload, TbDownload, TbSearch, TbFileSearch, TbLibrary, TbCalendarClock, TbLayoutGrid, TbMessage2Plus, TbChevronDown, TbEraser, TbTrash, TbChevronsLeft, TbChevronsRight, TbBusinessplan, TbSquareCheck, TbSquareChevronLeft, TbSquareChevronRight, TbUserPlus, TbUserShare, TbUserMinus, TbUserSearch, TbUsersPlus, TbUsers, TbUsersGroup, TbCheck, TbMailShare, TbBuildingCommunity, TbWorld, TbBarrierBlock, TbBriefcase, TbScale, TbBallAmericanFootball, TbTool, TbStethoscope, TbHome2, TbBuilding, TbBuildingSkyscraper, TbPhoto, TbBuildingFactory2, TbBuildingCarousel, TbUser, TbTemplate, TbHomeDollar, TbHomeRibbon, TbReceiptTax, TbBuildingWarehouse, TbBuildingBridge, TbBuildings, TbFileStar, TbTrophy } from 'react-icons/tb';
+import { TbWorldDollar, TbEdit, TbClockUp, TbCubeSend, TbClockPin, TbFilePlus, TbScript, TbCoins, TbFileText, TbClockEdit, TbUpload, TbDownload, TbSearch, TbFileSearch, TbLibrary, TbCalendarClock, TbLayoutGrid, TbMessage2Plus, TbChevronDown, TbEraser, TbTrash, TbChevronsLeft, TbChevronsRight, TbBusinessplan, TbSquareCheck, TbSquareChevronLeft, TbSquareChevronRight, TbUserPlus, TbUserShare, TbUserMinus, TbUserSearch, TbUsersPlus, TbUsers, TbUsersGroup, TbCheck, TbMailShare, TbBuildingCommunity, TbWorld, TbBarrierBlock, TbBriefcase, TbScale, TbBallAmericanFootball, TbTool, TbStethoscope, TbHome2, TbBuilding, TbBuildingSkyscraper, TbPhoto, TbBuildingFactory2, TbBuildingCarousel, TbUser, TbTemplate, TbHomeDollar, TbHomeRibbon, TbReceiptTax, TbBuildingWarehouse, TbBuildingBridge, TbBuildings, TbFileStar, TbTrophy, TbUserCog } from 'react-icons/tb';
 import { Logo } from '@/components/common/Logo';
 import { mockContracts } from '@/data/mockContracts';
 import { useEditor } from '@tiptap/react';
@@ -128,6 +128,10 @@ interface Contract {
   type: string;
   buyer?: string;
   seller?: string;
+  buyers?: string[];
+  sellers?: string[];
+  buyerEmails?: string[];
+  sellerEmails?: string[];
   agent?: string;
   // Additional form fields
   milestone?: string;
@@ -162,6 +166,7 @@ interface Contract {
   country?: string;
   industry?: string;
   additionalParties?: { name: string; email: string; role: string }[];
+  collaborators?: { name: string; email: string; role: string }[];
   party1Role?: string;
   party2Role?: string;
   documentIds?: string[]; // IDs of stored documents
@@ -511,6 +516,54 @@ const ContractsPage: React.FC = () => {
     return partiesString.split(' & ').map(party => party.trim());
   };
 
+  // Helper function to get all parties from buyers and sellers arrays
+  const getAllParties = (contract: Contract): string[] => {
+    const allParties: string[] = [];
+    
+    // Add buyers if available
+    if (contract.buyers && contract.buyers.length > 0) {
+      allParties.push(...contract.buyers);
+    }
+    
+    // Add sellers if available
+    if (contract.sellers && contract.sellers.length > 0) {
+      allParties.push(...contract.sellers);
+    }
+    
+    // Fallback to parsing parties string if no buyers/sellers arrays
+    if (allParties.length === 0 && contract.parties) {
+      return parseParties(contract.parties);
+    }
+    
+    return allParties;
+  };
+
+  // Helper function to get email for a buyer/seller from collaborators array (for existing contracts)
+  const getEmailFromCollaborators = (contract: Contract, name: string): string => {
+    if (!contract.collaborators) return '';
+    
+    const collaborator = contract.collaborators.find(c => c.name === name);
+    return collaborator?.email || '';
+  };
+
+  // Helper functions to organize additional parties by role
+  const getAdditionalBuyers = () => {
+    return additionalParties.filter(party => party.role === 'Buyer');
+  };
+
+  const getAdditionalSellers = () => {
+    return additionalParties.filter(party => party.role === 'Seller');
+  };
+
+  const getOtherAdditionalParties = () => {
+    // Only show parties with contract roles (exclude 'Standard' and other non-contract roles)
+    // Show parties that are not buyers or sellers but have contract roles
+    const contractRoles = ['Buyer Agent', 'Seller Agent', 'Closing Agent', 'Inspector', 'Appraiser'];
+    return additionalParties.filter(party => 
+      contractRoles.includes(party.role)
+    );
+  };
+
   // Helper function to toggle expanded state for a row
   const togglePartiesExpansion = (contractId: string) => {
     setExpandedPartiesRows(prev => {
@@ -535,10 +588,13 @@ const ContractsPage: React.FC = () => {
   // Create parties string from form data
   const createPartiesString = (): string => {
     // Use the collaborators data from step 2 instead of modalForm fields
-    const parties = collaborators
+    // Only include main parties (Party 1, Party 2) and additional parties (Party 3+)
+    // Do NOT include collaborators (from addedCollaborators) in the parties string
+    const mainParties = collaborators
       .filter(collaborator => collaborator.name && collaborator.name.trim() !== '')
       .map(collaborator => collaborator.name.trim());
-    return parties.join(' & ');
+    
+    return mainParties.join(' & ');
   };
 
   // Reset form to initial state
@@ -1629,8 +1685,15 @@ const ContractsPage: React.FC = () => {
       const party1ContractRole = buyerCollaborator?.contractPermissions.length > 0 ? buyerCollaborator.contractPermissions.join(', ') : 'Buyer';
       const party2ContractRole = sellerCollaborator?.contractPermissions.length > 0 ? sellerCollaborator.contractPermissions.join(', ') : 'Seller';
       
-      // Capture additional parties (Party 3 and beyond) with their emails
-      const additionalPartiesData = collaborators.slice(2).map(r => ({
+      // Capture additional parties (Party 3 and beyond) - only from main form collaborators slice 2+
+      const additionalPartiesData = collaborators.slice(2).filter(c => c.name.trim() !== '').map(r => ({
+        name: r.name,
+        email: r.email,
+        role: r.contractPermissions.length > 0 ? r.contractPermissions.join(', ') : 'Standard',
+      }));
+      
+      // Capture collaborators (from addedCollaborators) - these go to the collaborator box, not additional parties
+      const collaboratorsData = addedCollaborators.map(r => ({
         name: r.name,
         email: r.email,
         role: r.contractPermissions.length > 0 ? r.contractPermissions.join(', ') : 'Standard',
@@ -1648,6 +1711,16 @@ const ContractsPage: React.FC = () => {
         type: modalForm.type,
         buyer: selectedBuyers.length > 0 ? selectedBuyers.map((buyer, index) => `Buyer ${index + 1}: ${buyer}`).join(', ') : buyerCollaborator?.name || '',
         seller: selectedSellers.length > 0 ? selectedSellers.map((seller, index) => `Seller ${index + 1}: ${seller}`).join(', ') : sellerCollaborator?.name || '',
+        buyers: selectedBuyers,
+        sellers: selectedSellers,
+        buyerEmails: selectedBuyers.map(buyerName => {
+          const collaborator = addedCollaborators.find(c => c.name === buyerName);
+          return collaborator?.email || '';
+        }),
+        sellerEmails: selectedSellers.map(sellerName => {
+          const collaborator = addedCollaborators.find(c => c.name === sellerName);
+          return collaborator?.email || '';
+        }),
         // Include all form data
         milestone: modalForm.milestone,
         notes: modalForm.notes,
@@ -1680,6 +1753,7 @@ const ContractsPage: React.FC = () => {
         country: modalForm.country,
         industry: modalForm.industry,
         additionalParties: additionalPartiesData,
+        collaborators: collaboratorsData,
         party1Role: party1ContractRole,
         party2Role: party2ContractRole,
         documentIds: uploadedDocumentIds, // Store document IDs
@@ -2212,6 +2286,12 @@ const ContractsPage: React.FC = () => {
   const [showParty2RoleDropdown, setShowParty2RoleDropdown] = useState(false);
   const party1RoleDropdownRef = useRef<HTMLDivElement>(null);
   const party2RoleDropdownRef = useRef<HTMLDivElement>(null);
+  
+  // State for additional buyers/sellers role dropdowns
+  const [additionalBuyerRoleDropdowns, setAdditionalBuyerRoleDropdowns] = useState<{[key: string]: boolean}>({});
+  const [additionalSellerRoleDropdowns, setAdditionalSellerRoleDropdowns] = useState<{[key: string]: boolean}>({});
+  const additionalBuyerRoleDropdownRefs = useRef<{[key: string]: HTMLDivElement | null}>({});
+  const additionalSellerRoleDropdownRefs = useRef<{[key: string]: HTMLDivElement | null}>({});
 
   // Add state for additional parties
   const [additionalParties, setAdditionalParties] = useState<Array<{
@@ -2224,6 +2304,8 @@ const ContractsPage: React.FC = () => {
   }>>([]);
   const additionalPartyRoleDropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const [showAdditionalParties, setShowAdditionalParties] = useState(false);
+  const [showAllBuyers, setShowAllBuyers] = useState(false);
+  const [showAllSellers, setShowAllSellers] = useState(false);
 
   // Add contract comments state and functions
   const [contractComments, setContractComments] = useState<Record<string, Comment[]>>(() => {
@@ -2500,6 +2582,7 @@ const ContractsPage: React.FC = () => {
 
   // Add Collaborator Modal state
   const [showAddCollaboratorModal, setShowAddCollaboratorModal] = useState(false);
+  const [showAddCollaboratorDropdown, setShowAddCollaboratorDropdown] = useState(false);
   const [addCollaboratorForm, setAddCollaboratorForm] = useState({
     name: '',
     email: '',
@@ -2520,6 +2603,8 @@ const ContractsPage: React.FC = () => {
   // Add Collaborator Modal permissions dropdown ref
   const addCollaboratorPermissionsDropdownRef = useRef<HTMLDivElement>(null);
   const addCollaboratorPermissionsInputRef = useRef<HTMLDivElement>(null);
+  const addCollaboratorDropdownRef = useRef<HTMLDivElement>(null);
+  const addCollaboratorButtonRef = useRef<HTMLButtonElement>(null);
 
   // State for contract details collaborators
   const [contractDetailsCollaborators, setContractDetailsCollaborators] = useState<Array<{
@@ -2535,12 +2620,15 @@ const ContractsPage: React.FC = () => {
   // Initialize contract details collaborators when contract is selected
   useEffect(() => {
     if (selectedContract) {
-      const initialCollaborators = [
-        { name: selectedContract.buyer || selectedContract.parties?.split('&')[0]?.trim() || 'Robert Chen', email: 'robert.chen@email.com', permissions: ['Edit', 'View', 'Sign'], showRoleDropdown: false },
-        { name: selectedContract.seller || selectedContract.parties?.split('&')[1]?.trim() || 'Eastside Properties', email: 'info@eastsideproperties.com', permissions: ['View', 'Sign'], showRoleDropdown: false },
-        { name: selectedContract.agent || 'N/A', email: 'agent@escrow.com', permissions: ['View'], showRoleDropdown: false },
-      ];
-      setContractDetailsCollaborators(initialCollaborators);
+      // Use actual collaborator data from collaborators field (not additionalParties)
+      const collaboratorsFromContract = selectedContract.collaborators?.map(collaborator => ({
+        name: collaborator.name,
+        email: collaborator.email,
+        permissions: collaborator.role ? collaborator.role.split(', ').map(r => r.trim()) : ['View'],
+        showRoleDropdown: false
+      })) || [];
+      
+      setContractDetailsCollaborators(collaboratorsFromContract);
     }
   }, [selectedContract]);
   const step4AssigneeDropdownRef = useRef<HTMLDivElement>(null);
@@ -2753,13 +2841,29 @@ const ContractsPage: React.FC = () => {
           toggleAdditionalPartyRoleDropdown(party.id);
         }
       });
+      
+      // Handle additional buyer role dropdowns
+      Object.keys(additionalBuyerRoleDropdownRefs.current).forEach(buyerName => {
+        const ref = additionalBuyerRoleDropdownRefs.current[buyerName];
+        if (ref && !ref.contains(target)) {
+          setAdditionalBuyerRoleDropdowns(prev => ({ ...prev, [buyerName]: false }));
+        }
+      });
+      
+      // Handle additional seller role dropdowns
+      Object.keys(additionalSellerRoleDropdownRefs.current).forEach(sellerName => {
+        const ref = additionalSellerRoleDropdownRefs.current[sellerName];
+        if (ref && !ref.contains(target)) {
+          setAdditionalSellerRoleDropdowns(prev => ({ ...prev, [sellerName]: false }));
+        }
+      });
     }
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showParty1RoleDropdown, showParty2RoleDropdown, additionalParties]);
+  }, [showParty1RoleDropdown, showParty2RoleDropdown, additionalParties, additionalBuyerRoleDropdowns, additionalSellerRoleDropdowns]);
 
   useEffect(() => {
           if (!documentsBoxRef.current) return;
@@ -2809,8 +2913,17 @@ const ContractsPage: React.FC = () => {
     if (selectedContract) {
       setEditableTitle(selectedContract.title);
       setSelectedType(selectedContract.type || 'Property Sale');
-      setEditableBuyer(selectedContract.buyer || selectedContract.parties?.split('&')[0]?.trim() || 'Robert Chen');
-      setEditableSeller(selectedContract.seller || selectedContract.parties?.split('&')[1]?.trim() || 'Eastside Properties');
+      // Load buyer data - use first buyer from buyers array if available, otherwise fallback to buyer string
+      const firstBuyer = selectedContract.buyers && selectedContract.buyers.length > 0 
+        ? selectedContract.buyers[0] 
+        : selectedContract.buyer || selectedContract.parties?.split('&')[0]?.trim() || 'Robert Chen';
+      setEditableBuyer(firstBuyer);
+      
+      // Load seller data - use first seller from sellers array if available, otherwise fallback to seller string
+      const firstSeller = selectedContract.sellers && selectedContract.sellers.length > 0 
+        ? selectedContract.sellers[0] 
+        : selectedContract.seller || selectedContract.parties?.split('&')[1]?.trim() || 'Eastside Properties';
+      setEditableSeller(firstSeller);
       setEditableAgent(selectedContract.agent || 'N/A');
       setEditableValue(selectedContract.value || '');
       
@@ -2818,34 +2931,76 @@ const ContractsPage: React.FC = () => {
       setParty1Role(selectedContract.party1Role || 'Buyer');
       setParty2Role(selectedContract.party2Role || 'Seller');
       
-      // Use stored additional parties data from contract if available
+      // Build additional parties from all sources
+      const allAdditionalParties: Array<{
+        id: string;
+        name: string;
+        email: string;
+        role: string;
+        isEditing: boolean;
+        showRoleDropdown: boolean;
+      }> = [];
+      
+      // Add parties from additionalParties field
       if (selectedContract.additionalParties && selectedContract.additionalParties.length > 0) {
-        const additional = selectedContract.additionalParties.map((party, index) => ({
-          id: `party-${index + 3}`,
-          name: party.name,
-          email: party.email,
-          role: party.role,
-          isEditing: false,
-          showRoleDropdown: false
-        }));
-        setAdditionalParties(additional);
-      } else {
-        // Fallback: parse from parties string for existing contracts without additionalParties data
-        const allParties = selectedContract.parties?.split('&').map(p => p.trim()).filter(p => p) || [];
-        if (allParties.length > 2) {
-          const additional = allParties.slice(2).map((party, index) => ({
+        selectedContract.additionalParties.forEach((party, index) => {
+          allAdditionalParties.push({
             id: `party-${index + 3}`,
-            name: party,
-            email: '',
-            role: 'Standard',
+            name: party.name,
+            email: party.email,
+            role: party.role,
             isEditing: false,
             showRoleDropdown: false
-          }));
-          setAdditionalParties(additional);
-        } else {
-          setAdditionalParties([]);
+          });
+        });
+      }
+      
+      // Add parties from buyers array (excluding primary buyer)
+      if (selectedContract.buyers && selectedContract.buyers.length > 1) {
+        selectedContract.buyers.slice(1).forEach((buyer, index) => {
+          allAdditionalParties.push({
+            id: `buyer-${index + 2}`,
+            name: buyer,
+            email: selectedContract.buyerEmails?.[index + 1] || '',
+            role: 'Buyer',
+            isEditing: false,
+            showRoleDropdown: false
+          });
+        });
+      }
+      
+      // Add parties from sellers array (excluding primary seller)
+      if (selectedContract.sellers && selectedContract.sellers.length > 1) {
+        selectedContract.sellers.slice(1).forEach((seller, index) => {
+          allAdditionalParties.push({
+            id: `seller-${index + 2}`,
+            name: seller,
+            email: selectedContract.sellerEmails?.[index + 1] || '',
+            role: 'Seller',
+            isEditing: false,
+            showRoleDropdown: false
+          });
+        });
+      }
+      
+      // Fallback: parse from parties string for existing contracts without structured data
+      if (allAdditionalParties.length === 0) {
+        const allParties = selectedContract.parties?.split('&').map(p => p.trim()).filter(p => p) || [];
+        if (allParties.length > 2) {
+          allParties.slice(2).forEach((party, index) => {
+            allAdditionalParties.push({
+              id: `party-${index + 3}`,
+              name: party,
+              email: '',
+              role: 'Standard',
+              isEditing: false,
+              showRoleDropdown: false
+            });
+          });
         }
       }
+      
+      setAdditionalParties(allAdditionalParties);
     }
   }, [selectedContract]);
 
@@ -3212,9 +3367,53 @@ const ContractsPage: React.FC = () => {
   };
 
   const handleAdditionalPartyRoleChange = (partyId: string, newRole: string) => {
-    setAdditionalParties(prev => prev.map(party => 
-      party.id === partyId ? { ...party, role: newRole, showRoleDropdown: false } : party
-    ));
+    setAdditionalParties(prev => {
+      const updatedParties = prev.map(party => 
+        party.id === partyId ? { ...party, role: newRole, showRoleDropdown: false } : party
+      );
+      
+      // Update the contract data to reflect the role change
+      if (selectedContract) {
+        const updatedContract = { ...selectedContract };
+        
+        // Get all parties organized by role
+        const buyers = updatedContract.buyers || [];
+        const sellers = updatedContract.sellers || [];
+        const additionalParties = updatedContract.additionalParties || [];
+        
+        // Find the party that changed
+        const changedParty = updatedParties.find(ap => ap.id === partyId);
+        
+        if (changedParty) {
+          // Remove from current role arrays
+          const updatedBuyers = buyers.filter(b => b !== changedParty.name);
+          const updatedSellers = sellers.filter(s => s !== changedParty.name);
+          
+          // Update additionalParties array - remove the party and add it back with new role
+          const updatedAdditionalParties = additionalParties.map(party => 
+            party.name === changedParty.name ? { ...party, role: newRole } : party
+          );
+          
+          // Add to new role array if it's Buyer or Seller
+          if (newRole === 'Buyer') {
+            updatedBuyers.push(changedParty.name);
+          } else if (newRole === 'Seller') {
+            updatedSellers.push(changedParty.name);
+          }
+          
+          // Update the contract
+          updatedContract.buyers = updatedBuyers;
+          updatedContract.sellers = updatedSellers;
+          updatedContract.additionalParties = updatedAdditionalParties;
+          
+          // Update the contract in the contracts array
+          setContracts(prevContracts => prevContracts.map(c => c.id === selectedContract.id ? updatedContract : c));
+          setSelectedContract(updatedContract);
+        }
+      }
+      
+      return updatedParties;
+    });
   };
 
   const toggleAdditionalPartyEditing = (partyId: string) => {
@@ -3227,6 +3426,163 @@ const ContractsPage: React.FC = () => {
     setAdditionalParties(prev => prev.map(party => 
       party.id === partyId ? { ...party, showRoleDropdown: !party.showRoleDropdown } : party
     ));
+  };
+
+  // Toggle dropdowns for additional buyers
+  const toggleAdditionalBuyerRoleDropdown = (buyerName: string) => {
+    setAdditionalBuyerRoleDropdowns(prev => ({
+      ...prev,
+      [buyerName]: !prev[buyerName]
+    }));
+  };
+
+  // Toggle dropdowns for additional sellers
+  const toggleAdditionalSellerRoleDropdown = (sellerName: string) => {
+    setAdditionalSellerRoleDropdowns(prev => ({
+      ...prev,
+      [sellerName]: !prev[sellerName]
+    }));
+  };
+
+  // Handle role changes for primary buyer/seller
+  const handlePrimaryPartyRoleChange = (partyType: 'buyer' | 'seller', newRole: string) => {
+    if (!selectedContract) return;
+    
+    const updatedContract = { ...selectedContract };
+    const buyers = updatedContract.buyers || [];
+    const sellers = updatedContract.sellers || [];
+    const additionalParties = updatedContract.additionalParties || [];
+    
+    let partyName = '';
+    if (partyType === 'buyer') {
+      partyName = editableBuyer || selectedContract.buyer || selectedContract.buyers?.[0] || '';
+    } else {
+      partyName = editableSeller || selectedContract.seller || selectedContract.sellers?.[0] || '';
+    }
+    
+    if (partyName) {
+      // Remove from current role arrays
+      const updatedBuyers = buyers.filter(b => b !== partyName);
+      const updatedSellers = sellers.filter(s => s !== partyName);
+      
+      // Update additionalParties array
+      let updatedAdditionalParties = additionalParties.filter(p => p.name !== partyName);
+      
+      // Add to new role array or additionalParties
+      if (newRole === 'Buyer') {
+        updatedBuyers.push(partyName);
+      } else if (newRole === 'Seller') {
+        updatedSellers.push(partyName);
+      } else {
+        // Add to additionalParties with new role
+        updatedAdditionalParties.push({
+          name: partyName,
+          email: partyType === 'buyer' ? (selectedContract.buyerEmail || '') : (selectedContract.sellerEmail || ''),
+          role: newRole
+        });
+      }
+      
+      // Update the contract
+      updatedContract.buyers = updatedBuyers;
+      updatedContract.sellers = updatedSellers;
+      updatedContract.additionalParties = updatedAdditionalParties;
+      
+      // Update the contract in the contracts array
+      setContracts(prevContracts => prevContracts.map(c => c.id === selectedContract.id ? updatedContract : c));
+      setSelectedContract(updatedContract);
+      
+      // Update local state
+      if (partyType === 'buyer') {
+        setParty1Role(newRole);
+      } else {
+        setParty2Role(newRole);
+      }
+      
+      // Refresh additional parties state to reflect the changes
+      // This will be handled by the useEffect that watches selectedContract
+    }
+  };
+
+  // Handle role changes for additional buyers
+  const handleAdditionalBuyerRoleChange = (buyerName: string, newRole: string) => {
+    if (!selectedContract) return;
+    
+    const updatedContract = { ...selectedContract };
+    const buyers = updatedContract.buyers || [];
+    const sellers = updatedContract.sellers || [];
+    const additionalParties = updatedContract.additionalParties || [];
+    
+    // Remove from current role arrays
+    const updatedBuyers = buyers.filter(b => b !== buyerName);
+    const updatedSellers = sellers.filter(s => s !== buyerName);
+    
+    // Update additionalParties array
+    let updatedAdditionalParties = additionalParties.filter(p => p.name !== buyerName);
+    
+    // Add to new role array or additionalParties
+    if (newRole === 'Buyer') {
+      updatedBuyers.push(buyerName);
+    } else if (newRole === 'Seller') {
+      updatedSellers.push(buyerName);
+    } else {
+      // Add to additionalParties with new role
+      const buyerEmail = selectedContract.buyerEmails?.[buyers.indexOf(buyerName)] || '';
+      updatedAdditionalParties.push({
+        name: buyerName,
+        email: buyerEmail,
+        role: newRole
+      });
+    }
+    
+    // Update the contract
+    updatedContract.buyers = updatedBuyers;
+    updatedContract.sellers = updatedSellers;
+    updatedContract.additionalParties = updatedAdditionalParties;
+    
+    // Update the contract in the contracts array
+    setContracts(prevContracts => prevContracts.map(c => c.id === selectedContract.id ? updatedContract : c));
+    setSelectedContract(updatedContract);
+  };
+
+  // Handle role changes for additional sellers
+  const handleAdditionalSellerRoleChange = (sellerName: string, newRole: string) => {
+    if (!selectedContract) return;
+    
+    const updatedContract = { ...selectedContract };
+    const buyers = updatedContract.buyers || [];
+    const sellers = updatedContract.sellers || [];
+    const additionalParties = updatedContract.additionalParties || [];
+    
+    // Remove from current role arrays
+    const updatedBuyers = buyers.filter(b => b !== sellerName);
+    const updatedSellers = sellers.filter(s => s !== sellerName);
+    
+    // Update additionalParties array
+    let updatedAdditionalParties = additionalParties.filter(p => p.name !== sellerName);
+    
+    // Add to new role array or additionalParties
+    if (newRole === 'Buyer') {
+      updatedBuyers.push(sellerName);
+    } else if (newRole === 'Seller') {
+      updatedSellers.push(sellerName);
+    } else {
+      // Add to additionalParties with new role
+      const sellerEmail = selectedContract.sellerEmails?.[sellers.indexOf(sellerName)] || '';
+      updatedAdditionalParties.push({
+        name: sellerName,
+        email: sellerEmail,
+        role: newRole
+      });
+    }
+    
+    // Update the contract
+    updatedContract.buyers = updatedBuyers;
+    updatedContract.sellers = updatedSellers;
+    updatedContract.additionalParties = updatedAdditionalParties;
+    
+    // Update the contract in the contracts array
+    setContracts(prevContracts => prevContracts.map(c => c.id === selectedContract.id ? updatedContract : c));
+    setSelectedContract(updatedContract);
   };
 
   // Helper function to get distinct colors for recipient cards
@@ -3907,8 +4263,8 @@ const ContractsPage: React.FC = () => {
         return bType.localeCompare(aType);
       }
     } else if (partiesSortDirection) {
-      const aParties = a.parties.toLowerCase();
-      const bParties = b.parties.toLowerCase();
+      const aParties = getAllParties(a).join(', ').toLowerCase();
+      const bParties = getAllParties(b).join(', ').toLowerCase();
       if (partiesSortDirection === 'asc') {
         return aParties.localeCompare(bParties);
       } else {
@@ -4591,6 +4947,22 @@ const ContractsPage: React.FC = () => {
     };
   }, [showAddCollaboratorPermissionsDropdown]);
 
+  // Click outside handler for Add Collaborator dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (showAddCollaboratorDropdown && 
+          !addCollaboratorButtonRef.current?.contains(event.target as Node) &&
+          !addCollaboratorDropdownRef.current?.contains(event.target as Node)) {
+        setShowAddCollaboratorDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showAddCollaboratorDropdown]);
+
   return (
     <>
       <div className="space-y-4 select-none cursor-default">
@@ -4882,7 +5254,7 @@ const ContractsPage: React.FC = () => {
                       <div className="relative">
                         <input
                           type="text"
-                          className={`w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white dark:bg-gray-900 caret-transparent`}
+                          className={`w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white dark:bg-gray-900 caret-transparent`}
                           placeholder="Select property type..."
                           value={PROPERTY_TYPES.find(t => t === modalForm.propertyType) || ''}
                           readOnly
@@ -8494,7 +8866,7 @@ const ContractsPage: React.FC = () => {
                     </td>
                     <td className="px-6 py-2.5 text-xs">
                       {(() => {
-                        const parties = parseParties(contract.parties);
+                        const parties = getAllParties(contract);
                         const isExpanded = expandedPartiesRows.has(contract.id);
                         const hasMoreThanTwo = parties.length > 2;
                         
@@ -9940,7 +10312,7 @@ const ContractsPage: React.FC = () => {
                     <div className="space-y-4 cursor-default select-none">
                       {/* Party 1 */}
                       <div className="space-y-4">
-                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Party 1 (Buyer)</div>
+                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Primary Buyer</div>
                         {/* Name and Role on same line */}
                         <div className="grid grid-cols-2 gap-3">
                           {/* Name */}
@@ -9992,7 +10364,7 @@ const ContractsPage: React.FC = () => {
                             {showParty1RoleDropdown && (
                               <div
                                 ref={party1RoleDropdownRef}
-                                className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[160px]"
+                                className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[160px] max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700"
                                 style={{ fontFamily: 'Avenir, sans-serif' }}
                               >
                                 {['Standard', 'Buyer', 'Seller', 'Buyer Agent', 'Seller Agent', 'Closing Agent', 'Inspector', 'Appraiser'].map((role) => (
@@ -10001,7 +10373,7 @@ const ContractsPage: React.FC = () => {
                                     className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${party1Role === role ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                                     style={{ background: 'none', border: 'none', boxShadow: 'none' }}
                                     onClick={() => {
-                                      setParty1Role(role);
+                                      handlePrimaryPartyRoleChange('buyer', role);
                                       setShowParty1RoleDropdown(false);
                                     }}
                                   >
@@ -10013,17 +10385,126 @@ const ContractsPage: React.FC = () => {
                           </div>
                         </div>
                         {/* Email */}
-                        <div className={`w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs bg-white dark:bg-gray-900 select-none cursor-default ${selectedContract.buyerEmail ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>
-                          {selectedContract.buyerEmail || 'Not specified'}
+                        <div className={`w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs bg-white dark:bg-gray-900 select-none cursor-default ${(selectedContract.buyerEmails && selectedContract.buyerEmails[0]) || selectedContract.buyerEmail || (selectedContract.buyers && selectedContract.buyers[0] && getEmailFromCollaborators(selectedContract, selectedContract.buyers[0])) ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>
+                          {(selectedContract.buyerEmails && selectedContract.buyerEmails[0]) || selectedContract.buyerEmail || (selectedContract.buyers && selectedContract.buyers[0] && getEmailFromCollaborators(selectedContract, selectedContract.buyers[0])) || 'Not specified'}
                         </div>
+                        
+                        {/* Expand/Collapse Button for Multiple Buyers */}
+                        {((selectedContract.buyers && selectedContract.buyers.length > 1) || getAdditionalBuyers().length > 0) && (
+                          <div className="flex justify-center mt-2">
+                            <button
+                              type="button"
+                              onClick={() => setShowAllBuyers(!showAllBuyers)}
+                              className="h-[32px] px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer flex items-center gap-1"
+                            >
+                              <TbChevronDown 
+                                size={14} 
+                                className={`transition-transform duration-200 text-white ${showAllBuyers ? 'rotate-180' : ''}`}
+                              />
+                              <span className="text-xs font-medium">
+                                {showAllBuyers ? 'Hide' : 'Show'} All Buyers ({(selectedContract.buyers?.length || 0) + getAdditionalBuyers().length})
+                              </span>
+                            </button>
+                          </div>
+                        )}
                       </div>
+                      
+                      {/* Additional Buyers */}
+                      {showAllBuyers && (selectedContract.buyers && selectedContract.buyers.length > 1 || getAdditionalBuyers().length > 0) && (
+                        <>
+                          {/* Show additional buyers from selectedContract.buyers */}
+                          {selectedContract.buyers && selectedContract.buyers.slice(1).map((buyer, index) => (
+                            <div key={`buyer-${index + 2}`} className="space-y-4">
+                              
+                              <div className="space-y-4">
+                                <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Buyer {index + 2}</div>
+                                {/* Name and Role on same line */}
+                                <div className="grid grid-cols-2 gap-3">
+                                  {/* Name */}
+                                  <div>
+                                    <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 cursor-default select-none">
+                                      {buyer}
+                                    </div>
+                                  </div>
+                                  {/* Role */}
+                                  <div className="relative">
+                                    <button
+                                      onClick={() => toggleAdditionalBuyerRoleDropdown(buyer)}
+                                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 hover:border-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors flex items-center justify-between"
+                                    >
+                                      Buyer
+                                      <TbChevronDown className="text-gray-400 text-xs" />
+                                    </button>
+                                    
+                                    {additionalBuyerRoleDropdowns[buyer] && (
+                                      <div 
+                                        ref={el => { additionalBuyerRoleDropdownRefs.current[buyer] = el; }}
+                                        className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700"
+                                      >
+                                        {['Standard', 'Buyer', 'Seller', 'Buyer Agent', 'Seller Agent', 'Closing Agent', 'Inspector', 'Appraiser'].map((role) => (
+                                          <button
+                                            key={role}
+                                            className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${role === 'Buyer' ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                                            style={{ background: 'none', border: 'none', boxShadow: 'none' }}
+                                            onClick={() => {
+                                              handleAdditionalBuyerRoleChange(buyer, role);
+                                              setAdditionalBuyerRoleDropdowns(prev => ({ ...prev, [buyer]: false }));
+                                            }}
+                                          >
+                                            {role}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                {/* Email */}
+                                <div className={`w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs bg-white dark:bg-gray-900 select-none cursor-default ${(selectedContract.buyerEmails && selectedContract.buyerEmails[index + 1]) || getEmailFromCollaborators(selectedContract, buyer) ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>
+                                  {(selectedContract.buyerEmails && selectedContract.buyerEmails[index + 1]) || getEmailFromCollaborators(selectedContract, buyer) || 'Not specified'}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          
+                          {/* Show additional buyers from additionalParties */}
+                          {getAdditionalBuyers().map((party, index) => {
+                            const buyerNumber = (selectedContract.buyers?.length || 1) + index;
+                            return (
+                              <div key={`additional-buyer-${party.id}`} className="space-y-4">
+                                <div className="space-y-4">
+                                  <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Buyer {buyerNumber}</div>
+                                  {/* Name and Role on same line */}
+                                  <div className="grid grid-cols-2 gap-3">
+                                    {/* Name */}
+                                    <div>
+                                      <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 cursor-default select-none">
+                                        {party.name}
+                                      </div>
+                                    </div>
+                                    {/* Role */}
+                                    <div>
+                                      <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 cursor-default select-none">
+                                        Buyer
+                                      </div>
+                                    </div>
+                                  </div>
+                                  {/* Email */}
+                                  <div className={`w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs bg-white dark:bg-gray-900 select-none cursor-default ${party.email ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>
+                                    {party.email || 'Not specified'}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </>
+                      )}
                       
                       {/* Divider */}
                       <div className="border-t border-gray-200"></div>
                       
                       {/* Party 2 */}
                       <div className="space-y-4">
-                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Party 2 (Seller)</div>
+                        <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Primary Seller</div>
                         {/* Name and Role on same line */}
                         <div className="grid grid-cols-2 gap-3">
                           {/* Name */}
@@ -10075,7 +10556,7 @@ const ContractsPage: React.FC = () => {
                             {showParty2RoleDropdown && (
                               <div
                                 ref={party2RoleDropdownRef}
-                                className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[160px]"
+                                className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[160px] max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700"
                                 style={{ fontFamily: 'Avenir, sans-serif' }}
                               >
                                 {['Standard', 'Buyer', 'Seller', 'Buyer Agent', 'Seller Agent', 'Closing Agent', 'Inspector', 'Appraiser'].map((role) => (
@@ -10084,7 +10565,7 @@ const ContractsPage: React.FC = () => {
                                     className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${party2Role === role ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                                     style={{ background: 'none', border: 'none', boxShadow: 'none' }}
                                     onClick={() => {
-                                      setParty2Role(role);
+                                      handlePrimaryPartyRoleChange('seller', role);
                                       setShowParty2RoleDropdown(false);
                                     }}
                                   >
@@ -10096,13 +10577,122 @@ const ContractsPage: React.FC = () => {
                           </div>
                         </div>
                         {/* Email */}
-                        <div className={`w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs bg-white dark:bg-gray-900 select-none cursor-default ${selectedContract.sellerEmail ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>
-                          {selectedContract.sellerEmail || 'Not specified'}
+                        <div className={`w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs bg-white dark:bg-gray-900 select-none cursor-default ${(selectedContract.sellerEmails && selectedContract.sellerEmails[0]) || selectedContract.sellerEmail || (selectedContract.sellers && selectedContract.sellers[0] && getEmailFromCollaborators(selectedContract, selectedContract.sellers[0])) ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>
+                          {(selectedContract.sellerEmails && selectedContract.sellerEmails[0]) || selectedContract.sellerEmail || (selectedContract.sellers && selectedContract.sellers[0] && getEmailFromCollaborators(selectedContract, selectedContract.sellers[0])) || 'Not specified'}
                         </div>
+                        
+                        {/* Expand/Collapse Button for Multiple Sellers */}
+                        {((selectedContract.sellers && selectedContract.sellers.length > 1) || getAdditionalSellers().length > 0) && (
+                          <div className="flex justify-center mt-2">
+                            <button
+                              type="button"
+                              onClick={() => setShowAllSellers(!showAllSellers)}
+                              className="h-[32px] px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer flex items-center gap-1"
+                            >
+                              <TbChevronDown 
+                                size={14} 
+                                className={`transition-transform duration-200 text-white ${showAllSellers ? 'rotate-180' : ''}`}
+                              />
+                              <span className="text-xs font-medium">
+                                {showAllSellers ? 'Hide' : 'Show'} All Sellers ({(selectedContract.sellers?.length || 0) + getAdditionalSellers().length})
+                              </span>
+                            </button>
+                          </div>
+                        )}
                       </div>
                       
+                      {/* Additional Sellers */}
+                      {showAllSellers && (selectedContract.sellers && selectedContract.sellers.length > 1 || getAdditionalSellers().length > 0) && (
+                        <>
+                          {/* Show additional sellers from selectedContract.sellers */}
+                          {selectedContract.sellers && selectedContract.sellers.slice(1).map((seller, index) => (
+                            <div key={`seller-${index + 2}`} className="space-y-4">
+                              
+                              <div className="space-y-4">
+                                <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Seller {index + 2}</div>
+                                {/* Name and Role on same line */}
+                                <div className="grid grid-cols-2 gap-3">
+                                  {/* Name */}
+                                  <div>
+                                    <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 cursor-default select-none">
+                                      {seller}
+                                    </div>
+                                  </div>
+                                  {/* Role */}
+                                  <div className="relative">
+                                    <button
+                                      onClick={() => toggleAdditionalSellerRoleDropdown(seller)}
+                                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 hover:border-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors flex items-center justify-between"
+                                    >
+                                      Seller
+                                      <TbChevronDown className="text-gray-400 text-xs" />
+                                    </button>
+                                    
+                                    {additionalSellerRoleDropdowns[seller] && (
+                                      <div 
+                                        ref={el => { additionalSellerRoleDropdownRefs.current[seller] = el; }}
+                                        className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700"
+                                      >
+                                        {['Standard', 'Buyer', 'Seller', 'Buyer Agent', 'Seller Agent', 'Closing Agent', 'Inspector', 'Appraiser'].map((role) => (
+                                          <button
+                                            key={role}
+                                            className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${role === 'Seller' ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                                            style={{ background: 'none', border: 'none', boxShadow: 'none' }}
+                                            onClick={() => {
+                                              handleAdditionalSellerRoleChange(seller, role);
+                                              setAdditionalSellerRoleDropdowns(prev => ({ ...prev, [seller]: false }));
+                                            }}
+                                          >
+                                            {role}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                {/* Email */}
+                                <div className={`w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs bg-white dark:bg-gray-900 select-none cursor-default ${(selectedContract.sellerEmails && selectedContract.sellerEmails[index + 1]) || getEmailFromCollaborators(selectedContract, seller) ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>
+                                  {(selectedContract.sellerEmails && selectedContract.sellerEmails[index + 1]) || getEmailFromCollaborators(selectedContract, seller) || 'Not specified'}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          
+                          {/* Show additional sellers from additionalParties */}
+                          {getAdditionalSellers().map((party, index) => {
+                            const sellerNumber = (selectedContract.sellers?.length || 1) + index;
+                            return (
+                              <div key={`additional-seller-${party.id}`} className="space-y-4">
+                                <div className="space-y-4">
+                                  <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Seller {sellerNumber}</div>
+                                  {/* Name and Role on same line */}
+                                  <div className="grid grid-cols-2 gap-3">
+                                    {/* Name */}
+                                    <div>
+                                      <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 cursor-default select-none">
+                                        {party.name}
+                                      </div>
+                                    </div>
+                                    {/* Role */}
+                                    <div>
+                                      <div className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 cursor-default select-none">
+                                        Seller
+                                      </div>
+                                    </div>
+                                  </div>
+                                  {/* Email */}
+                                  <div className={`w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs bg-white dark:bg-gray-900 select-none cursor-default ${party.email ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>
+                                    {party.email || 'Not specified'}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </>
+                      )}
+                      
                       {/* Expand/Collapse Button for Additional Parties */}
-                      {additionalParties.length > 0 && (
+                      {getOtherAdditionalParties().length > 0 && (
                         <div className="flex justify-center mt-4">
                           <button
                             type="button"
@@ -10115,7 +10705,7 @@ const ContractsPage: React.FC = () => {
                               className={`transition-transform duration-200 text-white ${showAdditionalParties ? 'rotate-180' : ''}`}
                             />
                             <span className="text-xs font-medium">
-                              {showAdditionalParties ? 'Hide' : 'Show'} Additional Parties ({additionalParties.length})
+                              {showAdditionalParties ? 'Hide' : 'Show'} Additional Parties ({getOtherAdditionalParties().length})
                             </span>
                           </button>
                         </div>
@@ -10123,7 +10713,7 @@ const ContractsPage: React.FC = () => {
                                             {/* Additional Parties */}
                       {showAdditionalParties && (
                         <>
-                          {additionalParties.map((party, index) => (
+                          {getOtherAdditionalParties().map((party, index) => (
                             <div key={party.id}>
                               {/* Divider between additional parties */}
                               {index > 0 && (
@@ -10176,7 +10766,7 @@ const ContractsPage: React.FC = () => {
                                 {party.showRoleDropdown && (
                                   <div
                                     ref={(el) => { additionalPartyRoleDropdownRefs.current[party.id] = el; }}
-                                    className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[160px]"
+                                    className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[160px] max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700"
                                     style={{ fontFamily: 'Avenir, sans-serif' }}
                                   >
                                     {['Standard', 'Buyer', 'Seller', 'Buyer Agent', 'Seller Agent', 'Closing Agent', 'Inspector', 'Appraiser'].map((role) => (
@@ -10473,20 +11063,47 @@ const ContractsPage: React.FC = () => {
                   <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 w-full cursor-default select-none">
                                           <div className="flex items-center justify-between mb-4 cursor-default select-none">
                         <h3 className="text-sm font-semibold text-gray-900 dark:text-white cursor-default select-none">Collaborators</h3>
-                        <div className="flex items-center gap-0">
+                        <div className="relative">
                           <button 
+                            ref={addCollaboratorButtonRef}
                             className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-primary text-gray-700 dark:text-white font-semibold text-xs hover:bg-gray-200 dark:hover:bg-primary-dark transition-colors cursor-pointer" 
                             style={{ fontFamily: 'Avenir, sans-serif' }}
-                            onClick={() => setShowAddCollaboratorModal(true)}
+                            onClick={() => setShowAddCollaboratorDropdown(!showAddCollaboratorDropdown)}
                           >
                             <TbUsersPlus className="text-lg text-primary dark:text-white" /> Add
+                            <TbChevronDown className="text-sm text-primary dark:text-white" />
                           </button>
-                          <button 
-                            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-primary text-gray-700 dark:text-white font-semibold text-xs hover:bg-gray-200 dark:hover:bg-primary-dark transition-colors cursor-pointer ml-1" 
-                            style={{ fontFamily: 'Avenir, sans-serif' }}
-                          >
-                            <TbUsersPlus className="text-lg text-primary dark:text-white" /> Invite
-                          </button>
+                          
+                          {/* Add Collaborator Dropdown */}
+                          {showAddCollaboratorDropdown && (
+                            <div
+                              ref={addCollaboratorDropdownRef}
+                              className="absolute top-full right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-[9999] py-2 min-w-[200px]"
+                            >
+                              <button
+                                type="button"
+                                className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center text-gray-700 dark:text-gray-300"
+                                onClick={() => {
+                                  setShowAddCollaboratorDropdown(false);
+                                  setShowAddCollaboratorModal(true);
+                                }}
+                              >
+                                <TbUserPlus className="h-4 w-4 mr-2" />
+                                Add Existing Collaborator
+                              </button>
+                              <button
+                                type="button"
+                                className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center text-gray-700 dark:text-gray-300"
+                                onClick={() => {
+                                  setShowAddCollaboratorDropdown(false);
+                                  // TODO: Implement invite new collaborator functionality
+                                }}
+                              >
+                                <TbMailShare className="h-4 w-4 mr-2" />
+                                Invite New Collaborator
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     <div className="flex flex-col gap-3 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:hidden" style={{ maxHeight: '280px', minHeight: '280px' }}>
@@ -10508,9 +11125,9 @@ const ContractsPage: React.FC = () => {
                             </div>
                             <div className="flex items-center gap-1 cursor-default select-none ml-4">
                               <div className="relative cursor-pointer">
-                                <div
+                                <button
                                   data-collaborator-idx={idx}
-                                  className="flex items-center justify-between px-1.5 py-1 text-xs text-gray-700 dark:text-gray-300 bg-transparent border border-gray-300 dark:border-transparent rounded-md transition-colors min-w-[140px] cursor-pointer"
+                                  className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group cursor-pointer flex items-center justify-center"
                                   onClick={() => {
                                     // Toggle dropdown for this specific collaborator (exact same pattern as NewContractModal)
                                     setContractDetailsCollaborators(prev => prev.map((c, i) => 
@@ -10521,19 +11138,17 @@ const ContractsPage: React.FC = () => {
                                     ));
                                   }}
                                 >
-                                  <span className="flex-1 text-center">
-                                    {collaborator.permissions.length > 0 
-                                      ? collaborator.permissions.join(', ') 
-                                      : 'No permissions set'}
+                                  <TbUserCog className="h-4 w-4 transition-colors" />
+                                  <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                    Permissions
                                   </span>
-                                  <TbChevronDown size={16} className="text-gray-400 dark:text-gray-500 flex-shrink-0" />
-                                </div>
+                                </button>
                                 
                                 {/* Permissions Dropdown */}
                                 {collaborator.showRoleDropdown && (
                                   <div
                                     ref={(el) => { collaboratorDropdownRefs.current[idx] = el; }}
-                                    className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-[9999] py-2"
+                                    className="absolute top-full right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-[9999] py-2 min-w-[120px]"
                                     style={{ position: 'absolute' }}
                                   >
                                     {['Edit', 'View', 'Sign'].map((permission) => (
@@ -10570,7 +11185,7 @@ const ContractsPage: React.FC = () => {
                                 )}
                               </div>
                               <button 
-                                className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group cursor-pointer"
+                                className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group cursor-pointer flex items-center justify-center"
                               >
                                 <TbUserMinus className="h-4 w-4 transition-colors" />
                                 <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">

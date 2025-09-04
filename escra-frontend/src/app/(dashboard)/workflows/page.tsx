@@ -18,7 +18,7 @@ import { MdCancelPresentation, MdOutlineLibraryAddCheck } from 'react-icons/md';
 import { MdOutlineLightMode, MdOutlineDarkMode } from 'react-icons/md';
 import { RiUserSearchLine, RiKanbanView2 } from 'react-icons/ri';
 import { HiOutlineDocumentSearch } from 'react-icons/hi';
-import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbLibraryPlus, TbEdit, TbStatusChange, TbHistory, TbCategoryPlus, TbDragDrop, TbPencil, TbSubtask, TbSearch, TbFileSearch, TbDownload, TbCalendarClock, TbCancel, TbList, TbListSearch, TbUpload, TbLibrary, TbLibraryMinus, TbChevronDown, TbMessage2Plus, TbTrash, TbChevronsLeft, TbChevronsRight, TbUserSearch, TbLayoutGrid, TbCategory2, TbEye, TbPlus } from 'react-icons/tb';
+import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbLibraryPlus, TbEdit, TbStatusChange, TbHistory, TbCategoryPlus, TbDragDrop, TbPencil, TbSubtask, TbSearch, TbFileSearch, TbDownload, TbCalendarClock, TbCancel, TbList, TbListDetails, TbListSearch, TbUpload, TbLibrary, TbLibraryMinus, TbChevronDown, TbMessage2Plus, TbTrash, TbChevronsLeft, TbChevronsRight, TbUserSearch, TbLayoutGrid, TbCategory2, TbEye, TbPlus } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
 
@@ -422,7 +422,7 @@ export default function WorkflowsPage() {
       key: 'To Do',
       title: 'To Do',
       color: 'bg-gray-100',
-      icon: <TbList className="text-xl mr-2 text-gray-500" />,
+      icon: <TbLayoutGrid className="text-xl mr-2 text-gray-500" />,
       tasks: getTasksByStatus('To Do')
     },
     {
