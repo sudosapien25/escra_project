@@ -15,7 +15,7 @@ import { useDocumentStore } from '@/data/documentNameStore';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { useNotifications } from '@/context/NotificationContext';
-import { TbBuildingCommunity, TbWorld, TbBarrierBlock, TbBriefcase, TbScale, TbBallAmericanFootball, TbTool, TbStethoscope, TbCoins } from 'react-icons/tb';
+import { TbBuildingCommunity, TbWorld, TbBarrierBlock, TbBriefcase, TbScale, TbBallAmericanFootball, TbTool, TbStethoscope, TbCoins, TbForklift } from 'react-icons/tb';
 import { LuHardHat } from 'react-icons/lu';
 import { MdOutlineMovieFilter } from 'react-icons/md';
 import { HiOutlineChip } from 'react-icons/hi';
@@ -69,8 +69,6 @@ interface Contract {
   industry?: string;
   additionalParties?: { name: string; email: string; role: string }[];
   collaborators?: { name: string; email: string; role: string }[];
-  party1Role?: string;
-  party2Role?: string;
   documentIds?: string[];
 }
 
@@ -123,7 +121,7 @@ const INDUSTRY_ICONS = {
   'Healthcare': TbStethoscope,
   'Finance': TbCoins,
   'Entertainment': MdOutlineMovieFilter,
-  'Manufacturing': TbTool,
+  'Manufacturing': TbForklift,
   'Legal': TbScale,
   'Athletics': TbTrophy,
   'Technology': HiOutlineChip
@@ -1370,9 +1368,6 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
       const buyerRecipient = recipients[0];
       const sellerRecipient = recipients[1];
       
-      // Store party roles for the contract details modal
-      const party1ContractRole = buyerRecipient?.contractRole || 'Buyer';
-      const party2ContractRole = sellerRecipient?.contractRole || 'Seller';
       
       // Capture additional parties (Party 3 and beyond) with their emails
       const additionalPartiesData = recipients.slice(2).map(r => ({
@@ -1460,13 +1455,23 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
         country: modalForm.country,
         industry: modalForm.industry,
         additionalParties: additionalPartiesData,
-        collaborators: addedCollaborators.map(r => ({
-          name: r.name,
-          email: r.email,
-          role: r.contractPermissions && r.contractPermissions.length > 0 ? r.contractPermissions.join(', ') : 'Standard',
-        })),
-        party1Role: party1ContractRole,
-        party2Role: party2ContractRole,
+        collaborators: addedCollaborators.map(r => {
+          // Determine contract role based on whether they're in buyers or sellers arrays
+          let contractRole = 'Standard';
+          if (selectedBuyers.includes(r.name)) {
+            contractRole = 'Buyer';
+          } else if (selectedSellers.includes(r.name)) {
+            contractRole = 'Seller';
+          }
+          
+          return {
+            name: r.name,
+            email: r.email,
+            role: r.contractPermissions && r.contractPermissions.length > 0 ? r.contractPermissions.join(', ') : 'Standard',
+            contractRole: contractRole,
+            permissions: r.contractPermissions && r.contractPermissions.length > 0 ? r.contractPermissions : ['View'],
+          };
+        }),
         documentIds: [] as string[],
       };
 
@@ -1535,6 +1540,9 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
           
           // Update the contract with the final document IDs
           newContract.documentIds = finalDocumentIds;
+          
+          // Trigger a storage event to notify other components of new documents
+          window.dispatchEvent(new CustomEvent('documentsUpdated'));
         }
       } catch (error) {
         console.error('Error saving contract:', error);

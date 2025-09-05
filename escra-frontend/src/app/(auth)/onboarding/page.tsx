@@ -7,7 +7,7 @@ import { Select, SelectOption } from '@/components/common/Select';
 import { Logo } from '@/components/common/Logo';
 import { HiChevronDown } from 'react-icons/hi2';
 import { FaCheck } from 'react-icons/fa';
-import { TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbBuildingCommunity, TbBallAmericanFootball, TbTool, TbCoins, TbScale, TbBarrierBlock, TbStethoscope, TbBriefcase, TbTrophy } from 'react-icons/tb';
+import { TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbBuildingCommunity, TbBallAmericanFootball, TbTool, TbCoins, TbScale, TbBarrierBlock, TbStethoscope, TbBriefcase, TbTrophy, TbForklift } from 'react-icons/tb';
 import { MdOutlineSportsFootball, MdOutlineMovieFilter, MdOutlineHealthAndSafety } from 'react-icons/md';
 import { LuConstruction, LuBriefcaseBusiness, LuHardHat } from 'react-icons/lu';
 import { GrMoney, GrUserWorker } from 'react-icons/gr';
@@ -37,7 +37,7 @@ const INDUSTRIES: IndustryOption[] = [
   { value: 'healthcare', label: 'Healthcare', icon: TbStethoscope },
   { value: 'labor', label: 'Labor', icon: LuHardHat },
   { value: 'legal', label: 'Legal', icon: TbScale },
-  { value: 'manufacturing', label: 'Manufacturing', icon: TbTool },
+  { value: 'manufacturing', label: 'Manufacturing', icon: TbForklift },
   { value: 'retail', label: 'Retail', icon: TbShoppingBagEdit },
   { value: 'supply_chain', label: 'Logistics', icon: TbWorld },
   { value: 'technology', label: 'Technology', icon: HiOutlineChip },

@@ -1,231 +1,56 @@
 [
   {
-    "id": "5674",
-    "title": "Kefalonia Compound",
+    "id": "5525",
+    "title": "Jimmy Ciarlo x Buffalo Bills",
     "parties": "",
     "status": "Initiation",
     "updated": "Just now",
     "value": "$2,500,000",
     "documents": 0,
     "type": "Commercial – Cash or Financed",
-    "buyer": "Buyer 1: John Doe",
-    "seller": "Seller 1: Alex Johnson, Seller 2: Emily Davis",
+    "buyer": "Buyer 1: David Miller, Buyer 2: Sarah Miller",
+    "seller": "Seller 1: Alex Johnson, Seller 2: Emma Johnson",
     "buyers": [
-      "John Doe"
+      "David Miller",
+      "Sarah Miller"
     ],
     "sellers": [
       "Alex Johnson",
-      "Emily Davis"
+      "Emma Johnson"
     ],
-    "milestone": "Construction (8 milestones)",
-    "notes": "",
-    "closingDate": "",
-    "dueDate": "2025-10-11",
-    "propertyAddress": "1701 N Lois Avenue",
-    "propertyType": "Commercial",
-    "escrowNumber": "123456",
-    "buyerEmail": "",
-    "sellerEmail": "",
-    "earnestMoney": "$20,000",
-    "downPayment": "$125,000",
-    "loanAmount": "$1,200,000",
-    "interestRate": "5",
-    "loanTerm": "30",
-    "lenderName": "",
-    "sellerFinancialInstitution": "Chase",
-    "buyerFinancialInstitution": "BoA",
-    "buyerAccountNumber": "222222222222",
-    "sellerAccountNumber": "444444444444",
-    "buyerFinancialInstitutionRoutingNumber": "111111111",
-    "sellerFinancialInstitutionRoutingNumber": "333333333",
-    "titleCompany": "ABC Title",
-    "insuranceCompany": "XYZ Insurance",
-    "inspectionPeriod": "30",
-    "contingencies": "A lot its a comppound",
-    "city": "Tampa",
-    "state": "FL",
-    "zipCode": "33607",
-    "country": "US",
-    "industry": "Real Estate",
-    "additionalParties": [],
-    "collaborators": [
-      {
-        "name": "John Doe",
-        "email": "user@example.com",
-        "role": "Edit, View, Sign"
-      },
-      {
-        "name": "Alex Johnson",
-        "email": "nicholas.aquino@protonmail.com",
-        "role": "Edit, Sign, View"
-      },
-      {
-        "name": "Emily Davis",
-        "email": "nicholas@escra.io",
-        "role": "Edit, Sign, View"
-      }
+    "buyerEmails": [
+      "wwwww",
+      "tttttttt"
     ],
-    "party1Role": "Buyer",
-    "party2Role": "Seller",
-    "documentIds": [
-      "8375",
-      "8887"
-    ]
-  },
-  {
-    "id": "8266",
-    "title": "St Lucia Island",
-    "parties": "",
-    "status": "Initiation",
-    "updated": "Just now",
-    "value": "$2,500,000",
-    "documents": 0,
-    "type": "Commercial – Cash or Financed",
-    "buyer": "Buyer 1: John Doe, Buyer 2: Alex Johnson, Buyer 3: David Miller",
-    "seller": "Seller 1: Emma Johnson, Seller 2: Samantha Fox, Seller 3: Robert Chen, Seller 4: Marketing Solutions Inc",
-    "buyers": [
-      "John Doe",
-      "Alex Johnson",
-      "David Miller"
-    ],
-    "sellers": [
-      "Emma Johnson",
-      "Samantha Fox",
-      "Robert Chen",
-      "Marketing Solutions Inc"
+    "sellerEmails": [
+      "qqqqqqq",
+      "eeeeeee"
     ],
     "milestone": "Standard (6 milestones)",
     "notes": "",
     "closingDate": "",
     "dueDate": "2025-10-11",
     "propertyAddress": "2202 N Lois Ave",
-    "propertyType": "Single Family",
+    "propertyType": "Commercial",
     "escrowNumber": "123456",
     "buyerEmail": "",
     "sellerEmail": "",
     "earnestMoney": "$20,000",
-    "downPayment": "$125,000",
+    "downPayment": "$50,000",
     "loanAmount": "$1,200,000",
     "interestRate": "5",
     "loanTerm": "30",
     "lenderName": "",
     "sellerFinancialInstitution": "Chase",
     "buyerFinancialInstitution": "BoA",
-    "buyerAccountNumber": "222222222222",
-    "sellerAccountNumber": "444444444444",
-    "buyerFinancialInstitutionRoutingNumber": "111111111",
-    "sellerFinancialInstitutionRoutingNumber": "333333333",
+    "buyerAccountNumber": "",
+    "sellerAccountNumber": "",
+    "buyerFinancialInstitutionRoutingNumber": "",
+    "sellerFinancialInstitutionRoutingNumber": "",
     "titleCompany": "ABC Title",
     "insuranceCompany": "XYZ Insurance",
     "inspectionPeriod": "30",
-    "contingencies": "dsfasdfsfadsfsafdsaf",
-    "city": "Tampa",
-    "state": "FL",
-    "zipCode": "33607",
-    "country": "US",
-    "industry": "Real Estate",
-    "additionalParties": [],
-    "collaborators": [
-      {
-        "name": "John Doe",
-        "email": "user@example.com",
-        "role": "Edit, View, Sign"
-      },
-      {
-        "name": "Alex Johnson",
-        "email": "nicholas.aquino@protonmail.com",
-        "role": "Edit, Sign, View"
-      },
-      {
-        "name": "David Miller",
-        "email": "dddddddd@d",
-        "role": "Edit, Sign, View"
-      },
-      {
-        "name": "Emma Johnson",
-        "email": "gggggggg",
-        "role": "Edit, Sign, View"
-      },
-      {
-        "name": "Samantha Fox",
-        "email": "hhhhh@gmail.com",
-        "role": "Edit, View"
-      },
-      {
-        "name": "Robert Chen",
-        "email": "nicholas@escra.io",
-        "role": "Edit, View"
-      },
-      {
-        "name": "Marketing Solutions Inc",
-        "email": "benjamin@escra.io",
-        "role": "Edit, Sign"
-      }
-    ],
-    "party1Role": "Buyer",
-    "party2Role": "Seller",
-    "documentIds": [
-      "8941"
-    ]
-  },
-  {
-    "id": "9497",
-    "title": "Ajax x Benjamin Aiello",
-    "parties": "John Doe & David Miller & Alex Johnson & Emma Johnson & John Smith & Samantha Fox & TechCorp",
-    "status": "Initiation",
-    "updated": "Just now",
-    "value": "$2,500,000",
-    "documents": 4,
-    "type": "Player Contract",
-    "buyer": "Buyer 1: John Doe, Buyer 2: David Miller, Buyer 3: Alex Johnson, Buyer 4: Emma Johnson",
-    "seller": "Seller 1: John Smith, Seller 2: Samantha Fox, Seller 3: TechCorp",
-    "buyers": [
-      "John Doe",
-      "David Miller",
-      "Alex Johnson",
-      "Emma Johnson"
-    ],
-    "sellers": [
-      "John Smith",
-      "Samantha Fox",
-      "TechCorp"
-    ],
-    "buyerEmails": [
-      "user@example.com",
-      "nicholas.aquino@protonmail.com",
-      "qqqqqqqq",
-      "wwwwwwwww"
-    ],
-    "sellerEmails": [
-      "eeeeeeeee",
-      "rrrrrrrrrr",
-      "hhjjjjjjjjj"
-    ],
-    "milestone": "",
-    "notes": "",
-    "closingDate": "",
-    "dueDate": "2025-10-11",
-    "propertyAddress": "1701 N Lois Avenue",
-    "propertyType": "",
-    "escrowNumber": "123456",
-    "buyerEmail": "",
-    "sellerEmail": "",
-    "earnestMoney": "$20,000",
-    "downPayment": "$125,000",
-    "loanAmount": "$1,200,000",
-    "interestRate": "5",
-    "loanTerm": "30",
-    "lenderName": "",
-    "sellerFinancialInstitution": "Chase",
-    "buyerFinancialInstitution": "BoA",
-    "buyerAccountNumber": "222222222222",
-    "sellerAccountNumber": "344444444444",
-    "buyerFinancialInstitutionRoutingNumber": "111111111",
-    "sellerFinancialInstitutionRoutingNumber": "333333333",
-    "titleCompany": "ABC Title",
-    "insuranceCompany": "XYZ Insurance",
-    "inspectionPeriod": "30",
-    "contingencies": "algorand",
+    "contingencies": "sdfadsfadsfdsfadf",
     "city": "Tampa",
     "state": "FL",
     "zipCode": "33607",
@@ -236,135 +61,81 @@
       {
         "name": "John Doe",
         "email": "user@example.com",
-        "role": "Edit, View, Sign"
+        "role": "Edit, View, Sign",
+        "contractRole": "Standard",
+        "permissions": [
+          "Edit",
+          "View",
+          "Sign"
+        ]
+      },
+      {
+        "name": "Alex Johnson",
+        "email": "qqqqqqq",
+        "role": "Edit, Sign, View",
+        "contractRole": "Seller",
+        "permissions": [
+          "Edit",
+          "Sign",
+          "View"
+        ]
       },
       {
         "name": "David Miller",
-        "email": "nicholas.aquino@protonmail.com",
-        "role": "Edit, View"
-      },
-      {
-        "name": "Alex Johnson",
-        "email": "qqqqqqqq",
-        "role": "Edit, Sign, View"
+        "email": "wwwww",
+        "role": "Edit, Sign, View",
+        "contractRole": "Buyer",
+        "permissions": [
+          "Edit",
+          "Sign",
+          "View"
+        ]
       },
       {
         "name": "Emma Johnson",
-        "email": "wwwwwwwww",
-        "role": "Edit, View"
+        "email": "eeeeeee",
+        "role": "Edit, Sign, View",
+        "contractRole": "Seller",
+        "permissions": [
+          "Edit",
+          "Sign",
+          "View"
+        ]
       },
       {
         "name": "John Smith",
-        "email": "eeeeeeeee",
-        "role": "Edit, Sign, View"
+        "email": "rrrrrrr",
+        "role": "View",
+        "contractRole": "Standard",
+        "permissions": [
+          "View"
+        ]
       },
       {
-        "name": "Samantha Fox",
-        "email": "rrrrrrrrrr",
-        "role": "Edit, View"
+        "name": "Sarah Miller",
+        "email": "tttttttt",
+        "role": "Edit, View",
+        "contractRole": "Buyer",
+        "permissions": [
+          "Edit",
+          "View"
+        ]
       },
       {
-        "name": "TechCorp",
-        "email": "hhjjjjjjjjj",
-        "role": "Edit, View"
+        "name": "Sarah Johnson",
+        "email": "cccccc",
+        "role": "View",
+        "contractRole": "Standard",
+        "permissions": [
+          "View"
+        ]
       }
     ],
-    "party1Role": "Buyer",
-    "party2Role": "Seller",
-    "documentIds": []
-  },
-  {
-    "id": "8701",
-    "title": "Purchase Boliche Argentina",
-    "parties": "",
-    "status": "Initiation",
-    "updated": "Just now",
-    "value": "",
-    "documents": 0,
-    "type": "Commercial – Cash or Financed",
-    "buyer": "Buyer 1: John Doe, Buyer 2: Alex Johnson, Buyer 3: Emily Davis",
-    "seller": "Seller 1: John Smith, Seller 2: GreenSpace Developers",
-    "buyers": [
-      "John Doe",
-      "Alex Johnson",
-      "Emily Davis"
-    ],
-    "sellers": [
-      "John Smith",
-      "GreenSpace Developers"
-    ],
-    "buyerEmails": [
-      "user@example.com",
-      "nicholas.aquino@protonmail.com",
-      "nicholas@escra.io"
-    ],
-    "sellerEmails": [
-      "benjamin@escra.io",
-      "romanet@gmail.com"
-    ],
-    "milestone": "Standard (6 milestones)",
-    "notes": "",
-    "closingDate": "",
-    "dueDate": "",
-    "propertyAddress": "1701 N Lois Avenue",
-    "propertyType": "Commercial",
-    "escrowNumber": "123456",
-    "buyerEmail": "",
-    "sellerEmail": "",
-    "earnestMoney": "$20,000",
-    "downPayment": "$125,000",
-    "loanAmount": "$1,200,000",
-    "interestRate": "5",
-    "loanTerm": "30",
-    "lenderName": "",
-    "sellerFinancialInstitution": "Chase",
-    "buyerFinancialInstitution": "BoA",
-    "buyerAccountNumber": "222222222222",
-    "sellerAccountNumber": "444444444444",
-    "buyerFinancialInstitutionRoutingNumber": "111111111",
-    "sellerFinancialInstitutionRoutingNumber": "333333333",
-    "titleCompany": "ABC Title",
-    "insuranceCompany": "XYZ Insurance",
-    "inspectionPeriod": "30",
-    "contingencies": "There are a lot its a nightclub",
-    "city": "Tampa",
-    "state": "FL",
-    "zipCode": "33607",
-    "country": "AR",
-    "industry": "Real Estate",
-    "additionalParties": [],
-    "collaborators": [
-      {
-        "name": "John Doe",
-        "email": "user@example.com",
-        "role": "Edit, Sign, View"
-      },
-      {
-        "name": "Alex Johnson",
-        "email": "nicholas.aquino@protonmail.com",
-        "role": "Edit, Sign, View"
-      },
-      {
-        "name": "Emily Davis",
-        "email": "nicholas@escra.io",
-        "role": "Edit, Sign, View"
-      },
-      {
-        "name": "John Smith",
-        "email": "benjamin@escra.io",
-        "role": "Edit, Sign, View"
-      },
-      {
-        "name": "GreenSpace Developers",
-        "email": "romanet@gmail.com",
-        "role": "Edit, View"
-      }
-    ],
-    "party1Role": "Buyer",
-    "party2Role": "Seller",
     "documentIds": [
-      "8948",
-      "8145"
+      "8049",
+      "8383",
+      "8707",
+      "8863"
     ]
   }
 ]

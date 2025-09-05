@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { FaUser } from 'react-icons/fa';
-import { TbCameraCog, TbActivity, TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbBuildingCommunity, TbBallAmericanFootball, TbTool, TbWallet, TbLock, TbKey, TbApiApp, TbDevicesX, TbKeyOff, TbWalletOff, TbPlug, TbPlugOff, TbApiOff, TbWebhookOff, TbApiAppOff } from 'react-icons/tb';
+import { TbCameraCog, TbActivity, TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbBuildingCommunity, TbBallAmericanFootball, TbTool, TbWallet, TbLock, TbKey, TbApiApp, TbDevicesX, TbKeyOff, TbWalletOff, TbPlug, TbPlugOff, TbApiOff, TbWebhookOff, TbApiAppOff, TbForklift } from 'react-icons/tb';
 import { HiChevronDown, HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight, HiOutlineKey, HiOutlineDuplicate, HiStatusOffline } from 'react-icons/hi';
 import { MdOutlineGeneratingTokens, MdWebhook, MdOutlineSportsFootball, MdOutlineMovieFilter, MdOutlineHealthAndSafety, MdCancelPresentation } from 'react-icons/md';
 import { HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
@@ -69,7 +69,7 @@ const INDUSTRIES: IndustryOption[] = [
   { value: 'healthcare', label: 'Healthcare', icon: MdOutlineHealthAndSafety },
   { value: 'labor', label: 'Labor', icon: GrUserWorker },
   { value: 'legal', label: 'Legal', icon: VscLaw },
-      { value: 'manufacturing', label: 'Manufacturing', icon: TbTool },
+      { value: 'manufacturing', label: 'Manufacturing', icon: TbForklift },
   { value: 'retail', label: 'Retail', icon: TbShoppingBagEdit },
   { value: 'supply_chain', label: 'Logistics', icon: TbWorld },
   { value: 'technology', label: 'Technology', icon: HiOutlineChip },

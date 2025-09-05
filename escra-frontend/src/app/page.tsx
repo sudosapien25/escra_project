@@ -6,7 +6,7 @@ import Image from 'next/image';
 import DecryptedText from '@/components/DecryptedText';
 import { HiMiniChevronRight } from 'react-icons/hi2';
 import { HiOutlineIdentification, HiOutlineKey, HiOutlineCube, HiOutlineCog, HiOutlineDocumentText, HiOutlineClipboardCheck, HiOutlineServer, HiOutlineFingerPrint, HiOutlineLockClosed, HiOutlineChip, HiOutlineChevronLeft, HiOutlineChevronRight, HiOutlineDuplicate } from 'react-icons/hi';
-import { TbBuildingEstate, TbWorld, TbSettingsAutomation, TbServerSpark, TbAdjustmentsAlt, TbAtom, TbBolt, TbAbacus, TbWindow, TbEyeSearch, TbShieldSearch, TbShield, TbLock, TbShieldCheck, TbServer, TbNetwork, TbShieldStar, TbEngine, TbScale, TbWall, TbShieldLock, TbClipboardSearch, TbBuildingCommunity, TbBallAmericanFootball, TbManualGearbox, TbTool, TbGitBranch, TbCoins, TbSchema, TbKey, TbStethoscope, TbChevronRight, TbFingerprint, TbChevronLeft, TbCopy, TbBriefcase, TbBarrierBlock, TbBlocks, TbId, TbStack2, TbTrophy } from 'react-icons/tb';
+import { TbBuildingEstate, TbWorld, TbSettingsAutomation, TbServerSpark, TbAdjustmentsAlt, TbAtom, TbBolt, TbAbacus, TbWindow, TbEyeSearch, TbShieldSearch, TbShield, TbLock, TbShieldCheck, TbServer, TbNetwork, TbShieldStar, TbEngine, TbScale, TbWall, TbShieldLock, TbClipboardSearch, TbBuildingCommunity, TbBallAmericanFootball, TbManualGearbox, TbTool, TbGitBranch, TbCoins, TbSchema, TbKey, TbStethoscope, TbChevronRight, TbFingerprint, TbChevronLeft, TbCopy, TbBriefcase, TbBarrierBlock, TbBlocks, TbId, TbStack2, TbTrophy, TbForklift } from 'react-icons/tb';
 import { LuBriefcaseBusiness, LuConstruction, LuTrello, LuBlocks, LuIdCard, LuCpu, LuAtom, LuLayers3, LuHardHat } from 'react-icons/lu';
 import { GrMoney, GrUserWorker } from 'react-icons/gr';
 import { VscLaw } from 'react-icons/vsc';
@@ -144,7 +144,7 @@ export default function LandingPage() {
     },
     {
       name: 'Manufacturing',
-      icon: TbTool,
+      icon: TbForklift,
       description: 'Production, supply & equipment agreements with quality control automation and supply chain transparency'
     },
     {
