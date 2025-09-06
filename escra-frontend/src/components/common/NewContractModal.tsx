@@ -6,7 +6,7 @@ import { HiOutlineDocumentText, HiOutlineUpload, HiOutlineEye, HiOutlineEyeOff, 
 import { Logo } from '@/components/common/Logo';
 import { FaCheck, FaPlus, FaSearch } from 'react-icons/fa';
 import { LuPen, LuCalendarFold } from 'react-icons/lu';
-import { TbMailPlus, TbEdit, TbFilePlus, TbDragDrop, TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbSquareCheck, TbChevronDown, TbEraser, TbTrash, TbUserPlus, TbUsersPlus, TbUsers, TbUsersGroup, TbFileText, TbHomeDollar, TbHomeRibbon, TbBuildings, TbBuildingWarehouse, TbReceiptTax, TbTemplate, TbHome2, TbBuilding, TbBuildingSkyscraper, TbPhoto, TbBuildingFactory2, TbBuildingBridge, TbFileStar, TbTrophy } from 'react-icons/tb';
+import { TbMailPlus, TbEdit, TbFilePlus, TbDragDrop, TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbSquareCheck, TbChevronDown, TbEraser, TbTrash, TbUserPlus, TbUsersPlus, TbUsers, TbUsersGroup, TbFileText, TbHomeDollar, TbHomeRibbon, TbBuildings, TbBuildingWarehouse, TbReceiptTax, TbTemplate, TbHome2, TbBuilding, TbBuildingSkyscraper, TbPhoto, TbBuildingFactory2, TbBuildingBridge, TbFileStar, TbTrophy, TbArrowsShuffle2, TbAffiliate, TbUserShield, TbArrowsJoin, TbBuildingBank, TbAnalyze, TbScript, TbLicense, TbClipboardSearch, TbVinyl, TbBooks, TbDevicesShare, TbChairDirector, TbFileSpark, TbAward, TbAd2, TbCopyright } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
 import { TiUserAddOutline } from 'react-icons/ti';
@@ -86,6 +86,23 @@ const CONTRACT_TYPES = [
   'Installment / Lease-to-Own',
   'Collective Bargaining Agreement',
   'Player Contract',
+  'Intercompany Agreement',
+  'Vendor Agreement',
+  'Employment Contract',
+  'M&A Agreement',
+  'Mortgage',
+  'Advisory Agreement',
+  'Wills',
+  'Trusts',
+  'Compliance Agreement',
+  'Recording Contract',
+  'Publishing Agreement',
+  'Distribution Agreement',
+  'Producer Agreement',
+  'Management Agreement',
+  'Sponsorship Agreement',
+  'Licensing Agreement',
+  'Patent, Trademark Agreement',
 ];
 
 const PROPERTY_TYPES = [
@@ -135,7 +152,24 @@ const CONTRACT_TYPE_ICONS = {
   'Assignment / Wholesale': TbBuildingWarehouse,
   'Installment / Lease-to-Own': TbReceiptTax,
   'Collective Bargaining Agreement': TbUsersGroup,
-  'Player Contract': TbFileStar
+  'Player Contract': TbFileStar,
+  'Intercompany Agreement': TbArrowsShuffle2,
+  'Vendor Agreement': TbAffiliate,
+  'Employment Contract': TbUserShield,
+  'M&A Agreement': TbArrowsJoin,
+  'Mortgage': TbBuildingBank,
+  'Advisory Agreement': TbAnalyze,
+  'Wills': TbScript,
+  'Trusts': TbLicense,
+  'Compliance Agreement': TbClipboardSearch,
+  'Recording Contract': TbVinyl,
+  'Publishing Agreement': TbBooks,
+  'Distribution Agreement': TbDevicesShare,
+  'Producer Agreement': TbChairDirector,
+  'Management Agreement': TbFileSpark,
+  'Sponsorship Agreement': TbAward,
+  'Licensing Agreement': TbAd2,
+  'Patent, Trademark Agreement': TbCopyright
 };
 
 const PROPERTY_TYPE_ICONS = {
@@ -409,10 +443,9 @@ function parseAndFormatCurrency(input: string): string {
   return formatCurrency(numValue);
 }
 
-type Recipient = {
+type Collaborator = {
   name: string;
   email: string;
-  contractRole: string;
   contractPermissions: string[];
   showContractRoleDropdown: boolean;
   showNamesDropdown: boolean;
@@ -439,11 +472,13 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
   } | null>(null);
   const [contractCarouselPage, setContractCarouselPage] = useState(0);
   const [showContractTypeDropdown, setShowContractTypeDropdown] = useState(false);
+  const [contractTypeSearchTerm, setContractTypeSearchTerm] = useState('');
   const [showPropertyTypeDropdown, setShowPropertyTypeDropdown] = useState(false);
   const [showMilestoneDropdown, setShowMilestoneDropdown] = useState(false);
   const [showStateDropdown, setShowStateDropdown] = useState(false);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const [showIndustryDropdown, setShowIndustryDropdown] = useState(false);
+  const [industrySearchTerm, setIndustrySearchTerm] = useState('');
   const [showBuyerDropdown, setShowBuyerDropdown] = useState(false);
   const [showSellerDropdown, setShowSellerDropdown] = useState(false);
   const [selectedBuyers, setSelectedBuyers] = useState<string[]>([]);
@@ -497,11 +532,10 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
   });
 
   const [formErrors, setFormErrors] = useState<Record<string, boolean>>({});
-  const [recipients, setRecipients] = useState<Recipient[]>([
+  const [collaborators, setCollaborators] = useState<Collaborator[]>([
     {
       name: '',
       email: '',
-      contractRole: '',
       contractPermissions: [],
       showContractRoleDropdown: false,
       showNamesDropdown: false,
@@ -525,41 +559,41 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
   
   // Effect to recalculate dropdown position when names dropdown is shown
   useEffect(() => {
-    if (recipients[0].showNamesDropdown && recipients[0].namesInputRef.current) {
-      const rect = recipients[0].namesInputRef.current.getBoundingClientRect();
+    if (collaborators[0].showNamesDropdown && collaborators[0].namesInputRef.current) {
+      const rect = collaborators[0].namesInputRef.current.getBoundingClientRect();
       setDropdownPosition({
         top: rect.bottom + 4,
         left: rect.left,
         width: rect.width
       });
     }
-  }, [recipients[0].showNamesDropdown]);
+  }, [collaborators[0].showNamesDropdown]);
 
   // Effect to recalculate contract permissions dropdown position when shown
   useEffect(() => {
-    if (recipients[0].showContractRoleDropdown && recipients[0].contractRoleInputRef.current) {
-      const rect = recipients[0].contractRoleInputRef.current.getBoundingClientRect();
+    if (collaborators[0].showContractRoleDropdown && collaborators[0].contractRoleInputRef.current) {
+      const rect = collaborators[0].contractRoleInputRef.current.getBoundingClientRect();
       setContractPermissionsDropdownPosition({
         top: rect.bottom + 4,
         left: rect.left,
         width: rect.width
       });
     }
-  }, [recipients[0].showContractRoleDropdown]);
+  }, [collaborators[0].showContractRoleDropdown]);
 
   // Effect to handle window resize for dropdown positioning
   useEffect(() => {
     const handleResize = () => {
-      if (recipients[0].showNamesDropdown && recipients[0].namesInputRef.current) {
-        const rect = recipients[0].namesInputRef.current.getBoundingClientRect();
+      if (collaborators[0].showNamesDropdown && collaborators[0].namesInputRef.current) {
+        const rect = collaborators[0].namesInputRef.current.getBoundingClientRect();
         setDropdownPosition({
           top: rect.bottom + 4,
           left: rect.left,
           width: rect.width
         });
       }
-      if (recipients[0].showContractRoleDropdown && recipients[0].contractRoleInputRef.current) {
-        const rect = recipients[0].contractRoleInputRef.current.getBoundingClientRect();
+      if (collaborators[0].showContractRoleDropdown && collaborators[0].contractRoleInputRef.current) {
+        const rect = collaborators[0].contractRoleInputRef.current.getBoundingClientRect();
         setContractPermissionsDropdownPosition({
           top: rect.bottom + 4,
           left: rect.left,
@@ -570,21 +604,21 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [recipients[0].showNamesDropdown, recipients[0].showContractRoleDropdown]);
+  }, [collaborators[0].showNamesDropdown, collaborators[0].showContractRoleDropdown]);
 
   // Effect to handle scroll for dropdown positioning
   useEffect(() => {
     const handleScroll = () => {
-      if (recipients[0].showNamesDropdown && recipients[0].namesInputRef.current) {
-        const rect = recipients[0].namesInputRef.current.getBoundingClientRect();
+      if (collaborators[0].showNamesDropdown && collaborators[0].namesInputRef.current) {
+        const rect = collaborators[0].namesInputRef.current.getBoundingClientRect();
         setDropdownPosition({
           top: rect.bottom + 4,
           left: rect.left,
           width: rect.width
         });
       }
-      if (recipients[0].showContractRoleDropdown && recipients[0].contractRoleInputRef.current) {
-        const rect = recipients[0].contractRoleInputRef.current.getBoundingClientRect();
+      if (collaborators[0].showContractRoleDropdown && collaborators[0].contractRoleInputRef.current) {
+        const rect = collaborators[0].contractRoleInputRef.current.getBoundingClientRect();
         setContractPermissionsDropdownPosition({
           top: rect.bottom + 4,
           left: rect.left,
@@ -599,7 +633,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
       modalContainer.addEventListener('scroll', handleScroll);
       return () => modalContainer.removeEventListener('scroll', handleScroll);
     }
-  }, [recipients[0].showNamesDropdown, recipients[0].showContractRoleDropdown]);
+  }, [collaborators[0].showNamesDropdown, collaborators[0].showContractRoleDropdown]);
 
   // Effect to reset form when modal is closed externally
   useEffect(() => {
@@ -607,6 +641,96 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
       resetForm();
     }
   }, [isOpen]);
+
+  // Add style element for dark mode autofill fix
+  useEffect(() => {
+    const styleId = 'modal-dark-mode-autofill-fix';
+    
+    // Remove existing style if it exists
+    const existingStyle = document.getElementById(styleId);
+    if (existingStyle) {
+      existingStyle.remove();
+    }
+    
+    // Create new style element
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = `
+      .dark input:-webkit-autofill,
+      .dark input:-webkit-autofill:hover,
+      .dark input:-webkit-autofill:focus,
+      .dark input:-webkit-autofill:active,
+      .dark textarea:-webkit-autofill,
+      .dark textarea:-webkit-autofill:hover,
+      .dark textarea:-webkit-autofill:focus,
+      .dark textarea:-webkit-autofill:active {
+        -webkit-box-shadow: 
+          0 0 0 1000px rgb(17 24 39) inset !important,
+          0 0 0 2000px rgb(17 24 39) inset !important;
+        box-shadow: 
+          0 0 0 1000px rgb(17 24 39) inset !important,
+          0 0 0 2000px rgb(17 24 39) inset !important;
+        -webkit-text-fill-color: rgb(255 255 255) !important;
+        color: rgb(255 255 255) !important;
+        background-color: rgb(17 24 39) !important;
+        background-image: none !important;
+        background: rgb(17 24 39) !important;
+        border-color: rgb(75 85 99) !important;
+        font-family: 'Avenir', sans-serif !important;
+        font-size: 0.75rem !important;
+        font-weight: normal !important;
+        transition: all 0s !important;
+        -webkit-transition: all 0s !important;
+        -moz-transition: all 0s !important;
+        -webkit-animation: none !important;
+        animation: none !important;
+        -webkit-animation-delay: 99999s !important;
+        animation-delay: 99999s !important;
+      }
+      
+      .dark input:-webkit-autofill::selection {
+        background-color: rgb(59 130 246) !important;
+        color: rgb(255 255 255) !important;
+      }
+      
+      .dark input:focus:-webkit-autofill,
+      .dark input:not(:focus):-webkit-autofill {
+        -webkit-box-shadow: 0 0 0 1000px rgb(17 24 39) inset !important;
+        box-shadow: 0 0 0 1000px rgb(17 24 39) inset !important;
+        background-color: rgb(17 24 39) !important;
+        border-color: rgb(75 85 99) !important;
+      }
+      
+      .dark input:-webkit-autofill-strong-password,
+      .dark input:-webkit-autofill-strong-password:hover,
+      .dark input:-webkit-autofill-strong-password:focus,
+      .dark input:-webkit-autofill-and-obscured,
+      .dark input:-webkit-autofill-and-obscured:hover,
+      .dark input:-webkit-autofill-and-obscured:focus {
+        -webkit-box-shadow: 0 0 0 1000px rgb(17 24 39) inset !important;
+        box-shadow: 0 0 0 1000px rgb(17 24 39) inset !important;
+        -webkit-text-fill-color: rgb(255 255 255) !important;
+        color: rgb(255 255 255) !important;
+        background-color: rgb(17 24 39) !important;
+        background-image: none !important;
+        border-color: rgb(75 85 99) !important;
+        transition: none !important;
+        -webkit-transition: none !important;
+        animation: none !important;
+        -webkit-animation: none !important;
+      }
+    `;
+    
+    document.head.appendChild(style);
+    
+    return () => {
+      const styleToRemove = document.getElementById(styleId);
+      if (styleToRemove) {
+        styleToRemove.remove();
+      }
+    };
+  }, []);
+
   const [showManageCollaboratorsModal, setShowManageCollaboratorsModal] = useState(false);
   const [showPermissionsDropdown, setShowPermissionsDropdown] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -635,6 +759,10 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
   const [inlineEditingStep4DocumentType, setInlineEditingStep4DocumentType] = useState('');
   const [inlineEditingStep4DocumentAssignee, setInlineEditingStep4DocumentAssignee] = useState('');
   const [showStep4DocumentAssigneeDropdown, setShowStep4DocumentAssigneeDropdown] = useState(false);
+  
+  // Individual field editing states for step 4 documents
+  const [editingStep4DocumentField, setEditingStep4DocumentField] = useState<{index: number, field: 'name' | 'type' | 'assignee'} | null>(null);
+  const [editingStep4DocumentValue, setEditingStep4DocumentValue] = useState('');
   const step4UploadDropdownRef = useRef<HTMLDivElement>(null);
   const step4AssigneeDropdownRef = useRef<HTMLDivElement>(null);
   const step4DocumentAssigneeDropdownRef = useRef<HTMLDivElement>(null);
@@ -757,11 +885,11 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
       allParties.push(...selectedSellers);
     }
     
-    // Fallback to recipients if no buyers/sellers selected
+    // Fallback to collaborators if no buyers/sellers selected
     if (allParties.length === 0) {
-      const parties = recipients
-        .filter(recipient => recipient.name && recipient.name.trim() !== '')
-        .map(recipient => recipient.name.trim());
+      const parties = collaborators
+        .filter(collaborator => collaborator.name && collaborator.name.trim() !== '')
+        .map(collaborator => collaborator.name.trim());
       return parties.join(' & ');
     }
     
@@ -854,6 +982,8 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
       sellerFinancialInstitutionRoutingNumber: '',
       sellerAccountNumber: '',
     });
+    setContractTypeSearchTerm('');
+    setIndustrySearchTerm('');
     setModalStep(1);
     setFormErrors({});
     setRecipientErrors({});
@@ -861,10 +991,9 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
     setAddedCollaborators([]);
     setSelectedBuyers([]);
     setSelectedSellers([]);
-    setRecipients([{
+    setCollaborators([{
       name: '',
       email: '',
-      contractRole: '',
       contractPermissions: [],
       showContractRoleDropdown: false,
       showNamesDropdown: false,
@@ -901,7 +1030,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
     setShowPermissionsDropdown(false);
     setDropdownPosition(null);
     setContractPermissionsDropdownPosition(null);
-    setRecipients(prev => prev.map(r => ({
+    setCollaborators(prev => prev.map(r => ({
       ...r,
       showContractRoleDropdown: false,
       showNamesDropdown: false,
@@ -910,23 +1039,23 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
 
   const handleAddCollaborator = () => {
     // Check if current form has valid data
-    const currentRecipient = recipients[0];
+    const currentCollaborator = collaborators[0];
     
     // Validate required fields and set errors
     const newRecipientErrors: Record<string, boolean> = {};
     let hasErrors = false;
     
-    if (!currentRecipient.name.trim()) {
+    if (!currentCollaborator.name.trim()) {
       newRecipientErrors['name-0'] = true;
       hasErrors = true;
     }
     
-    if (!currentRecipient.email.trim()) {
+    if (!currentCollaborator.email.trim()) {
       newRecipientErrors['email-0'] = true;
       hasErrors = true;
     }
     
-    if (!currentRecipient.contractPermissions || currentRecipient.contractPermissions.length === 0) {
+    if (!currentCollaborator.contractPermissions || currentCollaborator.contractPermissions.length === 0) {
       newRecipientErrors['contractPermissions-0'] = true;
       hasErrors = true;
     }
@@ -938,10 +1067,10 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
     
     // Check if collaborator already exists (by name or email)
     const existingByName = addedCollaborators.find(collaborator => 
-      collaborator.name.toLowerCase() === currentRecipient.name.trim().toLowerCase()
+      collaborator.name.toLowerCase() === currentCollaborator.name.trim().toLowerCase()
     );
     const existingByEmail = addedCollaborators.find(collaborator => 
-      collaborator.email.toLowerCase() === currentRecipient.email.trim().toLowerCase()
+      collaborator.email.toLowerCase() === currentCollaborator.email.trim().toLowerCase()
     );
     
     if (existingByName || existingByEmail) {
@@ -958,18 +1087,17 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
     
           // Add current form data to added collaborators list
       setAddedCollaborators(prev => [...prev, {
-        name: currentRecipient.name.trim(),
-        email: currentRecipient.email.trim(),
-        contractRole: sortPermissions(currentRecipient.contractPermissions).join(', '),
-        contractPermissions: [...currentRecipient.contractPermissions],
+        name: currentCollaborator.name.trim(),
+        email: currentCollaborator.email.trim(),
+        contractRole: sortPermissions(currentCollaborator.contractPermissions).join(', '),
+        contractPermissions: [...currentCollaborator.contractPermissions],
         isEditingEmail: false
       }]);
     
     // Clear the form fields
-    setRecipients([{
+    setCollaborators([{
         name: '',
         email: '',
-        contractRole: '',
         contractPermissions: [],
         showContractRoleDropdown: false,
         showNamesDropdown: false,
@@ -1171,29 +1299,29 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
   // Click-off behavior for each recipient role dropdown and names dropdown
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      recipients.forEach((recipient, idx) => {
+      collaborators.forEach((collaborator, idx) => {
         const target = event.target as Node;
 
         if (
-          recipient.contractRoleInputRef.current?.contains(target) ||
-          recipient.contractRoleDropdownRef.current?.contains(target) ||
-          recipient.namesInputRef.current?.contains(target) ||
-          recipient.namesDropdownRef.current?.contains(target)
+          collaborator.contractRoleInputRef.current?.contains(target) ||
+          collaborator.contractRoleDropdownRef.current?.contains(target) ||
+          collaborator.namesInputRef.current?.contains(target) ||
+          collaborator.namesDropdownRef.current?.contains(target)
         ) {
           // Click inside contract role button, dropdown, or names input: do nothing
           return;
         }
-        if (recipient.showContractRoleDropdown) {
-          setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showContractRoleDropdown: false } : r));
+        if (collaborator.showContractRoleDropdown) {
+          setCollaborators(prev => prev.map((r, i) => i === idx ? { ...r, showContractRoleDropdown: false } : r));
         }
-        if (recipient.showNamesDropdown) {
-          setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showNamesDropdown: false } : r));
+        if (collaborator.showNamesDropdown) {
+          setCollaborators(prev => prev.map((r, i) => i === idx ? { ...r, showNamesDropdown: false } : r));
         }
       });
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [recipients]);
+  }, [collaborators]);
 
   // Step 4 dropdown click outside handlers
   useEffect(() => {
@@ -1265,6 +1393,32 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
     setShowStep4DocumentAssigneeDropdown(false);
   };
 
+  // Function to start editing a specific field of a step 4 document
+  const handleStartEditingStep4DocumentField = (index: number, field: 'name' | 'type' | 'assignee') => {
+    const doc = step4Documents[index];
+    setEditingStep4DocumentField({ index, field });
+    setEditingStep4DocumentValue(field === 'name' ? doc.name : field === 'type' ? doc.type : doc.assignee);
+  };
+
+  // Function to save a specific field edit
+  const handleSaveStep4DocumentField = () => {
+    if (editingStep4DocumentField && editingStep4DocumentValue.trim()) {
+      setStep4Documents(prev => prev.map((doc, i) => 
+        i === editingStep4DocumentField.index 
+          ? { ...doc, [editingStep4DocumentField.field]: editingStep4DocumentValue.trim() }
+          : doc
+      ));
+      setEditingStep4DocumentField(null);
+      setEditingStep4DocumentValue('');
+    }
+  };
+
+  // Function to cancel field editing
+  const handleCancelStep4DocumentField = () => {
+    setEditingStep4DocumentField(null);
+    setEditingStep4DocumentValue('');
+  };
+
   // Handle clicking outside dropdowns to close them
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -1277,6 +1431,28 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Comprehensive validation function for all required fields
+  const isFormValid = () => {
+    // Step 1 validation: Contract title and type
+    if (!modalForm.title.trim() || !modalForm.type.trim()) {
+      return false;
+    }
+
+    // Step 2 validation: At least one collaborator must be added
+    if (collaborators.length === 0) {
+      return false;
+    }
+
+    // Step 3 validation: Contract details (industry, country, state, city, propertyAddress)
+    if (!modalForm.industry.trim() || !modalForm.country.trim() || !modalForm.state.trim() || !modalForm.city.trim() || !modalForm.propertyAddress.trim()) {
+      return false;
+    }
+
+    // Step 4 validation: Documents are optional, so no validation needed
+
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -1300,47 +1476,37 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
       setFormErrors({});
       setModalStep(2);
     } else if (modalStep === 2) {
-      // Step 2: Validate based on working solo status
-      if (isWorkingSolo) {
-        // If working solo, just check if user is added as collaborator
-        if (addedCollaborators.length === 0) {
-          // This shouldn't happen if working solo, but just in case
-          return;
-        }
-        // Clear any existing errors and proceed
-        setRecipientErrors({});
-        setModalStep(3);
-      } else {
-        // If not working solo, validate the form fields
-        const newRecipientErrors: Record<string, boolean> = {};
-        let hasErrors = false;
+      // Step 2: Validate collaborator form fields
+      const newRecipientErrors: Record<string, boolean> = {};
+      let hasErrors = false;
 
-        recipients.forEach((recipient, index) => {
-          if (!recipient.name || recipient.name.trim() === '') {
-            newRecipientErrors[`name-${index}`] = true;
-            hasErrors = true;
-          }
-
-          if (!recipient.email || recipient.email.trim() === '') {
-            newRecipientErrors[`email-${index}`] = true;
-            hasErrors = true;
-          }
-
-          if (!recipient.contractPermissions || recipient.contractPermissions.length === 0) {
-            newRecipientErrors[`contractRole-${index}`] = true;
-            hasErrors = true;
-          }
-        });
-
-        if (hasErrors) {
-          setRecipientErrors(newRecipientErrors);
-          return;
+      // Check if there are any collaborators added
+      if (addedCollaborators.length === 0) {
+        // If no collaborators added, validate the form fields
+        if (!collaborators[0].name || collaborators[0].name.trim() === '') {
+          newRecipientErrors['name-0'] = true;
+          hasErrors = true;
         }
 
-        // Clear errors and proceed
-        setRecipientErrors({});
-        setModalStep(3);
+        if (!collaborators[0].email || collaborators[0].email.trim() === '') {
+          newRecipientErrors['email-0'] = true;
+          hasErrors = true;
+        }
+
+        if (!collaborators[0].contractPermissions || collaborators[0].contractPermissions.length === 0) {
+          newRecipientErrors['contractPermissions-0'] = true;
+          hasErrors = true;
+        }
       }
+
+      if (hasErrors) {
+        setRecipientErrors(newRecipientErrors);
+        return;
+      }
+
+      // Clear errors and proceed
+      setRecipientErrors({});
+      setModalStep(3);
     } else if (modalStep === 3) {
       // Step 3: Just progress to step 4 (document upload)
       setModalStep(4);
@@ -1364,16 +1530,16 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
       const partiesString = createPartiesString();
       const currentUserName = user?.name || 'Unknown User';
       
-      // Map recipients by position: first = buyer, second = seller
-      const buyerRecipient = recipients[0];
-      const sellerRecipient = recipients[1];
+      // Map collaborators by position: first = buyer, second = seller
+      const buyerCollaborator = collaborators[0];
+      const sellerCollaborator = collaborators[1];
       
       
       // Capture additional parties (Party 3 and beyond) with their emails
-      const additionalPartiesData = recipients.slice(2).map(r => ({
+      const additionalPartiesData = collaborators.slice(2).map(r => ({
         name: r.name,
         email: r.email,
-        role: r.contractRole || 'Standard',
+        role: 'Standard',
       }));
 
       // Debug logging to check form values
@@ -1412,8 +1578,8 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
         value: modalForm.value,
         documents: step4Documents.length + uploadedFiles.length, // Count all uploaded files
         type: modalForm.type,
-        buyer: selectedBuyers.length > 0 ? selectedBuyers.map((buyer, index) => `Buyer ${index + 1}: ${buyer}`).join(', ') : buyerRecipient?.name || '',
-        seller: selectedSellers.length > 0 ? selectedSellers.map((seller, index) => `Seller ${index + 1}: ${seller}`).join(', ') : sellerRecipient?.name || '',
+        buyer: selectedBuyers.length > 0 ? selectedBuyers.map((buyer, index) => `Buyer ${index + 1}: ${buyer}`).join(', ') : buyerCollaborator?.name || '',
+        seller: selectedSellers.length > 0 ? selectedSellers.map((seller, index) => `Seller ${index + 1}: ${seller}`).join(', ') : sellerCollaborator?.name || '',
         buyers: selectedBuyers,
         sellers: selectedSellers,
         buyerEmails: selectedBuyers.map(buyerName => {
@@ -1431,8 +1597,8 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
         propertyAddress: modalForm.propertyAddress,
         propertyType: modalForm.propertyType,
         escrowNumber: modalForm.escrowNumber,
-        buyerEmail: buyerRecipient?.email || '',
-        sellerEmail: sellerRecipient?.email || '',
+        buyerEmail: buyerCollaborator?.email || '',
+        sellerEmail: sellerCollaborator?.email || '',
         earnestMoney: modalForm.earnestMoney,
         downPayment: modalForm.downPayment,
         loanAmount: modalForm.loanAmount,
@@ -1845,9 +2011,12 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                       <input
                         type="text"
                         className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 bg-white dark:bg-gray-900"
-                        placeholder="Select Industry..."
-                        value={modalForm.industry}
-                        readOnly
+                        placeholder="Search or select industry..."
+                        value={industrySearchTerm || modalForm.industry}
+                        onChange={(e) => {
+                          setIndustrySearchTerm(e.target.value);
+                          setShowIndustryDropdown(true);
+                        }}
                         style={{ paddingLeft: modalForm.industry ? '2.5rem' : '1rem' }}
                         onFocus={(e) => {
                           e.target.setSelectionRange(e.target.value.length, e.target.value.length);
@@ -1868,24 +2037,36 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                       <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     </div>
                     {showIndustryDropdown && (
-                      <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
-                        {INDUSTRIES.map(industry => {
-                          const IconComponent = INDUSTRY_ICONS[industry as keyof typeof INDUSTRY_ICONS];
-                          return (
-                            <button
-                              key={industry}
-                              className={`w-full text-left px-3 py-0.5 text-xs font-medium flex items-center gap-2 ${modalForm.industry === industry ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-                              onClick={e => {
-                                e.preventDefault();
-                                setModalForm(prev => ({ ...prev, industry: industry }));
-                                setShowIndustryDropdown(false);
-                              }}
-                            >
-                              <IconComponent className="w-4 h-4 flex-shrink-0" />
-                              {industry}
-                            </button>
-                          );
-                        })}
+                      <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-hidden overflow-y-auto [&::-webkit-scrollbar]:hidden">
+                        {INDUSTRIES
+                          .filter(industry => 
+                            industry.toLowerCase().includes(industrySearchTerm.toLowerCase())
+                          )
+                          .map(industry => {
+                            const IconComponent = INDUSTRY_ICONS[industry as keyof typeof INDUSTRY_ICONS];
+                            return (
+                              <button
+                                key={industry}
+                                className={`w-full text-left px-3 py-0.5 text-xs font-medium flex items-center gap-2 ${modalForm.industry === industry ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                                onClick={e => {
+                                  e.preventDefault();
+                                  setModalForm(prev => ({ ...prev, industry: industry }));
+                                  setIndustrySearchTerm('');
+                                  setShowIndustryDropdown(false);
+                                }}
+                              >
+                                <IconComponent className="w-4 h-4 flex-shrink-0" />
+                                {industry}
+                              </button>
+                            );
+                          })}
+                        {INDUSTRIES.filter(industry => 
+                          industry.toLowerCase().includes(industrySearchTerm.toLowerCase())
+                        ).length === 0 && industrySearchTerm.length > 0 && (
+                          <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
+                            No industries found
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -1896,13 +2077,16 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                 <input
                   type="text"
                       required
-                      className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 cursor-pointer bg-white dark:bg-gray-900 caret-transparent"
-                                        placeholder="Select contract type..."
-                  value={CONTRACT_TYPES.find(t => t === modalForm.type) || ''}
-                  readOnly
+                      className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors pr-10 bg-white dark:bg-gray-900"
+                                        placeholder="Search or select contract type..."
+                  value={contractTypeSearchTerm || modalForm.type}
+                  onChange={(e) => {
+                    setContractTypeSearchTerm(e.target.value);
+                    setShowContractTypeDropdown(true);
+                  }}
                   style={{ paddingLeft: modalForm.type ? '2.5rem' : '0.75rem' }}
                       onKeyDown={(e) => {
-                        if (e.key === 'Backspace') {
+                        if (e.key === 'Backspace' && !contractTypeSearchTerm) {
                           e.preventDefault();
                           setModalForm(prev => ({ ...prev, type: '' }));
                         }
@@ -1925,25 +2109,37 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                 })()}
                 <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                 {showContractTypeDropdown && (
-                      <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                    {CONTRACT_TYPES.map(type => {
-                      const IconComponent = CONTRACT_TYPE_ICONS[type as keyof typeof CONTRACT_TYPE_ICONS];
-                      return (
-                        <button
-                          key={type}
-                          className={`w-full text-left px-3 py-0.5 text-xs font-medium flex items-center gap-2 ${modalForm.type === type ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-                          onClick={e => {
-                            e.preventDefault();
-                            setModalForm(prev => ({ ...prev, type }));
-                            setShowContractTypeDropdown(false);
-                            setFormErrors(prev => ({ ...prev, type: false }));
-                          }}
-                        >
-                          <IconComponent className="w-4 h-4 flex-shrink-0" />
-                          {type}
-                        </button>
-                      );
-                    })}
+                      <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-hidden overflow-y-auto [&::-webkit-scrollbar]:hidden">
+                    {CONTRACT_TYPES
+                      .filter(type => 
+                        type.toLowerCase().includes(contractTypeSearchTerm.toLowerCase())
+                      )
+                      .map(type => {
+                        const IconComponent = CONTRACT_TYPE_ICONS[type as keyof typeof CONTRACT_TYPE_ICONS];
+                        return (
+                          <button
+                            key={type}
+                            className={`w-full text-left px-3 py-0.5 text-xs font-medium flex items-center gap-2 ${modalForm.type === type ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                            onClick={e => {
+                              e.preventDefault();
+                              setModalForm(prev => ({ ...prev, type }));
+                              setContractTypeSearchTerm('');
+                              setShowContractTypeDropdown(false);
+                              setFormErrors(prev => ({ ...prev, type: false }));
+                            }}
+                          >
+                            <IconComponent className="w-4 h-4 flex-shrink-0" />
+                            {type}
+                          </button>
+                        );
+                      })}
+                    {CONTRACT_TYPES.filter(type => 
+                      type.toLowerCase().includes(contractTypeSearchTerm.toLowerCase())
+                    ).length === 0 && contractTypeSearchTerm.length > 0 && (
+                      <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
+                        No contract types found
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -2152,9 +2348,15 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                         }
                       }}
                       onFocus={(e) => {
-                        if (!showStateDropdown) {
-                          setShowStateDropdown(true);
-                        }
+                        e.target.setSelectionRange(e.target.value.length, e.target.value.length);
+                      }}
+                      onClick={() => {
+                        setShowStateDropdown(!showStateDropdown);
+                        setShowContractTypeDropdown(false);
+                        setShowPropertyTypeDropdown(false);
+                        setShowMilestoneDropdown(false);
+                        setShowIndustryDropdown(false);
+                        setShowCountryDropdown(false);
                       }}
                       onInput={(e) => {
                         // Handle browser autofill by mapping state names to codes
@@ -2223,9 +2425,15 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                         }
                       }}
                       onFocus={(e) => {
-                        if (!showCountryDropdown) {
-                          setShowCountryDropdown(true);
-                        }
+                        e.target.setSelectionRange(e.target.value.length, e.target.value.length);
+                      }}
+                      onClick={() => {
+                        setShowCountryDropdown(!showCountryDropdown);
+                        setShowContractTypeDropdown(false);
+                        setShowPropertyTypeDropdown(false);
+                        setShowMilestoneDropdown(false);
+                        setShowIndustryDropdown(false);
+                        setShowStateDropdown(false);
                       }}
                       onInput={(e) => {
                         // Handle browser autofill by mapping country names to codes
@@ -2376,18 +2584,18 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                       </label>
                         <div className="relative">
                         <input
-                          ref={recipients[0].namesInputRef}
+                          ref={collaborators[0].namesInputRef}
                           type="text"
                           className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white pr-10"
                           placeholder="Enter collaborator name..."
                               style={{ fontFamily: 'Avenir, sans-serif' }}
-                          value={recipients[0].name}
+                          value={collaborators[0].name}
                           onChange={e => {
-                            setRecipients(prev => prev.map((r, i) => i === 0 ? { ...r, name: e.target.value } : r));
+                            setCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, name: e.target.value } : r));
                             setRecipientErrors(prev => ({ ...prev, [`name-0`]: false }));
                             setDuplicateCollaboratorError(false);
                           }}
-                          onClick={() => setRecipients(prev => prev.map((r, i) => i === 0 ? { 
+                          onClick={() => setCollaborators(prev => prev.map((r, i) => i === 0 ? { 
                             ...r, 
                             showNamesDropdown: !r.showNamesDropdown,
                             showContractRoleDropdown: false // Close permissions dropdown
@@ -2397,9 +2605,9 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                         <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                         
                         {/* Names/Emails Autocomplete Dropdown */}
-                        {recipients[0].showNamesDropdown && (
+                        {collaborators[0].showNamesDropdown && (
                           <div 
-                            ref={recipients[0].namesDropdownRef}
+                            ref={collaborators[0].namesDropdownRef}
                             className="fixed bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-[9999] py-0.5 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500"
                             style={{
                               position: 'fixed',
@@ -2413,7 +2621,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                             {/* Assignees Section */}
                             {allAssignees
                               .filter(assignee => 
-                                assignee.toLowerCase().includes(recipients[0].name.toLowerCase())
+                                assignee.toLowerCase().includes(collaborators[0].name.toLowerCase())
                               )
                               .sort()
                               .map((assignee) => (
@@ -2421,7 +2629,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                                   key={`assignee-${assignee}`}
                                   className="w-full text-left px-3 py-0.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                                   onClick={() => {
-                                    setRecipients(prev => prev.map((r, i) => i === 0 ? { ...r, name: assignee, showNamesDropdown: false } : r));
+                                    setCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, name: assignee, showNamesDropdown: false } : r));
                                     setRecipientErrors(prev => ({ ...prev, [`name-0`]: false }));
                                   }}
                                 >
@@ -2440,7 +2648,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                               
                               const filteredParties = mockContracts
                                 .filter(party => 
-                                  party.toLowerCase().includes(recipients[0].name.toLowerCase()) &&
+                                  party.toLowerCase().includes(collaborators[0].name.toLowerCase()) &&
                                   !allAssignees.includes(party)
                                 )
                                 .sort();
@@ -2452,7 +2660,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                                       key={`party-${party}`}
                                       className="w-full text-left px-3 py-0.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                                       onClick={() => {
-                                        setRecipients(prev => prev.map((r, i) => i === 0 ? { ...r, name: party, showNamesDropdown: false } : r));
+                                        setCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, name: party, showNamesDropdown: false } : r));
                                         setRecipientErrors(prev => ({ ...prev, [`name-0`]: false }));
                                       }}
                                     >
@@ -2466,7 +2674,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                             {/* No Matches Message */}
                             {(() => {
                               const allAssigneesFiltered = allAssignees.filter(assignee => 
-                                assignee.toLowerCase().includes(recipients[0].name.toLowerCase())
+                                assignee.toLowerCase().includes(collaborators[0].name.toLowerCase())
                               );
                               const mockContracts = [
                                 'Robert Chen', 'Eastside Properties', 'GreenSpace Developers', 'BuildRight Construction',
@@ -2475,11 +2683,11 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                                 'Corporate Holdings', 'Real Estate', 'Retail Corp', 'Marketing Solutions Inc', 'Legal Advisory LLC'
                               ];
                               const filteredParties = mockContracts.filter(party => 
-                                party.toLowerCase().includes(recipients[0].name.toLowerCase()) &&
+                                party.toLowerCase().includes(collaborators[0].name.toLowerCase()) &&
                                 !allAssignees.includes(party)
                               );
                               
-                              return allAssigneesFiltered.length === 0 && filteredParties.length === 0 && recipients[0].name.length > 0 ? (
+                              return allAssigneesFiltered.length === 0 && filteredParties.length === 0 && collaborators[0].name.length > 0 ? (
                                 <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
                                   No matches found
                                 </div>
@@ -2490,7 +2698,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                             </div>
                                               {recipientErrors[`name-0`] && (
                           <p className="text-red-600 text-xs mt-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                            Name is required
+                            Collaborator name is required
                           </p>
                         )}
                       
@@ -2503,16 +2711,16 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                         className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white"
                         placeholder="Enter collaborator email address..."
                         style={{ fontFamily: 'Avenir, sans-serif' }}
-                        value={recipients[0].email || ''}
+                        value={collaborators[0].email || ''}
                         onChange={e => {
-                          setRecipients(prev => prev.map((r, i) => i === 0 ? { ...r, email: e.target.value } : r));
+                          setCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, email: e.target.value } : r));
                           setRecipientErrors(prev => ({ ...prev, [`email-0`]: false }));
                           setDuplicateCollaboratorError(false);
                         }}
                       />
                       {recipientErrors[`email-0`] && (
                         <p className="text-red-600 text-xs mt-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                          Email is required
+                          Collaborator email is required
                         </p>
                       )}
                         </div>
@@ -2523,12 +2731,12 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                       <div className="relative w-full">
                         {/* Permissions Field with Selected Permissions Inside */}
                         <div 
-                          ref={recipients[0].contractRoleInputRef}
+                          ref={collaborators[0].contractRoleInputRef}
                           className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-gray-700 dark:text-gray-300 focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-colors bg-white dark:bg-gray-900 flex items-center justify-between cursor-pointer"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            setRecipients(prev => prev.map((r, i) => i === 0 ? { 
+                            setCollaborators(prev => prev.map((r, i) => i === 0 ? { 
                               ...r, 
                               showContractRoleDropdown: !r.showContractRoleDropdown,
                               showNamesDropdown: false // Close names dropdown
@@ -2537,9 +2745,9 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                           style={{ fontFamily: 'Avenir, sans-serif' }}
                         >
                           <div className="flex-1 flex items-center overflow-hidden">
-                            {recipients[0].contractPermissions.length > 0 ? (
+                            {collaborators[0].contractPermissions.length > 0 ? (
                               <span className="text-gray-900 dark:text-white">
-                                {sortPermissions(recipients[0].contractPermissions).join(', ')}
+                                {sortPermissions(collaborators[0].contractPermissions).join(', ')}
                               </span>
                             ) : (
                               <span className="text-gray-500">Define collaborator contract permissions...</span>
@@ -2549,10 +2757,10 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                             className="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0 ml-2" 
                           />
                         </div>
-                        {recipients[0].showContractRoleDropdown && (
+                        {collaborators[0].showContractRoleDropdown && (
                           <div
                             key="permissions-dropdown"
-                            ref={recipients[0].contractRoleDropdownRef}
+                            ref={collaborators[0].contractRoleDropdownRef}
                             className="fixed bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-[9999] py-2"
                             style={{
                               fontFamily: 'Avenir, sans-serif',
@@ -2566,11 +2774,11 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                             {['Edit', 'View', 'Sign'].map((permission) => (
                                                                 <button
                                   key={permission}
-                                  className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${recipients[0].contractPermissions.includes(permission) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                                  className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${collaborators[0].contractPermissions.includes(permission) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    setRecipients(prev => prev.map((r, i) => i === 0 ? {
+                                    setCollaborators(prev => prev.map((r, i) => i === 0 ? {
                                       ...r,
                                       contractPermissions: r.contractPermissions.includes(permission)
                                         ? r.contractPermissions.filter(p => p !== permission)
@@ -2582,7 +2790,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                                   }}
                                 >
                                   <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                                    {recipients[0].contractPermissions.includes(permission) && (
+                                    {collaborators[0].contractPermissions.includes(permission) && (
                                       <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
                                         <FaCheck className="text-white" size={8} />
                                       </div>
@@ -2595,7 +2803,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                           )}
                                                 {recipientErrors[`contractPermissions-0`] && (
                           <p className="text-red-600 text-xs mt-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                              Select at least one permission
+                              Permissions must be defined
                             </p>
                         )}
                       </div>
@@ -2616,6 +2824,9 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                       >
                         <TbUsers className="h-5 w-5" />
                         <span className="text-xs font-semibold">Manage</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+                          ({addedCollaborators.length})
+                        </span>
                       </button>
                       <div className="flex flex-wrap gap-1">
                         {addedCollaborators.map((collaborator, idx) => {
@@ -2632,9 +2843,21 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                               
                               {/* X button for removal - only visible on hover */}
                               <button 
+                                type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
+                                  
+                                  // Check if the collaborator being removed is the current user
+                                  const collaboratorToRemove = addedCollaborators[idx];
+                                  const isCurrentUser = user && collaboratorToRemove.email.toLowerCase() === user.email.toLowerCase();
+                                  
+                                  // Remove the collaborator
                                   setAddedCollaborators(prev => prev.filter((_, i) => i !== idx));
+                                  
+                                  // If removing current user, uncheck the "I am working solo" box
+                                  if (isCurrentUser) {
+                                    setIsWorkingSolo(false);
+                                  }
                                 }}
                                 className="absolute -top-2 -right-2 w-5 h-5 bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 rounded-lg flex items-center justify-center text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100 dark:hover:bg-red-900/30 border-2 border-red-200 dark:border-red-800"
                               >
@@ -2669,7 +2892,7 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                   <button
                     type="button"
                     onClick={handleAddCollaborator}
-                    disabled={!recipients[0].name.trim() || recipients[0].contractPermissions.length === 0 || !recipients[0].email.trim()}
+                    disabled={!collaborators[0].name.trim() || collaborators[0].contractPermissions.length === 0 || !collaborators[0].email.trim()}
                     className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ fontFamily: 'Avenir, sans-serif' }}
                   >
@@ -3443,8 +3666,13 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                    {/* Added Documents Display - Below the upload box */}
                   {step4Documents.length > 0 && (
                      <div className="mt-6">
-                       <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-3 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Added Documents</h4>
-                      <div className="flex flex-col gap-2 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
+                       <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-3 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                         Added Documents
+                         <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
+                           ({step4Documents.length})
+                         </span>
+                       </h4>
+                      <div className="grid grid-cols-2 gap-2 max-h-72 overflow-y-auto [&::-webkit-scrollbar]:hidden">
                         {step4Documents.map((doc, idx) => (
                           <div 
                             key={idx} 
@@ -3549,36 +3777,88 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                                  </div>
                                </div>
                              ) : (
-                               // Display mode
+                               // Display mode with clickable fields
                                <div className="flex items-center justify-between">
-                            <div className="flex-1 min-w-0 pl-3">
-                              <div className="font-semibold text-xs text-black dark:text-white flex-1 min-w-0 truncate">
-                                {doc.name}
-                              </div>
-                              <div className="text-xs text-gray-500 cursor-default select-none">
-                                     {formatDateYYYYMMDD(new Date())} &bull; {doc.type || 'Unknown Type'} &bull; {doc.file.name.split('.').pop()?.toUpperCase() || 'Unknown'} &bull; {(doc.file.size / 1024 / 1024).toFixed(2)} MB &bull; {doc.assignee}
-                              </div>
-                            </div>
+                                 <div className="flex-1 min-w-0 pl-3">
+                                   {editingStep4DocumentField?.index === idx && editingStep4DocumentField?.field === 'name' ? (
+                                     <input
+                                       type="text"
+                                       value={editingStep4DocumentValue}
+                                       onChange={(e) => setEditingStep4DocumentValue(e.target.value)}
+                                       onBlur={handleSaveStep4DocumentField}
+                                       onKeyDown={(e) => {
+                                         if (e.key === 'Enter') handleSaveStep4DocumentField();
+                                         if (e.key === 'Escape') handleCancelStep4DocumentField();
+                                       }}
+                                       className="inline-block text-xs font-semibold text-black dark:text-white bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary min-w-0 max-w-xs"
+                                       style={{ width: `${Math.max(editingStep4DocumentValue.length * 8, 100)}px` }}
+                                       autoFocus
+                                     />
+                                   ) : (
+                                     <div 
+                                       className="font-semibold text-xs text-black dark:text-white cursor-pointer hover:text-primary transition-colors inline-block min-w-0 truncate"
+                                       onClick={() => handleStartEditingStep4DocumentField(idx, 'name')}
+                                     >
+                                       {doc.name}
+                                     </div>
+                                   )}
+                                   <div className="text-xs text-gray-500 cursor-default select-none">
+                                     {formatDateYYYYMMDD(new Date())} &bull; {editingStep4DocumentField?.index === idx && editingStep4DocumentField?.field === 'type' ? (
+                                       <input
+                                         type="text"
+                                         value={editingStep4DocumentValue}
+                                         onChange={(e) => setEditingStep4DocumentValue(e.target.value)}
+                                         onBlur={handleSaveStep4DocumentField}
+                                         onKeyDown={(e) => {
+                                           if (e.key === 'Enter') handleSaveStep4DocumentField();
+                                           if (e.key === 'Escape') handleCancelStep4DocumentField();
+                                         }}
+                                         className="inline text-xs text-gray-500 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                                         autoFocus
+                                       />
+                                     ) : (
+                                       <span 
+                                         className="cursor-pointer hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                                         onClick={() => handleStartEditingStep4DocumentField(idx, 'type')}
+                                       >
+                                         {doc.type || 'Unknown Type'}
+                                       </span>
+                                     )} &bull; {doc.file.name.split('.').pop()?.toUpperCase() || 'Unknown'} &bull; {(doc.file.size / 1024 / 1024).toFixed(2)} MB &bull; {editingStep4DocumentField?.index === idx && editingStep4DocumentField?.field === 'assignee' ? (
+                                       <input
+                                         type="text"
+                                         value={editingStep4DocumentValue}
+                                         onChange={(e) => setEditingStep4DocumentValue(e.target.value)}
+                                         onBlur={handleSaveStep4DocumentField}
+                                         onKeyDown={(e) => {
+                                           if (e.key === 'Enter') handleSaveStep4DocumentField();
+                                           if (e.key === 'Escape') handleCancelStep4DocumentField();
+                                         }}
+                                         className="inline text-xs text-gray-500 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                                         autoFocus
+                                       />
+                                     ) : (
+                                       <span 
+                                         className="cursor-pointer hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                                         onClick={() => handleStartEditingStep4DocumentField(idx, 'assignee')}
+                                       >
+                                         {doc.assignee}
+                                       </span>
+                                     )}
+                                   </div>
+                                 </div>
                                  <div className="flex items-center gap-1">
                                    <button 
-                                     type="button"
-                                     onClick={() => handleStartInlineEditStep4Document(idx)}
-                                     className="text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors p-1"
+                                     className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1 pr-3"
+                                     onClick={(e) => {
+                                       e.stopPropagation();
+                                       setStep4Documents(prev => prev.filter((_, i) => i !== idx));
+                                     }}
                                    >
-                                     <HiOutlinePencil className="h-4 w-4" />
+                                     <TbTrash className="h-4 w-4" />
                                    </button>
-                            <button 
-                              className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1 pr-3"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setStep4Documents(prev => prev.filter((_, i) => i !== idx));
-                              }}
-                            >
-                              <TbTrash className="h-4 w-4" />
-                            </button>
-                      </div>
-                    </div>
-                  )}
+                                 </div>
+                               </div>
+                             )}
                 </div>
                   ))}
                        </div>
@@ -3598,7 +3878,17 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                       Add Document
                     </button>
 
-                    <button type="submit" className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm ml-1">Create Contract</button>
+                    <button 
+                      type="submit" 
+                      disabled={!isFormValid()}
+                      className={`px-4 py-2 rounded-lg font-semibold transition-colors text-sm ml-1 ${
+                        isFormValid() 
+                          ? 'bg-primary text-white hover:bg-primary-dark' 
+                          : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                      }`}
+                    >
+                      Create Contract
+                    </button>
               </div>
                 </div>
             </div>

@@ -137,5 +137,123 @@
       "8707",
       "8863"
     ]
+  },
+  {
+    "id": "3798",
+    "title": "Frank Gore Jr x Buffalo Bills",
+    "parties": "Alex Johnson & Sarah Johnson & David Miller & Sarah Miller",
+    "status": "Initiation",
+    "updated": "Just now",
+    "value": "$2,500,000",
+    "documents": 6,
+    "type": "Player Contract",
+    "buyer": "Buyer 1: Alex Johnson, Buyer 2: Sarah Johnson",
+    "seller": "Seller 1: David Miller, Seller 2: Sarah Miller",
+    "buyers": [
+      "Alex Johnson",
+      "Sarah Johnson"
+    ],
+    "sellers": [
+      "David Miller",
+      "Sarah Miller"
+    ],
+    "buyerEmails": [
+      "nicholas@escra.io",
+      "wwwwww"
+    ],
+    "sellerEmails": [
+      "qqqqqqq",
+      "eeeee"
+    ],
+    "milestone": "Standard (6 milestones)",
+    "notes": "",
+    "closingDate": "",
+    "dueDate": "2025-09-27",
+    "propertyAddress": "1701 N Lois Avenue",
+    "propertyType": "Commercial",
+    "escrowNumber": "123456",
+    "buyerEmail": "",
+    "sellerEmail": "",
+    "earnestMoney": "$20,000",
+    "downPayment": "$125,000",
+    "loanAmount": "$1,200,000",
+    "interestRate": "5",
+    "loanTerm": "30",
+    "lenderName": "",
+    "sellerFinancialInstitution": "Chase",
+    "buyerFinancialInstitution": "BoA",
+    "buyerAccountNumber": "222222222222",
+    "sellerAccountNumber": "444444444444",
+    "buyerFinancialInstitutionRoutingNumber": "111111111",
+    "sellerFinancialInstitutionRoutingNumber": "333333333",
+    "titleCompany": "ABC Title",
+    "insuranceCompany": "XYZ Insurance",
+    "inspectionPeriod": "30",
+    "contingencies": "fgfdsgafgfsag",
+    "city": "Tampa",
+    "state": "FL",
+    "zipCode": "33607",
+    "country": "US",
+    "industry": "Athletics",
+    "additionalParties": [],
+    "collaborators": "[{\"name\":\"John Doe\",\"email\":\"user@example.com\",\"role\":\"Edit, View, Sign\",\"contractRole\":\"Buyer Agent\",\"permissions\":[\"Edit\",\"View\",\"Sign\"]},{\"name\":\"Alex Johnson\",\"email\":\"nicholas@escra.io\",\"role\":\"Edit, Sign, View\",\"contractRole\":\"Buyer\",\"permissions\":[\"Edit\",\"Sign\",\"View\"]},{\"name\":\"Emma Johnson\",\"email\":\"nicholas.aquino@protonmail.com\",\"role\":\"Edit, Sign, View\",\"contractRole\":\"Seller Agent\",\"permissions\":[\"Edit\",\"Sign\",\"View\"]},{\"name\":\"David Miller\",\"email\":\"qqqqqqq\",\"role\":\"Edit, Sign, View\",\"contractRole\":\"Seller\",\"permissions\":[\"Edit\",\"Sign\",\"View\"]},{\"name\":\"Sarah Johnson\",\"email\":\"wwwwww\",\"role\":\"View\",\"contractRole\":\"Buyer\",\"permissions\":[\"View\"]},{\"name\":\"Sarah Miller\",\"email\":\"eeeee\",\"role\":\"Edit, Sign, View\",\"contractRole\":\"Seller\",\"permissions\":[\"Edit\",\"Sign\",\"View\"]}]",
+    "documentIds": []
+  },
+  {
+    "id": "4666",
+    "title": "Buffalo Historic Home",
+    "parties": "Nicholas Aquino & Benjamin Aiello",
+    "status": "Initiation",
+    "updated": "Just now",
+    "value": "$120,000",
+    "documents": 2,
+    "type": "Residential – Financed",
+    "buyer": "Buyer 1: Nicholas Aquino",
+    "seller": "Seller 1: Benjamin Aiello",
+    "buyers": [
+      "Nicholas Aquino"
+    ],
+    "sellers": [
+      "Benjamin Aiello"
+    ],
+    "buyerEmails": [
+      "nicholas@escra.io"
+    ],
+    "sellerEmails": [
+      "benjamin@escra.io"
+    ],
+    "milestone": "Standard (6 milestones)",
+    "notes": "",
+    "closingDate": "",
+    "dueDate": "2025-10-11",
+    "propertyAddress": "39 Clearwater Drive",
+    "propertyType": "Multi Family",
+    "escrowNumber": "123456",
+    "buyerEmail": "",
+    "sellerEmail": "",
+    "earnestMoney": "$20,000",
+    "downPayment": "$125,000",
+    "loanAmount": "$1,200,000",
+    "interestRate": "5",
+    "loanTerm": "30",
+    "lenderName": "",
+    "sellerFinancialInstitution": "Chase",
+    "buyerFinancialInstitution": "BoA",
+    "buyerAccountNumber": "222222222222",
+    "sellerAccountNumber": "444444444444",
+    "buyerFinancialInstitutionRoutingNumber": "111111111",
+    "sellerFinancialInstitutionRoutingNumber": "333333333",
+    "titleCompany": "ABC Title",
+    "insuranceCompany": "XYZ Insurance",
+    "inspectionPeriod": "30",
+    "contingencies": "It is a very old house",
+    "city": "Buffalo",
+    "state": "NY",
+    "zipCode": "14228",
+    "country": "US",
+    "industry": "Real Estate",
+    "additionalParties": [],
+    "collaborators": "[{\"name\":\"Nicholas Aquino\",\"email\":\"nicholas@escra.io\",\"role\":\"Edit, Sign, View\",\"contractRole\":\"Buyer\",\"permissions\":[\"Edit\",\"Sign\",\"View\"]},{\"name\":\"Benjamin Aiello\",\"email\":\"benjamin@escra.io\",\"role\":\"Edit, Sign, View\",\"contractRole\":\"Seller\",\"permissions\":[\"Edit\",\"Sign\",\"View\"]},{\"name\":\"John Smith\",\"email\":\"gggggggg\",\"role\":\"View\",\"contractRole\":\"Buyer Agent\",\"permissions\":[\"View\"]},{\"name\":\"John Doe\",\"email\":\"user@example.com\",\"role\":\"Edit, View, Sign\",\"contractRole\":\"Seller Agent\",\"permissions\":[\"Edit\",\"View\",\"Sign\"]}]",
+    "documentIds": []
   }
 ]
