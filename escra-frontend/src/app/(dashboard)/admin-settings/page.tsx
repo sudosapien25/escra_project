@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { FaUser } from 'react-icons/fa';
-import { TbCameraCog, TbActivity, TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbBuildingCommunity, TbBallAmericanFootball, TbTool, TbWallet, TbLock, TbKey, TbApiApp, TbDevicesX, TbKeyOff, TbWalletOff, TbPlug, TbPlugOff, TbApiOff, TbWebhookOff, TbApiAppOff, TbForklift } from 'react-icons/tb';
+import { TbCameraCog, TbActivity, TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbBuildingCommunity, TbBallAmericanFootball, TbTool, TbWallet, TbLock, TbKey, TbApiApp, TbDevicesX, TbKeyOff, TbWalletOff, TbPlug, TbPlugOff, TbApiOff, TbWebhookOff, TbApiAppOff, TbForklift, TbWashDryFlat, TbUsers, TbUserOff } from 'react-icons/tb';
 import { HiChevronDown, HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight, HiOutlineKey, HiOutlineDuplicate, HiStatusOffline } from 'react-icons/hi';
 import { MdOutlineGeneratingTokens, MdWebhook, MdOutlineSportsFootball, MdOutlineMovieFilter, MdOutlineHealthAndSafety, MdCancelPresentation } from 'react-icons/md';
 import { HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
@@ -23,6 +23,7 @@ import { Toaster } from '@/components/ui/toaster';
 const TABS = [
   { key: 'profile', label: 'Profile' },
   { key: 'company', label: 'Company' },
+  { key: 'policies', label: 'Policies' },
   { key: 'security', label: 'Security' },
   { key: 'notifications', label: 'Notifications' },
   { key: 'integrations', label: 'Integrations' },
@@ -679,6 +680,64 @@ const webhooksData = [
   }
 ];
 
+// Mock policies data
+const policiesData = [
+  {
+    name: 'Data Retention Policy',
+    description: 'Defines how long user data is retained',
+    created: '2 weeks ago',
+    lastModified: '1 day ago'
+  },
+  {
+    name: 'Privacy Policy',
+    description: 'Outlines data collection and usage practices',
+    created: '1 week ago',
+    lastModified: '3 days ago'
+  },
+  {
+    name: 'Terms of Service',
+    description: 'Legal terms governing platform usage',
+    created: '3 weeks ago',
+    lastModified: '1 week ago'
+  }
+];
+
+// Mock collaborators data
+const collaboratorsData = [
+  {
+    name: 'John Smith',
+    email: 'john.smith@company.com',
+    role: 'Editor',
+    status: 'Active',
+    lastActive: '2 hours ago',
+    avatar: 'JS'
+  },
+  {
+    name: 'Sarah Johnson',
+    email: 'sarah.johnson@company.com',
+    role: 'Signer',
+    status: 'Active',
+    lastActive: '1 day ago',
+    avatar: 'SJ'
+  },
+  {
+    name: 'Mike Wilson',
+    email: 'mike.wilson@company.com',
+    role: 'Viewer',
+    status: 'Pending',
+    lastActive: 'Never',
+    avatar: 'MW'
+  },
+  {
+    name: 'Emily Davis',
+    email: 'emily.davis@company.com',
+    role: 'Creator',
+    status: 'Active',
+    lastActive: '3 hours ago',
+    avatar: 'ED'
+  }
+];
+
 // Billing plans data
 const billingPlans = [
   {
@@ -747,7 +806,7 @@ const billingPlans = [
 ];
 
 export default function AdminSettingsPage() {
-  const { addPasskeyAddedNotification, addPasskeyRemovedNotification, addWalletAddedNotification, addWalletRemovedNotification, addApiTokenAddedNotification, addApiTokenRemovedNotification, addWebhookAddedNotification, addWebhookRemovedNotification } = useNotifications();
+  const { addPasskeyAddedNotification, addPasskeyRemovedNotification, addWalletAddedNotification, addWalletRemovedNotification, addApiTokenAddedNotification, addApiTokenRemovedNotification, addWebhookAddedNotification, addWebhookRemovedNotification, addPolicyAddedNotification, addPolicyRemovedNotification } = useNotifications();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('profile');
   const [avatarImage, setAvatarImage] = useState<string | null>(null);
@@ -780,7 +839,15 @@ export default function AdminSettingsPage() {
   const [webhookSecretVisible, setWebhookSecretVisible] = useState(false);
   const [webhookTriggers, setWebhookTriggers] = useState<string[]>([]);
   const [showTriggersDropdown, setShowTriggersDropdown] = useState(false);
+  
+  // Policies state
+  const [showPolicies, setShowPolicies] = useState(false);
+  const [showAddPolicyModal, setShowAddPolicyModal] = useState(false);
+  const [policyName, setPolicyName] = useState('');
+  const [policyDescription, setPolicyDescription] = useState('');
+  const [policyContent, setPolicyContent] = useState('');
   const [showOrganizations, setShowOrganizations] = useState(false);
+  const [showCollaborators, setShowCollaborators] = useState(false);
   
   // User ID and wallet state
   const [userId, setUserId] = useState('1234567890');
@@ -2542,6 +2609,147 @@ export default function AdminSettingsPage() {
             </div>
           )}
           
+          {activeTab === 'policies' && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm">
+              <h2 className="text-lg font-bold mb-4 text-black dark:text-white">Policies</h2>
+              <p className="text-gray-600 dark:text-gray-400 text-xs mb-6">Create & manage policies</p>
+              {!showPolicies && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center border-2 border-gray-200 dark:border-gray-600">
+                      <VscLaw size={20} className="text-gray-600 dark:text-gray-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">{policiesData.length} policies configured</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Manage your policies for compliance and governance</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setShowPolicies(!showPolicies)}
+                    className="flex items-center gap-2 px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer" style={{ fontFamily: 'Avenir, sans-serif' }}
+                  >
+                    Manage Policies
+                  </button>
+                </div>
+              )}
+              
+              {showPolicies && (
+                <div className="flex justify-end mb-4">
+                  <div className="flex flex-col gap-2">
+                    <button 
+                      onClick={() => setShowPolicies(!showPolicies)}
+                      className="flex items-center gap-2 px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                    >
+                      Hide Policies
+                    </button>
+                    <button 
+                      onClick={() => setShowAddPolicyModal(true)}
+                      className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                    >
+                      Add Policy
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              {showPolicies && (
+                <div className="mt-8 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                  <div className="overflow-x-auto overflow-y-auto pr-2 h-64 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700">
+                    <table className="w-full">
+                      <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-2/5">Policy Name</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-2/5">Description</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5">Created</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5">Last Modified</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        {policiesData.map((policy, index) => (
+                          <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-2/5">{policy.name}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-2/5">{policy.description}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/5">{policy.created}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/5">{policy.lastModified}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/5">
+                              <div className="pl-3">
+                                <button
+                                  onClick={() => {
+                                    addPolicyRemovedNotification(policy.name);
+                                    
+                                    // Show toast notification
+                                    toast({
+                                      title: "Policy Removed Successfully",
+                                      description: `Policy "${policy.name}" has been removed successfully`,
+                                      duration: 5000,
+                                      variant: "destructive",
+                                    });
+                                    
+                                    // Remove from local state (in a real app, this would call an API)
+                                    const newPoliciesData = policiesData.filter((_, i) => i !== index);
+                                    // Note: In a real implementation, you'd update state here
+                                  }}
+                                  className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group flex items-center justify-center"
+                                  title="Remove policy"
+                                >
+                                  <TbWashDryFlat className="text-sm sm:text-base transition-colors" />
+                                  <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                    Remove
+                                  </span>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="bg-gray-50 dark:bg-gray-700 px-6 py-3 border-t border-gray-200 dark:border-gray-600">
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs text-gray-700 dark:text-gray-300">
+                        Showing {policiesData.length} policies.
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs text-gray-700 dark:text-gray-300">Rows per page</span>
+                          <div className="relative">
+                            <select className="text-xs border border-gray-300 dark:border-gray-600 rounded px-2 py-1 pr-6 bg-white dark:bg-gray-800 text-gray-900 dark:text-white appearance-none">
+                              <option>10</option>
+                              <option>20</option>
+                            </select>
+                            <div className="absolute inset-y-0 right-1 flex items-center pointer-events-none">
+                              <HiChevronDown className="w-3 h-3 text-gray-400" />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-xs text-gray-700 dark:text-gray-300">
+                          Page 1 of 1
+                        </div>
+                        <div className="flex space-x-1">
+                          <button className="p-1 text-gray-400 cursor-not-allowed">
+                            <HiOutlineChevronDoubleLeft className="w-3 h-3" />
+                          </button>
+                          <button className="p-1 text-gray-400 cursor-not-allowed">
+                            <HiOutlineChevronDoubleLeft className="w-3 h-3 rotate-180" />
+                          </button>
+                          <button className="p-1 text-gray-400 cursor-not-allowed">
+                            <HiOutlineChevronDoubleRight className="w-3 h-3 rotate-180" />
+                          </button>
+                          <button className="p-1 text-gray-400 cursor-not-allowed">
+                            <HiOutlineChevronDoubleRight className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          
           {activeTab === 'billing' && (
             <div className="space-y-4">
               {/* Header Section */}
@@ -3059,6 +3267,161 @@ export default function AdminSettingsPage() {
                   </div>
                 </div>
               )}
+
+              {/* Collaborators */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm mt-6">
+                <h2 className="text-lg font-bold mb-4 text-black dark:text-white">Collaborators</h2>
+                <p className="text-gray-600 dark:text-gray-400 text-xs mb-6">Manage collaborators who have access to this account</p>
+                {!showCollaborators && (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center border-2 border-gray-200 dark:border-gray-600">
+                        <TbUsers size={20} className="text-gray-600 dark:text-gray-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">{collaboratorsData.length} collaborators configured</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Manage your team members and their access levels</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => setShowCollaborators(!showCollaborators)}
+                      className="flex items-center gap-2 px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer" style={{ fontFamily: 'Avenir, sans-serif' }}
+                    >
+                      Manage Collaborators
+                    </button>
+                  </div>
+                )}
+                
+                {showCollaborators && (
+                  <div className="flex justify-end mb-4">
+                    <div className="flex flex-col gap-2">
+                      <button 
+                        onClick={() => setShowCollaborators(!showCollaborators)}
+                        className="flex items-center gap-2 px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                      >
+                        Hide Collaborators
+                      </button>
+                      <button 
+                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                      >
+                        Add Collaborator
+                      </button>
+                    </div>
+                  </div>
+                )}
+                
+                {showCollaborators && (
+                  <div className="mt-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <div className="overflow-x-auto overflow-y-auto pr-2 h-64 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700">
+                      <table className="w-full">
+                        <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-2/5">Collaborator</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5">Role</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5">Status</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5">Last Active</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                          {collaboratorsData.map((collaborator, index) => (
+                            <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                              <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-2/5">
+                                <div className="flex items-center">
+                                  <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center mr-3">
+                                    <span className="text-white font-semibold text-xs">{collaborator.avatar}</span>
+                                  </div>
+                                  <div>
+                                    <div className="text-sm font-medium text-gray-900 dark:text-white">{collaborator.name}</div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">{collaborator.email}</div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/5">{collaborator.role}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/5">
+                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                  collaborator.status === 'Active' 
+                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                                    : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                                }`}>
+                                  {collaborator.status}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/5">{collaborator.lastActive}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/5">
+                                <div className="pl-3">
+                                  <button
+                                    onClick={() => {
+                                      // Show toast notification
+                                      toast({
+                                        title: "Collaborator Removed Successfully",
+                                        description: `Collaborator "${collaborator.name}" has been removed successfully`,
+                                        duration: 5000,
+                                        variant: "destructive",
+                                      });
+                                      
+                                      // Remove from local state (in a real app, this would call an API)
+                                      const newCollaboratorsData = collaboratorsData.filter((_, i) => i !== index);
+                                      // Note: In a real implementation, you'd update state here
+                                    }}
+                                    className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group flex items-center justify-center"
+                                    title="Remove collaborator"
+                                  >
+                                    <TbUserOff className="text-sm sm:text-base transition-colors" />
+                                    <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                      Remove
+                                    </span>
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="bg-gray-50 dark:bg-gray-700 px-6 py-3 border-t border-gray-200 dark:border-gray-600">
+                      <div className="flex items-center justify-between">
+                        <div className="text-xs text-gray-700 dark:text-gray-300">
+                          Showing {collaboratorsData.length} collaborators.
+                        </div>
+                        <div className="flex items-center space-x-4">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-xs text-gray-700 dark:text-gray-300">Rows per page</span>
+                            <div className="relative">
+                              <select className="text-xs border border-gray-300 dark:border-gray-600 rounded px-2 py-1 pr-6 bg-white dark:bg-gray-800 text-gray-900 dark:text-white appearance-none">
+                                <option>10</option>
+                                <option>20</option>
+                              </select>
+                              <div className="absolute inset-y-0 right-1 flex items-center pointer-events-none">
+                                <HiChevronDown className="w-3 h-3 text-gray-400" />
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-xs text-gray-700 dark:text-gray-300">
+                            Page 1 of 1
+                          </div>
+                          <div className="flex space-x-1">
+                            <button className="p-1 text-gray-400 cursor-not-allowed">
+                              <HiOutlineChevronDoubleLeft className="w-3 h-3" />
+                            </button>
+                            <button className="p-1 text-gray-400 cursor-not-allowed">
+                              <HiOutlineChevronDoubleLeft className="w-3 h-3 rotate-180" />
+                            </button>
+                            <button className="p-1 text-gray-400 cursor-not-allowed">
+                              <HiOutlineChevronDoubleRight className="w-3 h-3 rotate-180" />
+                            </button>
+                            <button className="p-1 text-gray-400 cursor-not-allowed">
+                              <HiOutlineChevronDoubleRight className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </>
           )}
@@ -3524,6 +3887,116 @@ export default function AdminSettingsPage() {
                     setWebhookTriggers([]);
                   }
                   setShowAddWebhookModal(false);
+                }}
+                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+                style={{ fontFamily: 'Avenir, sans-serif' }}
+              >
+                Create
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Policy Modal */}
+      {showAddPolicyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 cursor-default select-none">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg p-6 cursor-default select-none">
+            <div className="flex justify-between items-start mb-4 cursor-default select-none">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white cursor-default select-none">Create policy</h2>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1 cursor-default select-none">On this page, you can create a new policy.</p>
+              </div>
+              <button
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
+                onClick={() => setShowAddPolicyModal(false)}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="space-y-6 cursor-default select-none">
+              {/* Policy Name Section */}
+              <div>
+                <label className="block text-xs font-medium text-gray-900 dark:text-white mb-1 cursor-default select-none">
+                  Policy Name *
+                </label>
+                <input
+                  type="text"
+                  value={policyName}
+                  onChange={(e) => setPolicyName(e.target.value)}
+                  className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                  placeholder="Enter policy name"
+                />
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 cursor-default select-none">
+                  A descriptive name for your policy
+                </p>
+              </div>
+              
+              {/* Policy Description Section */}
+              <div>
+                <label className="block text-xs font-medium text-gray-900 dark:text-white mb-1 cursor-default select-none">
+                  Description *
+                </label>
+                <input
+                  type="text"
+                  value={policyDescription}
+                  onChange={(e) => setPolicyDescription(e.target.value)}
+                  className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                  placeholder="Enter policy description"
+                />
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 cursor-default select-none">
+                  Brief description of what this policy covers
+                </p>
+              </div>
+              
+              {/* Policy Content Section */}
+              <div>
+                <label className="block text-xs font-medium text-gray-900 dark:text-white mb-1 cursor-default select-none">
+                  Policy Content *
+                </label>
+                <textarea
+                  value={policyContent}
+                  onChange={(e) => setPolicyContent(e.target.value)}
+                  rows={6}
+                  className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs resize-none"
+                  placeholder="Enter the full policy content..."
+                />
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 cursor-default select-none">
+                  The complete text of your policy
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-3 mt-8 cursor-default select-none">
+              <button
+                onClick={() => setShowAddPolicyModal(false)}
+                className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
+                style={{ fontFamily: 'Avenir, sans-serif' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  // Handle create policy logic here
+                  if (policyName.trim() && policyDescription.trim() && policyContent.trim()) {
+                    addPolicyAddedNotification(policyName);
+                    
+                    // Show toast notification
+                    toast({
+                      title: "Policy Added Successfully",
+                      description: `Policy "${policyName}" has been added successfully`,
+                      duration: 5000,
+                    });
+                    
+                    // Reset form
+                    setPolicyName('');
+                    setPolicyDescription('');
+                    setPolicyContent('');
+                  }
+                  setShowAddPolicyModal(false);
                 }}
                 className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
                 style={{ fontFamily: 'Avenir, sans-serif' }}
