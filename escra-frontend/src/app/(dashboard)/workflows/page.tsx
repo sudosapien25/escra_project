@@ -18,7 +18,7 @@ import { MdCancelPresentation, MdOutlineLibraryAddCheck } from 'react-icons/md';
 import { MdOutlineLightMode, MdOutlineDarkMode } from 'react-icons/md';
 import { RiUserSearchLine, RiKanbanView2 } from 'react-icons/ri';
 import { HiOutlineDocumentSearch } from 'react-icons/hi';
-import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbLibraryPlus, TbEdit, TbStatusChange, TbHistory, TbCategoryPlus, TbDragDrop, TbPencil, TbSubtask, TbSearch, TbFileSearch, TbDownload, TbCalendarClock, TbCancel, TbList, TbListDetails, TbListSearch, TbUpload, TbLibrary, TbLibraryMinus, TbChevronDown, TbMessage2Plus, TbTrash, TbChevronsLeft, TbChevronsRight, TbUserSearch, TbLayoutGrid, TbCategory2, TbEye, TbPlus } from 'react-icons/tb';
+import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbLibraryPlus, TbEdit, TbStatusChange, TbHistory, TbCategoryPlus, TbDragDrop, TbPencil, TbSubtask, TbSearch, TbFileSearch, TbDownload, TbCalendarClock, TbCancel, TbList, TbListDetails, TbListSearch, TbUpload, TbLibrary, TbLibraryMinus, TbChevronDown, TbMessage2Plus, TbTrash, TbChevronsLeft, TbChevronsRight, TbUserSearch, TbLayoutGrid, TbCategory2, TbEye, TbPlus, TbSquareCheck, TbSquarePlus } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
 
@@ -276,6 +276,16 @@ export default function WorkflowsPage() {
   // Document fields for Step 3
   const [newTaskDocumentName, setNewTaskDocumentName] = useState('');
   
+  // State for task confirmation step
+  const [taskConfirmationData, setTaskConfirmationData] = useState<{
+    taskName: string;
+    taskId: number;
+    contractId: string;
+    contractName: string;
+    subtasks: Array<{id: string, name: string}>;
+  } | null>(null);
+  const [taskCarouselPage, setTaskCarouselPage] = useState(0);
+  
   // Inline editing state for uploaded files
   const [editingTaskFileIndex, setEditingTaskFileIndex] = useState<number | null>(null);
   const [inlineEditingTaskFileName, setInlineEditingTaskFileName] = useState('');
@@ -309,6 +319,99 @@ export default function WorkflowsPage() {
     addTask,
     deleteTask
   } = useTaskStore();
+
+  // Add style element for dark mode autofill fix
+  React.useEffect(() => {
+    const styleId = 'dark-mode-autofill-fix';
+    
+    // Remove existing style if it exists
+    const existingStyle = document.getElementById(styleId);
+    if (existingStyle) {
+      existingStyle.remove();
+    }
+    
+    // Create new style element
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = `
+      .dark input:-webkit-autofill,
+      .dark input:-webkit-autofill:hover,
+      .dark input:-webkit-autofill:focus,
+      .dark input:-webkit-autofill:active,
+      .dark textarea:-webkit-autofill,
+      .dark textarea:-webkit-autofill:hover,
+      .dark textarea:-webkit-autofill:focus,
+      .dark textarea:-webkit-autofill:active {
+        -webkit-box-shadow: 
+          0 0 0 1000px rgb(17 24 39) inset !important,
+          0 0 0 2000px rgb(17 24 39) inset !important;
+        box-shadow: 
+          0 0 0 1000px rgb(17 24 39) inset !important,
+          0 0 0 2000px rgb(17 24 39) inset !important;
+        -webkit-text-fill-color: rgb(255 255 255) !important;
+        color: rgb(255 255 255) !important;
+        background-color: rgb(17 24 39) !important;
+        border-color: rgb(75 85 99) !important;
+        transition: background-color 5000s ease-in-out 0s !important;
+        -webkit-transition: background-color 5000s ease-in-out 0s !important;
+        animation: autofill 0s forwards !important;
+        -webkit-animation: autofill 0s forwards !important;
+        animation-delay: 99999s !important;
+        -webkit-animation-delay: 99999s !important;
+      }
+      
+      @keyframes autofill {
+        0%, 100% {
+          background-color: rgb(17 24 39) !important;
+          color: rgb(255 255 255) !important;
+        }
+      }
+      
+      @-webkit-keyframes autofill {
+        0%, 100% {
+          background-color: rgb(17 24 39) !important;
+          color: rgb(255 255 255) !important;
+        }
+      }
+      
+      .dark input:-webkit-autofill::selection {
+        background-color: rgb(59 130 246) !important;
+        color: rgb(255 255 255) !important;
+      }
+      
+      .dark input:focus:-webkit-autofill,
+      .dark input:not(:focus):-webkit-autofill {
+        -webkit-box-shadow: 0 0 0 1000px rgb(17 24 39) inset !important;
+        box-shadow: 0 0 0 1000px rgb(17 24 39) inset !important;
+        background-color: rgb(17 24 39) !important;
+        border-color: rgb(75 85 99) !important;
+      }
+      
+      .dark input:-webkit-autofill-strong-password,
+      .dark input:-webkit-autofill-strong-password:hover,
+      .dark input:-webkit-autofill-strong-password:focus,
+      .dark input:-webkit-autofill-and-obscured,
+      .dark input:-webkit-autofill-and-obscured:hover,
+      .dark input:-webkit-autofill-and-obscured:focus {
+        -webkit-box-shadow: 0 0 0 1000px rgb(17 24 39) inset !important;
+        box-shadow: 0 0 0 1000px rgb(17 24 39) inset !important;
+        -webkit-text-fill-color: rgb(255 255 255) !important;
+        color: rgb(255 255 255) !important;
+        background-color: rgb(17 24 39) !important;
+        border-color: rgb(75 85 99) !important;
+      }
+    `;
+    
+    document.head.appendChild(style);
+    
+    // Cleanup function
+    return () => {
+      const styleElement = document.getElementById(styleId);
+      if (styleElement) {
+        styleElement.remove();
+      }
+    };
+  }, []);
 
   // Initialize tasks from storage
   React.useEffect(() => {
@@ -1235,6 +1338,34 @@ export default function WorkflowsPage() {
     }
   };
 
+  // Function to close task confirmation and reset modal
+  const handleCloseTaskConfirmation = () => {
+    setShowNewTaskModal(false);
+    setNewTaskModalStep(1);
+    setNewTaskModalForm({ title: '', assignee: '', status: 'To Do' as TaskStatus, dueDate: '', description: '', contract: '' });
+    setNewTaskFormErrors({});
+    setNewTaskUploadedFiles([]);
+    setNewTaskSubtasks([]);
+    setNewSubtaskTitle('');
+    setNewSubtaskAssignee('');
+    setNewSubtaskStatus('To Do');
+    setNewSubtaskDueDate('');
+    setNewSubtaskDescription('');
+    setShowNewSubtaskAssigneeDropdown(false);
+    setShowNewSubtaskStatusDropdown(false);
+    setNewTaskDocumentName('');
+    setEditingTaskFileIndex(null);
+    setInlineEditingTaskFileName('');
+    setEditingSubtaskIndex(null);
+    setInlineEditingSubtaskTitle('');
+    setInlineEditingSubtaskAssignee('');
+    setInlineEditingSubtaskDueDate('');
+    setInlineEditingSubtaskDescription('');
+    setShowInlineSubtaskAssigneeDropdown(false);
+    setTaskConfirmationData(null);
+    setTaskCarouselPage(0);
+  };
+
   // Function to delete a subtask
   const deleteSubtask = (subtaskId: string) => {
     if (selectedTask) {
@@ -1333,13 +1464,20 @@ export default function WorkflowsPage() {
     setShowInlineSubtaskAssigneeDropdown(false);
   };
 
-  // Horizontal scroll on wheel
+  // Horizontal scroll on wheel - only when explicitly intended
   const handleKanbanWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     if (kanbanBoardRef.current) {
-      if (e.deltaY !== 0) {
+      // Only handle horizontal scroll when:
+      // 1. There's actual horizontal delta (trackpad horizontal scroll)
+      // 2. User is holding shift (common convention for horizontal scroll)
+      if (e.deltaX !== 0) {
+        e.preventDefault();
+        kanbanBoardRef.current.scrollLeft += e.deltaX;
+      } else if (e.shiftKey && e.deltaY !== 0) {
         e.preventDefault();
         kanbanBoardRef.current.scrollLeft += e.deltaY;
       }
+      // For pure vertical scroll without shift, let it pass through to scroll the page or individual columns
     }
   };
 
@@ -1392,40 +1530,56 @@ export default function WorkflowsPage() {
         {showNewTaskModal ? (
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-300 dark:border-gray-700 px-6 py-4 sm:pt-8 sm:pb-6 mb-6 select-none">
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-4">
-                <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800">
-                  <TbCategoryPlus size={20} className="text-teal-500 dark:text-teal-400" />
+              {newTaskModalStep !== 4 ? (
+                <div className="flex items-center gap-4">
+                  <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800">
+                    <TbCategoryPlus size={20} className="text-teal-500 dark:text-teal-400" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-black dark:text-white leading-tight">Create New Task</h2>
+                    <p className="text-gray-500 text-xs leading-tight cursor-default select-none">Fill in the task details to get started</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-lg font-bold text-black dark:text-white leading-tight">Create New Task</h2>
-                  <p className="text-gray-500 text-xs leading-tight cursor-default select-none">Fill in the task details to get started</p>
-                </div>
-              </div>
-              <button
-                onClick={() => { 
-                  setShowNewTaskModal(false); 
-                  setNewTaskModalStep(1); 
-                  setNewTaskModalForm({ title: '', assignee: '', status: 'To Do' as TaskStatus, dueDate: '', description: '', contract: '' }); 
-                  setNewTaskFormErrors({}); 
-                                          setNewTaskSubtasks([]);
-                        setNewSubtaskTitle('');
-                        setNewSubtaskAssignee('');
-                        setNewSubtaskStatus('To Do');
-                        setNewSubtaskDueDate('');
-                        setNewSubtaskDescription('');
-                        setShowNewSubtaskAssigneeDropdown(false);
-                        setShowNewSubtaskStatusDropdown(false);
-                        setNewTaskUploadedFiles([]);
-                }} 
-                className="text-gray-400 hover:text-gray-600 p-2 rounded-full -mt-3"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              ) : (
+                <div></div>
+              )}
+              {newTaskModalStep === 4 && taskConfirmationData ? (
+                <button
+                  onClick={handleCloseTaskConfirmation}
+                  className="text-gray-400 hover:text-gray-600 p-2 rounded-full -mt-3"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              ) : newTaskModalStep !== 4 && (
+                <button
+                  onClick={() => { 
+                    setShowNewTaskModal(false); 
+                    setNewTaskModalStep(1); 
+                    setNewTaskModalForm({ title: '', assignee: '', status: 'To Do' as TaskStatus, dueDate: '', description: '', contract: '' }); 
+                    setNewTaskFormErrors({}); 
+                                            setNewTaskSubtasks([]);
+                          setNewSubtaskTitle('');
+                          setNewSubtaskAssignee('');
+                          setNewSubtaskStatus('To Do');
+                          setNewSubtaskDueDate('');
+                          setNewSubtaskDescription('');
+                          setShowNewSubtaskAssigneeDropdown(false);
+                          setShowNewSubtaskStatusDropdown(false);
+                          setNewTaskUploadedFiles([]);
+                  }} 
+                  className="text-gray-400 hover:text-gray-600 p-2 rounded-full -mt-3"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
             </div>
 
-            {/* Stepper */}
+            {/* Stepper - Hidden on step 4 */}
+            {newTaskModalStep !== 4 && (
             <div className="w-full overflow-x-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
               <div className="flex items-center justify-between mb-6 min-w-[340px] sm:min-w-0">
                 <div className="flex items-center space-x-2 w-full flex-nowrap">
@@ -1453,6 +1607,7 @@ export default function WorkflowsPage() {
                 </div>
               </div>
             </div>
+            )}
 
             {/* Form Content */}
             <div className="space-y-4 pt-4">
@@ -2135,10 +2290,10 @@ export default function WorkflowsPage() {
                         </div>
                       ))}
                       {newTaskSubtasks.length === 0 && (
-                        <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-xs cursor-default select-none">
-                          <TbCategory2 className="mx-auto mb-2 w-6 h-6 text-primary" />
-                          <div>No subtasks yet</div>
-                          <div>Add a subtask by filling in the details above and clicking the "Add Subtask" button</div>
+                        <div className="text-center py-8 text-gray-500 dark:text-gray-400 cursor-default select-none">
+                          <TbCategory2 size={26} className="mx-auto mb-2 text-primary" />
+                          <p className="text-sm" style={{ fontFamily: 'Avenir, sans-serif' }}>No subtasks yet</p>
+                          <p className="text-xs" style={{ fontFamily: 'Avenir, sans-serif' }}>Add a subtask by filling in the details above and clicking the "Add Subtask" button</p>
                         </div>
                       )}
                     </div>
@@ -2176,7 +2331,7 @@ export default function WorkflowsPage() {
                         className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold flex items-center justify-center"
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       >
-                        <TbPlus className="w-4 h-4 mr-2" />
+                        <TbSquarePlus className="w-4 h-4 mr-2" />
                         Add Subtask
                       </button>
                       <button 
@@ -2421,6 +2576,10 @@ export default function WorkflowsPage() {
                           const formattedSubtasks = newTaskSubtasks.map((subtask, index) => ({
                             id: `sub-${newTaskId}-${index + 1}`,
                             title: subtask.title,
+                            assignee: subtask.assignee,
+                            status: subtask.status as TaskStatus,
+                            dueDate: subtask.dueDate,
+                            description: subtask.description,
                             completed: subtask.completed || false
                           }));
                           
@@ -2476,36 +2635,219 @@ export default function WorkflowsPage() {
                             setTaskFiles(existingFiles);
                           }
                           
-                          // Reset form
-                          setShowNewTaskModal(false);
-                          setNewTaskModalStep(1);
-                          setNewTaskModalForm({ title: '', assignee: '', status: 'To Do' as TaskStatus, dueDate: '', description: '', contract: '' });
-                          setNewTaskFormErrors({});
-                          setNewTaskUploadedFiles([]);
-                          setNewTaskSubtasks([]);
-                          setNewSubtaskTitle('');
-                          setNewSubtaskAssignee('');
-                          setNewSubtaskStatus('To Do');
-                          setNewSubtaskDueDate('');
-                          setNewSubtaskDescription('');
-                          setShowNewSubtaskAssigneeDropdown(false);
-                          setShowNewSubtaskStatusDropdown(false);
-                          setNewTaskDocumentName('');
-                          setEditingTaskFileIndex(null);
-                          setInlineEditingTaskFileName('');
-                          setEditingSubtaskIndex(null);
-                          setInlineEditingSubtaskTitle('');
-                          setInlineEditingSubtaskAssignee('');
-                          setInlineEditingSubtaskDueDate('');
-                          setInlineEditingSubtaskDescription('');
-                          setShowInlineSubtaskAssigneeDropdown(false);
+                          // Set up confirmation data and navigate to step 4
+                          setTaskConfirmationData({
+                            taskName: newTask.title,
+                            taskId: newTask.taskNumber,
+                            contractId: contractId,
+                            contractName: selectedContract?.title || 'Unknown Contract',
+                            subtasks: newTaskSubtasks.map((subtask, index) => ({
+                              id: `subtask-${index + 1}`,
+                              name: subtask.title
+                            }))
+                          });
+                          setTaskCarouselPage(0);
+                          setNewTaskModalStep(4);
                         }}
                         className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm"
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       >
                         Create Task
                       </button>
+                      
+                      {/* Tester Button */}
+                      <button
+                        onClick={() => {
+                          // Set up test confirmation data and navigate to step 4
+                          const selectedContract = contracts.find(c => c.id === newTaskModalForm.contract);
+                          
+                          // Create 15 test subtasks for scrolling functionality
+                          const testSubtasks = [
+                            'Review contract terms and conditions',
+                            'Prepare initial documentation package',
+                            'Schedule stakeholder meeting',
+                            'Conduct legal compliance check',
+                            'Draft preliminary agreement',
+                            'Coordinate with external legal counsel',
+                            'Prepare financial analysis report',
+                            'Review insurance requirements',
+                            'Schedule property inspection',
+                            'Prepare due diligence checklist',
+                            'Coordinate with title company',
+                            'Review environmental assessments',
+                            'Prepare closing documentation',
+                            'Schedule final walkthrough',
+                            'Coordinate closing logistics'
+                          ].map((name, index) => ({
+                            id: `test-subtask-${index + 1}`,
+                            name: name
+                          }));
+                          
+                          setTaskConfirmationData({
+                            taskName: newTaskModalForm.title || 'Test Task',
+                            taskId: Math.floor(Math.random() * 9000) + 1000,
+                            contractId: newTaskModalForm.contract || '12345',
+                            contractName: selectedContract?.title || 'Test Contract',
+                            subtasks: testSubtasks
+                          });
+                          setTaskCarouselPage(0);
+                          setNewTaskModalStep(4);
+                        }}
+                        className="px-4 py-2 rounded-lg bg-gray-500 text-white font-semibold hover:bg-gray-600 transition-colors text-sm ml-2"
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                      >
+                        Test Confirmation
+                      </button>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {newTaskModalStep === 4 && taskConfirmationData && (
+                <div className="space-y-4">
+                  <div className="text-center space-y-4 max-w-lg mx-auto px-6">
+                    {/* Success Icon */}
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center border-2 border-primary/20 mx-auto">
+                      <TbSquareCheck className="h-6 w-6 text-primary" />
+                    </div>
+                    
+                    {/* Main Title */}
+                    <div className="text-center -ml-2">
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                        Task Created Successfully
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 text-center mb-8 lg:whitespace-nowrap lg:break-normal break-words" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                        "{taskConfirmationData.taskName}" has been created with "{taskConfirmationData.taskId}" for "{taskConfirmationData.contractId}" - "{taskConfirmationData.contractName}"
+                      </p>
+                    </div>
+                    
+                    {/* Subtasks List - Responsive with Carousel */}
+                    {taskConfirmationData.subtasks.length > 0 && (
+                      <div className="text-left">
+                        <div className="flex justify-center mb-6">
+                          <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 text-center px-4" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                            The below subtasks have also been created:
+                          </p>
+                        </div>
+                        
+                        {/* Mobile Layout - Single Column with Carousel */}
+                        <div className="lg:hidden">
+                          <div className="flex justify-center">
+                            <div className="grid grid-cols-1 gap-y-1 max-w-md mx-auto px-4" 
+                              style={{ 
+                                gridAutoFlow: 'column',
+                                gridTemplateRows: `repeat(5, auto)`
+                              }}
+                              onWheel={(e) => {
+                                e.preventDefault();
+                                if (taskConfirmationData.subtasks.length > 5) {
+                                  if (e.deltaY > 0 && taskCarouselPage < Math.ceil(taskConfirmationData.subtasks.length / 5) - 1) {
+                                    setTaskCarouselPage(prev => prev + 1);
+                                  } else if (e.deltaY < 0 && taskCarouselPage > 0) {
+                                    setTaskCarouselPage(prev => prev - 1);
+                                  }
+                                }
+                              }}>
+                              {taskConfirmationData.subtasks
+                                .slice(taskCarouselPage * 5, (taskCarouselPage + 1) * 5)
+                                .map((subtask, index) => (
+                                <div key={index} className="text-sm text-gray-600 dark:text-gray-400" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                  <div className="flex items-start">
+                                    <span className="text-primary font-medium mr-3 flex-shrink-0">{taskCarouselPage * 5 + index + 1}.</span>
+                                    <span className="break-words">"{subtask.name}"</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          {/* Mobile Carousel Indicators */}
+                          {taskConfirmationData.subtasks.length > 5 && (
+                            <div className="flex justify-center mt-4 space-x-2">
+                              {Array.from({ length: Math.ceil(taskConfirmationData.subtasks.length / 5) }, (_, i) => (
+                                <button
+                                  key={i}
+                                  onClick={() => setTaskCarouselPage(i)}
+                                  className={`w-2 h-2 rounded-full transition-colors ${
+                                    i === taskCarouselPage 
+                                      ? 'bg-primary' 
+                                      : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Desktop Layout - 2 Columns with Carousel */}
+                        <div className="hidden lg:flex justify-center">
+                          <div className="grid grid-cols-2 gap-x-6 gap-y-1 ml-16" 
+                            style={{ 
+                              gridAutoFlow: 'column',
+                              gridTemplateRows: `repeat(5, auto)`,
+                              gridTemplateColumns: `repeat(2, minmax(380px, 1fr))`
+                            }}
+                            onWheel={(e) => {
+                              e.preventDefault();
+                              if (taskConfirmationData.subtasks.length > 10) {
+                                if (e.deltaY > 0 && taskCarouselPage < Math.ceil(taskConfirmationData.subtasks.length / 10) - 1) {
+                                  setTaskCarouselPage(prev => prev + 1);
+                                } else if (e.deltaY < 0 && taskCarouselPage > 0) {
+                                  setTaskCarouselPage(prev => prev - 1);
+                                }
+                              }
+                            }}>
+                            {taskConfirmationData.subtasks
+                              .slice(taskCarouselPage * 10, (taskCarouselPage + 1) * 10)
+                              .map((subtask, index) => (
+                              <div key={index} className="text-sm text-gray-600 dark:text-gray-400" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                <div className="flex items-start">
+                                  <span className="text-primary font-medium mr-3 flex-shrink-0">{taskCarouselPage * 10 + index + 1}.</span>
+                                  <span className="break-words">"{subtask.name}"</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {/* Desktop Carousel Indicators */}
+                        {taskConfirmationData.subtasks.length > 10 && (
+                          <div className="hidden lg:flex justify-center mt-4 space-x-2">
+                            {Array.from({ length: Math.ceil(taskConfirmationData.subtasks.length / 10) }, (_, i) => (
+                              <button
+                                key={i}
+                                onClick={() => setTaskCarouselPage(i)}
+                                className={`w-2 h-2 rounded-full transition-colors ${
+                                  i === taskCarouselPage 
+                                    ? 'bg-primary' 
+                                    : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Subtask Count */}
+                    {taskConfirmationData.subtasks.length > 0 && (
+                      <div className="text-center mt-6">
+                        <p className="text-sm font-bold text-gray-700 dark:text-gray-300" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                          Total subtasks created: {taskConfirmationData.subtasks.length}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Close Button - positioned like Create Task button */}
+                  <div className="flex justify-end mt-6 mb-6">
+                    <button
+                      onClick={handleCloseTaskConfirmation}
+                      className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm"
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                    >
+                      Close
+                    </button>
                   </div>
                 </div>
               )}
@@ -3247,7 +3589,7 @@ export default function WorkflowsPage() {
                           </div>
                         </div>
                       </div>
-                      <div className="p-4 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ height: 'calc(15 * 3.5rem + 3rem)' }}>
+                      <div className="p-4 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ height: 'calc(15 * 3.5rem + 3rem)' }}>
                         <div className="space-y-3">
                           {filterTasks(col.tasks).map((task, index) => (
                             <Draggable key={task.code} draggableId={task.code} index={index}>

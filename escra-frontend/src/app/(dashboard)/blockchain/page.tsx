@@ -15,7 +15,7 @@ import { MdOutlineAddToPhotos, MdOutlineUpdate } from 'react-icons/md';
 import { mockContracts } from '@/data/mockContracts';
 import Image from 'next/image';
 import { LuSquareArrowOutUpRight, LuFileTerminal, LuBookText } from 'react-icons/lu';
-import { TbClockPin, TbShieldLock, TbDropletFilled, TbReportSearch, TbHistory, TbHistoryOff, TbClockEdit, TbClockExclamation, TbTopologyBus, TbSearch, TbFileSearch, TbLayoutGrid, TbFilePlus, TbChevronDown } from 'react-icons/tb';
+import { TbClockPin, TbShieldLock, TbDropletFilled, TbReportSearch, TbHistory, TbHistoryOff, TbClockEdit, TbClockExclamation, TbTopologyBus, TbSearch, TbFileSearch, TbLayoutGrid, TbFilePlus, TbChevronDown, TbSquarePlus } from 'react-icons/tb';
 import { CgTerminal } from 'react-icons/cg';
 import { AiOutlineNodeExpand } from 'react-icons/ai';
 import { PiHandCoins } from 'react-icons/pi';

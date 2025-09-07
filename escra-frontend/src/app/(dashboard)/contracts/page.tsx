@@ -35,7 +35,7 @@ import { ContractsToaster } from '@/components/ui/contracts-toaster';
 import { useAuth } from '@/context/AuthContext';
 import { useDocumentStore } from '@/data/documentNameStore';
 import { PiMoneyWavyBold, PiBankBold, PiSignatureBold, PiCaretUpDownBold, PiCaretUpDown } from 'react-icons/pi';
-import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbChevronsDownRight, TbMailPlus, TbLibraryPlus, TbLibraryMinus, TbSquareX, TbStatusChange, TbDragDrop, TbHistory, TbBell } from 'react-icons/tb';
+import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbChevronsDownRight, TbMailPlus, TbLibraryPlus, TbLibraryMinus, TbSquareX, TbStatusChange, TbDragDrop, TbHistory, TbBell, TbSquarePlus } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
 import { FaCheckCircle } from 'react-icons/fa';
@@ -7237,9 +7237,10 @@ const ContractsPage: React.FC = () => {
                         type="button"
                         onClick={handleAddStep4Document}
                         disabled={!step4DocumentName.trim() || !step4DocumentType.trim() || !step4DocumentAssignee.trim() || step4SelectedFiles.length === 0}
-                        className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       >
+                        <TbSquarePlus className="w-4 h-4 mr-2" />
                         Add Document
                       </button>
                       <button 
@@ -7384,6 +7385,15 @@ const ContractsPage: React.FC = () => {
                           </div>
                         )}
                       </div>
+                    </div>
+                  )}
+                  
+                  {/* Document Count */}
+                  {confirmationData.documents.length > 0 && (
+                    <div className="text-center mt-6">
+                      <p className="text-sm font-bold text-gray-700 dark:text-gray-300" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                        Total supporting documents created: {confirmationData.documents.length}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -8120,9 +8130,10 @@ const ContractsPage: React.FC = () => {
                       type="button"
                       onClick={handleAddNewDocument}
                       disabled={!newDocumentName.trim() || !documentModalForm.contract.trim() || !newDocumentAssignee.trim() || newDocumentFormUploadedFiles.length === 0}
-                      className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                       style={{ fontFamily: 'Avenir, sans-serif' }}
                     >
+                      <TbSquarePlus className="w-4 h-4 mr-2" />
                       Add Document
                     </button>
                     <button 
@@ -8452,7 +8463,7 @@ const ContractsPage: React.FC = () => {
                       
                       {/* Summary */}
                       <div className="text-center mt-6">
-                        <p className="text-sm text-gray-500 dark:text-gray-400" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                        <p className="text-sm font-bold text-gray-700 dark:text-gray-300" style={{ fontFamily: 'Avenir, sans-serif' }}>
                           Total documents created: {documentConfirmationData.documents.length}
                         </p>
                       </div>

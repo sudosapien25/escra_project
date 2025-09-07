@@ -6,7 +6,7 @@ import { HiOutlineDocumentText, HiOutlineUpload, HiOutlineEye, HiOutlineEyeOff, 
 import { Logo } from '@/components/common/Logo';
 import { FaCheck, FaPlus, FaSearch } from 'react-icons/fa';
 import { LuPen, LuCalendarFold } from 'react-icons/lu';
-import { TbMailPlus, TbEdit, TbFilePlus, TbDragDrop, TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbSquareCheck, TbChevronDown, TbEraser, TbTrash, TbUserPlus, TbUsersPlus, TbUsers, TbUsersGroup, TbFileText, TbHomeDollar, TbHomeRibbon, TbBuildings, TbBuildingWarehouse, TbReceiptTax, TbTemplate, TbHome2, TbBuilding, TbBuildingSkyscraper, TbPhoto, TbBuildingFactory2, TbBuildingBridge, TbFileStar, TbTrophy, TbArrowsShuffle2, TbAffiliate, TbUserShield, TbArrowsJoin, TbBuildingBank, TbAnalyze, TbScript, TbLicense, TbClipboardSearch, TbVinyl, TbBooks, TbDevicesShare, TbChairDirector, TbFileSpark, TbAward, TbAd2, TbCopyright } from 'react-icons/tb';
+import { TbMailPlus, TbEdit, TbFilePlus, TbDragDrop, TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbSquareCheck, TbChevronDown, TbEraser, TbTrash, TbUserPlus, TbUsersPlus, TbUsers, TbUsersGroup, TbFileText, TbHomeDollar, TbHomeRibbon, TbBuildings, TbBuildingWarehouse, TbReceiptTax, TbTemplate, TbHome2, TbBuilding, TbBuildingSkyscraper, TbPhoto, TbBuildingFactory2, TbBuildingBridge, TbFileStar, TbTrophy, TbArrowsShuffle2, TbAffiliate, TbUserShield, TbArrowsJoin, TbBuildingBank, TbAnalyze, TbScript, TbLicense, TbClipboardSearch, TbVinyl, TbBooks, TbDevicesShare, TbChairDirector, TbFileSpark, TbAward, TbAd2, TbCopyright, TbSquarePlus } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
 import { TiUserAddOutline } from 'react-icons/ti';
@@ -3872,9 +3872,10 @@ const NewContractModal: React.FC<NewContractModalProps> = ({ isOpen, onClose }) 
                       type="button"
                       onClick={handleAddStep4Document}
                       disabled={!step4DocumentName.trim() || !step4DocumentType.trim() || !step4DocumentAssignee.trim() || step4SelectedFiles.length === 0}
-                      className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                       style={{ fontFamily: 'Avenir, sans-serif' }}
                     >
+                      <TbSquarePlus className="w-4 h-4 mr-2" />
                       Add Document
                     </button>
 

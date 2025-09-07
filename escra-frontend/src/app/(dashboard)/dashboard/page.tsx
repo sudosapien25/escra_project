@@ -7,7 +7,7 @@ import { IconBaseProps } from 'react-icons';
 import { LuPen } from 'react-icons/lu';
 import { PiMoneyWavyBold } from 'react-icons/pi';
 import { MdOutlineAddToPhotos } from 'react-icons/md';
-import { TbClockPin, TbClockUp, TbCoins, TbTransactionDollar, TbPencilExclamation, TbTransfer, TbFileText, TbClockShare, TbClockDown, TbArrowsExchange, TbClockEdit, TbFilePlus, TbBusinessplan, TbTrash, TbUserCheck } from 'react-icons/tb';
+import { TbClockPin, TbClockUp, TbCoins, TbTransactionDollar, TbPencilExclamation, TbTransfer, TbFileText, TbClockShare, TbClockDown, TbArrowsExchange, TbClockEdit, TbFilePlus, TbBusinessplan, TbTrash, TbUserCheck, TbSquarePlus } from 'react-icons/tb';
 import { TbChevronDown, TbArrowsHorizontal, TbArrowAutofitWidth } from 'react-icons/tb';
 import { HiOutlineDocumentText } from 'react-icons/hi';
 import { GrMoney } from 'react-icons/gr';
