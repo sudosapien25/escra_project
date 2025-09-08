@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Notification, NotificationType } from '../types/notifications';
 import { FaCheckCircle, FaExclamationTriangle, FaUserPlus, FaEdit, FaFileSignature, FaCommentDots, FaMoneyCheckAlt, FaTimesCircle, FaClock, FaLock, FaChartLine, FaCheck, FaSignature } from 'react-icons/fa';
-import { TbWritingSign, TbCloudUpload, TbFileText, TbFileDescription, TbApiApp, TbApiAppOff, TbWebhook, TbWebhookOff, TbTrash, TbCopyX, TbFileX, TbFilePlus, TbWalletOff, TbKeyOff, TbKey, TbWallet, TbSignature, TbSignatureOff, TbPlus, TbLibrary, TbSubtask, TbWritingSignOff, TbWand, TbPencilShare } from 'react-icons/tb';
+import { TbWritingSign, TbCloudUpload, TbFileText, TbFileDescription, TbApiApp, TbApiAppOff, TbWebhook, TbWebhookOff, TbTrash, TbCopyX, TbFileX, TbFilePlus, TbWalletOff, TbKeyOff, TbKey, TbWallet, TbSignature, TbSignatureOff, TbPlus, TbLibrary, TbLibraryPlus, TbSubtask, TbWritingSignOff, TbWand, TbPencilShare } from 'react-icons/tb';
 import { PiMoneyWavyBold } from 'react-icons/pi';
 import { AiOutlineFileDone } from 'react-icons/ai';
 import { HiOutlineClipboardCheck } from 'react-icons/hi';
@@ -30,6 +30,7 @@ const notificationIcons: Record<NotificationType, React.ReactNode> = {
   contract_voided: <TbFileX className="text-red-500 text-xl" />,
   contract_deleted: <FaTimesCircle className="text-red-500 text-xl" />,
   document_deleted: <TbCopyX className="text-red-500 text-xl" />,
+  document_added: <TbLibraryPlus className="text-primary text-xl" />,
   task_created: <TbSubtask className="text-primary text-xl" />,
   task_deleted: <FaTimesCircle className="text-red-500 text-xl" />,
   signature_requested: <TbPencilShare className="text-primary text-xl" />,
@@ -68,6 +69,8 @@ interface NotificationContextType {
   addDocumentDeletedNotification: (documentId: string, documentName: string, contractId: string, contractTitle: string) => void;
   addTaskCreatedNotification: (taskId: string, taskName: string, contractId: string, contractTitle: string) => void;
   addTaskDeletedNotification: (taskId: string, taskName: string, contractId: string, contractTitle: string) => void;
+  addTaskDocumentDeletedNotification: (documentName: string, taskId: string, taskName: string, contractId: string, contractName: string) => void;
+  addTaskDocumentAddedNotification: (documentName: string, taskId: string, taskName: string, contractId: string, contractName: string) => void;
   addSignatureRequestedNotification: (signatureId: string, documentName: string, recipients: Array<{name: string, email: string}>) => void;
   addSignatureRejectedNotification: (signatureId: string, documentName: string, recipients: Array<{name: string, email: string}>) => void;
   addSignatureVoidedNotification: (signatureId: string, documentName: string, recipients: Array<{name: string, email: string}>) => void;
@@ -199,6 +202,30 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       icon: 'task_deleted',
       link: `/workflows`,
       meta: { contractId, taskId },
+    });
+  };
+
+  const addTaskDocumentDeletedNotification = (documentName: string, taskId: string, taskName: string, contractId: string, contractName: string) => {
+    addNotification({
+      type: 'document_deleted',
+      title: 'Document Deleted Successfully',
+      message: `"${documentName}" associated with Task #${taskId} - "${taskName}" for Contract ID #${contractId} - ${contractName} has been removed and deleted`,
+      read: false,
+      icon: 'document_deleted',
+      link: `/workflows`,
+      meta: { taskId, documentName, contractId },
+    });
+  };
+
+  const addTaskDocumentAddedNotification = (documentName: string, taskId: string, taskName: string, contractId: string, contractName: string) => {
+    addNotification({
+      type: 'document_added',
+      title: 'Document Added Successfully',
+      message: `"${documentName}" has been added to Task ID #${taskId} - "${taskName}" and associated with Contract ID #${contractId} - ${contractName}`,
+      read: false,
+      icon: 'document_added',
+      link: `/workflows`,
+      meta: { taskId, documentName, contractId },
     });
   };
 
@@ -423,6 +450,8 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       addDocumentDeletedNotification,
       addTaskCreatedNotification,
       addTaskDeletedNotification,
+      addTaskDocumentDeletedNotification,
+    addTaskDocumentAddedNotification,
       addSignatureRequestedNotification,
       addSignatureRejectedNotification,
       addSignatureVoidedNotification,

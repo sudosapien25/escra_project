@@ -19,6 +19,7 @@ export type NotificationType =
   | 'contract_voided'
   | 'contract_deleted'
   | 'document_deleted'
+  | 'document_added'
   | 'task_created'
   | 'task_deleted'
   | 'signature_requested'

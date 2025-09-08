@@ -276,7 +276,21 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       if (savedTasks) {
         try {
           const parsedTasks = JSON.parse(savedTasks);
-          set({ tasks: parsedTasks });
+          
+          // Fix tasks with timestamp IDs to use task number as ID
+          const fixedTasks = parsedTasks.map((task: Task) => {
+            // Check if task ID is a timestamp (long number)
+            if (task.id && task.id.length > 10 && /^\d+$/.test(task.id)) {
+              console.log(`Fixing task ID from ${task.id} to ${task.taskNumber}`);
+              return { ...task, id: task.taskNumber.toString() };
+            }
+            return task;
+          });
+          
+          set({ tasks: fixedTasks });
+          
+          // Save the fixed tasks back to localStorage
+          localStorage.setItem('tasks', JSON.stringify(fixedTasks));
         } catch (error) {
           console.error('Error parsing saved tasks:', error);
           localStorage.setItem('tasks', JSON.stringify(mockTasks));

@@ -1319,11 +1319,11 @@ export default function DashboardPage() {
               )}
             </div>
             
-            <div className="flex flex-col sm:flex-row bg-gray-100 dark:bg-gray-700 rounded-lg p-1 border-2 border-gray-200 dark:border-gray-600 cursor-default select-none order-1 sm:order-none sm:mt-1">
+            <div className="flex flex-col sm:flex-row bg-gray-100 dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700 cursor-default select-none order-1 sm:order-none sm:mt-1">
               <button
-                className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
                   chartView === 'types' 
-                    ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' 
+                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' 
                     : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
                 }`}
                 onClick={() => setChartView('types')}
@@ -1331,9 +1331,9 @@ export default function DashboardPage() {
                 Contract Types
               </button>
               <button
-                className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
                   chartView === 'statuses' 
-                    ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' 
+                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' 
                     : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
                 }`}
                 onClick={() => setChartView('statuses')}
@@ -1341,9 +1341,9 @@ export default function DashboardPage() {
                 Contract Status
               </button>
               <button
-                className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
                   chartView === 'signatureStates' 
-                    ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' 
+                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' 
                     : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
                 }`}
                 onClick={() => setChartView('signatureStates')}

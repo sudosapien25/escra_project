@@ -34,6 +34,7 @@ import { useNotifications } from '@/context/NotificationContext';
 import { ContractsToaster } from '@/components/ui/contracts-toaster';
 import { useAuth } from '@/context/AuthContext';
 import { useDocumentStore } from '@/data/documentNameStore';
+import { useRouter } from 'next/navigation';
 import { PiMoneyWavyBold, PiBankBold, PiSignatureBold, PiCaretUpDownBold, PiCaretUpDown } from 'react-icons/pi';
 import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbChevronsDownRight, TbMailPlus, TbLibraryPlus, TbLibraryMinus, TbSquareX, TbStatusChange, TbDragDrop, TbHistory, TbBell, TbSquarePlus } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
@@ -305,6 +306,7 @@ const ContractsPage: React.FC = () => {
   const { user } = useAuth();
   const currentUserName = user?.name || '';
   const { toast } = useToast();
+  const router = useRouter();
   const { addContractCreatedNotification, addDocumentCreatedNotification, addContractVoidedNotification, addContractDeletedNotification, addDocumentDeletedNotification } = useNotifications();
   const { addDocument, getDocumentsByContract, removeDocument, updateDocumentContract } = useDocumentStore();
 
@@ -2663,13 +2665,25 @@ const ContractsPage: React.FC = () => {
     assignee: string;
   }>>([]);
 
-  // State for inline editing of upload modal documents
-  const [editingUploadModalDocumentIndex, setEditingUploadModalDocumentIndex] = useState<number | null>(null);
-  const [inlineEditingUploadModalDocumentName, setInlineEditingUploadModalDocumentName] = useState('');
-  const [inlineEditingUploadModalDocumentType, setInlineEditingUploadModalDocumentType] = useState('');
-  const [inlineEditingUploadModalDocumentAssignee, setInlineEditingUploadModalDocumentAssignee] = useState('');
-  const [showInlineEditingUploadModalAssigneeDropdown, setShowInlineEditingUploadModalAssigneeDropdown] = useState(false);
-  const inlineEditingUploadModalAssigneeDropdownRef = useRef<HTMLDivElement>(null);
+  // State for inline editing of upload modal documents - following workflows pattern
+  const [editingUploadModalDocumentField, setEditingUploadModalDocumentField] = useState<{index: number, field: 'name' | 'type'} | null>(null);
+  const [editingUploadModalDocumentValue, setEditingUploadModalDocumentValue] = useState('');
+
+  // Click-outside handler for upload modal document field editing
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      
+      if (editingUploadModalDocumentField && !target.closest('input[type="text"]')) {
+        handleSaveUploadModalDocumentField();
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [editingUploadModalDocumentField]);
 
   const [showPdfViewer, setShowPdfViewer] = useState(false);
   const [selectedPdf, setSelectedPdf] = useState<{ name: string; url: string; id?: string } | null>(null);
@@ -3439,6 +3453,9 @@ const ContractsPage: React.FC = () => {
         // Remove from document store
         removeDocument(documentId);
         
+        // Refresh documents to update the UI
+        refreshDocuments();
+        
         toast({
           title: "Document Deleted Successfully",
           description: `"${documentName}" with Document ID #${documentId} associated with Contract ID #${contractId} - ${contractName} has been deleted`,
@@ -3862,44 +3879,33 @@ const ContractsPage: React.FC = () => {
     setUploadModalAddedDocuments(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Function to start inline editing of an upload modal document
-  const handleStartInlineEditUploadModalDocument = (index: number) => {
+  // Function to start inline editing of an upload modal document field - following workflows pattern
+  const handleStartEditingUploadModalDocumentField = (index: number, field: 'name' | 'type') => {
     const doc = uploadModalAddedDocuments[index];
-    setEditingUploadModalDocumentIndex(index);
-    setInlineEditingUploadModalDocumentName(doc.documentName);
-    setInlineEditingUploadModalDocumentType(doc.documentType);
-    setInlineEditingUploadModalDocumentAssignee(doc.assignee);
-    setShowInlineEditingUploadModalAssigneeDropdown(false);
+    setEditingUploadModalDocumentField({ index, field });
+    setEditingUploadModalDocumentValue(field === 'name' ? doc.documentName : doc.documentType);
   };
 
-  // Function to save inline edits of an upload modal document
-  const handleSaveInlineEditUploadModalDocument = (index: number) => {
-    if (inlineEditingUploadModalDocumentName.trim() && inlineEditingUploadModalDocumentAssignee.trim()) {
-      setUploadModalAddedDocuments(prev => prev.map((doc, i) => 
-        i === index 
+  // Function to save inline edits of an upload modal document field
+  const handleSaveUploadModalDocumentField = () => {
+    if (editingUploadModalDocumentField && editingUploadModalDocumentValue.trim()) {
+      setUploadModalAddedDocuments(prev => prev.map((doc, i) =>
+        i === editingUploadModalDocumentField.index 
           ? { 
               ...doc, 
-              documentName: inlineEditingUploadModalDocumentName.trim(), 
-              documentType: inlineEditingUploadModalDocumentType.trim(), 
-              assignee: inlineEditingUploadModalDocumentAssignee.trim() 
+              [editingUploadModalDocumentField.field === 'name' ? 'documentName' : 'documentType']: editingUploadModalDocumentValue.trim() 
             }
           : doc
       ));
-      setEditingUploadModalDocumentIndex(null);
-      setInlineEditingUploadModalDocumentName('');
-      setInlineEditingUploadModalDocumentType('');
-      setInlineEditingUploadModalDocumentAssignee('');
-      setShowInlineEditingUploadModalAssigneeDropdown(false);
+      setEditingUploadModalDocumentField(null);
+      setEditingUploadModalDocumentValue('');
     }
   };
 
-  // Function to cancel inline editing of an upload modal document
-  const handleCancelInlineEditUploadModalDocument = () => {
-    setEditingUploadModalDocumentIndex(null);
-    setInlineEditingUploadModalDocumentName('');
-    setInlineEditingUploadModalDocumentType('');
-    setInlineEditingUploadModalDocumentAssignee('');
-    setShowInlineEditingUploadModalAssigneeDropdown(false);
+  // Function to cancel inline editing of an upload modal document field
+  const handleCancelUploadModalDocumentField = () => {
+    setEditingUploadModalDocumentField(null);
+    setEditingUploadModalDocumentValue('');
   };
 
   // Handler for document upload modal file selection
@@ -3993,6 +3999,7 @@ const ContractsPage: React.FC = () => {
     }
 
     try {
+      // Handle contract document upload
       const { addDocument } = useDocumentStore.getState();
       const contract = contracts.find(c => c.id === uploadContractId);
       const contractName = contract?.title || `Contract #${uploadContractId}`;
@@ -4033,11 +4040,25 @@ const ContractsPage: React.FC = () => {
         }
       }
 
-      // Show success message
-      toast({
-        title: "Documents Created",
-        description: `${createdDocumentIds.length} document(s) have been successfully created and associated with contract #${uploadContractId}.`,
+      // Show individual document created notifications (same as contract creation)
+      createdDocumentIds.forEach((documentId, index) => {
+        const doc = uploadModalAddedDocuments[index];
+        if (doc) {
+          setTimeout(() => {
+            toast({
+              title: "Document Created Successfully",
+              description: `"${doc.documentName}" with Document ID #${documentId} has been created for Contract ID #${uploadContractId} - ${contractName}`,
+              duration: 30000,
+            });
+            
+            // Add notification for document creation
+            addDocumentCreatedNotification(documentId, doc.documentName, uploadContractId || '', contractName);
+          }, (index + 1) * 200); // 200ms delay between each document toast
+        }
       });
+
+      // Refresh documents to show the newly uploaded ones
+      refreshDocuments();
 
       // Close modal and reset all state
       setShowUploadModal(false);
@@ -5096,19 +5117,6 @@ const ContractsPage: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [collaborators, showPermissionsDropdown]);
 
-  // Click outside handler for upload modal inline editing assignee dropdown
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (showInlineEditingUploadModalAssigneeDropdown && !inlineEditingUploadModalAssigneeDropdownRef.current?.contains(event.target as Node)) {
-        setShowInlineEditingUploadModalAssigneeDropdown(false);
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showInlineEditingUploadModalAssigneeDropdown]);
 
   // Click outside handlers for contract details dropdowns
   useEffect(() => {
@@ -6270,10 +6278,11 @@ const ContractsPage: React.FC = () => {
                       type="button"
                       onClick={handleAddCollaborator}
                       disabled={!collaborators[0].name.trim() || collaborators[0].contractPermissions.length === 0 || !collaborators[0].email.trim()}
-                      className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                       style={{ fontFamily: 'Avenir, sans-serif' }}
                     >
-                                            Add Collaborator
+                      <TbUserPlus className="w-4 h-4 mr-2" />
+                      Add Collaborator
                     </button>
                     <button 
                       type="submit" 
@@ -7246,11 +7255,7 @@ const ContractsPage: React.FC = () => {
                       <button 
                         type="submit" 
                         disabled={!isFormValid()}
-                        className={`px-4 py-2 rounded-lg font-semibold transition-colors text-sm sm:ml-1 ${
-                          isFormValid() 
-                            ? 'bg-primary text-white hover:bg-primary-dark' 
-                            : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-                        }`}
+                        className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary-dark transition-colors text-sm sm:ml-1 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Create Contract
                       </button>
@@ -8277,7 +8282,7 @@ const ContractsPage: React.FC = () => {
                           }
                           
                           // Prepare confirmation data
-                          const confirmationDocuments = [];
+                          const confirmationDocuments: Array<{id: string, name: string, contractName: string, contractId: string}> = [];
                           
                           // Process newDocumentDocuments (documents added during document creation)
                           if (newDocumentDocuments.length > 0) {
@@ -8305,6 +8310,26 @@ const ContractsPage: React.FC = () => {
                             });
                           }
                           
+                          // Refresh documents to show the newly created ones
+                          refreshDocuments();
+
+                          // Show individual document created notifications (same as upload modal)
+                          finalDocumentIds.forEach((documentId, index) => {
+                            const doc = confirmationDocuments[index];
+                            if (doc) {
+                              setTimeout(() => {
+                                toast({
+                                  title: "Document Created Successfully",
+                                  description: `"${doc.name}" with Document ID #${documentId} has been created for Contract ID #${doc.contractId} - ${doc.contractName}`,
+                                  duration: 30000,
+                                });
+                                
+                                // Add notification for document creation
+                                addDocumentCreatedNotification(documentId, doc.name, doc.contractId, doc.contractName);
+                              }, (index + 1) * 200); // 200ms delay between each document toast
+                            }
+                          });
+
                           // Set confirmation data and navigate to confirmation step
                           setDocumentConfirmationData({
                             documents: confirmationDocuments
@@ -11630,25 +11655,35 @@ const ContractsPage: React.FC = () => {
                             <TbLibrary className="w-5 h-5 text-primary" />
                             <div className="flex-1 min-w-0">
                               {editingContractDetailsDocumentField?.docId === doc.id && editingContractDetailsDocumentField?.field === 'name' ? (
-                                <input
-                                  type="text"
-                                  value={editingContractDetailsDocumentValue}
-                                  onChange={(e) => setEditingContractDetailsDocumentValue(e.target.value)}
-                                  onBlur={handleSaveContractDetailsDocumentField}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') handleSaveContractDetailsDocumentField();
-                                    if (e.key === 'Escape') handleCancelContractDetailsDocumentField();
-                                  }}
-                                  className="inline-block text-xs font-semibold text-black dark:text-white bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary min-w-0 max-w-xs"
-                                  style={{ width: `${Math.max(editingContractDetailsDocumentValue.length * 8, 120)}px` }}
-                                  autoFocus
-                                />
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-gray-500 dark:text-gray-400 font-mono cursor-default select-none whitespace-nowrap">
+                                    ID #{doc.id} -
+                                  </span>
+                                  <input
+                                    type="text"
+                                    value={editingContractDetailsDocumentValue}
+                                    onChange={(e) => setEditingContractDetailsDocumentValue(e.target.value)}
+                                    onBlur={handleSaveContractDetailsDocumentField}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') handleSaveContractDetailsDocumentField();
+                                      if (e.key === 'Escape') handleCancelContractDetailsDocumentField();
+                                    }}
+                                    className="inline-block text-xs font-semibold text-black dark:text-white bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary min-w-0 max-w-xs"
+                                    style={{ width: `${Math.max(editingContractDetailsDocumentValue.length * 8, 120)}px` }}
+                                    autoFocus
+                                  />
+                                </div>
                               ) : (
-                                <div 
-                                  className="font-semibold text-xs text-black dark:text-white cursor-pointer hover:text-primary transition-colors inline-block min-w-0 truncate"
-                                  onClick={() => handleStartEditingContractDetailsDocumentField(doc.id, 'name')}
-                                >
-                                  {getDocumentDisplayName(doc)}
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-gray-500 dark:text-gray-400 font-mono cursor-default select-none whitespace-nowrap">
+                                    ID #{doc.id} -
+                                  </span>
+                                  <div 
+                                    className="font-semibold text-xs text-black dark:text-white cursor-pointer hover:text-primary transition-colors inline-block min-w-0 truncate"
+                                    onClick={() => handleStartEditingContractDetailsDocumentField(doc.id, 'name')}
+                                  >
+                                    {getDocumentDisplayName(doc)}
+                                  </div>
                                 </div>
                               )}
                               <div className="text-xs text-gray-500 cursor-default select-none">
@@ -11713,9 +11748,9 @@ const ContractsPage: React.FC = () => {
                                 deleteDocument(doc.id, doc.name);
                               }}
                             >
-                              <TbLibraryMinus className="h-4 w-4 transition-colors" />
+                              <TbTrash className="h-4 w-4 transition-colors" />
                               <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                                Remove
+                                Delete
                               </span>
                             </button>
                           </div>
@@ -11783,6 +11818,17 @@ const ContractsPage: React.FC = () => {
                                     className="absolute right-0 mt-[1px] w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 py-2 z-50"
                                     style={{ fontFamily: 'Avenir, sans-serif' }}
                                   >
+                                    <button 
+                                      className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        // Navigate to workflows page with task ID to open task details modal
+                                        router.push(`/workflows?taskId=${task.id}`);
+                                        setOpenMenuTask(null);
+                                      }}
+                                    >
+                                      View More Details
+                                    </button>
                                     <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700">Mark as Done</button>
                                     <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700">Edit Task</button>
                                     <button 
@@ -11976,7 +12022,12 @@ const ContractsPage: React.FC = () => {
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 upload-modal cursor-default select-none">
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 cursor-default select-none">
           <div className="flex justify-between items-center mb-4 cursor-default select-none">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white cursor-default select-none">Upload Documents</h2>
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800">
+                <TbLibraryPlus size={20} className="text-teal-500 dark:text-teal-400" />
+              </div>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white cursor-default select-none">Upload Documents</h2>
+            </div>
               <button
               className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
               onClick={() => { 
@@ -12229,146 +12280,68 @@ const ContractsPage: React.FC = () => {
                 <div className="flex flex-col gap-2">
                   {uploadModalAddedDocuments.map((doc, idx) => (
                     <div key={idx} className="bg-gray-100 dark:bg-gray-700 rounded-lg px-3 py-2 border border-gray-200 dark:border-gray-600">
-                      {editingUploadModalDocumentIndex === idx ? (
-                        // Inline editing mode
-                        <div className="space-y-3">
-                          <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Document Name <span className="text-red-500">*</span></label>
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 min-w-0">
+                          {editingUploadModalDocumentField?.index === idx && editingUploadModalDocumentField?.field === 'name' ? (
+                            <input
+                              type="text"
+                              value={editingUploadModalDocumentValue}
+                              onChange={(e) => setEditingUploadModalDocumentValue(e.target.value)}
+                              onBlur={handleSaveUploadModalDocumentField}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleSaveUploadModalDocumentField();
+                                if (e.key === 'Escape') handleCancelUploadModalDocumentField();
+                              }}
+                              className="inline-block text-xs font-semibold text-black dark:text-white bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary min-w-0 max-w-xs"
+                              style={{ width: `${Math.max(editingUploadModalDocumentValue.length * 8, 100)}px` }}
+                              autoFocus
+                            />
+                          ) : (
+                            <div 
+                              className="font-semibold text-xs text-black dark:text-white cursor-pointer hover:text-primary transition-colors inline-block min-w-0 truncate"
+                              onClick={() => handleStartEditingUploadModalDocumentField(idx, 'name')}
+                            >
+                              {doc.documentName}
+                            </div>
+                          )}
+                          <div className="text-xs text-gray-500 cursor-default select-none">
+                            {doc.files.length} file(s) &bull; 
+                            {editingUploadModalDocumentField?.index === idx && editingUploadModalDocumentField?.field === 'type' ? (
                               <input
                                 type="text"
-                                placeholder="Enter document name..."
-                                className="w-full h-[34px] px-3 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs transition-colors cursor-text focus:ring-2 focus:ring-primary focus:border-primary"
-                                value={inlineEditingUploadModalDocumentName}
-                                onChange={(e) => setInlineEditingUploadModalDocumentName(e.target.value)}
-                                style={{ fontFamily: 'Avenir, sans-serif' }}
+                                value={editingUploadModalDocumentValue}
+                                onChange={(e) => setEditingUploadModalDocumentValue(e.target.value)}
+                                onBlur={handleSaveUploadModalDocumentField}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleSaveUploadModalDocumentField();
+                                  if (e.key === 'Escape') handleCancelUploadModalDocumentField();
+                                }}
+                                className="inline-block text-xs text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary min-w-0 max-w-xs mx-1"
+                                style={{ width: `${Math.max(editingUploadModalDocumentValue.length * 6, 60)}px` }}
+                                autoFocus
                               />
-                            </div>
-                            <div>
-                              <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Document Type</label>
-                              <input
-                                type="text"
-                                placeholder="Enter document type..."
-                                className="w-full h-[34px] px-3 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs transition-colors cursor-text focus:ring-2 focus:ring-primary focus:border-primary"
-                                value={inlineEditingUploadModalDocumentType}
-                                onChange={(e) => setInlineEditingUploadModalDocumentType(e.target.value)}
-                                style={{ fontFamily: 'Avenir, sans-serif' }}
-                              />
-                            </div>
+                            ) : (
+                              <span 
+                                className="cursor-pointer hover:text-primary transition-colors"
+                                onClick={() => handleStartEditingUploadModalDocumentField(idx, 'type')}
+                              >
+                                {doc.documentType}
+                              </span>
+                            )} &bull; {doc.assignee}
                           </div>
-                          <div>
-                            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Assignee <span className="text-red-500">*</span></label>
-                            <div className="relative" ref={inlineEditingUploadModalAssigneeDropdownRef}>
-                              <input
-                                type="text"
-                                className="w-full h-[34px] px-3 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs transition-colors cursor-text focus:ring-2 focus:ring-primary focus:border-primary pr-10"
-                                placeholder="Choose an assignee..."
-                                value={inlineEditingUploadModalDocumentAssignee}
-                                onChange={(e) => setInlineEditingUploadModalDocumentAssignee(e.target.value)}
-                                onFocus={() => setShowInlineEditingUploadModalAssigneeDropdown(true)}
-                                style={{ fontFamily: 'Avenir, sans-serif' }}
-                                autoComplete="off"
-                              />
-                              <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                              
-                              {showInlineEditingUploadModalAssigneeDropdown && (
-                                <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:hidden" 
-                                     style={{ 
-                                       fontFamily: 'Avenir, sans-serif'
-                                     }}>
-                                  {allAssignees.length > 0 ? (
-                                    <>
-                                      {allAssignees.map((assignee: string) => (
-                                        <div
-                                          key={assignee}
-                                          className={`px-4 py-2 text-xs cursor-pointer ${inlineEditingUploadModalDocumentAssignee === assignee ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'} select-none`}
-                                          onClick={() => {
-                                            setInlineEditingUploadModalDocumentAssignee(assignee);
-                                            setShowInlineEditingUploadModalAssigneeDropdown(false);
-                                          }}
-                                        >
-                                          {assignee}
-                                        </div>
-                                      ))}
-                                      <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
-                                      <div
-                                        className="px-4 py-2 text-xs cursor-pointer text-primary hover:bg-primary/10 select-none flex items-center gap-2"
-                                        onClick={() => {
-                                          // TODO: Add logic to create new assignee
-                                          setShowInlineEditingUploadModalAssigneeDropdown(false);
-                                        }}
-                                      >
-                                        <FaPlus className="text-xs" />
-                                        Add new assignee
-                                      </div>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <div className="px-4 py-2 text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">No assignees found</div>
-                                      <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
-                                      <div
-                                        className="px-4 py-2 text-xs cursor-pointer text-primary hover:bg-primary/10 select-none flex items-center gap-2"
-                                        onClick={() => {
-                                          // TODO: Add logic to create new assignee
-                                          setShowInlineEditingUploadModalAssigneeDropdown(false);
-                                        }}
-                                      >
-                                        <FaPlus className="text-xs" />
-                                        Add new assignee
-                                      </div>
-                                    </>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                                                     <div className="flex justify-end">
-                             <button
-                               type="button"
-                               onClick={() => handleSaveInlineEditUploadModalDocument(idx)}
-                               disabled={!inlineEditingUploadModalDocumentName.trim() || !inlineEditingUploadModalDocumentAssignee.trim()}
-                               className="px-2.5 py-1 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                               style={{ fontFamily: 'Avenir, sans-serif' }}
-                             >
-                               Save
-                             </button>
-                             <button
-                               type="button"
-                               onClick={handleCancelInlineEditUploadModalDocument}
-                               className="px-2.5 py-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ml-1"
-                               style={{ fontFamily: 'Avenir, sans-serif' }}
-                             >
-                               Cancel
-                             </button>
-                           </div>
                         </div>
-                      ) : (
-                        // Display mode
-                        <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-xs text-black dark:text-white truncate">
-                          {doc.documentName}
-                        </div>
-                        <div className="text-xs text-gray-500 cursor-default select-none">
-                          {doc.files.length} file(s) &bull; {doc.documentType} &bull; {doc.assignee}
+                        <div className="flex items-center gap-1">
+                          <button 
+                            className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1 relative group"
+                            onClick={() => handleRemoveUploadModalAddedDocument(idx)}
+                          >
+                            <TbLibraryMinus className="h-4 w-4" />
+                            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                              Remove
+                            </span>
+                          </button>
                         </div>
                       </div>
-                          <div className="flex items-center gap-1">
-                            <button 
-                              className="text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors p-1"
-                              onClick={() => handleStartInlineEditUploadModalDocument(idx)}
-                            >
-                              <HiOutlinePencil className="h-4 w-4" />
-                            </button>
-                      <button 
-                        className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1"
-                        onClick={() => handleRemoveUploadModalAddedDocument(idx)}
-                      >
-                        <TbTrash className="h-4 w-4" />
-                      </button>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -12406,9 +12379,10 @@ const ContractsPage: React.FC = () => {
                   type="button"
                   onClick={handleAddUploadModalDocument}
                   disabled={!uploadModalDocumentName.trim() || !uploadModalAssignee.trim() || uploadModalFiles.length === 0}
-                  className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                   style={{ fontFamily: 'Avenir, sans-serif' }}
                 >
+                  <TbSquarePlus className="w-4 h-4 mr-2" />
                   Add Document
                 </button>
                 <button

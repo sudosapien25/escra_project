@@ -3,12 +3,13 @@ import React, { useRef, useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { mockContracts } from '@/data/mockContracts';
 import { Task } from '@/types/task';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 // Icons
 import { HiOutlineViewBoards, HiOutlinePencil } from 'react-icons/hi';
 import { CgPlayPauseR, CgPlayStopR } from 'react-icons/cg';
 import { BsPerson } from 'react-icons/bs';
-import { LuCalendarClock, LuSendHorizontal, LuCalendarFold, LuTable2, LuListTodo, LuListPlus } from 'react-icons/lu';
+import { LuCalendarClock, LuSendHorizontal, LuCalendarFold, LuListTodo, LuListPlus } from 'react-icons/lu';
 import { FaPlus, FaCheckCircle, FaCheck } from 'react-icons/fa';
 import { FaRetweet } from 'react-icons/fa6';
 import { PiListMagnifyingGlassBold, PiListPlusBold, PiDotsThreeOutline, PiCaretUpDown } from 'react-icons/pi';
@@ -16,9 +17,9 @@ import { FaRegSquareCheck } from 'react-icons/fa6';
 import { BiDotsHorizontal, BiCommentAdd } from 'react-icons/bi';
 import { MdCancelPresentation, MdOutlineLibraryAddCheck } from 'react-icons/md';
 import { MdOutlineLightMode, MdOutlineDarkMode } from 'react-icons/md';
-import { RiUserSearchLine, RiKanbanView2 } from 'react-icons/ri';
+import { RiUserSearchLine } from 'react-icons/ri';
 import { HiOutlineDocumentSearch } from 'react-icons/hi';
-import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbLibraryPlus, TbEdit, TbStatusChange, TbHistory, TbCategoryPlus, TbDragDrop, TbPencil, TbSubtask, TbSearch, TbFileSearch, TbDownload, TbCalendarClock, TbCancel, TbList, TbListDetails, TbListSearch, TbUpload, TbLibrary, TbLibraryMinus, TbChevronDown, TbMessage2Plus, TbTrash, TbChevronsLeft, TbChevronsRight, TbUserSearch, TbLayoutGrid, TbCategory2, TbEye, TbPlus, TbSquareCheck, TbSquarePlus } from 'react-icons/tb';
+import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbLibraryPlus, TbEdit, TbStatusChange, TbHistory, TbCategoryPlus, TbDragDrop, TbPencil, TbSubtask, TbSearch, TbFileSearch, TbDownload, TbCalendarClock, TbCancel, TbList, TbListDetails, TbListSearch, TbUpload, TbLibrary, TbLibraryMinus, TbChevronDown, TbMessage2Plus, TbTrash, TbChevronsLeft, TbChevronsRight, TbUserSearch, TbLayoutGrid, TbCategory2, TbEye, TbPlus, TbSquareCheck, TbSquarePlus, TbColumns3, TbTable, TbCodeVariablePlus, TbRowInsertTop, TbFolderUp, TbFolderPlus } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
 
@@ -74,7 +75,9 @@ type StatusOption = TaskStatus | 'All';
 
 export default function WorkflowsPage() {
   const { toast } = useToast();
-  const { addTaskCreatedNotification, addTaskDeletedNotification } = useNotifications();
+  const { addTaskCreatedNotification, addTaskDeletedNotification, addDocumentDeletedNotification, addTaskDocumentDeletedNotification, addTaskDocumentAddedNotification } = useNotifications();
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   // Test function to generate multiple toast notifications
   const generateTestToasts = () => {
@@ -146,6 +149,7 @@ export default function WorkflowsPage() {
   const [showNewTaskModal, setShowNewTaskModal] = React.useState(false);
   const [showUploadModal, setShowUploadModal] = React.useState(false);
   const [uploadTaskId, setUploadTaskId] = React.useState<string | null>(null);
+  const [uploadModalOpenedFromTaskDetails, setUploadModalOpenedFromTaskDetails] = React.useState(false);
   const [uploadModalFiles, setUploadModalFiles] = React.useState<File[]>([]);
   const [taskCounts, setTaskCounts] = useState({
     total: 0,
@@ -188,16 +192,21 @@ export default function WorkflowsPage() {
     documentName: string;
   }>>([]);
   
-  // State for inline editing of upload modal documents
-  const [editingUploadModalDocumentIndex, setEditingUploadModalDocumentIndex] = useState<number | null>(null);
-  const [inlineEditingUploadModalDocumentName, setInlineEditingUploadModalDocumentName] = useState('');
+  // State for inline editing of upload modal documents - matching Create New Task pattern
+  const [editingUploadModalDocumentField, setEditingUploadModalDocumentField] = useState<{index: number, field: 'name'} | null>(null);
+  const [editingUploadModalDocumentValue, setEditingUploadModalDocumentValue] = useState('');
   
   // Add state for task files
   const [taskFiles, setTaskFiles] = useState<Record<string, any>>({});
   
-  // Add state for document name editing in task details modal
+  // Add state for document name editing in task details modal - matching new pattern
   const [editingDocumentName, setEditingDocumentName] = useState<string | null>(null);
+  const [editingDocumentValue, setEditingDocumentValue] = useState<string>('');
   const [customDocumentNames, setCustomDocumentNames] = useState<Record<string, string>>({});
+  
+  // Add state for subtask name editing in task details modal - matching new pattern
+  const [editingSubtaskName, setEditingSubtaskName] = useState<string | null>(null);
+  const [editingSubtaskValue, setEditingSubtaskValue] = useState<string>('');
   
   // Add state for new subtask modal
   const [showNewSubtaskModal, setShowNewSubtaskModal] = useState(false);
@@ -286,9 +295,9 @@ export default function WorkflowsPage() {
   } | null>(null);
   const [taskCarouselPage, setTaskCarouselPage] = useState(0);
   
-  // Inline editing state for uploaded files
-  const [editingTaskFileIndex, setEditingTaskFileIndex] = useState<number | null>(null);
-  const [inlineEditingTaskFileName, setInlineEditingTaskFileName] = useState('');
+  // Inline editing state for uploaded files - matching Step 4 contracts pattern
+  const [editingTaskFileField, setEditingTaskFileField] = useState<{index: number, field: 'name'} | null>(null);
+  const [editingTaskFileValue, setEditingTaskFileValue] = useState('');
   
   // Inline editing state for subtasks
   const [editingSubtaskIndex, setEditingSubtaskIndex] = useState<number | null>(null);
@@ -319,6 +328,19 @@ export default function WorkflowsPage() {
     addTask,
     deleteTask
   } = useTaskStore();
+
+  // Handle URL parameter to open specific task modal
+  useEffect(() => {
+    if (searchParams) {
+      const taskId = searchParams.get('taskId');
+      if (taskId && tasks.length > 0) {
+        const task = tasks.find(t => t.id === taskId);
+        if (task) {
+          setSelectedTask(task);
+        }
+      }
+    }
+  }, [searchParams, tasks, setSelectedTask]);
 
   // Add style element for dark mode autofill fix
   React.useEffect(() => {
@@ -813,28 +835,30 @@ export default function WorkflowsPage() {
     setUploadModalAddedDocuments(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Function to start inline editing of an upload modal document
-  const handleStartInlineEditUploadModalDocument = (index: number) => {
+  // Function to start inline editing of an upload modal document - matching Create New Task pattern
+  const handleStartEditingUploadModalDocumentField = (index: number, field: 'name') => {
     const doc = uploadModalAddedDocuments[index];
-    setEditingUploadModalDocumentIndex(index);
-    setInlineEditingUploadModalDocumentName(doc.documentName);
+    setEditingUploadModalDocumentField({ index, field });
+    setEditingUploadModalDocumentValue(field === 'name' ? doc.documentName : '');
   };
 
   // Function to save inline edits of an upload modal document
-  const handleSaveInlineEditUploadModalDocument = (index: number) => {
-    if (inlineEditingUploadModalDocumentName.trim()) {
+  const handleSaveUploadModalDocumentField = () => {
+    if (editingUploadModalDocumentField && editingUploadModalDocumentValue.trim()) {
       setUploadModalAddedDocuments(prev => prev.map((doc, i) =>
-        i === index ? { ...doc, documentName: inlineEditingUploadModalDocumentName.trim() } : doc
+        i === editingUploadModalDocumentField.index 
+          ? { ...doc, documentName: editingUploadModalDocumentValue.trim() }
+          : doc
       ));
-      setEditingUploadModalDocumentIndex(null);
-      setInlineEditingUploadModalDocumentName('');
+      setEditingUploadModalDocumentField(null);
+      setEditingUploadModalDocumentValue('');
     }
   };
 
   // Function to cancel inline editing of an upload modal document
-  const handleCancelInlineEditUploadModalDocument = () => {
-    setEditingUploadModalDocumentIndex(null);
-    setInlineEditingUploadModalDocumentName('');
+  const handleCancelUploadModalDocumentField = () => {
+    setEditingUploadModalDocumentField(null);
+    setEditingUploadModalDocumentValue('');
   };
 
   // Document name editing functions for task details modal
@@ -844,17 +868,107 @@ export default function WorkflowsPage() {
 
   const handleStartEditDocumentName = (file: any) => {
     setEditingDocumentName(file.originalName);
+    setEditingDocumentValue(getDocumentDisplayName(file));
   };
 
-  const handleSaveDocumentName = (file: any, newName: string) => {
-    if (newName.trim()) {
-      setCustomDocumentNames(prev => ({ ...prev, [file.originalName]: newName.trim() }));
+  const handleSaveDocumentName = (file: any) => {
+    if (editingDocumentValue.trim()) {
+      setCustomDocumentNames(prev => ({ ...prev, [file.originalName]: editingDocumentValue.trim() }));
     }
     setEditingDocumentName(null);
+    setEditingDocumentValue('');
   };
 
   const handleCancelEditDocumentName = () => {
     setEditingDocumentName(null);
+    setEditingDocumentValue('');
+  };
+
+  // Function to delete a document from the task
+  const handleDeleteTaskDocument = (file: any, index: number) => {
+    if (selectedTask && taskFiles[selectedTask.id]) {
+      // Remove the document from the task files
+      const updatedFiles = taskFiles[selectedTask.id].files.filter((_: any, i: number) => i !== index);
+      
+      // Update the task files in state
+      setTaskFiles(prev => ({
+        ...prev,
+        [selectedTask.id]: {
+          ...prev[selectedTask.id],
+          files: updatedFiles
+        }
+      }));
+
+      // Update localStorage
+      const updatedTaskFiles = {
+        ...taskFiles,
+        [selectedTask.id]: {
+          ...taskFiles[selectedTask.id],
+          files: updatedFiles
+        }
+      };
+      localStorage.setItem('taskFiles', JSON.stringify(updatedTaskFiles));
+
+      // Clear editing state if this document was being edited
+      if (editingDocumentName === file.originalName) {
+        setEditingDocumentName(null);
+        setEditingDocumentValue('');
+      }
+
+      // Remove custom document name if it exists
+      setCustomDocumentNames(prev => {
+        const newNames = { ...prev };
+        delete newNames[file.originalName];
+        return newNames;
+      });
+
+      // Show success notification
+      toast({
+        title: "Document Deleted Successfully",
+        description: `"${getDocumentDisplayName(file)}" associated with Task #${selectedTask.taskNumber} - "${selectedTask.title}" for Contract ID #${selectedTask.contractId} - ${contracts.find(c => c.id === selectedTask.contractId)?.title || 'Unknown Contract'} has been removed and deleted`,
+        variant: "voided",
+        duration: 30000,
+      });
+
+      // Add notification to header dropdown
+      addTaskDocumentDeletedNotification(
+        getDocumentDisplayName(file), // Document name
+        selectedTask.taskNumber.toString(), // Task ID
+        selectedTask.title, // Task name
+        selectedTask.contractId, // Contract ID
+        contracts.find(c => c.id === selectedTask.contractId)?.title || 'Unknown Contract' // Contract name
+      );
+    }
+  };
+
+  // Subtask name editing functions for task details modal
+  const handleStartEditSubtaskName = (subtask: any) => {
+    setEditingSubtaskName(subtask.id);
+    setEditingSubtaskValue(subtask.title);
+  };
+
+  const handleSaveSubtaskName = (subtask: any) => {
+    if (editingSubtaskValue.trim() && selectedTask) {
+      // Update the subtask in the selected task
+      const updatedSubtasks = selectedTask.subtasks.map((st: any) => 
+        st.id === subtask.id 
+          ? { ...st, title: editingSubtaskValue.trim() }
+          : st
+      );
+      
+      // Update the task in the store
+      updateTask(selectedTask.code, { subtasks: updatedSubtasks });
+      
+      // Update the selected task in the modal
+      setSelectedTask({ ...selectedTask, subtasks: updatedSubtasks });
+    }
+    setEditingSubtaskName(null);
+    setEditingSubtaskValue('');
+  };
+
+  const handleCancelEditSubtaskName = () => {
+    setEditingSubtaskName(null);
+    setEditingSubtaskValue('');
   };
 
   // Handler for uploading documents to task
@@ -913,15 +1027,36 @@ export default function WorkflowsPage() {
     // Update state
     setTaskFiles(updatedTaskFiles);
 
+    // Show success notifications for each uploaded document
+    uploadModalAddedDocuments.forEach(doc => {
+      // Show toast notification
+      toast({
+        title: "Document Added Successfully",
+        description: `"${doc.documentName}" has been added to Task ID #${selectedTask.taskNumber} - "${selectedTask.title}" and associated with Contract ID #${selectedTask.contractId} - ${contracts.find(c => c.id === selectedTask.contractId)?.title || 'Unknown Contract'}`,
+        variant: "default",
+        duration: 30000,
+      });
+
+      // Add notification to header dropdown
+      addTaskDocumentAddedNotification(
+        doc.documentName, // Document name
+        selectedTask.taskNumber.toString(), // Task ID
+        selectedTask.title, // Task name
+        selectedTask.contractId, // Contract ID
+        contracts.find(c => c.id === selectedTask.contractId)?.title || 'Unknown Contract' // Contract name
+      );
+    });
+
     // Close modal and reset form
     setShowUploadModal(false);
+    setUploadModalOpenedFromTaskDetails(false);
     setUploadModalFiles([]);
     setUploadModalDocumentName('');
     setSelectedUploadSource(null);
     setUploadTaskId(null);
     setUploadModalAddedDocuments([]);
-    setEditingUploadModalDocumentIndex(null);
-    setInlineEditingUploadModalDocumentName('');
+    setEditingUploadModalDocumentField(null);
+    setEditingUploadModalDocumentValue('');
   };
 
   // Add debug logs for selectedTask and subtasks
@@ -1307,7 +1442,7 @@ export default function WorkflowsPage() {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as Node;
       const dropdown = subtaskMenuRef.current;
-      
+
       if (openSubtaskMenu && dropdown && !dropdown.contains(target)) {
         setOpenSubtaskMenu(null);
       }
@@ -1318,6 +1453,82 @@ export default function WorkflowsPage() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [openSubtaskMenu]);
+
+  // Add click-outside handler for task file field editing
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      
+      if (editingTaskFileField && !target.closest('input[type="text"]')) {
+        handleSaveTaskFileField();
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [editingTaskFileField]);
+
+  // Add click-outside handler for upload modal document field editing
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      
+      if (editingUploadModalDocumentField && !target.closest('input[type="text"]')) {
+        handleSaveUploadModalDocumentField();
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [editingUploadModalDocumentField]);
+
+  // Add click-outside handler for task details modal document name editing
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      
+      if (editingDocumentName && !target.closest('input[type="text"]')) {
+        // Find the file object to save the document name
+        if (selectedTask && taskFiles[selectedTask.id]) {
+          const file = taskFiles[selectedTask.id].files.find((f: any) => f.originalName === editingDocumentName);
+          if (file) {
+            handleSaveDocumentName(file);
+          }
+        }
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [editingDocumentName, selectedTask, taskFiles]);
+
+  // Add click-outside handler for task details modal subtask name editing
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      
+      if (editingSubtaskName && !target.closest('input[type="text"]')) {
+        // Find the subtask object to save the subtask name
+        if (selectedTask && selectedTask.subtasks) {
+          const subtask = selectedTask.subtasks.find((st: any) => st.id === editingSubtaskName);
+          if (subtask) {
+            handleSaveSubtaskName(subtask);
+          }
+        }
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [editingSubtaskName, selectedTask]);
 
   // Function to clean up all task-related data when deleting a task
   const cleanupTaskData = (taskId: string) => {
@@ -1354,8 +1565,8 @@ export default function WorkflowsPage() {
     setShowNewSubtaskAssigneeDropdown(false);
     setShowNewSubtaskStatusDropdown(false);
     setNewTaskDocumentName('');
-    setEditingTaskFileIndex(null);
-    setInlineEditingTaskFileName('');
+    setEditingTaskFileField(null);
+    setEditingTaskFileValue('');
     setEditingSubtaskIndex(null);
     setInlineEditingSubtaskTitle('');
     setInlineEditingSubtaskAssignee('');
@@ -1397,32 +1608,33 @@ export default function WorkflowsPage() {
     return { left, top };
   };
 
-  // Inline editing functions for uploaded files
-  const handleStartInlineEditTaskFile = (index: number) => {
+  // Inline editing functions for uploaded files - matching Step 4 contracts pattern
+  const handleStartEditingTaskFileField = (index: number, field: 'name') => {
     const file = newTaskUploadedFiles[index];
-    setEditingTaskFileIndex(index);
-    setInlineEditingTaskFileName(file.name.replace(/\.[^/.]+$/, "")); // Remove extension
+    setEditingTaskFileField({ index, field });
+    setEditingTaskFileValue(field === 'name' ? file.name.replace(/\.[^/.]+$/, "") : '');
   };
 
-  const handleSaveInlineEditTaskFile = (index: number) => {
-    if (inlineEditingTaskFileName.trim()) {
+  const handleSaveTaskFileField = () => {
+    if (editingTaskFileField && editingTaskFileValue.trim()) {
       const updatedFiles = [...newTaskUploadedFiles];
-      const originalFile = updatedFiles[index];
+      const originalFile = updatedFiles[editingTaskFileField.index];
       
       // Create a new File object with the updated name
-      const newFileName = `${inlineEditingTaskFileName.trim()}.${originalFile.name.split('.').pop()}`;
+      const newFileName = `${editingTaskFileValue.trim()}.${originalFile.name.split('.').pop()}`;
       const newFile = new File([originalFile], newFileName, { type: originalFile.type });
       
-      updatedFiles[index] = newFile;
+      updatedFiles[editingTaskFileField.index] = newFile;
       setNewTaskUploadedFiles(updatedFiles);
+      
+      setEditingTaskFileField(null);
+      setEditingTaskFileValue('');
     }
-    setEditingTaskFileIndex(null);
-    setInlineEditingTaskFileName('');
   };
 
-  const handleCancelInlineEditTaskFile = () => {
-    setEditingTaskFileIndex(null);
-    setInlineEditingTaskFileName('');
+  const handleCancelTaskFileField = () => {
+    setEditingTaskFileField(null);
+    setEditingTaskFileValue('');
   };
 
   // Inline editing functions for subtasks
@@ -1508,7 +1720,7 @@ export default function WorkflowsPage() {
             onClick={() => setShowNewTaskModal(true)}
             className="flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold w-full sm:w-auto"
           >
-            <TbCategoryPlus className="mr-2 text-[22px]" />
+            <TbCodeVariablePlus className="mr-2 text-[22px]" />
             New Task
           </button>
           <button 
@@ -1533,7 +1745,7 @@ export default function WorkflowsPage() {
               {newTaskModalStep !== 4 ? (
                 <div className="flex items-center gap-4">
                   <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800">
-                    <TbCategoryPlus size={20} className="text-teal-500 dark:text-teal-400" />
+                    <TbCodeVariablePlus size={20} className="text-teal-500 dark:text-teal-400" />
                   </div>
                   <div>
                     <h2 className="text-lg font-bold text-black dark:text-white leading-tight">Create New Task</h2>
@@ -2116,13 +2328,15 @@ export default function WorkflowsPage() {
 
                   {/* Subtasks List Section */}
                   <div className="mt-6">
-                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 cursor-default select-none">Added Subtasks</h4>
-                    <div className="space-y-2 cursor-default select-none">
+                    {newTaskSubtasks.length > 0 && (
+                      <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-3 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Added Subtasks ({newTaskSubtasks.length})</h4>
+                    )}
+                    <div className={`${newTaskSubtasks.length > 0 ? `grid grid-cols-2 gap-2 ${newTaskSubtasks.length > 4 ? 'max-h-72 overflow-y-auto [&::-webkit-scrollbar]:hidden' : ''}` : 'space-y-2'} cursor-default select-none`}>
                       {newTaskSubtasks.map((subtask, idx) => (
-                        <div key={subtask.id} className="bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-700 transition-colors">
+                        <div key={subtask.id} className="bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-700 transition-colors">
                           {editingSubtaskIndex === idx ? (
                             // Inline editing form
-                            <div className="p-4 space-y-4">
+                            <div className="space-y-4">
                               <div className="grid grid-cols-2 gap-4">
                                 <div>
                                   <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Task Name</label>
@@ -2260,7 +2474,7 @@ export default function WorkflowsPage() {
                             </div>
                           ) : (
                             // Display mode
-                            <div className="flex items-center gap-3 p-3">
+                            <div className="flex items-center gap-3">
                               <div className="flex-1 flex items-center gap-4">
                                 <span className="text-xs font-medium text-gray-900 dark:text-white">{subtask.title}</span>
                                 <span className="text-xs text-gray-500 dark:text-gray-400">{subtask.dueDate ? formatDatePretty(subtask.dueDate) : 'No due date'}</span>
@@ -2291,7 +2505,7 @@ export default function WorkflowsPage() {
                       ))}
                       {newTaskSubtasks.length === 0 && (
                         <div className="text-center py-8 text-gray-500 dark:text-gray-400 cursor-default select-none">
-                          <TbCategory2 size={26} className="mx-auto mb-2 text-primary" />
+                          <TbSubtask size={26} className="mx-auto mb-2 text-primary" />
                           <p className="text-sm" style={{ fontFamily: 'Avenir, sans-serif' }}>No subtasks yet</p>
                           <p className="text-xs" style={{ fontFamily: 'Avenir, sans-serif' }}>Add a subtask by filling in the details above and clicking the "Add Subtask" button</p>
                         </div>
@@ -2299,7 +2513,7 @@ export default function WorkflowsPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row justify-between mt-6 gap-2 sm:gap-0">
+                  <div className="flex flex-col sm:flex-row justify-between mt-8 gap-2 sm:gap-0">
                     <button 
                       onClick={() => setNewTaskModalStep(1)}
                       className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold" 
@@ -2331,7 +2545,7 @@ export default function WorkflowsPage() {
                         className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold flex items-center justify-center"
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       >
-                        <TbSquarePlus className="w-4 h-4 mr-2" />
+                        <TbRowInsertTop className="w-5 h-5 mr-2" />
                         Add Subtask
                       </button>
                       <button 
@@ -2461,70 +2675,52 @@ export default function WorkflowsPage() {
                   {newTaskUploadedFiles.length > 0 && (
                     <div className="mt-4">
                       <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-3 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Added Documents</h4>
-                      <div className="flex flex-col gap-2 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:hidden">
+                      <div className={`grid grid-cols-2 gap-2 ${newTaskUploadedFiles.length > 4 ? 'max-h-72 overflow-y-auto [&::-webkit-scrollbar]:hidden' : ''}`}>
                         {newTaskUploadedFiles.map((file, idx) => (
                           <div key={idx} className="bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-700 transition-colors">
-                            {editingTaskFileIndex === idx ? (
-                              // Inline editing form
-                              <div className="space-y-3">
-                                <div className="flex gap-2">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1 min-w-0">
+                                {editingTaskFileField?.index === idx && editingTaskFileField?.field === 'name' ? (
                                   <input
                                     type="text"
-                                    placeholder="Document name..."
-                                    className="w-1/3 h-[28px] px-2 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-xs text-gray-900 dark:text-white focus:ring-1 focus:ring-primary focus:border-primary"
-                                    value={inlineEditingTaskFileName}
-                                    onChange={(e) => setInlineEditingTaskFileName(e.target.value)}
-                                  />
-                                </div>
-                                <div className="flex justify-end">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleSaveInlineEditTaskFile(idx)}
-                                    disabled={!inlineEditingTaskFileName.trim()}
-                                    className="px-2.5 py-1 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                  >
-                                    Save
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={handleCancelInlineEditTaskFile}
-                                    className="px-2.5 py-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ml-1"
-                                  >
-                                    Cancel
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              // Display mode
-                              <div className="flex items-center justify-between">
-                                <div className="flex-1 min-w-0">
-                                  <div className="font-semibold text-xs text-black dark:text-white flex-1 min-w-0 truncate">
-                                    {file.name}
-                                  </div>
-                                  <div className="text-xs text-gray-500 cursor-default select-none">
-                                    {file.name.split('.').pop()?.toUpperCase() || 'Unknown'} &bull; {(file.size / 1024 / 1024).toFixed(2)} MB
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <button 
-                                    type="button"
-                                    onClick={() => handleStartInlineEditTaskFile(idx)}
-                                    className="text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors p-1"
-                                  >
-                                    <HiOutlinePencil className="h-4 w-4" />
-                                  </button>
-                                  <button 
-                                    className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setNewTaskUploadedFiles(prev => prev.filter((_, index) => index !== idx));
+                                    value={editingTaskFileValue}
+                                    onChange={(e) => setEditingTaskFileValue(e.target.value)}
+                                    onBlur={handleSaveTaskFileField}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') handleSaveTaskFileField();
+                                      if (e.key === 'Escape') handleCancelTaskFileField();
                                     }}
+                                    className="inline-block text-xs font-semibold text-black dark:text-white bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary min-w-0 max-w-xs"
+                                    style={{ width: `${Math.max(editingTaskFileValue.length * 8, 100)}px` }}
+                                    autoFocus
+                                  />
+                                ) : (
+                                  <div 
+                                    className="font-semibold text-xs text-black dark:text-white cursor-pointer hover:text-primary transition-colors inline-block min-w-0 truncate"
+                                    onClick={() => handleStartEditingTaskFileField(idx, 'name')}
                                   >
-                                    <TbTrash className="h-4 w-4" />
-                                  </button>
+                                    {file.name.replace(/\.[^/.]+$/, "")}
+                                  </div>
+                                )}
+                                <div className="text-xs text-gray-500 cursor-default select-none">
+                                  {file.name.split('.').pop()?.toUpperCase() || 'Unknown'} &bull; {(file.size / 1024 / 1024).toFixed(2)} MB
                                 </div>
                               </div>
-                            )}
+                              <div className="flex items-center gap-1">
+                                <button 
+                                  className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1 relative group"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setNewTaskUploadedFiles(prev => prev.filter((_, index) => index !== idx));
+                                  }}
+                                >
+                                  <TbLibraryMinus className="h-4 w-4" />
+                                  <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                    Remove
+                                  </span>
+                                </button>
+                              </div>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -2548,8 +2744,8 @@ export default function WorkflowsPage() {
                           console.log('Documents:', newTaskUploadedFiles);
                           
                           // Generate unique task ID and code
-                          const newTaskId = Date.now().toString();
                           const newTaskNumber = Math.max(...tasks.map(t => t.taskNumber), 0) + 1;
+                          const newTaskId = newTaskNumber.toString(); // Use task number as ID for consistency
                           const newTaskCode = `TSK-${String(newTaskNumber).padStart(3, '0')}`;
                           
                           // Parse contract ID from the contract string (format: "ID - Title")
@@ -3233,7 +3429,7 @@ export default function WorkflowsPage() {
                   }`}
                   onClick={() => setViewMode('kanban')}
                 >
-                  <RiKanbanView2 size={17} />
+                  <TbColumns3 size={17} />
                   <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                     Kanban
                   </span>
@@ -3246,7 +3442,7 @@ export default function WorkflowsPage() {
                   }`}
                   onClick={() => setViewMode('table')}
                 >
-                  <LuTable2 size={17} />
+                  <TbTable size={17} />
                   <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                     Table
                   </span>
@@ -3525,7 +3721,7 @@ export default function WorkflowsPage() {
                   }`}
                   onClick={() => setViewMode('kanban')}
                 >
-                  <RiKanbanView2 size={17} />
+                  <TbColumns3 size={17} />
                   <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                     Kanban
                   </span>
@@ -3538,7 +3734,7 @@ export default function WorkflowsPage() {
                   }`}
                   onClick={() => setViewMode('table')}
                 >
-                  <LuTable2 size={17} />
+                  <TbTable size={17} />
                   <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                     Table
                   </span>
@@ -3654,6 +3850,21 @@ export default function WorkflowsPage() {
                                           }}
                                         >
                                           Add Subtask
+                                        </button>
+                                        <button 
+                                          className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            // Set the task for the upload documents modal without opening task details
+                                            const fullTask = tasks.find(t => t.code === task.code);
+                                            setSelectedTask(fullTask || task);
+                                            setUploadModalOpenedFromTaskDetails(false); // Not opened from task details
+                                            setUploadTaskId(task.id);
+                                            setShowUploadModal(true);
+                                            setOpenMenuTask(null);
+                                          }}
+                                        >
+                                          Add Document
                                         </button>
                                         <button className="w-full text-left px-4 py-2 text-xs font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700">Edit</button>
                                         <button 
@@ -4004,7 +4215,7 @@ export default function WorkflowsPage() {
       )}
 
       {/* Task Details Modal */}
-      {selectedTask && !(showNewSubtaskModal && !newSubtaskModalOpenedFromTaskDetails) && !(showEditSubtaskModal && !editSubtaskModalOpenedFromTaskDetails) && (
+      {selectedTask && !(showNewSubtaskModal && !newSubtaskModalOpenedFromTaskDetails) && !(showEditSubtaskModal && !editSubtaskModalOpenedFromTaskDetails) && !(showUploadModal && !uploadModalOpenedFromTaskDetails) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 cursor-default select-none">
           <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden cursor-default select-none">
             {/* Sticky Header with Task ID and Close buttons */}
@@ -4038,8 +4249,12 @@ export default function WorkflowsPage() {
                       updateTask(selectedTask.code, { subtasks: sortedSubtasks });
                     }
                     
-                    // Close the modal
+                    // Close the modal and clean up URL parameter
                     setSelectedTask(null);
+                    // Remove taskId from URL to prevent modal from reopening on refresh
+                    if (searchParams?.get('taskId')) {
+                      router.push('/workflows');
+                    }
                   }}
                   aria-label="Close"
                 >
@@ -4293,11 +4508,33 @@ export default function WorkflowsPage() {
                           }}
                         >
                           <div className="flex-1">
-                            <div className={`font-semibold text-xs text-black dark:text-white flex-1 min-w-0 truncate ${
-                              subtask.completed || subtask.status === 'Done' ? 'line-through' : ''
-                            }`}>
-                              {subtask.title}
-                            </div>
+                            {editingSubtaskName === subtask.id ? (
+                              <input
+                                type="text"
+                                value={editingSubtaskValue}
+                                onChange={(e) => setEditingSubtaskValue(e.target.value)}
+                                onBlur={() => handleSaveSubtaskName(subtask)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleSaveSubtaskName(subtask);
+                                  if (e.key === 'Escape') handleCancelEditSubtaskName();
+                                }}
+                                className="inline-block text-xs font-semibold text-black dark:text-white bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary min-w-0 max-w-xs"
+                                style={{ width: `${Math.max(editingSubtaskValue.length * 8, 100)}px`, fontFamily: 'Avenir, sans-serif' }}
+                                autoFocus
+                              />
+                            ) : (
+                              <div 
+                                className={`font-semibold text-xs text-black dark:text-white flex-1 min-w-0 truncate cursor-pointer hover:text-primary transition-colors ${
+                                  subtask.completed || subtask.status === 'Done' ? 'line-through' : ''
+                                }`}
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Prevent opening edit modal
+                                  handleStartEditSubtaskName(subtask);
+                                }}
+                              >
+                                {subtask.title}
+                              </div>
+                            )}
                             <div className="text-xs text-gray-500 cursor-default select-none">
                               {subtask.assignee ? `${subtask.assignee} • ` : ''}{subtask.status} • {subtask.dueDate ? new Date(subtask.dueDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'No due date'}
                             </div>
@@ -4399,7 +4636,11 @@ export default function WorkflowsPage() {
                     <div className="flex items-center justify-between mb-4 cursor-default select-none">
                       <h3 className="text-sm font-semibold text-gray-900 dark:text-white cursor-default select-none">Documents</h3>
                       <button 
-                        onClick={() => { setShowUploadModal(true); setUploadTaskId(selectedTask?.id || null); }}
+                        onClick={() => { 
+                          setUploadModalOpenedFromTaskDetails(true);
+                          setShowUploadModal(true); 
+                          setUploadTaskId(selectedTask?.id || null); 
+                        }}
                         className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-primary text-gray-700 dark:text-white font-semibold text-xs hover:bg-gray-200 dark:hover:bg-primary-dark transition-colors cursor-pointer" style={{ fontFamily: 'Avenir, sans-serif' }}
                       >
                         <TbUpload className="text-base text-primary dark:text-white" /> Upload
@@ -4413,42 +4654,24 @@ export default function WorkflowsPage() {
                               <TbLibrary className="w-5 h-5 text-primary" />
                               <div className="flex-1 min-w-0">
                                 {editingDocumentName === file.originalName ? (
-                                  <div className="flex items-center gap-1">
-                                    <input
-                                      type="text"
-                                      value={getDocumentDisplayName(file)}
-                                      onChange={(e) => {
-                                        setCustomDocumentNames(prev => ({ ...prev, [file.originalName]: e.target.value }));
-                                      }}
-                                      onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                          handleSaveDocumentName(file, getDocumentDisplayName(file));
-                                        } else if (e.key === 'Escape') {
-                                          handleCancelEditDocumentName();
-                                        }
-                                      }}
-                                      onBlur={() => handleSaveDocumentName(file, getDocumentDisplayName(file))}
-                                      className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded bg-white dark:bg-gray-800 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                                      style={{ fontFamily: 'Avenir, sans-serif' }}
-                                      autoFocus
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={() => handleSaveDocumentName(file, getDocumentDisplayName(file))}
-                                      className="px-2.5 py-1 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary-dark transition-colors"
-                                    >
-                                      Save
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleCancelEditDocumentName()}
-                                      className="px-2.5 py-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                                    >
-                                      Cancel
-                                    </button>
-                                  </div>
+                                  <input
+                                    type="text"
+                                    value={editingDocumentValue}
+                                    onChange={(e) => setEditingDocumentValue(e.target.value)}
+                                    onBlur={() => handleSaveDocumentName(file)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') handleSaveDocumentName(file);
+                                      if (e.key === 'Escape') handleCancelEditDocumentName();
+                                    }}
+                                    className="inline-block text-xs font-semibold text-black dark:text-white bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary min-w-0 max-w-xs"
+                                    style={{ width: `${Math.max(editingDocumentValue.length * 8, 100)}px`, fontFamily: 'Avenir, sans-serif' }}
+                                    autoFocus
+                                  />
                                 ) : (
-                                  <div className="font-semibold text-xs text-black dark:text-white flex-1 min-w-0 truncate">
+                                  <div 
+                                    className="font-semibold text-xs text-black dark:text-white flex-1 min-w-0 truncate cursor-pointer hover:text-primary transition-colors"
+                                    onClick={() => handleStartEditDocumentName(file)}
+                                  >
                                     {getDocumentDisplayName(file)}
                                   </div>
                                 )}
@@ -4482,10 +4705,16 @@ export default function WorkflowsPage() {
                                   Download
                                 </span>
                               </button>
-                              <button className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group cursor-pointer">
-                                <TbLibraryMinus className="h-4 w-4 transition-colors" />
+                              <button 
+                                className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group cursor-pointer"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteTaskDocument(file, index);
+                                }}
+                              >
+                                <TbTrash className="h-4 w-4 transition-colors" />
                                 <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                                  Remove
+                                  Delete
                                 </span>
                               </button>
                             </div>
@@ -4680,10 +4909,15 @@ export default function WorkflowsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 cursor-default select-none">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Upload Documents</h2>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800">
+                  <TbFolderUp size={20} className="text-teal-500 dark:text-teal-400" />
+                </div>
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Upload Documents</h2>
+              </div>
               <button
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                onClick={() => { setShowUploadModal(false); setUploadModalFiles([]); }}
+                onClick={() => { setShowUploadModal(false); setUploadModalOpenedFromTaskDetails(false); setUploadModalFiles([]); }}
                 aria-label="Close"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -4846,75 +5080,46 @@ export default function WorkflowsPage() {
                   <div className="flex flex-col gap-2">
                     {uploadModalAddedDocuments.map((doc, idx) => (
                       <div key={idx} className="bg-gray-100 dark:bg-gray-700 rounded-lg px-3 py-2 border border-gray-200 dark:border-gray-700">
-                        {editingUploadModalDocumentIndex === idx ? (
-                          // Inline editing mode
-                          <div className="space-y-3">
-                            <div>
-                              <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Document Name <span className="text-red-500">*</span></label>
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            {editingUploadModalDocumentField?.index === idx && editingUploadModalDocumentField?.field === 'name' ? (
                               <input
                                 type="text"
-                                placeholder="Enter document name..."
-                                className="w-full h-[34px] px-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs transition-colors cursor-text focus:ring-2 focus:ring-primary focus:border-primary"
-                                value={inlineEditingUploadModalDocumentName}
-                                onChange={(e) => setInlineEditingUploadModalDocumentName(e.target.value)}
-                                style={{ fontFamily: 'Avenir, sans-serif' }}
+                                value={editingUploadModalDocumentValue}
+                                onChange={(e) => setEditingUploadModalDocumentValue(e.target.value)}
+                                onBlur={handleSaveUploadModalDocumentField}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleSaveUploadModalDocumentField();
+                                  if (e.key === 'Escape') handleCancelUploadModalDocumentField();
+                                }}
+                                className="inline-block text-xs font-semibold text-black dark:text-white bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary min-w-0 max-w-xs"
+                                style={{ width: `${Math.max(editingUploadModalDocumentValue.length * 8, 100)}px` }}
+                                autoFocus
                               />
-                            </div>
-                            <div className="flex justify-end">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  handleSaveInlineEditUploadModalDocument(idx);
-                                }}
-                                disabled={!inlineEditingUploadModalDocumentName.trim()}
-                                className="px-2.5 py-1 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                style={{ fontFamily: 'Avenir, sans-serif' }}
+                            ) : (
+                              <div 
+                                className="font-semibold text-xs text-black dark:text-white cursor-pointer hover:text-primary transition-colors inline-block min-w-0 truncate"
+                                onClick={() => handleStartEditingUploadModalDocumentField(idx, 'name')}
                               >
-                                Save
-                              </button>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  handleCancelInlineEditUploadModalDocument();
-                                }}
-                                className="px-2.5 py-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ml-1"
-                                style={{ fontFamily: 'Avenir, sans-serif' }}
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          // Display mode
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1 min-w-0">
-                              <div className="font-semibold text-xs text-black dark:text-white truncate">
                                 {doc.documentName}
                               </div>
-                              <div className="text-xs text-gray-500 cursor-default select-none">
-                                {doc.files.length} file(s)
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <button 
-                                className="text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors p-1"
-                                onClick={() => handleStartInlineEditUploadModalDocument(idx)}
-                              >
-                                <HiOutlinePencil className="h-4 w-4" />
-                              </button>
-                              <button 
-                                className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1"
-                                onClick={() => handleRemoveUploadModalAddedDocument(idx)}
-                              >
-                                <TbTrash className="h-4 w-4" />
-                              </button>
+                            )}
+                            <div className="text-xs text-gray-500 cursor-default select-none">
+                              {doc.files.length} file(s)
                             </div>
                           </div>
-                        )}
+                          <div className="flex items-center gap-1">
+                            <button 
+                              className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1 relative group"
+                              onClick={() => handleRemoveUploadModalAddedDocument(idx)}
+                            >
+                              <TbLibraryMinus className="h-4 w-4" />
+                              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                Remove
+                              </span>
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -4926,13 +5131,14 @@ export default function WorkflowsPage() {
                   type="button"
                   onClick={() => { 
                     setShowUploadModal(false); 
+                    setUploadModalOpenedFromTaskDetails(false);
                     setUploadModalFiles([]); 
                     setUploadModalDocumentName('');
                     setSelectedUploadSource(null);
                     setUploadTaskId(null);
                     setUploadModalAddedDocuments([]);
-                    setEditingUploadModalDocumentIndex(null);
-                    setInlineEditingUploadModalDocumentName('');
+                    setEditingUploadModalDocumentField(null);
+                    setEditingUploadModalDocumentValue('');
                   }}
                   className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
                   style={{ fontFamily: 'Avenir, sans-serif' }}
@@ -4944,9 +5150,10 @@ export default function WorkflowsPage() {
                     type="button"
                     onClick={handleAddUploadModalDocument}
                     disabled={!uploadModalDocumentName.trim() || uploadModalFiles.length === 0}
-                    className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                     style={{ fontFamily: 'Avenir, sans-serif' }}
                   >
+                    <TbFolderPlus className="w-4 h-4 mr-2" />
                     Add Document
                   </button>
                   <button
@@ -4969,7 +5176,12 @@ export default function WorkflowsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 cursor-default select-none">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Create New Subtask</h2>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800">
+                  <TbRowInsertTop size={20} className="text-teal-500 dark:text-teal-400" />
+                </div>
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Create New Subtask</h2>
+              </div>
               <button
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 onClick={() => { 
@@ -5186,7 +5398,7 @@ export default function WorkflowsPage() {
                    />
                  </div>
                </div>
-               <div className="flex gap-1 mt-6">
+               <div className="flex justify-between items-center mt-6">
                  <button
                    type="button"
                    onClick={() => { 
@@ -5199,7 +5411,7 @@ export default function WorkflowsPage() {
                      setNewSubtaskForm({ title: '', assignee: '', status: 'To Do' as TaskStatus, dueDate: '', description: '' }); 
                      setNewSubtaskFormErrors({}); 
                    }}
-                   className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
+                   className="px-5 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
                  >
                    Cancel
                  </button>
@@ -5248,10 +5460,9 @@ export default function WorkflowsPage() {
                      setNewSubtaskForm({ title: '', assignee: '', status: 'To Do' as TaskStatus, dueDate: '', description: '' });
                      setNewSubtaskFormErrors({});
                    }}
-                   className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold flex items-center justify-center"
+                   className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold flex items-center justify-center"
                  >
-                   <TbPlus className="w-4 h-4 mr-2" />
-                   Create Subtask
+                   Create
                  </button>
                </div>
              </form>
@@ -5478,7 +5689,7 @@ export default function WorkflowsPage() {
                                       />
                                     </div>
                                   </div>
-              <div className="flex gap-1 mt-6">
+              <div className="flex justify-between items-center mt-6">
                 <button
                   type="button"
                   onClick={() => {
@@ -5488,7 +5699,7 @@ export default function WorkflowsPage() {
                     setEditSubtaskForm({ title: '', assignee: '', status: 'To Do' as TaskStatus, dueDate: '', description: '' });
                     setEditSubtaskFormErrors({});
                   }}
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
+                  className="px-5 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
                 >
                   Cancel
                 </button>
@@ -5535,9 +5746,9 @@ export default function WorkflowsPage() {
                     setEditSubtaskForm({ title: '', assignee: '', status: 'To Do' as TaskStatus, dueDate: '', description: '' });
                     setEditSubtaskFormErrors({});
                   }}
-                  className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
                 >
-                  Save Changes
+                  Save
                                         </button>
                                     </div>
             </form>

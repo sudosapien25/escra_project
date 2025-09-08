@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { FaUser } from 'react-icons/fa';
-import { TbCameraCog, TbActivity, TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbBuildingCommunity, TbBallAmericanFootball, TbTool, TbWallet, TbLock, TbKey, TbApiApp, TbDevicesX, TbKeyOff, TbWalletOff, TbPlug, TbPlugOff, TbApiOff, TbWebhookOff, TbApiAppOff, TbForklift, TbWashDryFlat, TbUsers, TbUserOff } from 'react-icons/tb';
+import { TbCameraCog, TbActivity, TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbBuildingCommunity, TbBallAmericanFootball, TbTool, TbWallet, TbLock, TbKey, TbApiApp, TbDevicesX, TbKeyOff, TbWalletOff, TbPlug, TbPlugOff, TbApiOff, TbWebhookOff, TbApiAppOff, TbForklift, TbWashDryFlat, TbUsers, TbUserOff, TbBuildingOff, TbChevronDown, TbChevronUp, TbUserPlus, TbUserCog, TbMailShare, TbUpload } from 'react-icons/tb';
 import { HiChevronDown, HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight, HiOutlineKey, HiOutlineDuplicate, HiStatusOffline } from 'react-icons/hi';
 import { MdOutlineGeneratingTokens, MdWebhook, MdOutlineSportsFootball, MdOutlineMovieFilter, MdOutlineHealthAndSafety, MdCancelPresentation } from 'react-icons/md';
 import { HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
@@ -848,6 +848,32 @@ export default function AdminSettingsPage() {
   const [policyContent, setPolicyContent] = useState('');
   const [showOrganizations, setShowOrganizations] = useState(false);
   const [showCollaborators, setShowCollaborators] = useState(false);
+  const [expandedOrganization, setExpandedOrganization] = useState<string | null>(null);
+
+  // Mock organizations data
+  const organizationsData = [
+    {
+      id: 'personal',
+      name: 'Personal',
+      initials: 'ES',
+      description: 'Your personal organization.',
+      color: 'cyan'
+    },
+    {
+      id: 'company',
+      name: 'Acme Corp',
+      initials: 'AC',
+      description: 'Main company organization.',
+      color: 'blue'
+    },
+    {
+      id: 'client',
+      name: 'Client Services',
+      initials: 'CS',
+      description: 'Client-facing organization.',
+      color: 'green'
+    }
+  ];
   
   // User ID and wallet state
   const [userId, setUserId] = useState('1234567890');
@@ -3164,8 +3190,8 @@ export default function AdminSettingsPage() {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">1 organization configured</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Manage your organizations and memberships</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">{organizationsData.length} organizations configured</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Manage existing or add new organizations</p>
                     </div>
                   </div>
                   <button 
@@ -3198,230 +3224,195 @@ export default function AdminSettingsPage() {
               )}
               
               {showOrganizations && (
-                <div className="mt-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                  <div className="overflow-x-auto overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700">
-                    <table className="w-full">
-                      <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Organization</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Role</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created At</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                        <tr className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center mr-3">
-                                <span className="text-white font-semibold text-sm">P</span>
-                              </div>
-                              <div>
-                                <div className="text-sm font-semibold text-gray-900 dark:text-white">Personal</div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">Your personal organization.</div>
-                              </div>
+                <div className="mt-6 space-y-4">
+                  {organizationsData.map((org) => (
+                    <div key={org.id}>
+                      <div 
+                        className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        onClick={() => setExpandedOrganization(expandedOrganization === org.id ? null : org.id)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className={`h-10 w-10 rounded-lg flex items-center justify-center border-2 mr-3 ${
+                              org.color === 'cyan' ? 'bg-cyan-100 dark:bg-cyan-900/30 border-cyan-200 dark:border-cyan-800' :
+                              org.color === 'blue' ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800' :
+                              'bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-800'
+                            }`}>
+                              <span className={`font-semibold text-sm ${
+                                org.color === 'cyan' ? 'text-cyan-500 dark:text-cyan-400' :
+                                org.color === 'blue' ? 'text-blue-500 dark:text-blue-400' :
+                                'text-green-500 dark:text-green-400'
+                              }`}>{org.initials}</span>
                             </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white">Owner</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white">Jun 27, 2025</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                  <div className="bg-gray-50 dark:bg-gray-700 px-6 py-3 border-t border-gray-200 dark:border-gray-600">
-                    <div className="flex items-center justify-between">
-                      <div className="text-xs text-gray-700 dark:text-gray-300">
-                        Showing 1 organization.
-                      </div>
-                      <div className="flex items-center space-x-4">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-xs text-gray-700 dark:text-gray-300">Rows per page</span>
-                          <div className="relative">
-                            <select className="text-xs border border-gray-300 dark:border-gray-600 rounded px-2 py-1 pr-6 bg-white dark:bg-gray-800 text-gray-900 dark:text-white appearance-none">
-                              <option>10</option>
-                              <option>20</option>
-                            </select>
-                            <div className="absolute inset-y-0 right-1 flex items-center pointer-events-none">
-                              <HiChevronDown className="w-3 h-3 text-gray-400" />
+                            <div>
+                              <div className="flex items-center">
+                                <div className="text-sm font-semibold text-gray-900 dark:text-white">{org.name}</div>
+                                <div className="text-gray-700 dark:text-gray-300 ml-2">
+                                  {expandedOrganization === org.id ? <TbChevronUp className="h-4 w-4 transition-colors" /> : <TbChevronDown className="h-4 w-4 transition-colors" />}
+                                </div>
+                              </div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{org.description}</div>
                             </div>
                           </div>
+                          <div className="flex items-center space-x-1" onClick={(e) => e.stopPropagation()}>
+                            <button 
+                              className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group"
+                            >
+                              <TbBuildingOff className="h-4 w-4 transition-colors" />
+                              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                Remove
+                              </span>
+                            </button>
+                          </div>
                         </div>
-                        <div className="text-xs text-gray-700 dark:text-gray-300">
-                          Page 1 of 1
-                        </div>
-                        <div className="flex space-x-1">
-                          <button className="p-1 text-gray-400 cursor-not-allowed">
-                            <HiOutlineChevronDoubleLeft className="w-3 h-3" />
-                          </button>
-                          <button className="p-1 text-gray-400 cursor-not-allowed">
-                            <HiOutlineChevronDoubleLeft className="w-3 h-3 rotate-180" />
-                          </button>
-                          <button className="p-1 text-gray-400 cursor-not-allowed">
-                            <HiOutlineChevronDoubleRight className="w-3 h-3 rotate-180" />
-                          </button>
-                          <button className="p-1 text-gray-400 cursor-not-allowed">
-                            <HiOutlineChevronDoubleRight className="w-3 h-3" />
-                          </button>
-                        </div>
+                        
+                        {/* Expanded Collaborators Section */}
+                        {expandedOrganization === org.id && (
+                          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                            <div className="mb-6">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <h3 className="text-base font-bold text-black dark:text-white">Collaborators</h3>
+                                  <p className="text-gray-600 dark:text-gray-400 text-xs">Manage collaborators who have access to this organization</p>
+                                </div>
+                                <div className="flex flex-col sm:flex-row gap-2 sm:gap-0">
+                                  <button 
+                                    className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 dark:border-transparent bg-white dark:bg-primary text-gray-900 dark:text-white font-semibold text-sm hover:bg-gray-50 dark:hover:bg-primary-dark transition-colors cursor-pointer"
+                                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                                  >
+                                    <TbMailShare className="w-4 h-4 text-primary dark:text-white" /> Invite
+                                  </button>
+                                  <button 
+                                    className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 dark:border-transparent bg-white dark:bg-primary text-gray-900 dark:text-white font-semibold text-xs hover:bg-gray-50 dark:hover:bg-primary-dark transition-colors cursor-pointer sm:ml-1"
+                                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                                  >
+                                    <TbUserPlus className="text-base text-primary dark:text-white" /> Add
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                              <div className="overflow-x-auto overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700">
+                                <table className="w-full">
+                                  <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700">
+                                    <tr>
+                                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-2/5">Name</th>
+                                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5">Role</th>
+                                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5">Status</th>
+                                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5">Last Active</th>
+                                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5">Actions</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                    {collaboratorsData.map((collaborator, index) => (
+                                      <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                        <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-2/5">
+                                          <div className="flex items-center">
+                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center border-2 mr-3 ${
+                                              index === 0 ? 'bg-teal-50 dark:bg-teal-900/30 border-teal-200 dark:border-teal-800' :
+                                              index === 1 ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800' :
+                                              index === 2 ? 'bg-purple-100 dark:bg-purple-900/30 border-purple-200 dark:border-purple-800' :
+                                              index === 3 ? 'bg-orange-100 dark:bg-orange-900/30 border-orange-200 dark:border-orange-800' :
+                                              index === 4 ? 'bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-800' :
+                                              index === 5 ? 'bg-pink-100 dark:bg-pink-900/30 border-pink-200 dark:border-pink-800' :
+                                              index === 6 ? 'bg-indigo-100 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-800' :
+                                              'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-800'
+                                            }`}>
+                                              <span className={`font-semibold text-xs ${
+                                                index === 0 ? 'text-teal-500 dark:text-teal-400' :
+                                                index === 1 ? 'text-blue-500 dark:text-blue-400' :
+                                                index === 2 ? 'text-purple-500 dark:text-purple-400' :
+                                                index === 3 ? 'text-orange-500 dark:text-orange-400' :
+                                                index === 4 ? 'text-green-500 dark:text-green-400' :
+                                                index === 5 ? 'text-pink-500 dark:text-pink-400' :
+                                                index === 6 ? 'text-indigo-500 dark:text-indigo-400' :
+                                                'text-yellow-500 dark:text-yellow-400'
+                                              }`}>{collaborator.avatar}</span>
+                                            </div>
+                                            <div>
+                                              <div className="font-medium">{collaborator.name}</div>
+                                              <div className="text-gray-500 dark:text-gray-400">{collaborator.email}</div>
+                                            </div>
+                                          </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/5">
+                                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                            collaborator.role === 'Admin' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+                                            collaborator.role === 'Editor' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                                            collaborator.role === 'Viewer' ? 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' :
+                                            'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                          }`}>
+                                            {collaborator.role}
+                                          </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/5">
+                                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                            collaborator.status === 'Active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                                            'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                                          }`}>
+                                            {collaborator.status}
+                                          </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/5">
+                                          {collaborator.lastActive}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/5">
+                                          <div className="flex items-center space-x-1">
+                                            <button
+                                              className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group flex items-center justify-center"
+                                            >
+                                              <TbUserCog size={14} />
+                                              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                                Configure
+                                              </span>
+                                            </button>
+                                            <button
+                                              onClick={() => {
+                                                toast({
+                                                  title: "Collaborator removed",
+                                                  description: `${collaborator.name} has been removed from the organization`,
+                                                  duration: 5000,
+                                                  variant: "destructive",
+                                                });
+                                                
+                                                // Remove from local state (in a real app, this would call an API)
+                                                const newCollaboratorsData = collaboratorsData.filter((_, i) => i !== index);
+                                                // Note: In a real implementation, you'd update state here
+                                              }}
+                                              className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group flex items-center justify-center"
+                                            >
+                                              <TbUserOff size={14} />
+                                              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                                Remove
+                                              </span>
+                                            </button>
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                              <div className="bg-gray-50 dark:bg-gray-700 px-6 py-3 border-t border-gray-200 dark:border-gray-600">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <TbUsers size={16} className="text-gray-600 dark:text-gray-400" />
+                                    <div className="text-xs text-gray-700 dark:text-gray-300">
+                                      {collaboratorsData.length} collaborators have been configured for this organization
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
               )}
 
-              {/* Collaborators */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm mt-6">
-                <h2 className="text-lg font-bold mb-4 text-black dark:text-white">Collaborators</h2>
-                <p className="text-gray-600 dark:text-gray-400 text-xs mb-6">Manage collaborators who have access to this account</p>
-                {!showCollaborators && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center border-2 border-gray-200 dark:border-gray-600">
-                        <TbUsers size={20} className="text-gray-600 dark:text-gray-400" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">{collaboratorsData.length} collaborators configured</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Manage your team members and their access levels</p>
-                      </div>
-                    </div>
-                    <button 
-                      onClick={() => setShowCollaborators(!showCollaborators)}
-                      className="flex items-center gap-2 px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer" style={{ fontFamily: 'Avenir, sans-serif' }}
-                    >
-                      Manage Collaborators
-                    </button>
-                  </div>
-                )}
-                
-                {showCollaborators && (
-                  <div className="flex justify-end mb-4">
-                    <div className="flex flex-col gap-2">
-                      <button 
-                        onClick={() => setShowCollaborators(!showCollaborators)}
-                        className="flex items-center gap-2 px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
-                        style={{ fontFamily: 'Avenir, sans-serif' }}
-                      >
-                        Hide Collaborators
-                      </button>
-                      <button 
-                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
-                        style={{ fontFamily: 'Avenir, sans-serif' }}
-                      >
-                        Add Collaborator
-                      </button>
-                    </div>
-                  </div>
-                )}
-                
-                {showCollaborators && (
-                  <div className="mt-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                    <div className="overflow-x-auto overflow-y-auto pr-2 h-64 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-track]:dark:bg-gray-700 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar-corner]:bg-gray-50 [&::-webkit-scrollbar-corner]:dark:bg-gray-700">
-                      <table className="w-full">
-                        <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700">
-                          <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-2/5">Collaborator</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5">Role</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5">Status</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5">Last Active</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                          {collaboratorsData.map((collaborator, index) => (
-                            <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                              <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-2/5">
-                                <div className="flex items-center">
-                                  <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center mr-3">
-                                    <span className="text-white font-semibold text-xs">{collaborator.avatar}</span>
-                                  </div>
-                                  <div>
-                                    <div className="text-sm font-medium text-gray-900 dark:text-white">{collaborator.name}</div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">{collaborator.email}</div>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/5">{collaborator.role}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/5">
-                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                  collaborator.status === 'Active' 
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
-                                    : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                                }`}>
-                                  {collaborator.status}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/5">{collaborator.lastActive}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/5">
-                                <div className="pl-3">
-                                  <button
-                                    onClick={() => {
-                                      // Show toast notification
-                                      toast({
-                                        title: "Collaborator Removed Successfully",
-                                        description: `Collaborator "${collaborator.name}" has been removed successfully`,
-                                        duration: 5000,
-                                        variant: "destructive",
-                                      });
-                                      
-                                      // Remove from local state (in a real app, this would call an API)
-                                      const newCollaboratorsData = collaboratorsData.filter((_, i) => i !== index);
-                                      // Note: In a real implementation, you'd update state here
-                                    }}
-                                    className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group flex items-center justify-center"
-                                    title="Remove collaborator"
-                                  >
-                                    <TbUserOff className="text-sm sm:text-base transition-colors" />
-                                    <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                                      Remove
-                                    </span>
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                    <div className="bg-gray-50 dark:bg-gray-700 px-6 py-3 border-t border-gray-200 dark:border-gray-600">
-                      <div className="flex items-center justify-between">
-                        <div className="text-xs text-gray-700 dark:text-gray-300">
-                          Showing {collaboratorsData.length} collaborators.
-                        </div>
-                        <div className="flex items-center space-x-4">
-                          <div className="flex items-center space-x-2">
-                            <span className="text-xs text-gray-700 dark:text-gray-300">Rows per page</span>
-                            <div className="relative">
-                              <select className="text-xs border border-gray-300 dark:border-gray-600 rounded px-2 py-1 pr-6 bg-white dark:bg-gray-800 text-gray-900 dark:text-white appearance-none">
-                                <option>10</option>
-                                <option>20</option>
-                              </select>
-                              <div className="absolute inset-y-0 right-1 flex items-center pointer-events-none">
-                                <HiChevronDown className="w-3 h-3 text-gray-400" />
-                              </div>
-                            </div>
-                          </div>
-                          <div className="text-xs text-gray-700 dark:text-gray-300">
-                            Page 1 of 1
-                          </div>
-                          <div className="flex space-x-1">
-                            <button className="p-1 text-gray-400 cursor-not-allowed">
-                              <HiOutlineChevronDoubleLeft className="w-3 h-3" />
-                            </button>
-                            <button className="p-1 text-gray-400 cursor-not-allowed">
-                              <HiOutlineChevronDoubleLeft className="w-3 h-3 rotate-180" />
-                            </button>
-                            <button className="p-1 text-gray-400 cursor-not-allowed">
-                              <HiOutlineChevronDoubleRight className="w-3 h-3 rotate-180" />
-                            </button>
-                            <button className="p-1 text-gray-400 cursor-not-allowed">
-                              <HiOutlineChevronDoubleRight className="w-3 h-3" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
             </div>
           </>
           )}
