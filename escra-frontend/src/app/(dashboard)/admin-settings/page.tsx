@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { FaUser } from 'react-icons/fa';
-import { TbCameraCog, TbActivity, TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbBuildingCommunity, TbBallAmericanFootball, TbTool, TbWallet, TbLock, TbKey, TbApiApp, TbDevicesX, TbKeyOff, TbWalletOff, TbPlug, TbPlugOff, TbApiOff, TbWebhookOff, TbApiAppOff, TbForklift, TbWashDryFlat, TbUsers, TbUserOff, TbBuildingOff, TbChevronDown, TbChevronUp, TbUserPlus, TbUserCog, TbMailShare, TbUpload } from 'react-icons/tb';
+import { FaUser, FaCheck } from 'react-icons/fa';
+import { TbCameraCog, TbActivity, TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbBuildingCommunity, TbBallAmericanFootball, TbTool, TbWallet, TbLock, TbKey, TbApiApp, TbDevicesX, TbKeyOff, TbWalletOff, TbPlug, TbPlugOff, TbApiOff, TbWebhookOff, TbApiAppOff, TbForklift, TbWashDryFlat, TbUsers, TbUserOff, TbBuildingOff, TbBuildingCog, TbChevronDown, TbChevronUp, TbUserPlus, TbUserCog, TbMailShare, TbUpload, TbBarrierBlock, TbBriefcase, TbStethoscope, TbCoins, TbScale, TbTrophy, TbDotsVertical } from 'react-icons/tb';
 import { HiChevronDown, HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight, HiOutlineKey, HiOutlineDuplicate, HiStatusOffline } from 'react-icons/hi';
 import { MdOutlineGeneratingTokens, MdWebhook, MdOutlineSportsFootball, MdOutlineMovieFilter, MdOutlineHealthAndSafety, MdCancelPresentation } from 'react-icons/md';
 import { HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
 import { PiEjectBold, PiPowerBold, PiLockKeyBold, PiMinusSquareBold } from 'react-icons/pi';
-import { LuConstruction, LuBriefcaseBusiness } from 'react-icons/lu';
+import { LuConstruction, LuBriefcaseBusiness, LuHardHat } from 'react-icons/lu';
 import { GrMoney, GrUserWorker } from 'react-icons/gr';
 import { VscLaw } from 'react-icons/vsc';
 import { LiaToolsSolid } from 'react-icons/lia';
@@ -22,7 +22,7 @@ import { Toaster } from '@/components/ui/toaster';
 
 const TABS = [
   { key: 'profile', label: 'Profile' },
-  { key: 'company', label: 'Company' },
+  { key: 'company', label: 'Organization' },
   { key: 'policies', label: 'Policies' },
   { key: 'security', label: 'Security' },
   { key: 'notifications', label: 'Notifications' },
@@ -61,21 +61,35 @@ const COMPANY_TYPES = [
   { value: 'other', label: 'Other' }
 ];
 
-const INDUSTRIES: IndustryOption[] = [
-      { value: 'real_estate', label: 'Real Estate', icon: TbBuildingCommunity },
-      { value: 'athletics', label: 'Athletics', icon: TbBallAmericanFootball },
-  { value: 'construction', label: 'Construction', icon: LuConstruction },
-  { value: 'entertainment', label: 'Entertainment', icon: MdOutlineMovieFilter },
-  { value: 'finance', label: 'Finance', icon: GrMoney },
-  { value: 'healthcare', label: 'Healthcare', icon: MdOutlineHealthAndSafety },
-  { value: 'labor', label: 'Labor', icon: GrUserWorker },
-  { value: 'legal', label: 'Legal', icon: VscLaw },
-      { value: 'manufacturing', label: 'Manufacturing', icon: TbForklift },
-  { value: 'retail', label: 'Retail', icon: TbShoppingBagEdit },
-  { value: 'supply_chain', label: 'Logistics', icon: TbWorld },
-  { value: 'technology', label: 'Technology', icon: HiOutlineChip },
-  { value: 'other', label: 'Other', icon: LuBriefcaseBusiness }
+const INDUSTRIES = [
+  'Real Estate',
+  'Logistics',
+  'Construction',
+  'Corporate',
+  'Labor',
+  'Healthcare',
+  'Finance',
+  'Entertainment',
+  'Manufacturing',
+  'Legal',
+  'Athletics',
+  'Technology'
 ];
+
+const INDUSTRY_ICONS = {
+  'Real Estate': TbBuildingCommunity,
+  'Logistics': TbWorld,
+  'Construction': TbBarrierBlock,
+  'Corporate': TbBriefcase,
+  'Labor': LuHardHat,
+  'Healthcare': TbStethoscope,
+  'Finance': TbCoins,
+  'Entertainment': MdOutlineMovieFilter,
+  'Manufacturing': TbForklift,
+  'Legal': TbScale,
+  'Athletics': TbTrophy,
+  'Technology': HiOutlineChip
+};
 
 const US_STATES = [
   { value: 'AL', label: 'Alabama' },
@@ -806,7 +820,7 @@ const billingPlans = [
 ];
 
 export default function AdminSettingsPage() {
-  const { addPasskeyAddedNotification, addPasskeyRemovedNotification, addWalletAddedNotification, addWalletRemovedNotification, addApiTokenAddedNotification, addApiTokenRemovedNotification, addWebhookAddedNotification, addWebhookRemovedNotification, addPolicyAddedNotification, addPolicyRemovedNotification } = useNotifications();
+  const { addPasskeyAddedNotification, addPasskeyRemovedNotification, addWalletAddedNotification, addWalletRemovedNotification, addApiTokenAddedNotification, addApiTokenRemovedNotification, addWebhookAddedNotification, addWebhookRemovedNotification } = useNotifications();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('profile');
   const [avatarImage, setAvatarImage] = useState<string | null>(null);
@@ -814,6 +828,7 @@ export default function AdminSettingsPage() {
   const [showUserRoleDropdown, setShowUserRoleDropdown] = useState(false);
   const [defaultLanguage, setDefaultLanguage] = useState('English');
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
+  const [showOrganizationActionsDropdown, setShowOrganizationActionsDropdown] = useState<string | null>(null);
   const [includeSigningCertificate, setIncludeSigningCertificate] = useState('Yes');
   const [showSigningCertificateDropdown, setShowSigningCertificateDropdown] = useState(false);
   const [defaultSignatureSettings, setDefaultSignatureSettings] = useState<string[]>(['Draw', 'Type', 'Upload']);
@@ -849,6 +864,10 @@ export default function AdminSettingsPage() {
   const [showOrganizations, setShowOrganizations] = useState(false);
   const [showCollaborators, setShowCollaborators] = useState(false);
   const [expandedOrganization, setExpandedOrganization] = useState<string | null>(null);
+  const [selectedOrganizationFilter, setSelectedOrganizationFilter] = useState<string[]>(['all']);
+  const [showOrganizationDropdown, setShowOrganizationDropdown] = useState(false);
+  const [configuredOrganization, setConfiguredOrganization] = useState<string | null>(null);
+  const organizationDropdownRef = useRef<HTMLDivElement>(null);
 
   // Mock organizations data
   const organizationsData = [
@@ -908,6 +927,7 @@ export default function AdminSettingsPage() {
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [showIndustriesDropdown, setShowIndustriesDropdown] = useState(false);
   const [industrySearchTerm, setIndustrySearchTerm] = useState('');
+  const [organizationIndustrySearchTerm, setOrganizationIndustrySearchTerm] = useState('');
   
   // Billing state
   const [billingPeriod, setBillingPeriod] = useState('monthly');
@@ -1073,11 +1093,27 @@ export default function AdminSettingsPage() {
       // Close industries dropdown if click is outside
       if (industriesDropdownRef.current && !industriesDropdownRef.current.contains(target)) {
         setShowIndustriesDropdown(false);
+        setIndustrySearchTerm('');
       }
       
       // Close wallet provider dropdown if click is outside
       if (walletProviderDropdownRef.current && !walletProviderDropdownRef.current.contains(target)) {
         setShowWalletProviderDropdown(false);
+      }
+      
+      // Close organization dropdown if click is outside
+      if (organizationDropdownRef.current && !organizationDropdownRef.current.contains(target)) {
+        setShowOrganizationDropdown(false);
+      }
+      
+      // Close organization actions dropdown if click is outside
+      if (showOrganizationActionsDropdown) {
+        // Find the currently open dropdown using data attribute
+        const openDropdown = document.querySelector(`[data-org-dropdown="${showOrganizationActionsDropdown}"]`);
+        
+        if (openDropdown && !openDropdown.contains(target)) {
+          setShowOrganizationActionsDropdown(null);
+        }
       }
     }
 
@@ -1089,7 +1125,7 @@ export default function AdminSettingsPage() {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('click', handleClickOutside);
     };
-  }, []);
+  }, [showOrganizationActionsDropdown]);
 
   const handleSignatureSettingToggle = (setting: string) => {
     setDefaultSignatureSettings(prev => 
@@ -2100,7 +2136,7 @@ export default function AdminSettingsPage() {
                                 </tr>
                               </thead>
                       <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                        {connectedWallets.map((wallet) => (
+                        {connectedWallets.map((wallet, index) => (
                           <tr key={wallet.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                             <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white">
                               <div className="flex items-center gap-2">
@@ -2704,7 +2740,7 @@ export default function AdminSettingsPage() {
                               <div className="pl-3">
                                 <button
                                   onClick={() => {
-                                    addPolicyRemovedNotification(policy.name);
+                                    // Policy removed notification
                                     
                                     // Show toast notification
                                     toast({
@@ -2892,29 +2928,195 @@ export default function AdminSettingsPage() {
 
           {activeTab === 'company' && (
             <>
-              {/* Company Information */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm mb-6">
-                <h2 className="text-xl font-bold mb-4 text-black dark:text-white">Company Information</h2>
-                <p className="text-gray-600 dark:text-gray-400 text-xs mb-6">Update your company details and contact information.</p>
-                <form className="space-y-6">
+              {/* Organizations */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-lg font-bold text-black dark:text-white">Organizations</h2>
+                    <p className="text-gray-600 dark:text-gray-400 text-xs">Create & manage organizations</p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-0 items-center">
+                    <div className="relative" ref={organizationDropdownRef}>
+                      <button
+                        onClick={() => setShowOrganizationDropdown(!showOrganizationDropdown)}
+                        className="appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 text-sm font-semibold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary dark:focus:ring-0 dark:focus:border-gray-600 transition-colors cursor-pointer flex items-center justify-between w-full gap-3"
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                      >
+                        <span>
+                          {selectedOrganizationFilter.includes('all') 
+                            ? `All (${organizationsData.length})` 
+                            : selectedOrganizationFilter.length === 1
+                              ? organizationsData.find(org => org.id === selectedOrganizationFilter[0])?.name || 'All'
+                              : `${selectedOrganizationFilter.map(id => organizationsData.find(org => org.id === id)?.name).filter(Boolean).join(', ')} (${selectedOrganizationFilter.length})`
+                          }
+                        </span>
+                        <TbChevronDown className="w-4 h-4 text-gray-400" />
+                      </button>
+                      
+                      {showOrganizationDropdown && (
+                        <div className="absolute right-0 mt-1 w-52 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
+                          <button
+                            className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedOrganizationFilter.includes('all') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                            onClick={() => {
+                              setSelectedOrganizationFilter(['all']);
+                              setShowOrganizationDropdown(false);
+                            }}
+                          >
+                            <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                              {selectedOrganizationFilter.includes('all') && (
+                                <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                                  <FaCheck className="text-white" size={8} />
+                                </div>
+                              )}
+                            </div>
+                            All
+                          </button>
+                          {organizationsData.map((org) => (
+                            <button
+                              key={org.id}
+                              className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedOrganizationFilter.includes(org.id) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setSelectedOrganizationFilter(prev => {
+                                  const newFilters = prev.filter(f => f !== 'all');
+                                  if (prev.includes(org.id)) {
+                                    const updatedFilters = newFilters.filter(f => f !== org.id);
+                                    // If no organizations left, default to 'all'
+                                    return updatedFilters.length === 0 ? ['all'] : updatedFilters;
+                                  } else {
+                                    return [...newFilters, org.id];
+                                  }
+                                });
+                              }}
+                            >
+                              <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                                {selectedOrganizationFilter.includes(org.id) && (
+                                  <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                                    <FaCheck className="text-white" size={8} />
+                                  </div>
+                                )}
+                              </div>
+                              {org.name}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <button 
+                      className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold sm:ml-1"
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                    >
+                      Create
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="mt-6">
+                  {organizationsData
+                    .filter((org) => selectedOrganizationFilter.includes('all') || selectedOrganizationFilter.includes(org.id))
+                    .map((org, index, filteredOrgs) => (
+                    <div key={org.id}>
+                      {index > 0 && (
+                        <div className="mt-2 pt-4 border-t border-gray-200 dark:border-gray-700 mx-6"></div>
+                      )}
+                      <div 
+                        className={`bg-white dark:bg-gray-800 rounded-xl ${index > 0 ? 'pt-2 pb-6 px-6' : 'p-6'}`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className={`h-10 w-10 rounded-lg flex items-center justify-center border-2 mr-3 ${
+                              org.color === 'cyan' ? 'bg-cyan-100 dark:bg-cyan-900/30 border-cyan-200 dark:border-cyan-800' :
+                              org.color === 'blue' ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800' :
+                              'bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-800'
+                            }`}>
+                              <span className={`font-semibold text-sm ${
+                                org.color === 'cyan' ? 'text-cyan-500 dark:text-cyan-400' :
+                                org.color === 'blue' ? 'text-blue-500 dark:text-blue-400' :
+                                'text-green-500 dark:text-green-400'
+                              }`}>{org.initials}</span>
+                            </div>
+                            <div>
+                              <div className="flex items-center">
+                                <div className="text-sm font-semibold text-gray-900 dark:text-white">{org.name}</div>
+                              </div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{org.description}</div>
+                            </div>
+                          </div>
+                          <div className="relative" data-org-dropdown={org.id}>
+                            <button 
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setShowOrganizationActionsDropdown(showOrganizationActionsDropdown === org.id ? null : org.id);
+                              }}
+                              className="border border-gray-300 dark:border-gray-800 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-gray-600 relative group flex items-center justify-center"
+                            >
+                              <TbDotsVertical size={14} />
+                            </button>
+                            
+                            {showOrganizationActionsDropdown === org.id && (
+                              <div 
+                                className="absolute right-0 mt-1 w-32 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5"
+                              >
+                                <button
+                                  className="w-full px-3 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center"
+                                  onClick={() => {
+                                    setConfiguredOrganization(configuredOrganization === org.id ? null : org.id);
+                                    setShowOrganizationActionsDropdown(null);
+                                  }}
+                                >
+                                  <TbBuildingCog className="h-4 w-4 mr-2" />
+                                  Configure
+                                </button>
+                                <button
+                                  className="w-full px-3 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center"
+                                  onClick={() => {
+                                    setShowOrganizationActionsDropdown(null);
+                                    // Add remove functionality here
+                                  }}
+                                >
+                                  <TbBuildingOff className="h-4 w-4 mr-2" />
+                                  Remove
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Organization Configuration Section */}
+                        {configuredOrganization === org.id && (
+                          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                            <div className="flex justify-end mb-4">
+                              <button
+                                onClick={() => setConfiguredOrganization(null)}
+                                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-full -mr-1.5"
+                              >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </div>
+                            <div className="mb-6">
+                              <form className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                       <div>
-                    <label className="block text-xs font-medium text-black dark:text-white mb-1">Company Name</label>
+                                    <label className="block text-xs font-medium text-black dark:text-white mb-1">Organization Name</label>
                     <input 
                       type="text" 
                       value={companyName}
                       onChange={(e) => setCompanyName(e.target.value)}
                       className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs" 
-                      placeholder="Enter company name..." 
+                                      placeholder="Enter organization name..." 
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-black dark:text-white mb-1">Company Type</label>
+                                    <label className="block text-xs font-medium text-black dark:text-white mb-1">Organization Type</label>
                     <div className="relative w-full" ref={companyTypeDropdownRef}>
                       <input
                         type="text"
                         className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs pr-10 cursor-pointer caret-transparent"
-                        placeholder="Select company type..."
+                                        placeholder="Select organization type..."
                         value={COMPANY_TYPES.find(t => t.value === companyType)?.label || ''}
                         readOnly
                         onClick={() => setShowCompanyTypeDropdown(!showCompanyTypeDropdown)}
@@ -3085,194 +3287,118 @@ export default function AdminSettingsPage() {
                       placeholder="Enter website..." 
                     />
                   </div>
-                  <div>
-                    <label className="block text-xs font-medium text-black dark:text-white mb-1">Industries</label>
-                    <div className="relative w-full" ref={industriesDropdownRef}>
-                      <div 
-                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-colors text-xs min-h-[40px] flex flex-wrap items-center gap-2 cursor-pointer"
-                        onClick={() => setShowIndustriesDropdown(!showIndustriesDropdown)}
-                      >
-                        <div className="flex flex-wrap gap-2 flex-1">
-                          {selectedIndustries.map(industryValue => {
-                            const industry = INDUSTRIES.find(i => i.value === industryValue);
-                            if (!industry) return null;
-                            const IconComponent = industry.icon;
-                            return (
-                              <span 
-                                key={industryValue}
-                                className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded border border-primary text-xs font-medium"
-                              >
-                                <IconComponent className="w-3 h-3" />
-                                {industry.label}
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleIndustryToggle(industryValue);
-                                  }}
-                                  className="ml-1 hover:text-primary-dark"
-                                >
-                                  ×
-                                </button>
-                              </span>
-                            );
-                          })}
-                          {selectedIndustries.length === 0 && (
-                            <span className="text-gray-400">Select industries...</span>
-                          )}
-                        </div>
-                        <HiChevronDown className="pointer-events-none w-4 h-4 text-gray-400" />
-                      </div>
-                      {showIndustriesDropdown && (
-                        <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                          <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700">
-                            <input
-                              type="text"
-                              placeholder="Search industries..."
-                              value={industrySearchTerm}
-                              onChange={handleIndustrySearch}
-                              className="w-full px-2 py-1 text-xs border border-gray-200 dark:border-gray-600 rounded bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"
-                            />
-                          </div>
-                          {INDUSTRIES
-                            .filter(industry => 
-                              industry.label.toLowerCase().includes(industrySearchTerm.toLowerCase())
-                            )
-                            .map(industry => {
-                              const IconComponent = industry.icon;
-                              return (
-                                <button
-                                  type="button"
-                                  key={industry.value}
-                                  className={`w-full text-left px-3 py-2 text-xs font-medium flex items-center gap-2 ${selectedIndustries.includes(industry.value) ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-                                  onClick={() => handleIndustryToggle(industry.value)}
-                                >
-                                  <div className="w-4 h-4 border border-gray-300 rounded flex items-center justify-center">
-                                    {selectedIndustries.includes(industry.value) && (
-                                      <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
-                                        <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                        </svg>
+                                <div>
+                                  <label className="block text-xs font-medium text-black dark:text-white mb-1">Industries</label>
+                                  <div className="relative w-full" ref={industriesDropdownRef}>
+                                    <div className="relative">
+                                      <div 
+                                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-colors bg-white dark:bg-gray-900 min-h-[40px] flex flex-wrap items-center gap-2 cursor-text"
+                                        onClick={() => {
+                                          setShowIndustriesDropdown(!showIndustriesDropdown);
+                                          if (!showIndustriesDropdown) {
+                                            setIndustrySearchTerm('');
+                                          }
+                                        }}
+                                      >
+                                        {/* Selected industries display inside the field */}
+                                        {selectedIndustries.map(industry => {
+                                          const IconComponent = INDUSTRY_ICONS[industry as keyof typeof INDUSTRY_ICONS];
+                                          return (
+                                            <span 
+                                              key={industry}
+                                              className="inline-flex items-center gap-1 px-2 py-1 border border-gray-300 dark:border-primary bg-white dark:bg-primary/10 text-gray-900 dark:text-white rounded text-xs font-medium"
+                                            >
+                                              <IconComponent className="w-3 h-3 text-primary dark:text-white" />
+                                              {industry}
+                                              <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  setSelectedIndustries(prev => prev.filter(i => i !== industry));
+                                                }}
+                                                className="ml-1 hover:text-primary-dark dark:hover:text-gray-300"
+                                              >
+                                                ×
+                                              </button>
+                                            </span>
+                                          );
+                                        })}
+                                        {/* Input field for typing */}
+                                        <input
+                                          type="text"
+                                          className="flex-1 min-w-[120px] bg-transparent border-none outline-none text-xs font-medium text-black dark:text-white placeholder-gray-400"
+                                          placeholder={selectedIndustries.length === 0 ? "Search or select industries..." : ""}
+                                          value={industrySearchTerm}
+                                          onChange={(e) => {
+                                            setIndustrySearchTerm(e.target.value);
+                                            setShowIndustriesDropdown(true);
+                                          }}
+                                          onFocus={(e) => {
+                                            e.target.setSelectionRange(e.target.value.length, e.target.value.length);
+                                          }}
+                                        />
+                                      </div>
+                                    </div>
+                                    {showIndustriesDropdown && (
+                                      <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-hidden overflow-y-auto [&::-webkit-scrollbar]:hidden">
+                                        {INDUSTRIES
+                                          .filter(industry => 
+                                            industry.toLowerCase().includes(industrySearchTerm.toLowerCase())
+                                          )
+                                          .map(industry => {
+                                            const IconComponent = INDUSTRY_ICONS[industry as keyof typeof INDUSTRY_ICONS];
+                                            return (
+                                              <button
+                                                key={industry}
+                                                className={`w-full text-left px-3 py-2 text-xs font-medium flex items-center gap-2 ${selectedIndustries.includes(industry) ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                                                onClick={e => {
+                                                  e.preventDefault();
+                                                  setSelectedIndustries(prev => {
+                                                    if (prev.includes(industry)) {
+                                                      return prev.filter(i => i !== industry);
+                                                    } else {
+                                                      return [...prev, industry];
+                                                    }
+                                                  });
+                                                  setIndustrySearchTerm('');
+                                                }}
+                                              >
+                                                <div className="w-4 h-4 border border-gray-300 rounded flex items-center justify-center">
+                                                  {selectedIndustries.includes(industry) && (
+                                                    <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                                                      <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                      </svg>
+                                                    </div>
+                                                  )}
+                                                </div>
+                                                <IconComponent className="w-4 h-4" />
+                                                {industry}
+                                              </button>
+                                            );
+                                          })}
+                                        {INDUSTRIES.filter(industry => 
+                                          industry.toLowerCase().includes(industrySearchTerm.toLowerCase())
+                                        ).length === 0 && industrySearchTerm.length > 0 && (
+                                          <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
+                                            No industries found
+                                          </div>
+                                        )}
                                       </div>
                                     )}
                                   </div>
-                                  <IconComponent className="w-4 h-4" />
-                                  {industry.label}
-                                </button>
-                              );
-                            })}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex justify-end mt-4 pt-2">
-                    <button 
-                      type="submit" 
-                      className="flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold mb-0"
-                      style={{ fontFamily: 'Avenir, sans-serif' }}
-                    >
-                      Save
-                    </button>
-                  </div>
-                </form>
-              </div>
-
-              {/* Organizations */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm">
-                <h2 className="text-lg font-bold mb-4 text-black dark:text-white">Organizations</h2>
-                <p className="text-gray-600 dark:text-gray-400 text-xs mb-6">Create & manage organizations</p>
-              {!showOrganizations && (
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center border-2 border-gray-200 dark:border-gray-600">
-                      <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">{organizationsData.length} organizations configured</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Manage existing or add new organizations</p>
-                    </div>
-                  </div>
-                  <button 
-                    onClick={() => setShowOrganizations(!showOrganizations)}
-                    className="flex items-center gap-2 px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer" style={{ fontFamily: 'Avenir, sans-serif' }}
-                  >
-                    Manage Organizations
-                  </button>
-                </div>
-              )}
-              
-              {showOrganizations && (
-                <div className="flex justify-end mb-4">
-                  <div className="flex flex-col gap-2">
-                    <button 
-                      onClick={() => setShowOrganizations(!showOrganizations)}
-                      className="flex items-center gap-2 px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
-                      style={{ fontFamily: 'Avenir, sans-serif' }}
-                    >
-                      Hide Organizations
-                    </button>
-                    <button 
-                      className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
-                      style={{ fontFamily: 'Avenir, sans-serif' }}
-                    >
-                      Create Organization
-                    </button>
-                  </div>
-                </div>
-              )}
-              
-              {showOrganizations && (
-                <div className="mt-6 space-y-4">
-                  {organizationsData.map((org) => (
-                    <div key={org.id}>
-                      <div 
-                        className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                        onClick={() => setExpandedOrganization(expandedOrganization === org.id ? null : org.id)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <div className={`h-10 w-10 rounded-lg flex items-center justify-center border-2 mr-3 ${
-                              org.color === 'cyan' ? 'bg-cyan-100 dark:bg-cyan-900/30 border-cyan-200 dark:border-cyan-800' :
-                              org.color === 'blue' ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800' :
-                              'bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-800'
-                            }`}>
-                              <span className={`font-semibold text-sm ${
-                                org.color === 'cyan' ? 'text-cyan-500 dark:text-cyan-400' :
-                                org.color === 'blue' ? 'text-blue-500 dark:text-blue-400' :
-                                'text-green-500 dark:text-green-400'
-                              }`}>{org.initials}</span>
-                            </div>
-                            <div>
-                              <div className="flex items-center">
-                                <div className="text-sm font-semibold text-gray-900 dark:text-white">{org.name}</div>
-                                <div className="text-gray-700 dark:text-gray-300 ml-2">
-                                  {expandedOrganization === org.id ? <TbChevronUp className="h-4 w-4 transition-colors" /> : <TbChevronDown className="h-4 w-4 transition-colors" />}
                                 </div>
-                              </div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{org.description}</div>
+                              </form>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-1" onClick={(e) => e.stopPropagation()}>
-                            <button 
-                              className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group"
-                            >
-                              <TbBuildingOff className="h-4 w-4 transition-colors" />
-                              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                                Remove
-                              </span>
-                            </button>
-                          </div>
-                        </div>
-                        
-                        {/* Expanded Collaborators Section */}
-                        {expandedOrganization === org.id && (
-                          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                        )}
+              
+                        {/* Collaborators Section */}
+                          <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
                             <div className="mb-6">
                               <div className="flex items-center justify-between">
                                 <div>
-                                  <h3 className="text-base font-bold text-black dark:text-white">Collaborators</h3>
+                                  <h3 className="text-sm font-bold text-black dark:text-white">Collaborators</h3>
                                   <p className="text-gray-600 dark:text-gray-400 text-xs">Manage collaborators who have access to this organization</p>
                                 </div>
                                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-0">
@@ -3406,12 +3532,10 @@ export default function AdminSettingsPage() {
                               </div>
                             </div>
                           </div>
-                        )}
                       </div>
                     </div>
                   ))}
                 </div>
-              )}
 
             </div>
           </>
@@ -3973,7 +4097,7 @@ export default function AdminSettingsPage() {
                 onClick={() => {
                   // Handle create policy logic here
                   if (policyName.trim() && policyDescription.trim() && policyContent.trim()) {
-                    addPolicyAddedNotification(policyName);
+                    // Policy added notification
                     
                     // Show toast notification
                     toast({

@@ -6210,7 +6210,7 @@ const ContractsPage: React.FC = () => {
                         >
                           <TbUsers className="h-5 w-5" />
                           <span className="text-xs font-semibold">Manage</span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+                          <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
                             ({addedCollaborators.length})
                           </span>
                         </button>
@@ -6255,7 +6255,7 @@ const ContractsPage: React.FC = () => {
                       </>
                     ) : (
                       <div className="text-center py-8 text-gray-500 dark:text-gray-400 cursor-default select-none">
-                        <TbUsersPlus size={26} className="mx-auto mb-2 text-primary" />
+                        <TbUsers size={26} className="mx-auto mb-2 text-primary" />
                         <p className="text-sm" style={{ fontFamily: 'Avenir, sans-serif' }}>No collaborators yet</p>
                         <p className="text-xs" style={{ fontFamily: 'Avenir, sans-serif' }}>Add a collaborator by filling in the details above and clicking the "Add Collaborator" button</p>
                       </div>

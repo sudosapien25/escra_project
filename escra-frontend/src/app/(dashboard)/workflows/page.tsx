@@ -19,7 +19,7 @@ import { MdCancelPresentation, MdOutlineLibraryAddCheck } from 'react-icons/md';
 import { MdOutlineLightMode, MdOutlineDarkMode } from 'react-icons/md';
 import { RiUserSearchLine } from 'react-icons/ri';
 import { HiOutlineDocumentSearch } from 'react-icons/hi';
-import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbLibraryPlus, TbEdit, TbStatusChange, TbHistory, TbCategoryPlus, TbDragDrop, TbPencil, TbSubtask, TbSearch, TbFileSearch, TbDownload, TbCalendarClock, TbCancel, TbList, TbListDetails, TbListSearch, TbUpload, TbLibrary, TbLibraryMinus, TbChevronDown, TbMessage2Plus, TbTrash, TbChevronsLeft, TbChevronsRight, TbUserSearch, TbLayoutGrid, TbCategory2, TbEye, TbPlus, TbSquareCheck, TbSquarePlus, TbColumns3, TbTable, TbCodeVariablePlus, TbRowInsertTop, TbFolderUp, TbFolderPlus } from 'react-icons/tb';
+import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbLibraryPlus, TbEdit, TbStatusChange, TbHistory, TbCategoryPlus, TbDragDrop, TbPencil, TbSubtask, TbSearch, TbFileSearch, TbDownload, TbCalendarClock, TbCancel, TbList, TbListDetails, TbListSearch, TbUpload, TbLibrary, TbLibraryMinus, TbChevronDown, TbMessage2Plus, TbTrash, TbChevronsLeft, TbChevronsRight, TbUserSearch, TbLayoutGrid, TbCategory2, TbEye, TbPlus, TbSquareCheck, TbSquarePlus, TbColumns3, TbTable, TbCodeVariablePlus, TbRowInsertTop, TbFolderUp, TbFolderPlus, TbDotsVertical } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
 
@@ -3816,7 +3816,7 @@ export default function WorkflowsPage() {
                                         setOpenMenuTask(openMenuTask === task.code ? null : task.code);
                                       }}
                                     >
-                                      <BiDotsHorizontal size={18} />
+                                      <TbDotsVertical size={18} />
                                     </button>
                                     {openMenuTask === task.code && (
                                       <div

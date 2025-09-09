@@ -72,7 +72,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
   const isSignaturesPage = pathname === '/signatures' || pathname.startsWith('/signatures/');
 
   const navItems: NavItem[] = [
-    { name: 'Dashboard', href: '/dashboard', icon: TbCategory2 },
+    { name: 'Dashboard', href: '/dashboard', icon: TbLayoutBoard },
     { name: 'Contracts', href: '/contracts', icon: TbFileText },
     { name: 'Tasks', href: '/workflows', icon: TbSubtask },
     { name: 'Signatures', href: '/signatures', icon: TbWritingSign },
