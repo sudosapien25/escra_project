@@ -60,9 +60,6 @@ export class TaskService {
                 description: task.description || '',
                 status: task.status || 'To Do',
                 subtasks: task.subtasks || [],
-                comments: task.comments || [],
-                createdAt: task.createdAt,
-                updatedAt: task.updatedAt
               }));
               allTasks.push(...contractTasks);
             }
@@ -111,9 +108,6 @@ export class TaskService {
           description: task.description || '',
           status: task.status || 'To Do',
           subtasks: task.subtasks || [],
-          comments: task.comments || [],
-          createdAt: task.createdAt,
-          updatedAt: task.updatedAt
         }));
       }
       
@@ -161,10 +155,7 @@ export class TaskService {
         taskNumber: parseInt(createdTask.id) || 0,
         description: createdTask.description || '',
         status: createdTask.status || 'To Do',
-        subtasks: createdTask.subtasks || [],
-        comments: createdTask.comments || [],
-        createdAt: createdTask.createdAt,
-        updatedAt: createdTask.updatedAt
+        subtasks: createdTask.subtasks || []
       };
     } catch (error) {
       console.error('Create task error:', error);
@@ -211,9 +202,6 @@ export class TaskService {
         description: updatedTask.description || '',
         status: updatedTask.status || 'To Do',
         subtasks: updatedTask.subtasks || [],
-        comments: updatedTask.comments || [],
-        createdAt: updatedTask.createdAt,
-        updatedAt: updatedTask.updatedAt
       };
     } catch (error) {
       console.error('Update task error:', error);

@@ -1201,18 +1201,18 @@ const ContractsPage: React.FC = () => {
         // Include all form data
         milestone: modalForm.milestone,
         notes: modalForm.notes,
-        closingDate: modalForm.closingDate || null,
-        dueDate: modalForm.dueDate || null,
+        closingDate: modalForm.closingDate || undefined,
+        dueDate: modalForm.dueDate || undefined,
         propertyAddress: modalForm.propertyAddress,
         propertyType: modalForm.propertyType,
         escrowNumber: modalForm.escrowNumber,
         buyerEmail: buyerRecipient?.email || '',
         sellerEmail: sellerRecipient?.email || '',
-        earnestMoney: modalForm.earnestMoney ? (parseFloat(modalForm.earnestMoney.toString().replace(/[^0-9.-]+/g, '')) || null) : null,
-        downPayment: modalForm.downPayment ? (parseFloat(modalForm.downPayment.toString().replace(/[^0-9.-]+/g, '')) || null) : null,
-        loanAmount: modalForm.loanAmount ? (parseFloat(modalForm.loanAmount.toString().replace(/[^0-9.-]+/g, '')) || null) : null,
-        interestRate: modalForm.interestRate ? (parseFloat(modalForm.interestRate) || null) : null,
-        loanTerm: modalForm.loanTerm ? (parseInt(modalForm.loanTerm) || null) : null,
+        earnestMoney: modalForm.earnestMoney || undefined,
+        downPayment: modalForm.downPayment || undefined,
+        loanAmount: modalForm.loanAmount || undefined,
+        interestRate: modalForm.interestRate || undefined,
+        loanTerm: modalForm.loanTerm || undefined,
         lenderName: modalForm.lenderName,
         sellerFinancialInstitution: modalForm.sellerFinancialInstitution,
         buyerFinancialInstitution: modalForm.buyerFinancialInstitution,
@@ -6295,7 +6295,7 @@ const ContractsPage: React.FC = () => {
                         </div>
                         All
                       </button>
-                      {mockContracts
+                      {contracts
                         .filter(contract => 
                           contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
                           contract.title.toLowerCase().includes(contractSearch.toLowerCase())

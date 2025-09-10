@@ -704,16 +704,16 @@ export default function DashboardPage() {
   // Sort signatures based on current sort direction
   const sortedSignatures = [...signaturesData].sort((a, b) => {
     if (signatureAssigneeSortDirection) {
-      const aAssignee = a.assignee.toLowerCase();
-      const bAssignee = b.assignee.toLowerCase();
+      const aAssignee = a.signerName.toLowerCase();
+      const bAssignee = b.signerName.toLowerCase();
       if (signatureAssigneeSortDirection === 'asc') {
         return aAssignee.localeCompare(bAssignee);
       } else {
         return bAssignee.localeCompare(aAssignee);
       }
     } else if (signatureSignaturesSortDirection) {
-      const aSignatures = a.signatures.toLowerCase();
-      const bSignatures = b.signatures.toLowerCase();
+      const aSignatures = a.documentName.toLowerCase();
+      const bSignatures = b.documentName.toLowerCase();
       if (signatureSignaturesSortDirection === 'asc') {
         return aSignatures.localeCompare(bSignatures);
       } else {
@@ -728,16 +728,16 @@ export default function DashboardPage() {
         return bStatus.localeCompare(aStatus);
       }
     } else if (signatureRecipientsSortDirection) {
-      const aRecipients = a.parties.join(', ').toLowerCase();
-      const bRecipients = b.parties.join(', ').toLowerCase();
+      const aRecipients = a.signerEmail.toLowerCase();
+      const bRecipients = b.signerEmail.toLowerCase();
       if (signatureRecipientsSortDirection === 'asc') {
         return aRecipients.localeCompare(bRecipients);
       } else {
         return bRecipients.localeCompare(aRecipients);
       }
     } else if (signatureContractSortDirection) {
-      const aContract = a.contract.toLowerCase();
-      const bContract = b.contract.toLowerCase();
+      const aContract = (a.contractId || '').toLowerCase();
+      const bContract = (b.contractId || '').toLowerCase();
       if (signatureContractSortDirection === 'asc') {
         return aContract.localeCompare(bContract);
       } else {
@@ -752,8 +752,8 @@ export default function DashboardPage() {
         return bContractId - aContractId;
       }
     } else if (signatureDocumentSortDirection) {
-      const aDocument = a.document.toLowerCase();
-      const bDocument = b.document.toLowerCase();
+      const aDocument = a.documentName.toLowerCase();
+      const bDocument = b.documentName.toLowerCase();
       if (signatureDocumentSortDirection === 'asc') {
         return aDocument.localeCompare(bDocument);
       } else {
@@ -1577,26 +1577,26 @@ export default function DashboardPage() {
                       <span className="text-primary underline font-semibold cursor-pointer">{signature.id}</span>
                     </td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-sm cursor-default select-none">
-                      <div className="text-xs font-bold text-gray-900 dark:text-white cursor-default select-none">{signature.document}</div>
+                      <div className="text-xs font-bold text-gray-900 dark:text-white cursor-default select-none">{signature.documentName}</div>
                     </td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs cursor-default select-none">
                       <span className="text-primary underline font-semibold cursor-pointer">{signature.contractId}</span>
                     </td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-sm cursor-default select-none">
-                      <div className="text-xs font-bold text-gray-900 dark:text-white cursor-default select-none">{signature.contract}</div>
+                      <div className="text-xs font-bold text-gray-900 dark:text-white cursor-default select-none">{signature.contractId || 'N/A'}</div>
                     </td>
                     <td className="px-6 py-2.5 text-xs cursor-default select-none">
                       <div className="flex flex-col space-y-1 cursor-default select-none">
                         {/* Show recipients based on expanded state */}
                         {(() => {
                           const isExpanded = expandedRecipients.has(signature.id);
-                          return signature.parties.slice(0, isExpanded ? signature.parties.length : 2).map((party, index) => (
+                          return [signature.signerName].slice(0, 1).map((party, index) => (
                             <div key={index} className="text-gray-900 dark:text-white cursor-default select-none">{party}</div>
                           ));
                         })()}
                         
                         {/* Show expand/collapse button if more than 2 recipients */}
-                        {signature.parties.length > 2 && (
+                        {false && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -1604,7 +1604,7 @@ export default function DashboardPage() {
                             }}
                             className="text-primary hover:text-primary-dark text-xs font-medium cursor-pointer transition-colors text-left"
                           >
-                            {expandedRecipients.has(signature.id) ? 'Show less' : `+${signature.parties.length - 2} more`}
+                            {expandedRecipients.has(signature.id) ? 'Show less' : `+0 more`}
                           </button>
                         )}
                       </div>
@@ -1614,10 +1614,10 @@ export default function DashboardPage() {
                         style={{ minWidth: '7rem', display: 'inline-flex', borderWidth: '1px' }}>{signature.status}</span>
                     </td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs cursor-default select-none">
-                      <span className="text-gray-900 dark:text-white font-semibold cursor-default select-none">{signature.signatures}</span>
+                      <span className="text-gray-900 dark:text-white font-semibold cursor-default select-none">{signature.status === 'signed' ? '1/1' : '0/1'}</span>
                     </td>
                     <td className="px-6 py-2.5 whitespace-nowrap text-sm cursor-default select-none">
-                      <div className="text-xs text-gray-900 dark:text-white cursor-default select-none">{signature.assignee}</div>
+                      <div className="text-xs text-gray-900 dark:text-white cursor-default select-none">{signature.signerName}</div>
                     </td>
                   </tr>
                 ))}

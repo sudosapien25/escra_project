@@ -469,8 +469,8 @@ export default function WorkflowsPage() {
     if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
     const taskId = result.draggableId;
-    console.log('Moving task:', taskId, 'to status:', destination.droppableId);
-    moveTask(taskId, destination.droppableId as Task['status']);
+    console.log('Moving task:', taskId, 'from status:', source.droppableId, 'to status:', destination.droppableId);
+    moveTask(taskId, source.droppableId as Task['status'], destination.droppableId as Task['status']);
   }
 
   React.useEffect(() => {
@@ -558,7 +558,7 @@ export default function WorkflowsPage() {
   // Update the status change handler
   const handleStatusChange = (status: typeof statusOptions[number]['key']) => {
     if (selectedTask) {
-      moveTask(selectedTask.id, status);
+      moveTask(selectedTask.id, selectedTask.status, status);
       setShowStatusDropdown(false);
     }
   };
@@ -573,7 +573,7 @@ export default function WorkflowsPage() {
   const handleTaskStatusChange = (status: StatusOption) => {
     if (selectedTask && status !== 'All') {
       const taskStatus = status as TaskStatus;
-      moveTask(selectedTask.code, taskStatus);
+      moveTask(selectedTask.code, selectedTask.status, taskStatus);
       // Update the selected task's status in the modal
       setSelectedTask({ ...selectedTask, status: taskStatus });
       setShowStatusDropdown(false);
@@ -2347,7 +2347,7 @@ export default function WorkflowsPage() {
                     </div>
                     All
                   </button>
-                  {mockContracts
+                  {contracts
                     .filter(contract => 
                       contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
                       contract.title.toLowerCase().includes(contractSearch.toLowerCase())
@@ -2647,7 +2647,7 @@ export default function WorkflowsPage() {
                     </div>
                     All
                   </button>
-                  {mockContracts
+                  {contracts
                     .filter(contract => 
                       contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
                       contract.title.toLowerCase().includes(contractSearch.toLowerCase())

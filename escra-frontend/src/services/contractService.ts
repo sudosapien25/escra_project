@@ -475,7 +475,7 @@ export class ContractService {
       
       if (completedContracts.length > 0) {
         const completionTimes = completedContracts.map(c => {
-          const created = new Date(c.createdAt || c.updatedAt);
+          const created = new Date(c.updatedAt);
           const closed = new Date(c.updatedAt);
           const daysDiff = Math.floor((closed.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
           return daysDiff;
@@ -491,14 +491,14 @@ export class ContractService {
       
       // Sort contracts by update time to get recent changes
       const sortedContracts = [...contracts].sort((a, b) => {
-        const dateA = new Date(a.updatedAt || a.createdAt || '').getTime();
-        const dateB = new Date(b.updatedAt || b.createdAt || '').getTime();
+        const dateA = new Date(a.updatedAt || '').getTime();
+        const dateB = new Date(b.updatedAt || '').getTime();
         return dateB - dateA;
       });
       
       // Generate activities based on contract status and updates
       sortedContracts.slice(0, 5).forEach((contract, index) => {
-        const timestamp = contract.updatedAt || contract.createdAt || new Date().toISOString();
+        const timestamp = contract.updatedAt || new Date().toISOString();
         const contractTitle = `Contract ${contract.id}`;
         
         // Generate action based on status
@@ -511,7 +511,7 @@ export class ContractService {
             break;
           case 'Signatures':
             action = `is pending signatures`;
-            user = contract.buyer || 'Party';
+            user = 'Party';
             break;
           case 'In Progress':
             action = `is now in progress`;
@@ -530,7 +530,7 @@ export class ContractService {
         }
         
         // Check if this is a new contract (created within last 24 hours)
-        const createdDate = new Date(contract.createdAt || contract.updatedAt);
+        const createdDate = new Date(contract.updatedAt);
         const now = new Date();
         const hoursSinceCreation = (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60);
         

@@ -1,6 +1,6 @@
 import React from 'react';
 import { TbPencilShare } from 'react-icons/tb';
-import { SignatureDocument } from '@/data/mockSignatures';
+import { SignatureDocument } from '@/services/signatureService';
 
 // Types for signature values
 export interface SignatureValue {
@@ -99,21 +99,21 @@ export const SignatureConfirmationModal: React.FC<SignatureConfirmationModalProp
               <div className="space-y-2">
                 <div>
                   <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Document ID:</span>
-                  <p className="text-sm text-gray-900 dark:text-white">{document.documentId || document.id}</p>
+                  <p className="text-sm text-gray-900 dark:text-white">{document.id}</p>
                 </div>
                 <div>
                   <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Document Name:</span>
-                  <p className="text-sm text-gray-900 dark:text-white">{document.document}</p>
+                  <p className="text-sm text-gray-900 dark:text-white">{document.documentName}</p>
                 </div>
                 <div>
                   <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Signer Name:</span>
-                  <p className="text-sm text-gray-900 dark:text-white">{document.assignee || 'N/A'}</p>
+                  <p className="text-sm text-gray-900 dark:text-white">{document.signerName || 'N/A'}</p>
                 </div>
               </div>
               <div className="space-y-2">
                 <div>
                   <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Contract Name:</span>
-                  <p className="text-sm text-gray-900 dark:text-white">{document.contract || 'N/A'}</p>
+                  <p className="text-sm text-gray-900 dark:text-white">{document.contractId || 'N/A'}</p>
                 </div>
                 <div>
                   <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Contract ID:</span>

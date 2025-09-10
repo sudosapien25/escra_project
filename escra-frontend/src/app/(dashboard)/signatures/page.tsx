@@ -460,21 +460,15 @@ export default function SignaturesPage() {
   };
 
   // Function to check if a row matches the search term
-  const matchesSearch = (row: {
-    document: string;
-    parties: string[];
-    contract: string;
-    id: string;
-    contractId: string;
-  }) => {
+  const matchesSearch = (row: SignatureDocument) => {
     if (!searchTerm) return true;
     const searchLower = searchTerm.toLowerCase();
     return (
-      row.document.toLowerCase().includes(searchLower) ||
-      row.parties.some(party => party.toLowerCase().includes(searchLower)) ||
-      row.contract.toLowerCase().includes(searchLower) ||
+      row.documentName.toLowerCase().includes(searchLower) ||
+      row.signerName.toLowerCase().includes(searchLower) ||
+      row.signerEmail.toLowerCase().includes(searchLower) ||
       row.id.toLowerCase().includes(searchLower) ||
-      row.contractId.toLowerCase().includes(searchLower)
+      (row.contractId || '').toLowerCase().includes(searchLower)
     );
   };
 
@@ -1157,8 +1151,8 @@ export default function SignaturesPage() {
 
   const handleDocumentSort = () => {
     setSortConfig(current => ({
-      key: 'document',
-      direction: current?.key === 'document' && current.direction === 'ascending' ? 'descending' : 'ascending'
+      key: 'documentName',
+      direction: current?.key === 'documentName' && current.direction === 'ascending' ? 'descending' : 'ascending'
     }));
   };
 
@@ -1178,29 +1172,29 @@ export default function SignaturesPage() {
 
   const handleContractSort = () => {
     setSortConfig(current => ({
-      key: 'contract',
-      direction: current?.key === 'contract' && current.direction === 'ascending' ? 'descending' : 'ascending'
+      key: 'contractId',
+      direction: current?.key === 'contractId' && current.direction === 'ascending' ? 'descending' : 'ascending'
     }));
   };
 
   const handleAssigneeSort = () => {
     setSortConfig(current => ({
-      key: 'assignee',
-      direction: current?.key === 'assignee' && current.direction === 'ascending' ? 'descending' : 'ascending'
+      key: 'signerName',
+      direction: current?.key === 'signerName' && current.direction === 'ascending' ? 'descending' : 'ascending'
     }));
   };
 
   const handleDateSentSort = () => {
     setSortConfig(current => ({
-      key: 'dateSent',
-      direction: current?.key === 'dateSent' && current.direction === 'ascending' ? 'descending' : 'ascending'
+      key: 'sentDate',
+      direction: current?.key === 'sentDate' && current.direction === 'ascending' ? 'descending' : 'ascending'
     }));
   };
 
   const handleDueDateSort = () => {
     setSortConfig(current => ({
-      key: 'dueDate',
-      direction: current?.key === 'dueDate' && current.direction === 'ascending' ? 'descending' : 'ascending'
+      key: 'signedDate',
+      direction: current?.key === 'signedDate' && current.direction === 'ascending' ? 'descending' : 'ascending'
     }));
   };
 
@@ -1210,27 +1204,19 @@ export default function SignaturesPage() {
 
     return [...data].sort((a, b) => {
       if (sortConfig.key === 'id' || sortConfig.key === 'contractId') {
-        const aValue = parseInt(a[sortConfig.key]);
-        const bValue = parseInt(b[sortConfig.key]);
+        const aValue = parseInt(a[sortConfig.key] || '0');
+        const bValue = parseInt(b[sortConfig.key] || '0');
         return sortConfig.direction === 'ascending' ? aValue - bValue : bValue - aValue;
       }
       
-      if (sortConfig.key === 'dateSent' || sortConfig.key === 'dueDate') {
-        const aDate = new Date(a[sortConfig.key]);
-        const bDate = new Date(b[sortConfig.key]);
+      if (sortConfig.key === 'sentDate' || sortConfig.key === 'signedDate') {
+        const aDate = new Date(a[sortConfig.key] || '');
+        const bDate = new Date(b[sortConfig.key] || '');
         return sortConfig.direction === 'ascending' ? aDate.getTime() - bDate.getTime() : bDate.getTime() - aDate.getTime();
       }
 
-      if (sortConfig.key === 'parties') {
-        const aValue = a[sortConfig.key].join(', ').toLowerCase();
-        const bValue = b[sortConfig.key].join(', ').toLowerCase();
-        return sortConfig.direction === 'ascending' 
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
-      }
-
-      const aValue = a[sortConfig.key];
-      const bValue = b[sortConfig.key];
+      const aValue = String(a[sortConfig.key] || '');
+      const bValue = String(b[sortConfig.key] || '');
       
       // Handle arrays (like parties)
       if (Array.isArray(aValue) && Array.isArray(bValue)) {
@@ -1272,10 +1258,10 @@ export default function SignaturesPage() {
   const filteredRows = getSortedData(signaturesData.filter(row => {
     return shouldShowRow(row.status) &&
            shouldShowCancelledRow(row.status) &&
-           shouldShowAssignee(row.assignee) &&
+           shouldShowAssignee(row.signerName) &&
            matchesSearch(row) &&
-           shouldShowSender(row.assignee, row.parties) &&
-           shouldShowContract(row.contractId);
+           shouldShowSender(row.signerName, [row.signerEmail]) &&
+           shouldShowContract(row.contractId || '');
   }));
 
   // Helper function to generate document hash
@@ -1748,19 +1734,13 @@ export default function SignaturesPage() {
 
     const newSignatureRequest: SignatureDocument = {
       id: generateSignatureId(),
-      document: getDocumentName(),
-      parties: extractPartiesFromRecipients(),
-      status: 'Pending',
-      signatures: calculateSignaturesRequired(),
-      contractId: contractId,
-      contract: contract,
-      assignee: signatureAssignee || currentUserName,
-      dateSent: new Date().toISOString().split('T')[0],
-      dueDate: dueDate,
-      message: message,
-      subject: subject,
-      documentId: selectedDocuments[0] || '',
-      recipients: cleanRecipients
+      documentName: getDocumentName(),
+      signerName: cleanRecipients[0]?.name || '',
+      signerEmail: cleanRecipients[0]?.email || '',
+      status: 'pending',
+      sentDate: new Date().toISOString().split('T')[0],
+      signedDate: undefined,
+      contractId: contractId
     };
 
     console.log('New signature request:', newSignatureRequest);
@@ -1787,7 +1767,7 @@ export default function SignaturesPage() {
         // Show success feedback
         toast({
           title: "Signature request created successfully",
-          description: `"${newSignatureRequest.document}" has been sent for signature`,
+          description: `"${newSignatureRequest.documentName}" has been sent for signature`,
           duration: 5000,
         });
       } else {
@@ -1820,19 +1800,13 @@ export default function SignaturesPage() {
 
     const newSignatureRequest: SignatureDocument = {
       id: generateSignatureId(),
-      document: getDocumentName(),
-      parties: docuSignRecipients.filter(r => r.name && r.name.trim() !== '').map(r => r.name),
-      status: 'Pending',
-      signatures: `${docuSignRecipients.filter(r => r.name && r.name.trim() !== '').length} of ${docuSignRecipients.filter(r => r.name && r.name.trim() !== '').length}`,
-      contractId: contractId,
-      contract: contract,
-      assignee: signatureAssignee || currentUserName,
-      dateSent: new Date().toISOString().split('T')[0],
-      dueDate: dueDate,
-      message: docuSignMessage,
-      subject: docuSignSubject,
-      documentId: docuSignSelectedDocuments[0] || '',
-      recipients: cleanRecipients
+      documentName: getDocumentName(),
+      signerName: docuSignRecipients[0]?.name || '',
+      signerEmail: docuSignRecipients[0]?.email || '',
+      status: 'pending',
+      sentDate: new Date().toISOString().split('T')[0],
+      signedDate: undefined,
+      contractId: contractId
     };
 
     console.log('New DocuSign signature request:', newSignatureRequest);
@@ -1859,7 +1833,7 @@ export default function SignaturesPage() {
         // Show success feedback
         toast({
           title: "DocuSign signature request created successfully",
-          description: `"${newSignatureRequest.document}" has been sent to DocuSign for signature`,
+          description: `"${newSignatureRequest.documentName}" has been sent to DocuSign for signature`,
           duration: 5000,
         });
       } else {
@@ -1880,7 +1854,7 @@ export default function SignaturesPage() {
   const openPdfViewer = (documentName: string, signatureId: string) => {
     // Find the signature document to get the actual document ID
     const signatureDoc = signaturesData.find(sig => sig.id === signatureId);
-    const actualDocumentId = signatureDoc?.documentId || signatureId;
+    const actualDocumentId = signatureId;
     
     setSelectedPdf({ 
       name: documentName, 
@@ -1917,7 +1891,7 @@ export default function SignaturesPage() {
       const deletedSignature = signaturesData.find(s => s.id === signatureId);
       toast({
         title: "Signature Request Deleted",
-        description: `"${documentName}" (Document ID: ${deletedSignature?.documentId || 'N/A'}, Contract: ${deletedSignature?.contract || 'N/A'}, Contract ID: ${deletedSignature?.contractId || 'N/A'}) has been permanently deleted.`,
+        description: `"${documentName}" (Contract ID: ${deletedSignature?.contractId || 'N/A'}) has been permanently deleted.`,
       });
 
     } catch (error) {
@@ -1960,18 +1934,11 @@ export default function SignaturesPage() {
       // Simulate signing process
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Parse current signature count
-      const [currentSignatures, totalRequired] = selectedDocument.signatures.split(" of ").map(num => parseInt(num));
-      const newSignatureCount = currentSignatures + 1;
-      
-      // Determine if this completes all required signatures
-      const isCompleted = newSignatureCount >= totalRequired;
-      
-      // Update the signature status
+      // Update the signature status to signed
       const updatedSignature = {
         ...selectedDocument,
-        status: isCompleted ? "Completed" : "Pending",
-        signatures: `${newSignatureCount} of ${totalRequired}`
+        status: "signed" as const,
+        signedDate: new Date().toISOString().split('T')[0]
       };
       
       // Update the signatures data
@@ -1989,12 +1956,10 @@ export default function SignaturesPage() {
       setCapturedSignatureData(null);
       
       // Show appropriate success message
-      const message = isCompleted 
-        ? `"${selectedDocument.document}" has been signed and completed.`
-        : `"${selectedDocument.document}" has been signed. ${totalRequired - newSignatureCount} signature(s) remaining.`;
+      const message = `"${selectedDocument.documentName}" has been signed successfully.`;
       
       toast({
-        title: isCompleted ? "Document Signed Successfully" : "Signature Added Successfully",
+        title: "Document Signed Successfully",
         description: message,
       });
       
@@ -2106,7 +2071,7 @@ export default function SignaturesPage() {
           </div>
           <div className="flex flex-col items-start h-full cursor-default select-none">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Waiting on Others</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{signaturesData.filter(sig => sig.status === 'Pending' && sig.signatures.split(' of ')[0] !== '0').length}</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white cursor-default select-none">{signaturesData.filter(sig => sig.status === 'pending').length}</p>
             <p className="text-xs text-gray-400 dark:text-gray-500 cursor-default select-none">Requires action</p>
             <p className="text-xs invisible cursor-default select-none">placeholder</p>
           </div>
@@ -3077,33 +3042,18 @@ export default function SignaturesPage() {
                         className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" 
                         onClick={() => {
                           console.log('Row data being passed to modal:', row);
-                          setSelectedDocument({
-                            id: row.id,
-                            document: row.document,
-                            parties: row.parties,
-                            status: row.status,
-                            signatures: row.signatures,
-                            contractId: row.contractId,
-                            contract: row.contract,
-                            assignee: row.assignee,
-                            dateSent: row.dateSent,
-                            dueDate: row.dueDate,
-                            documentId: row.documentId,
-                            message: row.message,
-                            subject: row.subject,
-                            recipients: row.recipients
-                          });
+                          setSelectedDocument(row);
                         }}
                       >
                         <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
-                          <span className="text-primary underline font-semibold cursor-pointer">{row.documentId || row.id}</span>
+                          <span className="text-primary underline font-semibold cursor-pointer">{row.id}</span>
                         </td>
                         <td className="px-6 py-2.5 whitespace-nowrap text-sm">
-                          <div className="text-xs font-bold text-gray-900 dark:text-white">{row.document}</div>
+                          <div className="text-xs font-bold text-gray-900 dark:text-white">{row.documentName}</div>
                         </td>
                         <td className="px-6 py-2.5 text-xs">
                           {(() => {
-                            const parties = row.parties;
+                            const parties = [row.signerName];
                             const isExpanded = expandedRecipientsRows.has(row.id);
                             const hasMoreThanTwo = parties.length > 2;
                             
@@ -3149,18 +3099,18 @@ export default function SignaturesPage() {
                             {row.status}
                           </span>
                         </td>
-                        <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs text-gray-500 dark:text-gray-400">{row.signatures}</td>
+                        <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs text-gray-500 dark:text-gray-400">{row.status === 'signed' ? '1/1' : '0/1'}</td>
                         <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs">
                           <span className="text-primary underline font-semibold cursor-pointer">{row.contractId}</span>
                         </td>
                         <td className="px-6 py-2.5 whitespace-nowrap text-sm">
-                          <div className="text-xs font-bold text-gray-900 dark:text-white">{row.contract}</div>
+                          <div className="text-xs font-bold text-gray-900 dark:text-white">{row.contractId || 'N/A'}</div>
                         </td>
                         <td className="px-6 py-2.5 whitespace-nowrap text-sm">
-                          <div className="text-xs text-gray-900 dark:text-white">{row.assignee}</div>
+                          <div className="text-xs text-gray-900 dark:text-white">{row.signerName}</div>
                         </td>
-                        <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs text-gray-500 dark:text-gray-400">{row.dateSent}</td>
-                        <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs text-gray-500 dark:text-gray-400">{row.dueDate}</td>
+                        <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs text-gray-500 dark:text-gray-400">{row.sentDate}</td>
+                        <td className="px-6 py-2.5 whitespace-nowrap text-center text-xs text-gray-500 dark:text-gray-400">{row.signedDate || 'N/A'}</td>
                         <td className="px-6 py-2.5 whitespace-nowrap text-center">
                           <div className="flex items-center justify-center space-x-1">
                             <button 
@@ -3168,7 +3118,7 @@ export default function SignaturesPage() {
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                openPdfViewer(row.document, row.id);
+                                openPdfViewer(row.documentName, row.id);
                               }}
                             >
                               <HiOutlineEye className="text-sm sm:text-base transition-colors" />
@@ -3207,7 +3157,7 @@ export default function SignaturesPage() {
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                deleteSignature(row.id, row.document);
+                                deleteSignature(row.id, row.documentName);
                               }}
                             >
                               <MdCancelPresentation className="text-sm sm:text-base transition-colors" />
@@ -3289,7 +3239,7 @@ export default function SignaturesPage() {
                 <div className="flex-1 min-w-0 cursor-default select-none">
                   <div className="flex items-center gap-2 sm:gap-4 mb-4 cursor-default select-none">
                     <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary cursor-default select-none">
-                      # {selectedDocument?.documentId || selectedDocument?.id}
+                      # {selectedDocument?.id}
                     </span>
                   </div>
                 </div>
@@ -3319,7 +3269,7 @@ export default function SignaturesPage() {
                         {/* Row 1: Document ID, Document Hash, and Contract ID */}
                         <div>
                           <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Document ID</div>
-                          <div className="text-xs text-black dark:text-white select-none cursor-default">{selectedDocument?.documentId || selectedDocument?.id}</div>
+                          <div className="text-xs text-black dark:text-white select-none cursor-default">{selectedDocument?.id}</div>
                         </div>
                         <div>
                           <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Document Chain ID</div>
@@ -3327,9 +3277,9 @@ export default function SignaturesPage() {
                             <span
                               className="text-xs font-mono text-gray-900 dark:text-white truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-default select-none"
                               style={{ maxWidth: '120px' }}
-                                                                            title={selectedDocument && selectedDocument.documentId ? getDocumentChainId(selectedDocument.documentId) : ''}
+                                                                            title={selectedDocument ? getDocumentChainId(selectedDocument.id) : ''}
                             >
-                              {selectedDocument && selectedDocument.documentId ? getDocumentChainId(selectedDocument.documentId) : ''}
+                              {selectedDocument ? getDocumentChainId(selectedDocument.id) : ''}
                             </span>
                             <div className="relative">
                               <button 
@@ -3337,23 +3287,23 @@ export default function SignaturesPage() {
                                 className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
                                 onClick={() => {
                                   if (selectedDocument) {
-                                    navigator.clipboard.writeText(getDocumentChainId(selectedDocument.documentId || ''));
-                                    setCopiedDocumentId(selectedDocument.documentId || '');
+                                    navigator.clipboard.writeText(getDocumentChainId(selectedDocument.id || ''));
+                                    setCopiedDocumentId(selectedDocument.id || '');
                                     setTimeout(() => setCopiedDocumentId(null), 1500);
                                   }
                                 }}
-                                onMouseEnter={() => selectedDocument && setHoveredDocumentId(selectedDocument.documentId || '')}
+                                onMouseEnter={() => selectedDocument && setHoveredDocumentId(selectedDocument.id || '')}
                                 onMouseLeave={() => setHoveredDocumentId(null)}
                                 aria-label="Copy document chain ID"
                               >
                                 <HiOutlineDuplicate className="w-4 h-4" />
                               </button>
-                              {copiedDocumentId === selectedDocument?.documentId && (
+                              {copiedDocumentId === selectedDocument?.id && (
                                 <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none">
                                   Copied!
                                 </div>
                               )}
-                              {hoveredDocumentId === selectedDocument?.documentId && copiedDocumentId !== selectedDocument?.documentId && (
+                              {hoveredDocumentId === selectedDocument?.id && copiedDocumentId !== selectedDocument?.id && (
                                 <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none">
                                   Copy
                                 </div>
@@ -3368,7 +3318,7 @@ export default function SignaturesPage() {
                         {/* Row 2: Document Name and Contract Name */}
                         <div>
                           <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Document Name</div>
-                          <div className="text-xs text-black dark:text-white select-none cursor-default">{selectedDocument?.document}</div>
+                          <div className="text-xs text-black dark:text-white select-none cursor-default">{selectedDocument?.documentName}</div>
                         </div>
                         <div>
                           <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Smart Contract Chain ID</div>
@@ -3376,22 +3326,22 @@ export default function SignaturesPage() {
                             <span
                               className="text-xs font-mono text-gray-900 dark:text-white truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-default select-none"
                               style={{ maxWidth: '120px' }}
-                              title={selectedDocument ? getSmartContractChainId(selectedDocument.contractId) : ''}
+                              title={selectedDocument?.contractId ? getSmartContractChainId(selectedDocument.contractId) : ''}
                             >
-                              {selectedDocument ? getSmartContractChainId(selectedDocument.contractId) : ''}
+                              {selectedDocument?.contractId ? getSmartContractChainId(selectedDocument.contractId) : 'N/A'}
                             </span>
                             <div className="relative">
                               <button 
                                 type="button"
                                 className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
                                 onClick={() => {
-                                  if (selectedDocument) {
+                                  if (selectedDocument?.contractId) {
                                     navigator.clipboard.writeText(getSmartContractChainId(selectedDocument.contractId));
                                     setCopiedDocumentId(selectedDocument.contractId);
                                     setTimeout(() => setCopiedDocumentId(null), 1500);
                                   }
                                 }}
-                                onMouseEnter={() => selectedDocument && setHoveredDocumentId(selectedDocument.contractId)}
+                                onMouseEnter={() => selectedDocument?.contractId && setHoveredDocumentId(selectedDocument.contractId)}
                                 onMouseLeave={() => setHoveredDocumentId(null)}
                                 aria-label="Copy smart contract chain ID"
                               >
@@ -3412,20 +3362,20 @@ export default function SignaturesPage() {
                         </div>
                         <div>
                           <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Contract Name</div>
-                          <div className="text-xs text-black dark:text-white select-none cursor-default">{selectedDocument?.contract}</div>
+                          <div className="text-xs text-black dark:text-white select-none cursor-default">{selectedDocument?.contractId || 'N/A'}</div>
                         </div>
                         {/* Subject Field */}
                         <div className="col-span-1 sm:col-span-2 lg:col-span-3">
                           <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Subject</div>
                           <div className="w-full px-4 py-2 text-xs font-medium text-black dark:text-white border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900">
-                            {selectedDocument?.subject || 'No subject provided'}
+                            {'No subject provided'}
                           </div>
                         </div>
                         {/* Message Field */}
                         <div className="col-span-1 sm:col-span-2 lg:col-span-3">
                           <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Message</div>
                           <div className="w-full min-h-24 px-4 py-2 text-xs font-medium text-black dark:text-white border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900">
-                            {selectedDocument?.message || 'Please review and sign the attached document at your earliest convenience. This document requires your signature to proceed with the transaction.'}
+                            {'Please review and sign the attached document at your earliest convenience. This document requires your signature to proceed with the transaction.'}
                           </div>
                         </div>
                       </div>
@@ -3444,7 +3394,7 @@ export default function SignaturesPage() {
                             <div>
                               <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Parties</div>
                               <div className="text-xs text-black dark:text-white select-none cursor-default mb-4">
-                                {selectedDocument?.parties.map((party, idx) => (
+                                {[selectedDocument?.signerName].filter(Boolean).map((party, idx) => (
                                   <div key={idx}>{party}</div>
                                 ))}
                               </div>
@@ -3456,11 +3406,11 @@ export default function SignaturesPage() {
                                   <div 
                                     className="h-full bg-primary rounded-full" 
                                     style={{ 
-                                      width: `${(parseInt(selectedDocument?.signatures.split(' of ')[0] || '0') / parseInt(selectedDocument?.signatures.split(' of ')[1] || '1')) * 100}%` 
+                                      width: selectedDocument?.status === 'signed' ? '100%' : '0%' 
                                     }}
                                   />
                                 </div>
-                                {selectedDocument?.signatures}
+                                {selectedDocument?.status === 'signed' ? '1/1' : '0/1'}
                               </div>
                             </div>
                             <div className="hidden sm:block"></div>
@@ -3479,7 +3429,7 @@ export default function SignaturesPage() {
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-x-12">
                             <div>
                               <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Due Date</div>
-                              <div className="text-xs text-black dark:text-white select-none cursor-default mb-4">{selectedDocument?.dueDate}</div>
+                              <div className="text-xs text-black dark:text-white select-none cursor-default mb-4">{selectedDocument?.signedDate || 'N/A'}</div>
                             </div>
                             <div>
                               <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Last Reminder Date</div>
@@ -3487,14 +3437,14 @@ export default function SignaturesPage() {
                             </div>
                             <div>
                               <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Date Sent</div>
-                              <div className="text-xs text-black dark:text-white select-none cursor-default mb-4">{selectedDocument?.dateSent}</div>
+                              <div className="text-xs text-black dark:text-white select-none cursor-default mb-4">{selectedDocument?.sentDate}</div>
                             </div>
                           </div>
                         </div>
                         {/* Row 4: Assignee */}
                         <div>
                           <div className="text-gray-500 dark:text-gray-400 text-xs mb-1 cursor-default select-none">Assignee</div>
-                          <div className="text-xs text-black dark:text-white select-none cursor-default mb-4">{selectedDocument?.assignee}</div>
+                          <div className="text-xs text-black dark:text-white select-none cursor-default mb-4">{selectedDocument?.signerName}</div>
                         </div>
                         <div className="hidden sm:block"></div>
                       </div>
@@ -3508,7 +3458,7 @@ export default function SignaturesPage() {
                     <div className="w-full cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
                       {/* Mobile: Card-based layout */}
                       <div className="lg:hidden space-y-3">
-                        {selectedDocument?.recipients?.map((recipient, idx) => (
+                        {[].map((recipient: any, idx: number) => (
                           <div key={recipient.name} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600 cursor-default select-none">
                             <div className="flex items-center gap-3 mb-3">
                               <div className="text-center font-semibold text-sm bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center">
@@ -3547,7 +3497,7 @@ export default function SignaturesPage() {
                           <div className="text-left">Date/Time</div>
                         </div>
                         {/* Recipients Data */}
-                        {selectedDocument?.recipients?.map((recipient, idx) => (
+                        {[].map((recipient: any, idx: number) => (
                           <div key={recipient.name} className="grid grid-cols-[40px_40px_1.5fr_2fr_1fr_1.5fr] gap-2 items-center px-2 py-4 border-b border-gray-100 dark:border-gray-700 text-xs text-gray-800 dark:text-gray-200 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
                             <div className="text-center font-semibold">{idx + 1}</div>
                                                           <div className="flex justify-center items-center">
@@ -3573,7 +3523,7 @@ export default function SignaturesPage() {
             <div className="flex justify-end pt-0 pb-6 px-6 mt-0 bg-gray-50 dark:bg-gray-900">
               <button
                 onClick={handleSign}
-                disabled={selectedDocument?.status === 'Completed' || selectedDocument?.status === 'Rejected' || selectedDocument?.status === 'Expired' || selectedDocument?.status === 'Voided'}
+                disabled={selectedDocument?.status === 'signed' || selectedDocument?.status === 'rejected' || selectedDocument?.status === 'expired'}
                 className="flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
                 style={{ fontFamily: 'Avenir, sans-serif' }}
               >
@@ -5459,7 +5409,7 @@ export default function SignaturesPage() {
           drawEnabled={true}
           typeEnabled={true}
           uploadEnabled={true}
-          title={`Sign Document: ${selectedDocument?.document || 'Document'}`}
+          title={`Sign Document: ${selectedDocument?.documentName || 'Document'}`}
           confirmText="Confirm Signature"
           cancelText="Cancel"
         />
