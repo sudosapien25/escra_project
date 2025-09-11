@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { FaUser, FaCheck } from 'react-icons/fa';
-import { TbCameraCog, TbActivity, TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbBuildingCommunity, TbBallAmericanFootball, TbTool, TbWallet, TbLock, TbKey, TbApiApp, TbDevicesX, TbKeyOff, TbWalletOff, TbPlug, TbPlugOff, TbApiOff, TbWebhookOff, TbApiAppOff, TbForklift, TbWashDryFlat, TbUsers, TbUserOff, TbBuildingOff, TbBuildingCog, TbChevronDown, TbChevronUp, TbUserPlus, TbUserCog, TbMailShare, TbUpload, TbBarrierBlock, TbBriefcase, TbStethoscope, TbCoins, TbScale, TbTrophy, TbDotsVertical } from 'react-icons/tb';
+import { TbCameraCog, TbActivity, TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbBuildingCommunity, TbBallAmericanFootball, TbTool, TbWallet, TbLock, TbKey, TbApiApp, TbDevicesX, TbKeyOff, TbWalletOff, TbPlug, TbPlugOff, TbApiOff, TbWebhookOff, TbApiAppOff, TbForklift, TbWashDryFlat, TbUsers, TbUsersGroup, TbBuildingPlus, TbUserOff, TbBuilding, TbBuildingOff, TbBuildingCog, TbChevronDown, TbChevronUp, TbUserPlus, TbUserCog, TbMailShare, TbUpload, TbBarrierBlock, TbBriefcase, TbStethoscope, TbCoins, TbScale, TbScaleOff, TbTrophy, TbDotsVertical, TbUserMinus, TbUser, TbGavel, TbWallpaperOff } from 'react-icons/tb';
 import { HiChevronDown, HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight, HiOutlineKey, HiOutlineDuplicate, HiStatusOffline } from 'react-icons/hi';
 import { MdOutlineGeneratingTokens, MdWebhook, MdOutlineSportsFootball, MdOutlineMovieFilter, MdOutlineHealthAndSafety, MdCancelPresentation } from 'react-icons/md';
 import { HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
@@ -19,10 +19,11 @@ import { Logo } from '@/components/common/Logo';
 import { useNotifications } from '@/context/NotificationContext';
 import { useToast } from '@/components/ui/use-toast';
 import { Toaster } from '@/components/ui/toaster';
+import { useAuth } from '@/context/AuthContext';
 
 const TABS = [
   { key: 'profile', label: 'Profile' },
-  { key: 'company', label: 'Organization' },
+  { key: 'company', label: 'Organizations' },
   { key: 'policies', label: 'Policies' },
   { key: 'security', label: 'Security' },
   { key: 'notifications', label: 'Notifications' },
@@ -822,6 +823,7 @@ const billingPlans = [
 export default function AdminSettingsPage() {
   const { addPasskeyAddedNotification, addPasskeyRemovedNotification, addWalletAddedNotification, addWalletRemovedNotification, addApiTokenAddedNotification, addApiTokenRemovedNotification, addWebhookAddedNotification, addWebhookRemovedNotification } = useNotifications();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const [avatarImage, setAvatarImage] = useState<string | null>(null);
   const [userRole, setUserRole] = useState('Admin');
@@ -929,6 +931,41 @@ export default function AdminSettingsPage() {
   const [industrySearchTerm, setIndustrySearchTerm] = useState('');
   const [organizationIndustrySearchTerm, setOrganizationIndustrySearchTerm] = useState('');
   
+  // Organization inline form state
+  const [showOrganizationCreateForm, setShowOrganizationCreateForm] = useState(false);
+  const [organizationFormStep, setOrganizationFormStep] = useState(1);
+  const [organizationFormData, setOrganizationFormData] = useState({
+    name: '',
+    type: '',
+    businessAddress: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    country: '',
+    phone: '',
+    website: '',
+    industries: [] as string[]
+  });
+  const [organizationCollaborators, setOrganizationCollaborators] = useState([
+    { 
+      name: '', 
+      email: '', 
+      contractPermissions: [] as string[], 
+      showNamesDropdown: false, 
+      namesDropdownRef: React.createRef<HTMLDivElement>(), 
+      contractRoleInputRef: React.createRef<HTMLDivElement>(), 
+      contractRoleDropdownRef: React.createRef<HTMLDivElement>(), 
+      namesInputRef: React.createRef<HTMLInputElement>(), 
+      showContractRoleDropdown: false 
+    }
+  ]);
+  const [showOrganizationPermissionsDropdown, setShowOrganizationPermissionsDropdown] = useState(false);
+  const [organizationRecipientErrors, setOrganizationRecipientErrors] = useState<{[key: string]: boolean}>({});
+  const [duplicateOrganizationCollaboratorError, setDuplicateOrganizationCollaboratorError] = useState<string | false>(false);
+  const [addedOrganizationCollaborators, setAddedOrganizationCollaborators] = useState<any[]>([]);
+  const [isWorkingSolo, setIsWorkingSolo] = useState(false);
+  const [showManageOrganizationCollaboratorsModal, setShowManageOrganizationCollaboratorsModal] = useState(false);
+  
   // Billing state
   const [billingPeriod, setBillingPeriod] = useState('monthly');
   
@@ -1029,6 +1066,12 @@ export default function AdminSettingsPage() {
   const countryDropdownRef = useRef<HTMLDivElement>(null);
   const industriesDropdownRef = useRef<HTMLDivElement>(null);
   const walletProviderDropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Organization form refs
+  const organizationFormTypeDropdownRef = useRef<HTMLDivElement>(null);
+  const organizationFormStateDropdownRef = useRef<HTMLDivElement>(null);
+  const organizationFormCountryDropdownRef = useRef<HTMLDivElement>(null);
+  const organizationFormIndustriesDropdownRef = useRef<HTMLDivElement>(null);
 
   const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -1384,6 +1427,164 @@ export default function AdminSettingsPage() {
     }
   };
 
+  // Organization form helper functions
+  const handleOrganizationFormChange = (field: string, value: any) => {
+    setOrganizationFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleOrganizationCollaboratorChange = (index: number, field: string, value: any) => {
+    setOrganizationCollaborators(prev => prev.map((collaborator, i) => 
+      i === index ? { ...collaborator, [field]: value } : collaborator
+    ));
+  };
+
+  const addOrganizationCollaborator = () => {
+    setOrganizationCollaborators(prev => [...prev, { 
+      name: '', 
+      email: '', 
+      contractPermissions: [], 
+      showNamesDropdown: false, 
+      namesDropdownRef: React.createRef<HTMLDivElement>(), 
+      contractRoleInputRef: React.createRef<HTMLDivElement>(), 
+      contractRoleDropdownRef: React.createRef<HTMLDivElement>(),
+      namesInputRef: React.createRef<HTMLInputElement>(),
+      showContractRoleDropdown: false
+    }]);
+  };
+
+  const removeOrganizationCollaborator = (index: number) => {
+    if (organizationCollaborators.length > 1) {
+      setOrganizationCollaborators(prev => prev.filter((_, i) => i !== index));
+    }
+  };
+
+  const sortOrganizationPermissions = (permissions: string[]) => {
+    const order = ['Edit', 'View', 'Sign'];
+    return permissions.sort((a, b) => order.indexOf(a) - order.indexOf(b));
+  };
+
+  // Helper functions for organization collaborators (matching contracts page)
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const getCollaboratorBadgeColor = (index: number) => {
+    const colors = [
+      { bg: 'bg-teal-50 dark:bg-teal-900/30', border: 'border-teal-200 dark:border-teal-800', text: 'text-teal-500 dark:text-teal-400' },
+      { bg: 'bg-blue-100 dark:bg-blue-900/30', border: 'border-blue-200 dark:border-blue-800', text: 'text-blue-500 dark:text-blue-400' },
+      { bg: 'bg-purple-100 dark:bg-purple-900/30', border: 'border-purple-200 dark:border-purple-800', text: 'text-purple-500 dark:text-purple-400' },
+      { bg: 'bg-orange-100 dark:bg-orange-900/30', border: 'border-orange-200 dark:border-orange-800', text: 'text-orange-500 dark:text-orange-400' },
+      { bg: 'bg-green-100 dark:bg-green-900/30', border: 'border-green-200 dark:border-green-800', text: 'text-green-500 dark:text-green-400' },
+      { bg: 'bg-pink-100 dark:bg-pink-900/30', border: 'border-pink-200 dark:border-pink-800', text: 'text-pink-500 dark:text-pink-400' },
+      { bg: 'bg-indigo-100 dark:bg-indigo-900/30', border: 'border-indigo-200 dark:border-indigo-800', text: 'text-indigo-500 dark:text-indigo-400' },
+    ];
+    return colors[index % colors.length];
+  };
+
+  const handleAddOrganizationCollaborator = () => {
+    const collaborator = organizationCollaborators[0];
+    
+    // Check for duplicates
+    const isDuplicateName = addedOrganizationCollaborators.some(c => 
+      c.name.toLowerCase() === collaborator.name.toLowerCase()
+    );
+    const isDuplicateEmail = addedOrganizationCollaborators.some(c => 
+      c.email.toLowerCase() === collaborator.email.toLowerCase()
+    );
+    
+    if (isDuplicateName && isDuplicateEmail) {
+      setDuplicateOrganizationCollaboratorError('both');
+      return;
+    } else if (isDuplicateEmail) {
+      setDuplicateOrganizationCollaboratorError('email');
+      return;
+    } else if (isDuplicateName) {
+      setDuplicateOrganizationCollaboratorError('name');
+      return;
+    }
+    
+    // Add collaborator
+    setAddedOrganizationCollaborators(prev => [...prev, {
+      ...collaborator,
+      isEditingEmail: false
+    }]);
+    
+    // Reset form
+    setOrganizationCollaborators(prev => prev.map((r, i) => i === 0 ? { 
+      ...r, 
+      name: '', 
+      email: '', 
+      contractPermissions: [],
+      showNamesDropdown: false,
+      showContractRoleDropdown: false
+    } : r));
+    
+    setDuplicateOrganizationCollaboratorError(false);
+  };
+
+  // Mock data for assignees (matching contracts page)
+  const allAssignees = [
+    'John Smith', 'Sarah Johnson', 'Mike Wilson', 'Emily Davis', 'David Brown',
+    'Lisa Anderson', 'Chris Taylor', 'Jessica Martinez', 'Ryan Thompson', 'Amanda White'
+  ];
+
+  // Click outside handler for organization form dropdowns and collaborator name dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+      
+      // Check if click is inside any organization form dropdown
+      if (
+        organizationFormTypeDropdownRef.current?.contains(target) ||
+        organizationFormStateDropdownRef.current?.contains(target) ||
+        organizationFormCountryDropdownRef.current?.contains(target) ||
+        organizationFormIndustriesDropdownRef.current?.contains(target) ||
+        organizationCollaborators[0]?.contractRoleInputRef?.current?.contains(target) ||
+        organizationCollaborators[0]?.contractRoleDropdownRef?.current?.contains(target) ||
+        organizationCollaborators[0]?.namesInputRef?.current?.contains(target) ||
+        organizationCollaborators[0]?.namesDropdownRef?.current?.contains(target)
+      ) {
+        // Click inside any organization form dropdown or collaborator input: do nothing
+        return;
+      }
+      
+      // Close organization form dropdowns
+      if (showCompanyTypeDropdown) {
+        setShowCompanyTypeDropdown(false);
+      }
+      if (showStateDropdown) {
+        setShowStateDropdown(false);
+        setStateSearchTerm('');
+      }
+      if (showCountryDropdown) {
+        setShowCountryDropdown(false);
+        setCountrySearchTerm('');
+      }
+      if (showIndustriesDropdown) {
+        setShowIndustriesDropdown(false);
+        setIndustrySearchTerm('');
+      }
+      
+      // Close organization collaborator dropdowns
+      if (showOrganizationPermissionsDropdown) {
+        setShowOrganizationPermissionsDropdown(false);
+      }
+      if (organizationCollaborators[0]?.showNamesDropdown) {
+        setOrganizationCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, showNamesDropdown: false } : r));
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showCompanyTypeDropdown, showStateDropdown, showCountryDropdown, showIndustriesDropdown, showOrganizationPermissionsDropdown, organizationCollaborators[0]?.showNamesDropdown]);
+
   return (
     <div className="flex h-screen">
       {/* Hidden file input for avatar upload */}
@@ -1460,7 +1661,7 @@ export default function AdminSettingsPage() {
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm">
               <div className="flex justify-between items-start">
                 <div>
-                  <h2 className="text-xl font-bold mb-4 text-black dark:text-white">Profile Information</h2>
+                  <h2 className="text-xl font-bold mb-2 text-black dark:text-white">Profile Information</h2>
                   <p className="text-gray-600 dark:text-gray-400 text-xs mb-6">Update your personal details and contact information.</p>
                 </div>
                 <div className="relative w-28 h-28">
@@ -1593,7 +1794,7 @@ export default function AdminSettingsPage() {
           {/* Change Password Card */}
           {activeTab === 'security' && (
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm">
-              <h2 className="text-lg font-bold mb-4 text-black dark:text-white">Change Password</h2>
+              <h2 className="text-lg font-bold mb-2 text-black dark:text-white">Change Password</h2>
               <p className="text-gray-600 dark:text-gray-400 text-xs mb-6">Update your account password to keep your account secure</p>
               <form className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1706,7 +1907,7 @@ export default function AdminSettingsPage() {
           {/* Two Factor Authentication Card */}
           {activeTab === 'security' && (
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm mt-6">
-              <h2 className="text-lg font-bold mb-4 text-black dark:text-white">Two Factor Authentication</h2>
+              <h2 className="text-lg font-bold mb-2 text-black dark:text-white">Two Factor Authentication</h2>
               <p className="text-gray-600 dark:text-gray-400 text-xs mb-6">Add an extra layer of security to your account by enabling two-factor authentication</p>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -1731,7 +1932,7 @@ export default function AdminSettingsPage() {
           {/* Passkeys Card */}
           {activeTab === 'security' && (
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm mt-6">
-              <h2 className="text-lg font-bold mb-4 text-black dark:text-white">Passkeys</h2>
+              <h2 className="text-lg font-bold mb-2 text-black dark:text-white">Passkeys</h2>
               <p className="text-gray-600 dark:text-gray-400 text-xs mb-6">Use passkeys for secure, passwordless authentication across your devices</p>
               {!showPasskeys && (
                 <div className="flex items-center justify-between">
@@ -1871,7 +2072,7 @@ export default function AdminSettingsPage() {
           {/* Recent Activity Card */}
           {activeTab === 'security' && (
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm mt-6">
-              <h2 className="text-lg font-bold mb-4 text-black dark:text-white">Recent Activity</h2>
+              <h2 className="text-lg font-bold mb-2 text-black dark:text-white">Recent Activity</h2>
               <p className="text-gray-600 dark:text-gray-400 text-xs mb-6">Monitor your recent account activity & login attempts</p>
               {!showRecentActivity && (
                 <div className="flex items-center justify-between">
@@ -1940,7 +2141,7 @@ export default function AdminSettingsPage() {
           {/* Active Sessions Card */}
           {activeTab === 'security' && (
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm mt-6">
-              <h2 className="text-lg font-bold mb-4 text-black dark:text-white">Active Sessions</h2>
+              <h2 className="text-lg font-bold mb-2 text-black dark:text-white">Active Sessions</h2>
               <p className="text-gray-600 dark:text-gray-400 text-xs mb-6">View & manage active sessions across different devices</p>
               {!showSessions && (
                 <div className="flex items-center justify-between">
@@ -2075,7 +2276,7 @@ export default function AdminSettingsPage() {
           {/* Wallets Box */}
           {activeTab === 'profile' && (
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm mt-6">
-              <h2 className="text-lg font-bold mb-4 text-black dark:text-white">Wallets</h2>
+              <h2 className="text-lg font-bold mb-2 text-black dark:text-white">Wallets</h2>
               <p className="text-gray-600 dark:text-gray-400 text-xs mb-6">Manage your connected wallets</p>
               {!showWallets && (
                 <div className="flex items-center justify-between">
@@ -2086,7 +2287,8 @@ export default function AdminSettingsPage() {
                                             <div>
                           <p className="text-sm font-medium text-gray-900 dark:text-white">{connectedWallets.length} wallets configured</p>
                           {connectedWallets.find(wallet => wallet.connected) && (
-                            <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary cursor-default select-none">
+                            <span className="inline-flex items-center gap-1 px-2 py-1 border border-gray-300 dark:border-primary bg-white dark:bg-primary/10 text-gray-900 dark:text-white rounded text-xs font-medium cursor-default select-none mt-1">
+                              <Logo width={12} height={12} className="flex-shrink-0" />
                               {connectedWallets.find(wallet => wallet.connected)?.name}
                             </span>
                           )}
@@ -2244,7 +2446,7 @@ export default function AdminSettingsPage() {
           {/* Preferences Box */}
           {activeTab === 'profile' && (
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm mt-6">
-              <h2 className="text-xl font-bold mb-4 text-black dark:text-white">Preferences</h2>
+              <h2 className="text-xl font-bold mb-2 text-black dark:text-white">Preferences</h2>
               <p className="text-gray-600 dark:text-gray-400 text-xs mb-6">Customize your account preferences and settings.</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
@@ -2361,7 +2563,7 @@ export default function AdminSettingsPage() {
           {/* Sign Out Box */}
           {activeTab === 'profile' && (
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm mt-6">
-              <h2 className="text-xl font-bold mb-4 text-black dark:text-white">Sign Out</h2>
+              <h2 className="text-xl font-bold mb-2 text-black dark:text-white">Sign Out</h2>
               <p className="text-gray-600 dark:text-gray-400 text-xs mb-6">Sign out of your account and return to the login page.</p>
               <div className="flex justify-end">
                 <button 
@@ -2378,7 +2580,7 @@ export default function AdminSettingsPage() {
           {/* Delete Account Box */}
           {activeTab === 'profile' && (
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm mt-6">
-              <h2 className="text-xl font-bold mb-4 text-black dark:text-white">Delete Account</h2>
+              <h2 className="text-xl font-bold mb-2 text-black dark:text-white">Delete Account</h2>
               <p className="text-gray-600 dark:text-gray-400 text-xs mb-6">Delete your account and all its contents, including completed documents. This action is irreversible and will cancel your subscription, so proceed with caution</p>
               <div className="flex justify-end">
                 <button 
@@ -2393,7 +2595,7 @@ export default function AdminSettingsPage() {
           )}
           {activeTab === 'api' && (
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm">
-              <h2 className="text-lg font-bold mb-4 text-black dark:text-white">API Tokens</h2>
+              <h2 className="text-lg font-bold mb-2 text-black dark:text-white">API Tokens</h2>
               <p className="text-gray-600 dark:text-gray-400 text-xs mb-6">Create & manage API tokens for secure access to your account</p>
               {!showApiTokens && (
                 <div className="flex items-center justify-between">
@@ -2532,7 +2734,7 @@ export default function AdminSettingsPage() {
           
           {activeTab === 'webhooks' && (
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm">
-              <h2 className="text-lg font-bold mb-4 text-black dark:text-white">Webhooks</h2>
+              <h2 className="text-lg font-bold mb-2 text-black dark:text-white">Webhooks</h2>
               <p className="text-gray-600 dark:text-gray-400 text-xs mb-6">Create & manage webhooks</p>
               {!showWebhooks && (
                 <div className="flex items-center justify-between">
@@ -2673,13 +2875,13 @@ export default function AdminSettingsPage() {
           
           {activeTab === 'policies' && (
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm">
-              <h2 className="text-lg font-bold mb-4 text-black dark:text-white">Policies</h2>
+              <h2 className="text-lg font-bold mb-2 text-black dark:text-white">Policies</h2>
               <p className="text-gray-600 dark:text-gray-400 text-xs mb-6">Create & manage policies</p>
               {!showPolicies && (
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center border-2 border-gray-200 dark:border-gray-600">
-                      <VscLaw size={20} className="text-gray-600 dark:text-gray-400" />
+                      <TbGavel size={20} className="text-gray-600 dark:text-gray-400" />
                     </div>
                     <div>
                       <p className="text-sm font-medium text-gray-900 dark:text-white">{policiesData.length} policies configured</p>
@@ -2757,7 +2959,7 @@ export default function AdminSettingsPage() {
                                   className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group flex items-center justify-center"
                                   title="Remove policy"
                                 >
-                                  <TbWashDryFlat className="text-sm sm:text-base transition-colors" />
+                                  <TbWallpaperOff className="text-sm sm:text-base transition-colors" />
                                   <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                     Remove
                                   </span>
@@ -2817,7 +3019,7 @@ export default function AdminSettingsPage() {
               {/* Header Section */}
               <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm">
                 <div>
-                  <h2 className="text-lg font-bold text-black dark:text-white mb-1">Billing</h2>
+                  <h2 className="text-lg font-bold text-black dark:text-white mb-2">Billing</h2>
                   <div className="flex justify-between items-center">
                     <p className="text-gray-500 dark:text-gray-400 text-xs">You are currently on the Free Plan.</p>
                     <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold">
@@ -2930,87 +3132,992 @@ export default function AdminSettingsPage() {
             <>
               {/* Organizations */}
               <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h2 className="text-lg font-bold text-black dark:text-white">Organizations</h2>
-                    <p className="text-gray-600 dark:text-gray-400 text-xs">Create & manage organizations</p>
-                  </div>
-                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-0 items-center">
-                    <div className="relative" ref={organizationDropdownRef}>
-                      <button
-                        onClick={() => setShowOrganizationDropdown(!showOrganizationDropdown)}
-                        className="appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 text-sm font-semibold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary dark:focus:ring-0 dark:focus:border-gray-600 transition-colors cursor-pointer flex items-center justify-between w-full gap-3"
-                        style={{ fontFamily: 'Avenir, sans-serif' }}
-                      >
-                        <span>
-                          {selectedOrganizationFilter.includes('all') 
-                            ? `All (${organizationsData.length})` 
-                            : selectedOrganizationFilter.length === 1
-                              ? organizationsData.find(org => org.id === selectedOrganizationFilter[0])?.name || 'All'
-                              : `${selectedOrganizationFilter.map(id => organizationsData.find(org => org.id === id)?.name).filter(Boolean).join(', ')} (${selectedOrganizationFilter.length})`
-                          }
-                        </span>
-                        <TbChevronDown className="w-4 h-4 text-gray-400" />
-                      </button>
-                      
-                      {showOrganizationDropdown && (
-                        <div className="absolute right-0 mt-1 w-52 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
-                          <button
-                            className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedOrganizationFilter.includes('all') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
-                            onClick={() => {
-                              setSelectedOrganizationFilter(['all']);
-                              setShowOrganizationDropdown(false);
-                            }}
-                          >
-                            <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                              {selectedOrganizationFilter.includes('all') && (
-                                <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
-                                  <FaCheck className="text-white" size={8} />
-                                </div>
-                              )}
-                            </div>
-                            All
-                          </button>
-                          {organizationsData.map((org) => (
+                {!showOrganizationCreateForm ? (
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h2 className="text-lg font-bold mb-2 text-black dark:text-white">Organizations</h2>
+                      <p className="text-gray-600 dark:text-gray-400 text-xs">Create & manage organizations</p>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-0 items-center">
+                      <div className="relative" ref={organizationDropdownRef}>
+                        <button
+                          onClick={() => setShowOrganizationDropdown(!showOrganizationDropdown)}
+                          className="appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 text-sm font-semibold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary dark:focus:ring-0 dark:focus:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer flex items-center justify-between w-full gap-3"
+                          style={{ fontFamily: 'Avenir, sans-serif' }}
+                        >
+                          <span>
+                            {selectedOrganizationFilter.includes('all') 
+                              ? `All (${organizationsData.length})` 
+                              : selectedOrganizationFilter.length === 1
+                                ? organizationsData.find(org => org.id === selectedOrganizationFilter[0])?.name || 'All'
+                                : `${selectedOrganizationFilter.map(id => organizationsData.find(org => org.id === id)?.name).filter(Boolean).join(', ')} (${selectedOrganizationFilter.length})`
+                            }
+                          </span>
+                          <TbChevronDown className="w-4 h-4 text-gray-400" />
+                        </button>
+                        
+                        {showOrganizationDropdown && (
+                          <div className="absolute right-0 mt-1 w-52 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
                             <button
-                              key={org.id}
-                              className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedOrganizationFilter.includes(org.id) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                setSelectedOrganizationFilter(prev => {
-                                  const newFilters = prev.filter(f => f !== 'all');
-                                  if (prev.includes(org.id)) {
-                                    const updatedFilters = newFilters.filter(f => f !== org.id);
-                                    // If no organizations left, default to 'all'
-                                    return updatedFilters.length === 0 ? ['all'] : updatedFilters;
-                                  } else {
-                                    return [...newFilters, org.id];
-                                  }
-                                });
+                              className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedOrganizationFilter.includes('all') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                              onClick={() => {
+                                setSelectedOrganizationFilter(['all']);
+                                setShowOrganizationDropdown(false);
                               }}
                             >
                               <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                                {selectedOrganizationFilter.includes(org.id) && (
+                                {selectedOrganizationFilter.includes('all') && (
                                   <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
                                     <FaCheck className="text-white" size={8} />
                                   </div>
                                 )}
                               </div>
-                              {org.name}
+                              All
                             </button>
-                          ))}
-                        </div>
-                      )}
+                            {organizationsData.map((org) => (
+                              <button
+                                key={org.id}
+                                className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedOrganizationFilter.includes(org.id) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setSelectedOrganizationFilter(prev => {
+                                    const newFilters = prev.filter(f => f !== 'all');
+                                    if (prev.includes(org.id)) {
+                                      const updatedFilters = newFilters.filter(f => f !== org.id);
+                                      // If no organizations left, default to 'all'
+                                      return updatedFilters.length === 0 ? ['all'] : updatedFilters;
+                                    } else {
+                                      return [...newFilters, org.id];
+                                    }
+                                  });
+                                }}
+                              >
+                                <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                                  {selectedOrganizationFilter.includes(org.id) && (
+                                    <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                                      <FaCheck className="text-white" size={8} />
+                                    </div>
+                                  )}
+                                </div>
+                                {org.name}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <button 
+                        onClick={() => setShowOrganizationCreateForm(true)}
+                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold sm:ml-1 flex items-center gap-2"
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                      >
+                        <TbBuildingPlus size={16} />
+                        Create Organization
+                      </button>
                     </div>
-                    <button 
-                      className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold sm:ml-1"
-                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-4">
+                      <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800">
+                        <TbBuildingPlus size={21} className="text-teal-500 dark:text-teal-400" />
+                      </div>
+                      <div>
+                        <h2 className="text-lg font-bold text-black dark:text-white leading-tight">Create New Organization</h2>
+                        <p className="text-gray-500 text-xs leading-tight cursor-default select-none">Fill in the organization details to get started</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setShowOrganizationCreateForm(false);
+                        setOrganizationFormStep(1);
+                        setOrganizationFormData({
+                          name: '',
+                          type: '',
+                          businessAddress: '',
+                          city: '',
+                          state: '',
+                          zipCode: '',
+                          country: '',
+                          phone: '',
+                          website: '',
+                          industries: []
+                        });
+                        setOrganizationCollaborators([{
+                          name: '',
+                          email: '',
+                          contractPermissions: [],
+                          showNamesDropdown: false,
+                          namesDropdownRef: React.createRef<HTMLDivElement>(),
+                          contractRoleInputRef: React.createRef<HTMLDivElement>(),
+                          contractRoleDropdownRef: React.createRef<HTMLDivElement>(),
+                          namesInputRef: React.createRef<HTMLInputElement>(),
+                          showContractRoleDropdown: false
+                        }]);
+                      }}
+                      className="text-gray-400 hover:text-gray-600 p-2 rounded-full"
                     >
-                      Create
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
                     </button>
                   </div>
-                </div>
+                )}
+
+                {/* Organization Create Inline Form */}
+                {showOrganizationCreateForm && (
+                  <div>
+                    <div className="bg-white dark:bg-gray-800 rounded-xl pb-6">
+
+                      {/* Stepper */}
+                      <div className="w-full overflow-x-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
+                        <div className="flex items-center justify-between mb-6 min-w-0">
+                          <div className="flex items-center space-x-2 w-full flex-nowrap">
+                            {[1, 2].map((step, idx) => (
+                            <React.Fragment key={step}>
+                              <button
+                                type="button"
+                                onClick={() => setOrganizationFormStep(step)}
+                                className={`flex items-center gap-2 rounded-xl font-semibold border transition-all duration-300 text-sm px-3 sm:px-4 py-2 whitespace-nowrap flex-shrink-0
+                                  ${organizationFormStep === step
+                                    ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 ring-1 ring-inset ring-gray-200 dark:ring-gray-600 shadow-sm'
+                                    : 'text-gray-500 dark:text-gray-400 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700'
+                                  }`}
+                              >
+                                <span className={`inline-block transition-all duration-300 ${organizationFormStep === step ? 'opacity-100 mr-2' : 'opacity-0 w-0 mr-0'}`} style={{width: organizationFormStep === step ? 18 : 0}}>
+                                  {organizationFormStep === step && <Logo width={18} height={18} className="pointer-events-none" />}
+                                </span>
+                                {step === 1 && 'Step 1: Details'}
+                                {step === 2 && 'Step 2: Collaborators'}
+                              </button>
+                              {idx < 1 && <div className="flex-1 h-0.5 bg-gray-200 dark:bg-gray-600 mx-1 sm:mx-2" />}
+                            </React.Fragment>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Form Content */}
+                      <div className="space-y-6 pt-4">
+                        {organizationFormStep === 1 && (
+                          <form className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <div>
+                                <label className="block text-xs font-medium text-black dark:text-white mb-1">Organization Name <span className="text-red-500">*</span></label>
+                                <input 
+                                  type="text" 
+                                  value={organizationFormData.name}
+                                  onChange={(e) => handleOrganizationFormChange('name', e.target.value)}
+                                  className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs" 
+                                  placeholder="Enter organization name..." 
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-black dark:text-white mb-1">Organization Type <span className="text-red-500">*</span></label>
+                                <div className="relative w-full" ref={organizationFormTypeDropdownRef}>
+                                  <input
+                                    type="text"
+                                    className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs pr-10 cursor-pointer caret-transparent"
+                                    placeholder="Select organization type..."
+                                    value={COMPANY_TYPES.find(t => t.value === organizationFormData.type)?.label || ''}
+                                    readOnly
+                                    onClick={() => {
+                                      setShowCompanyTypeDropdown(!showCompanyTypeDropdown);
+                                      // Close other dropdowns when opening this one
+                                      if (!showCompanyTypeDropdown) {
+                                        setShowStateDropdown(false);
+                                        setShowCountryDropdown(false);
+                                        setShowIndustriesDropdown(false);
+                                        setStateSearchTerm('');
+                                        setCountrySearchTerm('');
+                                        setIndustrySearchTerm('');
+                                      }
+                                    }}
+                                  />
+                                  <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                  {showCompanyTypeDropdown && (
+                                    <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar]:hidden" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                      {COMPANY_TYPES.map(type => (
+                                        <button
+                                          key={type.value}
+                                          className={`w-full text-left px-3 py-2 text-xs font-medium ${organizationFormData.type === type.value ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                                          onClick={() => {
+                                            handleOrganizationFormChange('type', type.value);
+                                            setShowCompanyTypeDropdown(false);
+                                          }}
+                                        >
+                                          {type.label}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-black dark:text-white mb-1">Business Address</label>
+                              <input 
+                                type="text" 
+                                value={organizationFormData.businessAddress}
+                                onChange={(e) => handleOrganizationFormChange('businessAddress', e.target.value)}
+                                className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs" 
+                                placeholder="Enter business address..." 
+                              />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                              <div>
+                                <label className="block text-xs font-medium text-black dark:text-white mb-1">City</label>
+                                <input 
+                                  type="text" 
+                                  value={organizationFormData.city}
+                                  onChange={(e) => handleOrganizationFormChange('city', e.target.value)}
+                                  className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs" 
+                                  placeholder="Enter City..." 
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-black dark:text-white mb-1">State</label>
+                                <div className="relative w-full" ref={organizationFormStateDropdownRef}>
+                                  <input
+                                    type="text"
+                                    className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs pr-10 cursor-pointer caret-transparent"
+                                    placeholder="Select State..."
+                                    value={stateSearchTerm || US_STATES.find(s => s.value === organizationFormData.state)?.label || ''}
+                                    onChange={(e) => setStateSearchTerm(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Backspace' && !stateSearchTerm) {
+                                        e.preventDefault();
+                                        handleOrganizationFormChange('state', '');
+                                      }
+                                    }}
+                                    onClick={() => {
+                                      setShowStateDropdown(!showStateDropdown);
+                                      // Close other dropdowns when opening this one
+                                      if (!showStateDropdown) {
+                                        setShowCompanyTypeDropdown(false);
+                                        setShowCountryDropdown(false);
+                                        setShowIndustriesDropdown(false);
+                                        setCountrySearchTerm('');
+                                        setIndustrySearchTerm('');
+                                      }
+                                    }}
+                                  />
+                                  <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                  {showStateDropdown && (
+                                    <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar]:hidden" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                      {US_STATES
+                                        .filter(stateOption => 
+                                          stateOption.label.toLowerCase().includes(stateSearchTerm.toLowerCase())
+                                        )
+                                        .map(stateOption => (
+                                        <button
+                                          key={stateOption.value}
+                                          className={`w-full text-left px-3 py-2 text-xs font-medium ${organizationFormData.state === stateOption.value ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                                          onClick={() => {
+                                            handleOrganizationFormChange('state', stateOption.value);
+                                            setShowStateDropdown(false);
+                                            setStateSearchTerm('');
+                                          }}
+                                        >
+                                          {stateOption.label}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-black dark:text-white mb-1">ZIP Code</label>
+                                <input 
+                                  type="text" 
+                                  value={organizationFormData.zipCode}
+                                  onChange={(e) => handleOrganizationFormChange('zipCode', e.target.value)}
+                                  className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs" 
+                                  placeholder="Enter ZIP code..." 
+                                />
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <div>
+                                <label className="block text-xs font-medium text-black dark:text-white mb-1">Country</label>
+                                <div className="relative w-full" ref={organizationFormCountryDropdownRef}>
+                                  <input
+                                    type="text"
+                                    className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs pr-10 cursor-pointer caret-transparent"
+                                    placeholder="Select Country..."
+                                    value={countrySearchTerm || COUNTRIES.find(c => c.value === organizationFormData.country)?.label || ''}
+                                    onChange={(e) => setCountrySearchTerm(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Backspace' && !countrySearchTerm) {
+                                        e.preventDefault();
+                                        handleOrganizationFormChange('country', '');
+                                      }
+                                    }}
+                                    onClick={() => {
+                                      setShowCountryDropdown(!showCountryDropdown);
+                                      // Close other dropdowns when opening this one
+                                      if (!showCountryDropdown) {
+                                        setShowCompanyTypeDropdown(false);
+                                        setShowStateDropdown(false);
+                                        setShowIndustriesDropdown(false);
+                                        setStateSearchTerm('');
+                                        setIndustrySearchTerm('');
+                                      }
+                                    }}
+                                  />
+                                  <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                  {showCountryDropdown && (
+                                    <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar]:hidden" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                      {COUNTRIES
+                                        .filter(countryOption => 
+                                          countryOption.label.toLowerCase().includes(countrySearchTerm.toLowerCase())
+                                        )
+                                        .map(countryOption => (
+                                        <button
+                                          key={countryOption.value}
+                                          className={`w-full text-left px-3 py-2 text-xs font-medium ${organizationFormData.country === countryOption.value ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                                          onClick={() => {
+                                            handleOrganizationFormChange('country', countryOption.value);
+                                            setShowCountryDropdown(false);
+                                            setCountrySearchTerm('');
+                                          }}
+                                        >
+                                          {countryOption.label}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-black dark:text-white mb-1">Phone</label>
+                                <input 
+                                  type="tel" 
+                                  value={organizationFormData.phone}
+                                  onChange={(e) => handleOrganizationFormChange('phone', e.target.value)}
+                                  className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs" 
+                                  placeholder="Enter phone number..." 
+                                />
+                              </div>
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-black dark:text-white mb-1">Website</label>
+                              <input 
+                                type="url" 
+                                value={organizationFormData.website}
+                                onChange={(e) => handleOrganizationFormChange('website', e.target.value)}
+                                className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs" 
+                                placeholder="Enter website..." 
+                              />
+                            </div>
+                            <div className="mb-8">
+                              <label className="block text-xs font-medium text-black dark:text-white mb-1">Industries</label>
+                              <div className="relative w-full" ref={organizationFormIndustriesDropdownRef}>
+                                <div className="relative">
+                                  <div 
+                                    className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-black dark:text-white focus-within:ring-2 focus-within:ring-primary focus-within:border-primary dark:focus-within:ring-0 dark:focus-within:border-gray-600 transition-colors bg-white dark:bg-gray-900 min-h-[40px] flex flex-wrap items-center gap-2 cursor-text"
+                                    onClick={() => {
+                                      setShowIndustriesDropdown(!showIndustriesDropdown);
+                                      if (!showIndustriesDropdown) {
+                                        setIndustrySearchTerm('');
+                                        // Close other dropdowns when opening this one
+                                        setShowCompanyTypeDropdown(false);
+                                        setShowStateDropdown(false);
+                                        setShowCountryDropdown(false);
+                                        setStateSearchTerm('');
+                                        setCountrySearchTerm('');
+                                      }
+                                    }}
+                                  >
+                                    {/* Selected industries display inside the field */}
+                                    {organizationFormData.industries.map(industry => {
+                                      const IconComponent = INDUSTRY_ICONS[industry as keyof typeof INDUSTRY_ICONS];
+                                      return (
+                                        <span 
+                                          key={industry}
+                                          className="inline-flex items-center gap-1 px-2 py-1 border border-gray-300 dark:border-primary bg-white dark:bg-primary/10 text-gray-900 dark:text-white rounded text-xs font-medium"
+                                        >
+                                          <IconComponent className="w-3 h-3 text-primary dark:text-white" />
+                                          {industry}
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleOrganizationFormChange('industries', organizationFormData.industries.filter(i => i !== industry));
+                                            }}
+                                            className="ml-1 hover:text-primary-dark dark:hover:text-gray-300"
+                                          >
+                                            ×
+                                          </button>
+                                        </span>
+                                      );
+                                    })}
+                                    {/* Input field for typing */}
+                                    <input
+                                      type="text"
+                                      className="flex-1 min-w-[120px] bg-transparent border-none outline-none text-xs font-medium text-black dark:text-white placeholder-gray-400"
+                                      placeholder={organizationFormData.industries.length === 0 ? "Search or select industries..." : ""}
+                                      value={industrySearchTerm}
+                                      onChange={(e) => {
+                                        setIndustrySearchTerm(e.target.value);
+                                        setShowIndustriesDropdown(true);
+                                      }}
+                                      onFocus={(e) => {
+                                        e.target.setSelectionRange(e.target.value.length, e.target.value.length);
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                                {showIndustriesDropdown && (
+                                  <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-hidden overflow-y-auto [&::-webkit-scrollbar]:hidden">
+                                    {INDUSTRIES
+                                      .filter(industry => 
+                                        industry.toLowerCase().includes(industrySearchTerm.toLowerCase())
+                                      )
+                                      .map(industry => {
+                                        const IconComponent = INDUSTRY_ICONS[industry as keyof typeof INDUSTRY_ICONS];
+                                        return (
+                                          <button
+                                            key={industry}
+                                            className={`w-full text-left px-3 py-2 text-xs font-medium flex items-center gap-2 ${organizationFormData.industries.includes(industry) ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                                            onClick={e => {
+                                              e.preventDefault();
+                                              const newIndustries = organizationFormData.industries.includes(industry)
+                                                ? organizationFormData.industries.filter(i => i !== industry)
+                                                : [...organizationFormData.industries, industry];
+                                              handleOrganizationFormChange('industries', newIndustries);
+                                              setIndustrySearchTerm('');
+                                            }}
+                                          >
+                                            <div className="w-4 h-4 border border-gray-300 rounded flex items-center justify-center">
+                                              {organizationFormData.industries.includes(industry) && (
+                                                <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                                                  <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                  </svg>
+                                                </div>
+                                              )}
+                                            </div>
+                                            <IconComponent className="w-4 h-4" />
+                                            {industry}
+                                          </button>
+                                        );
+                                      })}
+                                    {INDUSTRIES.filter(industry => 
+                                      industry.toLowerCase().includes(industrySearchTerm.toLowerCase())
+                                    ).length === 0 && industrySearchTerm.length > 0 && (
+                                      <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
+                                        No industries found
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Cancel and Continue Buttons - Step 1 */}
+                            <div className="flex items-center justify-between w-full !mt-5">
+                              <button
+                                onClick={() => {
+                                  setShowOrganizationCreateForm(false);
+                                  setOrganizationFormStep(1);
+                                  setOrganizationFormData({
+                                    name: '',
+                                    type: '',
+                                    businessAddress: '',
+                                    city: '',
+                                    state: '',
+                                    zipCode: '',
+                                    country: '',
+                                    phone: '',
+                                    website: '',
+                                    industries: []
+                                  });
+                                  setOrganizationCollaborators([{
+                                    name: '',
+                                    email: '',
+                                    contractPermissions: [],
+                                    showNamesDropdown: false,
+                                    namesDropdownRef: React.createRef<HTMLDivElement>(),
+                                    contractRoleInputRef: React.createRef<HTMLDivElement>(),
+                                    contractRoleDropdownRef: React.createRef<HTMLDivElement>(),
+                                    namesInputRef: React.createRef<HTMLInputElement>(),
+                                    showContractRoleDropdown: false
+                                  }]);
+                                }}
+                                className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
+                                style={{ fontFamily: 'Avenir, sans-serif' }}
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={() => setOrganizationFormStep(organizationFormStep + 1)}
+                                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+                                style={{ fontFamily: 'Avenir, sans-serif' }}
+                              >
+                                Continue
+                              </button>
+                            </div>
+                          </form>
+                        )}
+
+                        {organizationFormStep === 2 && (
+                          <form className="space-y-4">
+                            {/* I am working solo checkbox */}
+                            <div className="flex items-center gap-2 mb-6">
+                              <div className="w-5 h-5 border border-gray-300 rounded flex items-center justify-center cursor-pointer" onClick={() => {
+                                const newValue = !isWorkingSolo;
+                                setIsWorkingSolo(newValue);
+                                
+                                // If checking the box, automatically add current user as collaborator
+                                if (newValue && user) {
+                                  const currentUserCollaborator = {
+                                    name: user.name,
+                                    email: user.email,
+                                    contractPermissions: ['Edit', 'View', 'Sign'],
+                                    isEditingEmail: false
+                                  };
+                                  
+                                  // Check if user is already added as collaborator
+                                  const existingUser = addedOrganizationCollaborators.find(collaborator => 
+                                    collaborator.email.toLowerCase() === user.email.toLowerCase()
+                                  );
+                                  
+                                  if (!existingUser) {
+                                    setAddedOrganizationCollaborators(prev => [...prev, currentUserCollaborator]);
+                                  }
+                                } else if (!newValue && user) {
+                                  // If unchecking the box, remove current user as collaborator
+                                  setAddedOrganizationCollaborators(prev => prev.filter(collaborator => 
+                                    collaborator.email.toLowerCase() !== user.email.toLowerCase()
+                                  ));
+                                }
+                              }}>
+                                {isWorkingSolo && (
+                                  <div className="w-4 h-4 bg-primary rounded-sm flex items-center justify-center">
+                                    <FaCheck className="text-white" size={10} />
+                                  </div>
+                                )}
+                              </div>
+                              <label 
+                                className="text-xs font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
+                                style={{ fontFamily: 'Avenir, sans-serif' }}
+                                onClick={() => {
+                                  const newValue = !isWorkingSolo;
+                                  setIsWorkingSolo(newValue);
+                                  
+                                  // If checking the box, automatically add current user as collaborator
+                                  if (newValue && user) {
+                                    const currentUserCollaborator = {
+                                      name: user.name,
+                                      email: user.email,
+                                      contractPermissions: ['Edit', 'View', 'Sign'],
+                                      isEditingEmail: false
+                                    };
+                                    
+                                    // Check if user is already added as collaborator
+                                    const existingUser = addedOrganizationCollaborators.find(collaborator => 
+                                      collaborator.email.toLowerCase() === user.email.toLowerCase()
+                                    );
+                                    
+                                    if (!existingUser) {
+                                      setAddedOrganizationCollaborators(prev => [...prev, currentUserCollaborator]);
+                                    }
+                                  } else if (!newValue && user) {
+                                    // If unchecking the box, remove current user as collaborator
+                                    setAddedOrganizationCollaborators(prev => prev.filter(collaborator => 
+                                      collaborator.email.toLowerCase() !== user.email.toLowerCase()
+                                    ));
+                                  }
+                                }}
+                              >
+                                I am working solo
+                              </label>
+                            </div>
+                            
+                            {/* Single form fields */}
+                            <div className="relative mb-4">
+                              {/* Form fields */}
+                              <div className="flex gap-6">
+                                <div className="w-1/2">
+                                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                    Collaborator Name <span className="text-red-500">*</span>
+                                  </label>
+                                  <div className="relative">
+                                    <input
+                                      ref={organizationCollaborators[0].namesInputRef}
+                                      type="text"
+                                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white pr-10"
+                                      placeholder="Enter collaborator name..."
+                                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                                      value={organizationCollaborators[0].name}
+                                      onChange={e => {
+                                        setOrganizationCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, name: e.target.value } : r));
+                                        setOrganizationRecipientErrors(prev => ({ ...prev, [`name-0`]: false }));
+                                        setDuplicateOrganizationCollaboratorError(false);
+                                      }}
+                                      onClick={() => {
+                                        setOrganizationCollaborators(prev => prev.map((r, i) => i === 0 ? { 
+                                          ...r, 
+                                          showNamesDropdown: !r.showNamesDropdown,
+                                          showContractRoleDropdown: false // Close permissions dropdown
+                                        } : r));
+                                        // Also close the showPermissionsDropdown state
+                                        setShowOrganizationPermissionsDropdown(false);
+                                      }}
+                                      autoComplete="off"
+                                    />
+                                    <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
+                                    
+                                    {/* Names/Emails Autocomplete Dropdown */}
+                                    {organizationCollaborators[0].showNamesDropdown && (
+                                      <div 
+                                        ref={organizationCollaborators[0].namesDropdownRef}
+                                        className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500"
+                                      >
+                                        {/* Assignees Section */}
+                                        {allAssignees
+                                          .filter(assignee => 
+                                            assignee.toLowerCase().includes(organizationCollaborators[0].name.toLowerCase())
+                                          )
+                                          .sort()
+                                          .map((assignee) => (
+                                            <button
+                                              key={`assignee-${assignee}`}
+                                              className="w-full text-left px-3 py-0.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                                              onClick={() => {
+                                                setOrganizationCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, name: assignee, showNamesDropdown: false } : r));
+                                                setOrganizationRecipientErrors(prev => ({ ...prev, [`name-0`]: false }));
+                                              }}
+                                            >
+                                              <TbUser className="w-4 h-4 flex-shrink-0" />
+                                              {assignee}
+                                            </button>
+                                          ))}
+                                        
+                                        {/* Contract Parties Section */}
+                                        {(() => {
+                                          const mockContracts = [
+                                            'Robert Chen', 'Eastside Properties', 'GreenSpace Developers', 'BuildRight Construction',
+                                            'TechCorp', 'Property Holdings', 'Smith Family', 'Real Estate Co', 'InvestPro', 
+                                            'Property Group', 'Johnson Family', 'Home Sales', 'Office Solutions', 'Property Co',
+                                            'Corporate Holdings', 'Real Estate', 'Retail Corp', 'Marketing Solutions Inc', 'Legal Advisory LLC'
+                                          ];
+                                          
+                                          const filteredParties = mockContracts
+                                            .filter(party => 
+                                              party.toLowerCase().includes(organizationCollaborators[0].name.toLowerCase()) &&
+                                              !allAssignees.includes(party)
+                                            )
+                                            .sort();
+                                          
+                                          return filteredParties.length > 0 ? (
+                                            <>
+                                              {filteredParties.map((party) => (
+                                                <button
+                                                  key={`party-${party}`}
+                                                  className="w-full text-left px-3 py-0.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                                                  onClick={() => {
+                                                    setOrganizationCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, name: party, showNamesDropdown: false } : r));
+                                                    setOrganizationRecipientErrors(prev => ({ ...prev, [`name-0`]: false }));
+                                                  }}
+                                                >
+                                                  <TbUser className="w-4 h-4 flex-shrink-0" />
+                                                  {party}
+                                                </button>
+                                              ))}
+                                            </>
+                                          ) : null;
+                                        })()}
+                                        
+                                        {/* No Matches Message */}
+                                        {(() => {
+                                          const allAssigneesFiltered = allAssignees.filter(assignee => 
+                                            assignee.toLowerCase().includes(organizationCollaborators[0].name.toLowerCase())
+                                          );
+                                          const mockContracts = [
+                                            'Robert Chen', 'Eastside Properties', 'GreenSpace Developers', 'BuildRight Construction',
+                                            'TechCorp', 'Property Holdings', 'Smith Family', 'Real Estate Co', 'InvestPro', 
+                                            'Property Group', 'Johnson Family', 'Home Sales', 'Office Solutions', 'Property Co',
+                                            'Corporate Holdings', 'Real Estate', 'Retail Corp', 'Marketing Solutions Inc', 'Legal Advisory LLC'
+                                          ];
+                                          const filteredParties = mockContracts.filter(party => 
+                                            party.toLowerCase().includes(organizationCollaborators[0].name.toLowerCase()) &&
+                                            !allAssignees.includes(party)
+                                          );
+                                          
+                                          return allAssigneesFiltered.length === 0 && filteredParties.length === 0 && organizationCollaborators[0].name.length > 0 ? (
+                                            <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
+                                              No matches found
+                                            </div>
+                                          ) : null;
+                                        })()}
+                                      </div>
+                                    )}
+                                  </div>
+                                  {organizationRecipientErrors[`name-0`] && (
+                                    <p className="text-red-600 text-xs mt-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                      Collaborator name is required
+                                    </p>
+                                  )}
+                                
+                                  {/* Email Field */}
+                                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 mt-6" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                    Collaborator Email <span className="text-red-500">*</span>
+                                  </label>
+                                  <input
+                                    type="email"
+                                    className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white"
+                                    placeholder="Enter collaborator email address..."
+                                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                                    value={organizationCollaborators[0].email || ''}
+                                    onChange={e => {
+                                      setOrganizationCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, email: e.target.value } : r));
+                                      setOrganizationRecipientErrors(prev => ({ ...prev, [`email-0`]: false }));
+                                      setDuplicateOrganizationCollaboratorError(false);
+                                    }}
+                                  />
+                                  {organizationRecipientErrors[`email-0`] && (
+                                    <p className="text-red-600 text-xs mt-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                      Collaborator email is required
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="w-1/2">
+                                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                    Contract Permissions <span className="text-red-500">*</span>
+                                  </label>
+                                  <div className="relative w-full">
+                                    {/* Permissions Field with Selected Permissions Inside */}
+                                    <div 
+                                      ref={organizationCollaborators[0].contractRoleInputRef}
+                                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-gray-700 dark:text-gray-300 focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-colors bg-white dark:bg-gray-900 flex items-center justify-between cursor-pointer"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setShowOrganizationPermissionsDropdown(!showOrganizationPermissionsDropdown);
+                                        // Close names dropdown when opening permissions dropdown
+                                        setOrganizationCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, showNamesDropdown: false } : r));
+                                      }}
+                                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                                    >
+                                      <div className="flex-1 flex items-center overflow-hidden">
+                                        {organizationCollaborators[0].contractPermissions.length > 0 ? (
+                                          <span className="text-gray-900 dark:text-white">
+                                            {sortOrganizationPermissions(organizationCollaborators[0].contractPermissions).join(', ')}
+                                          </span>
+                                        ) : (
+                                          <span className="text-gray-500">Define collaborator contract permissions...</span>
+                                        )}
+                                      </div>
+                                      <TbChevronDown 
+                                        className="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0 ml-2" 
+                                      />
+                                    </div>
+                                    
+                                    {/* Permissions Dropdown */}
+                                    {showOrganizationPermissionsDropdown && (
+                                      <div
+                                        key="permissions-dropdown"
+                                        ref={organizationCollaborators[0].contractRoleDropdownRef}
+                                        className="absolute top-full left-0 right-0 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2"
+                                        style={{ 
+                                          top: 'calc(100% + 4px)',
+                                          fontFamily: 'Avenir, sans-serif'
+                                        }}
+                                      >
+                                        {['Edit', 'View', 'Sign'].map((permission) => (
+                                          <button
+                                            key={permission}
+                                            className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${organizationCollaborators[0].contractPermissions.includes(permission) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                                            onClick={(e) => {
+                                              e.preventDefault();
+                                              e.stopPropagation();
+                                              setOrganizationCollaborators(prev => prev.map((r, i) => i === 0 ? {
+                                                ...r,
+                                                contractPermissions: r.contractPermissions.includes(permission)
+                                                  ? r.contractPermissions.filter(p => p !== permission)
+                                                  : [...r.contractPermissions, permission]
+                                              } : r));
+                                              setOrganizationRecipientErrors(prev => ({ ...prev, [`contractPermissions-0`]: false }));
+                                              // Don't close the dropdown - allow multiple selections
+                                            }}
+                                          >
+                                            <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                                              {organizationCollaborators[0].contractPermissions.includes(permission) && (
+                                                <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                                                  <FaCheck className="text-white" size={8} />
+                                                </div>
+                                              )}
+                                            </div>
+                                            {permission}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    )}
+                                    
+                                    {organizationRecipientErrors[`contractPermissions-0`] && (
+                                      <p className="text-red-600 text-xs mt-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                        Permissions must be defined
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Added Collaborators Display */}
+                            <div className="mt-6 min-h-[120px]">
+                              {addedOrganizationCollaborators.length > 0 ? (
+                                <>
+                                  <button 
+                                    className="flex items-center gap-2 mb-3 bg-white dark:bg-gray-800 rounded-lg px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-0 active:transform-none transition-colors cursor-pointer"
+                                    onClick={() => setShowManageOrganizationCollaboratorsModal(true)}
+                                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                                  >
+                                    <TbUsers className="h-5 w-5" />
+                                    <span className="text-xs font-semibold">Manage</span>
+                                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                                      ({addedOrganizationCollaborators.length})
+                                    </span>
+                                  </button>
+                                  <div className="flex flex-wrap gap-1">
+                                    {addedOrganizationCollaborators.map((collaborator, idx) => {
+                                      const colorScheme = getCollaboratorBadgeColor(idx);
+                                      return (
+                                        <div 
+                                          key={idx} 
+                                          className={`h-10 w-10 rounded-lg ${colorScheme.bg} flex items-center justify-center border-2 ${colorScheme.border} relative group cursor-pointer`}
+                                          onClick={() => setShowManageOrganizationCollaboratorsModal(true)}
+                                        >
+                                          <span className={`text-sm font-semibold ${colorScheme.text}`} style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                            {getInitials(collaborator.name)}
+                                          </span>
+                                          
+                                          {/* X button for removal - only visible on hover */}
+                                          <button 
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              
+                                              // Check if the collaborator being removed is the current user
+                                              const collaboratorToRemove = addedOrganizationCollaborators[idx];
+                                              const isCurrentUser = user && collaboratorToRemove.email.toLowerCase() === user.email.toLowerCase();
+                                              
+                                              // Remove the collaborator
+                                              setAddedOrganizationCollaborators(prev => prev.filter((_, i) => i !== idx));
+                                              
+                                              // If removing current user, uncheck the "I am working solo" box
+                                              if (isCurrentUser) {
+                                                setIsWorkingSolo(false);
+                                              }
+                                            }}
+                                            className="absolute -top-2 -right-2 w-5 h-5 bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 rounded-lg flex items-center justify-center text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100 dark:hover:bg-red-900/30 border-2 border-red-200 dark:border-red-800"
+                                          >
+                                            ×
+                                          </button>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="text-center py-8 pb-8 text-gray-500 dark:text-gray-400 cursor-default select-none">
+                                  <TbUsers size={26} className="mx-auto mb-2 text-primary" />
+                                  <p className="text-sm" style={{ fontFamily: 'Avenir, sans-serif' }}>No collaborators yet</p>
+                                  <p className="text-xs" style={{ fontFamily: 'Avenir, sans-serif' }}>Add a collaborator by filling in the details above and clicking the "Add Collaborator" button</p>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Step 2 specific content - no buttons here */}
+                          </form>
+                        )}
+
+                        {/* Form Actions */}
+                        {organizationFormStep > 1 && (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            {organizationFormStep > 1 && (
+                              <button
+                                onClick={() => { setOrganizationFormStep(1); setCountrySearchTerm(''); setStateSearchTerm(''); }}
+                                className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
+                                style={{ fontFamily: 'Avenir, sans-serif' }}
+                              >
+                                Previous
+                              </button>
+                            )}
+                          </div>
+                          <div className="flex items-center" style={{ gap: '3px' }}>
+                            {organizationFormStep === 2 && (
+                              <div className="relative flex">
+                                {/* Duplicate Collaborator Error */}
+                                {duplicateOrganizationCollaboratorError && (
+                                  <p className="absolute bottom-full left-0 mb-1 text-xs text-red-600 font-medium cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                    {duplicateOrganizationCollaboratorError === 'both' ? 'Collaborator name & email already used' : 
+                                     duplicateOrganizationCollaboratorError === 'email' ? 'Collaborator email has already been used' : 
+                                     'Collaborator has already been added'}
+                                  </p>
+                                )}
+                                
+                                <button
+                                  type="button"
+                                  onClick={handleAddOrganizationCollaborator}
+                                  disabled={!organizationCollaborators[0].name.trim() || organizationCollaborators[0].contractPermissions.length === 0 || !organizationCollaborators[0].email.trim()}
+                                  className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                                >
+                                  <TbUserPlus className="w-4 h-4 mr-2" />
+                                  Add Collaborator
+                                </button>
+                              </div>
+                            )}
+                            {organizationFormStep === 2 && (
+                              <button
+                                onClick={() => {
+                                  // Handle form submission here
+                                  console.log('Organization form submitted:', { organizationFormData, organizationCollaborators });
+                                  setShowOrganizationCreateForm(false);
+                                  setOrganizationFormStep(1);
+                                  setOrganizationFormData({
+                                    name: '',
+                                    type: '',
+                                    businessAddress: '',
+                                    city: '',
+                                    state: '',
+                                    zipCode: '',
+                                    country: '',
+                                    phone: '',
+                                    website: '',
+                                    industries: []
+                                  });
+                                  setOrganizationCollaborators([{
+                                    name: '',
+                                    email: '',
+                                    contractPermissions: [],
+                                    showNamesDropdown: false,
+                                    namesDropdownRef: React.createRef<HTMLDivElement>(),
+                                    contractRoleInputRef: React.createRef<HTMLDivElement>(),
+                                    contractRoleDropdownRef: React.createRef<HTMLDivElement>(),
+                                    namesInputRef: React.createRef<HTMLInputElement>(),
+                                    showContractRoleDropdown: false
+                                  }]);
+                                }}
+                                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+                                style={{ fontFamily: 'Avenir, sans-serif' }}
+                              >
+                                Create
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        )}
+                        
+                        {/* Divider Line */}
+                        <div className="border-t border-gray-200 dark:border-gray-700 mt-6"></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 
                 <div className="mt-6">
                   {organizationsData
@@ -3067,7 +4174,7 @@ export default function AdminSettingsPage() {
                                   }}
                                 >
                                   <TbBuildingCog className="h-4 w-4 mr-2" />
-                                  Configure
+                                  Edit
                                 </button>
                                 <button
                                   className="w-full px-3 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center"
@@ -3490,7 +4597,7 @@ export default function AdminSettingsPage() {
                                             >
                                               <TbUserCog size={14} />
                                               <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                                                Configure
+                                                Edit
                                               </span>
                                             </button>
                                             <button
@@ -3541,7 +4648,7 @@ export default function AdminSettingsPage() {
           </>
           )}
 
-          {activeTab !== 'profile' && activeTab !== 'api' && activeTab !== 'webhooks' && activeTab !== 'security' && activeTab !== 'billing' && activeTab !== 'company' && (
+          {activeTab !== 'profile' && activeTab !== 'api' && activeTab !== 'webhooks' && activeTab !== 'security' && activeTab !== 'billing' && activeTab !== 'company' && activeTab !== 'policies' && (
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm">
               <h2 className="text-xl font-bold mb-4 text-black dark:text-white">{TABS.find(tab => tab.key === activeTab)?.label} (Placeholder)</h2>
               <p className="text-gray-600 dark:text-gray-400 text-xs">Content for the {TABS.find(tab => tab.key === activeTab)?.label} tab will go here.</p>

@@ -329,6 +329,16 @@ export default function WorkflowsPage() {
     deleteTask
   } = useTaskStore();
 
+  // Validation function for subtask form
+  const isSubtaskFormValid = () => {
+    return (
+      newSubtaskTitle.trim() !== '' &&
+      newSubtaskAssignee.trim() !== '' &&
+      newSubtaskStatus.trim() !== '' &&
+      newSubtaskDueDate.trim() !== ''
+    );
+  };
+
   // Handle URL parameter to open specific task modal
   useEffect(() => {
     if (searchParams) {
@@ -1530,6 +1540,33 @@ export default function WorkflowsPage() {
     };
   }, [editingSubtaskName, selectedTask]);
 
+  // Add click-outside handler for inline subtask editing
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      
+      if (editingSubtaskIndex !== null && !target.closest('.subtask-editing-form')) {
+        // Save the changes when clicking outside - save if there's a title or if any other field has been modified
+        const originalSubtask = newTaskSubtasks[editingSubtaskIndex];
+        const hasChanges = inlineEditingSubtaskTitle.trim() !== '' || 
+                          inlineEditingSubtaskAssignee !== originalSubtask.assignee ||
+                          inlineEditingSubtaskDueDate !== originalSubtask.dueDate ||
+                          inlineEditingSubtaskDescription !== originalSubtask.description;
+        
+        if (hasChanges) {
+          handleSaveInlineEditSubtask(editingSubtaskIndex);
+        } else {
+          handleCancelInlineEditSubtask();
+        }
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [editingSubtaskIndex, inlineEditingSubtaskTitle, inlineEditingSubtaskAssignee, inlineEditingSubtaskDueDate, inlineEditingSubtaskDescription, newTaskSubtasks]);
+
   // Function to clean up all task-related data when deleting a task
   const cleanupTaskData = (taskId: string) => {
     // Clean up task files
@@ -2152,7 +2189,7 @@ export default function WorkflowsPage() {
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                               e.preventDefault();
-                              if (newSubtaskTitle.trim()) {
+                              if (isSubtaskFormValid()) {
                                 const newSubtask = {
                                   id: Date.now().toString(),
                                   title: newSubtaskTitle.trim(),
@@ -2336,7 +2373,7 @@ export default function WorkflowsPage() {
                         <div key={subtask.id} className="bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-700 transition-colors">
                           {editingSubtaskIndex === idx ? (
                             // Inline editing form
-                            <div className="space-y-4">
+                            <div className="space-y-4 subtask-editing-form">
                               <div className="grid grid-cols-2 gap-4">
                                 <div>
                                   <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Task Name</label>
@@ -2346,6 +2383,21 @@ export default function WorkflowsPage() {
                                     className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                                     value={inlineEditingSubtaskTitle}
                                     onChange={(e) => setInlineEditingSubtaskTitle(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        // Save if there's a title or if any other field has been modified
+                                        const originalSubtask = newTaskSubtasks[idx];
+                                        const hasChanges = inlineEditingSubtaskTitle.trim() !== '' || 
+                                                          inlineEditingSubtaskAssignee !== originalSubtask.assignee ||
+                                                          inlineEditingSubtaskDueDate !== originalSubtask.dueDate ||
+                                                          inlineEditingSubtaskDescription !== originalSubtask.description;
+                                        
+                                        if (hasChanges) {
+                                          handleSaveInlineEditSubtask(idx);
+                                        }
+                                      }
+                                    }}
                                   />
                                 </div>
                                 <div>
@@ -2454,39 +2506,31 @@ export default function WorkflowsPage() {
                                    onChange={(e) => setInlineEditingSubtaskDescription(e.target.value)}
                                  />
                               </div>
-                              <div className="flex justify-end">
-                                <button
-                                  type="button"
-                                  onClick={() => handleSaveInlineEditSubtask(idx)}
-                                  disabled={!inlineEditingSubtaskTitle.trim()}
-                                  className="px-2.5 py-1 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                  Save
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={handleCancelInlineEditSubtask}
-                                  className="px-2.5 py-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ml-1"
-                                >
-                                  Cancel
-                                </button>
-                              </div>
                             </div>
                           ) : (
                             // Display mode
                             <div className="flex items-center gap-3">
                               <div className="flex-1 flex items-center gap-4">
-                                <span className="text-xs font-medium text-gray-900 dark:text-white">{subtask.title}</span>
-                                <span className="text-xs text-gray-500 dark:text-gray-400">{subtask.dueDate ? formatDatePretty(subtask.dueDate) : 'No due date'}</span>
-                                <span className="text-xs text-gray-500 dark:text-gray-400">{subtask.assignee || 'Unassigned'}</span>
+                                <span 
+                                  className="text-xs font-medium text-gray-900 dark:text-white cursor-pointer hover:text-primary dark:hover:text-primary transition-colors"
+                                  onClick={() => handleStartInlineEditSubtask(idx)}
+                                >
+                                  {subtask.title}
+                                </span>
+                                <span 
+                                  className="text-xs text-gray-500 dark:text-gray-400 cursor-pointer hover:text-primary dark:hover:text-primary transition-colors"
+                                  onClick={() => handleStartInlineEditSubtask(idx)}
+                                >
+                                  {subtask.dueDate ? formatDatePretty(subtask.dueDate) : 'No due date'}
+                                </span>
+                                <span 
+                                  className="text-xs text-gray-500 dark:text-gray-400 cursor-pointer hover:text-primary dark:hover:text-primary transition-colors"
+                                  onClick={() => handleStartInlineEditSubtask(idx)}
+                                >
+                                  {subtask.assignee || 'Unassigned'}
+                                </span>
                               </div>
                               <div className="flex items-center gap-1">
-                                <button
-                                  onClick={() => handleStartInlineEditSubtask(idx)}
-                                  className="text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors p-1"
-                                >
-                                  <TbPencil className="h-4 w-4" />
-                                </button>
                                 <button
                                   onClick={() => {
                                     setNewTaskSubtasks(prev => prev.filter(st => st.id !== subtask.id));
@@ -2524,7 +2568,7 @@ export default function WorkflowsPage() {
                     <div className="flex flex-col sm:flex-row gap-2 sm:gap-0">
                       <button
                         onClick={() => {
-                          if (newSubtaskTitle.trim()) {
+                          if (isSubtaskFormValid()) {
                             const newSubtask = {
                               id: Date.now().toString(),
                               title: newSubtaskTitle.trim(),
@@ -2542,7 +2586,12 @@ export default function WorkflowsPage() {
                             setNewSubtaskDescription('');
                           }
                         }}
-                        className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold flex items-center justify-center"
+                        disabled={!isSubtaskFormValid()}
+                        className={`px-4 py-2 rounded-lg border text-sm font-semibold flex items-center justify-center transition-colors ${
+                          isSubtaskFormValid()
+                            ? 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700'
+                            : 'border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                        }`}
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       >
                         <TbRowInsertTop className="w-5 h-5 mr-2" />

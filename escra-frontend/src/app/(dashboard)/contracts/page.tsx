@@ -7,7 +7,7 @@ import { FaClock, FaSort, FaPlus, FaDollarSign, FaTimes, FaRegClock, FaCheck } f
 import { FaArrowUpRightFromSquare } from 'react-icons/fa6';
 import { HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineEye, HiOutlineEyeOff, HiOutlineClipboardList, HiOutlineExclamation, HiOutlineDocumentSearch, HiOutlineDocumentAdd, HiOutlineX, HiOutlinePencil, HiOutlineChip } from 'react-icons/hi';
 import { HiOutlineViewBoards } from 'react-icons/hi';
-import { LuCalendarFold, LuCalendarClock, LuPen, LuHardHat } from 'react-icons/lu';
+import { LuCalendarFold, LuCalendarClock, LuPen, LuHardHat, LuHandshake } from 'react-icons/lu';
 import { BiDotsHorizontal, BiCommentAdd } from 'react-icons/bi';
 import { TbWorldDollar, TbEdit, TbClockUp, TbCubeSend, TbClockPin, TbFilePlus, TbScript, TbCoins, TbFileText, TbClockEdit, TbUpload, TbDownload, TbSearch, TbFileSearch, TbLibrary, TbCalendarClock, TbLayoutGrid, TbMessage2Plus, TbChevronDown, TbEraser, TbTrash, TbChevronsLeft, TbChevronsRight, TbBusinessplan, TbSquareCheck, TbSquareChevronLeft, TbSquareChevronRight, TbUserPlus, TbUserShare, TbUserMinus, TbUserSearch, TbUsersPlus, TbUsers, TbUsersGroup, TbCheck, TbMailShare, TbBuildingCommunity, TbWorld, TbBarrierBlock, TbBriefcase, TbScale, TbBallAmericanFootball, TbTool, TbStethoscope, TbHome2, TbBuilding, TbBuildingSkyscraper, TbPhoto, TbBuildingFactory2, TbBuildingCarousel, TbUser, TbTemplate, TbHomeDollar, TbHomeRibbon, TbReceiptTax, TbBuildingWarehouse, TbBuildingBridge, TbBuildings, TbFileStar, TbTrophy, TbUserCog, TbForklift, TbArrowsShuffle2, TbAffiliate, TbUserShield, TbArrowsJoin, TbBuildingBank, TbAnalyze, TbLicense, TbClipboardSearch, TbVinyl, TbBooks, TbDevicesShare, TbChairDirector, TbFileSpark, TbAward, TbAd2, TbCopyright } from 'react-icons/tb';
 import { Logo } from '@/components/common/Logo';
@@ -1149,7 +1149,7 @@ const ContractsPage: React.FC = () => {
     'Commercial – Cash or Financed': TbBuildings,
     'Assignment / Wholesale': TbBuildingWarehouse,
     'Installment / Lease-to-Own': TbReceiptTax,
-    'Collective Bargaining Agreement': TbUsersGroup,
+    'Collective Bargaining Agreement': LuHandshake,
     'Player Contract': TbFileStar,
     'Intercompany Agreement': TbArrowsShuffle2,
     'Vendor Agreement': TbAffiliate,
