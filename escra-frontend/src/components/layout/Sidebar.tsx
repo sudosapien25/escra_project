@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { HiOutlineDocumentText, HiOutlineBell } from 'react-icons/hi';
 import { RiLayoutColumnLine, RiDashboardLine, RiBox3Line } from 'react-icons/ri';
 import { FaSignature } from 'react-icons/fa';
-import { TbSubtask, TbCubeSpark, TbLayoutDashboard, TbScript, TbLayoutBoard, TbWritingSign, TbFileText, TbTimeline, TbLogout2, TbSettingsCog, TbSunHigh, TbMoon, TbChevronsLeft, TbChevronsRight, TbDoorExit, TbTransferOut, TbSettings, TbMoonStars, TbCategory2 } from 'react-icons/tb';
+import { TbSubtask, TbCubeSpark, TbLayoutDashboard, TbScript, TbLayoutBoard, TbWritingSign, TbFileText, TbTimeline, TbLogout2, TbSettingsCog, TbSunHigh, TbMoon, TbChevronsLeft, TbChevronsRight, TbDoorExit, TbTransferOut, TbSettings, TbMoonStars, TbCategory2, TbDeviceHeartMonitor } from 'react-icons/tb';
 import { IconBaseProps } from 'react-icons';
 import clsx from 'clsx';
 
@@ -72,7 +72,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, isCollapsed, toggleSide
   const isSignaturesPage = pathname === '/signatures' || pathname.startsWith('/signatures/');
 
   const navItems: NavItem[] = [
-    { name: 'Dashboard', href: '/dashboard', icon: TbLayoutBoard },
+    { name: 'Dashboard', href: '/dashboard', icon: TbDeviceHeartMonitor },
     { name: 'Contracts', href: '/contracts', icon: TbFileText },
     { name: 'Tasks', href: '/workflows', icon: TbSubtask },
     { name: 'Signatures', href: '/signatures', icon: TbWritingSign },

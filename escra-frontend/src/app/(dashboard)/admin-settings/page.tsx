@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { FaUser, FaCheck } from 'react-icons/fa';
-import { TbCameraCog, TbActivity, TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbBuildingCommunity, TbBallAmericanFootball, TbTool, TbWallet, TbLock, TbKey, TbApiApp, TbDevicesX, TbKeyOff, TbWalletOff, TbPlug, TbPlugOff, TbApiOff, TbWebhookOff, TbApiAppOff, TbForklift, TbWashDryFlat, TbUsers, TbUsersGroup, TbBuildingPlus, TbUserOff, TbBuilding, TbBuildingOff, TbBuildingCog, TbChevronDown, TbChevronUp, TbUserPlus, TbUserCog, TbMailShare, TbUpload, TbBarrierBlock, TbBriefcase, TbStethoscope, TbCoins, TbScale, TbScaleOff, TbTrophy, TbDotsVertical, TbUserMinus, TbUser, TbGavel, TbWallpaperOff } from 'react-icons/tb';
+import { TbCameraCog, TbActivity, TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbBuildingCommunity, TbBallAmericanFootball, TbTool, TbWallet, TbLock, TbKey, TbApiApp, TbDevicesX, TbKeyOff, TbWalletOff, TbPlug, TbPlugOff, TbApiOff, TbWebhookOff, TbApiAppOff, TbForklift, TbWashDryFlat, TbUsers, TbUsersGroup, TbUsersPlus, TbBuildingPlus, TbUserOff, TbBuilding, TbBuildingOff, TbBuildingCog, TbChevronDown, TbChevronUp, TbUserPlus, TbUserCog, TbMailShare, TbUpload, TbBarrierBlock, TbBriefcase, TbStethoscope, TbCoins, TbScale, TbScaleOff, TbTrophy, TbDotsVertical, TbUserMinus, TbUser, TbGavel, TbWallpaperOff } from 'react-icons/tb';
 import { HiChevronDown, HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight, HiOutlineKey, HiOutlineDuplicate, HiStatusOffline } from 'react-icons/hi';
 import { MdOutlineGeneratingTokens, MdWebhook, MdOutlineSportsFootball, MdOutlineMovieFilter, MdOutlineHealthAndSafety, MdCancelPresentation } from 'react-icons/md';
 import { HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
@@ -966,6 +966,30 @@ export default function AdminSettingsPage() {
   const [isWorkingSolo, setIsWorkingSolo] = useState(false);
   const [showManageOrganizationCollaboratorsModal, setShowManageOrganizationCollaboratorsModal] = useState(false);
   
+  // Group inline form state
+  const [showGroupCreateForm, setShowGroupCreateForm] = useState(false);
+  const [groupFormStep, setGroupFormStep] = useState(1);
+  const [groupFormData, setGroupFormData] = useState({
+    name: '',
+    organization: '',
+    description: ''
+  });
+  const [groupCollaborators, setGroupCollaborators] = useState([
+    { 
+      name: '', 
+      email: '', 
+      showNamesDropdown: false, 
+      namesDropdownRef: React.createRef<HTMLDivElement>(), 
+      namesInputRef: React.createRef<HTMLInputElement>()
+    }
+  ]);
+  const [groupRecipientErrors, setGroupRecipientErrors] = useState<{[key: string]: boolean}>({});
+  const [duplicateGroupCollaboratorError, setDuplicateGroupCollaboratorError] = useState<string | false>(false);
+  const [addedGroupCollaborators, setAddedGroupCollaborators] = useState<any[]>([]);
+  const [showManageGroupCollaboratorsModal, setShowManageGroupCollaboratorsModal] = useState(false);
+  const [showGroupOrganizationDropdown, setShowGroupOrganizationDropdown] = useState(false);
+  const groupOrganizationDropdownRef = useRef<HTMLDivElement>(null);
+  
   // Billing state
   const [billingPeriod, setBillingPeriod] = useState('monthly');
   
@@ -1463,6 +1487,75 @@ export default function AdminSettingsPage() {
     return permissions.sort((a, b) => order.indexOf(a) - order.indexOf(b));
   };
 
+  // Group form helper functions
+  const handleGroupFormChange = (field: string, value: any) => {
+    setGroupFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleGroupCollaboratorChange = (index: number, field: string, value: any) => {
+    setGroupCollaborators(prev => prev.map((collaborator, i) => 
+      i === index ? { ...collaborator, [field]: value } : collaborator
+    ));
+  };
+
+  const addGroupCollaborator = () => {
+    setGroupCollaborators(prev => [...prev, { 
+      name: '', 
+      email: '', 
+      showNamesDropdown: false, 
+      namesDropdownRef: React.createRef<HTMLDivElement>(), 
+      namesInputRef: React.createRef<HTMLInputElement>()
+    }]);
+  };
+
+  const removeGroupCollaborator = (index: number) => {
+    if (groupCollaborators.length > 1) {
+      setGroupCollaborators(prev => prev.filter((_, i) => i !== index));
+    }
+  };
+
+
+  const handleAddGroupCollaborator = () => {
+    const collaborator = groupCollaborators[0];
+    
+    // Check for duplicates
+    const isDuplicateName = addedGroupCollaborators.some(c => 
+      c.name.toLowerCase() === collaborator.name.toLowerCase()
+    );
+    const isDuplicateEmail = addedGroupCollaborators.some(c => 
+      c.email.toLowerCase() === collaborator.email.toLowerCase()
+    );
+    
+    if (isDuplicateName && isDuplicateEmail) {
+      setDuplicateGroupCollaboratorError('both');
+      return;
+    } else if (isDuplicateEmail) {
+      setDuplicateGroupCollaboratorError('email');
+      return;
+    } else if (isDuplicateName) {
+      setDuplicateGroupCollaboratorError('name');
+      return;
+    }
+    
+    // Add collaborator
+    setAddedGroupCollaborators(prev => [...prev, {
+      ...collaborator,
+      isEditingEmail: false
+    }]);
+    
+    // Reset form
+    setGroupCollaborators(prev => prev.map((r, i) => i === 0 ? { 
+      ...r, 
+      name: '', 
+      email: '', 
+      showNamesDropdown: false
+    } : r));
+    
+    // Clear any errors
+    setGroupRecipientErrors({});
+    setDuplicateGroupCollaboratorError(false);
+  };
+
   // Helper functions for organization collaborators (matching contracts page)
   const getInitials = (name: string) => {
     return name
@@ -1547,7 +1640,11 @@ export default function AdminSettingsPage() {
         organizationCollaborators[0]?.contractRoleInputRef?.current?.contains(target) ||
         organizationCollaborators[0]?.contractRoleDropdownRef?.current?.contains(target) ||
         organizationCollaborators[0]?.namesInputRef?.current?.contains(target) ||
-        organizationCollaborators[0]?.namesDropdownRef?.current?.contains(target)
+        organizationCollaborators[0]?.namesDropdownRef?.current?.contains(target) ||
+        // Group form dropdowns
+        groupOrganizationDropdownRef.current?.contains(target) ||
+        groupCollaborators[0]?.namesInputRef?.current?.contains(target) ||
+        groupCollaborators[0]?.namesDropdownRef?.current?.contains(target)
       ) {
         // Click inside any organization form dropdown or collaborator input: do nothing
         return;
@@ -1577,13 +1674,21 @@ export default function AdminSettingsPage() {
       if (organizationCollaborators[0]?.showNamesDropdown) {
         setOrganizationCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, showNamesDropdown: false } : r));
       }
+      
+      // Close group form dropdowns
+      if (showGroupOrganizationDropdown) {
+        setShowGroupOrganizationDropdown(false);
+      }
+      if (groupCollaborators[0]?.showNamesDropdown) {
+        setGroupCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, showNamesDropdown: false } : r));
+      }
     }
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showCompanyTypeDropdown, showStateDropdown, showCountryDropdown, showIndustriesDropdown, showOrganizationPermissionsDropdown, organizationCollaborators[0]?.showNamesDropdown]);
+  }, [showCompanyTypeDropdown, showStateDropdown, showCountryDropdown, showIndustriesDropdown, showOrganizationPermissionsDropdown, organizationCollaborators[0]?.showNamesDropdown, showGroupOrganizationDropdown, groupCollaborators[0]?.showNamesDropdown]);
 
   return (
     <div className="flex h-screen">
@@ -3132,7 +3237,7 @@ export default function AdminSettingsPage() {
             <>
               {/* Organizations */}
               <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full shadow-sm">
-                {!showOrganizationCreateForm ? (
+                {!showOrganizationCreateForm && !showGroupCreateForm ? (
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <h2 className="text-lg font-bold mb-2 text-black dark:text-white">Organizations</h2>
@@ -3214,7 +3319,50 @@ export default function AdminSettingsPage() {
                         <TbBuildingPlus size={16} />
                         Create Organization
                       </button>
+                      <button 
+                        onClick={() => setShowGroupCreateForm(true)}
+                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold sm:ml-1 flex items-center gap-2"
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                      >
+                        <TbUsersPlus size={16} />
+                        Create Group
+                      </button>
                     </div>
+                  </div>
+                ) : showGroupCreateForm ? (
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-4">
+                      <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800">
+                        <TbUsersPlus size={21} className="text-teal-500 dark:text-teal-400" />
+                      </div>
+                      <div>
+                        <h2 className="text-lg font-bold text-black dark:text-white leading-tight">Create New Group</h2>
+                        <p className="text-gray-500 text-xs leading-tight cursor-default select-none">Fill in group details & add collaborators</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setShowGroupCreateForm(false);
+                        setGroupFormStep(1);
+                        setGroupFormData({
+                          name: '',
+                          organization: '',
+                          description: ''
+                        });
+                        setGroupCollaborators([{
+                          name: '',
+                          email: '',
+                          showNamesDropdown: false,
+                          namesDropdownRef: React.createRef<HTMLDivElement>(),
+                          namesInputRef: React.createRef<HTMLInputElement>()
+                        }]);
+                      }}
+                      className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
                   </div>
                 ) : (
                   <div className="flex items-center justify-between mb-4">
@@ -3965,9 +4113,9 @@ export default function AdminSettingsPage() {
                                 </div>
                               </div>
                             </div>
-                            
+
                             {/* Added Collaborators Display */}
-                            <div className="mt-6 min-h-[120px]">
+                            <div className="pt-2.5 min-h-[120px]">
                               {addedOrganizationCollaborators.length > 0 ? (
                                 <>
                                   <button 
@@ -4110,6 +4258,405 @@ export default function AdminSettingsPage() {
                             )}
                           </div>
                         </div>
+                        )}
+                        
+                        {/* Divider Line */}
+                        <div className="border-t border-gray-200 dark:border-gray-700 mt-6"></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Group Create Inline Form */}
+                {showGroupCreateForm && (
+                  <div>
+                    <div className="bg-white dark:bg-gray-800 rounded-xl pb-6">
+
+                      {/* Stepper */}
+                      <div className="w-full overflow-x-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
+                        <div className="flex items-center justify-between mb-6 min-w-0">
+                          <div className="flex items-center space-x-2 w-full flex-nowrap">
+                            {[1, 2].map((step, idx) => (
+                            <React.Fragment key={step}>
+                              <button
+                                type="button"
+                                onClick={() => setGroupFormStep(step)}
+                                className={`flex items-center gap-2 rounded-xl font-semibold border transition-all duration-300 text-sm px-3 sm:px-4 py-2 whitespace-nowrap flex-shrink-0
+                                  ${groupFormStep === step
+                                    ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 ring-1 ring-inset ring-gray-200 dark:ring-gray-600 shadow-sm'
+                                    : 'text-gray-500 dark:text-gray-400 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700'
+                                  }`}
+                              >
+                                <span className={`inline-block transition-all duration-300 ${groupFormStep === step ? 'opacity-100 mr-2' : 'opacity-0 w-0 mr-0'}`} style={{width: groupFormStep === step ? 18 : 0}}>
+                                  {groupFormStep === step && <Logo width={18} height={18} className="pointer-events-none" />}
+                                </span>
+                                {step === 1 && 'Step 1: Details'}
+                                {step === 2 && 'Step 2: Collaborators'}
+                              </button>
+                              {idx < 1 && <div className="flex-1 h-0.5 bg-gray-200 dark:bg-gray-600 mx-1 sm:mx-2" />}
+                            </React.Fragment>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Form Content */}
+                      <div className="space-y-6 pt-4">
+                        {groupFormStep === 1 && (
+                          <form className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <div>
+                                <label className="block text-xs font-medium text-black dark:text-white mb-1">Group Name <span className="text-red-500">*</span></label>
+                                <input 
+                                  type="text" 
+                                  value={groupFormData.name}
+                                  onChange={(e) => handleGroupFormChange('name', e.target.value)}
+                                  className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs" 
+                                  placeholder="Enter group name..." 
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-black dark:text-white mb-1">Organization <span className="text-red-500">*</span></label>
+                                <div className="relative w-full" ref={groupOrganizationDropdownRef}>
+                                  <input
+                                    type="text"
+                                    className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs pr-10 cursor-pointer caret-transparent"
+                                    placeholder="Select organization..."
+                                    value={organizationsData.find(org => org.id === groupFormData.organization)?.name || ''}
+                                    readOnly
+                                    onClick={() => setShowGroupOrganizationDropdown(!showGroupOrganizationDropdown)}
+                                  />
+                                  <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                  {showGroupOrganizationDropdown && (
+                                    <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar]:hidden" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                      {organizationsData.map(org => (
+                                        <button
+                                          key={org.id}
+                                          className={`w-full text-left px-3 py-2 text-xs font-medium ${groupFormData.organization === org.id ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                                          onClick={() => {
+                                            handleGroupFormChange('organization', org.id);
+                                            setShowGroupOrganizationDropdown(false);
+                                          }}
+                                        >
+                                          {org.name}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-black dark:text-white mb-1">Description</label>
+                              <textarea 
+                                value={groupFormData.description}
+                                onChange={(e) => handleGroupFormChange('description', e.target.value)}
+                                className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs resize-none" 
+                                placeholder="Enter group description..."
+                                rows={4}
+                              />
+                            </div>
+                            
+                            {/* Cancel and Continue Buttons - Step 1 */}
+                            <div className="flex items-center justify-between w-full !mt-5">
+                              <button
+                                onClick={() => {
+                                  setShowGroupCreateForm(false);
+                                  setGroupFormStep(1);
+                                  setGroupFormData({
+                                    name: '',
+                                    organization: '',
+                                    description: ''
+                                  });
+                                  setGroupCollaborators([{
+                                    name: '',
+                                    email: '',
+                                    showNamesDropdown: false,
+                                    namesDropdownRef: React.createRef<HTMLDivElement>(),
+                                    namesInputRef: React.createRef<HTMLInputElement>()
+                                  }]);
+                                }}
+                                className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
+                                style={{ fontFamily: 'Avenir, sans-serif' }}
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={() => setGroupFormStep(groupFormStep + 1)}
+                                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+                                style={{ fontFamily: 'Avenir, sans-serif' }}
+                              >
+                                Continue
+                              </button>
+                            </div>
+                          </form>
+                        )}
+
+                        {groupFormStep === 2 && (
+                          <form>
+                            
+                            {/* Single form fields */}
+                            <div className="relative mb-4">
+                              {/* Form fields */}
+                              <div className="flex gap-6">
+                                <div className="w-1/2">
+                                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                    Collaborator Name <span className="text-red-500">*</span>
+                                  </label>
+                                  <div className="relative">
+                                    <input
+                                      ref={groupCollaborators[0].namesInputRef}
+                                      type="text"
+                                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white pr-10"
+                                      placeholder="Enter collaborator name..."
+                                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                                      value={groupCollaborators[0].name}
+                                      onChange={e => {
+                                        setGroupCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, name: e.target.value } : r));
+                                        setGroupRecipientErrors(prev => ({ ...prev, [`name-0`]: false }));
+                                        setDuplicateGroupCollaboratorError(false);
+                                      }}
+                                      onClick={() => {
+                                        setGroupCollaborators(prev => prev.map((r, i) => i === 0 ? { 
+                                          ...r, 
+                                          showNamesDropdown: !r.showNamesDropdown
+                                        } : r));
+                                      }}
+                                      autoComplete="off"
+                                    />
+                                    <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
+                                    
+                                    {/* Names/Emails Autocomplete Dropdown */}
+                                    {groupCollaborators[0].showNamesDropdown && (
+                                      <div 
+                                        ref={groupCollaborators[0].namesDropdownRef}
+                                        className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500"
+                                      >
+                                        {/* Assignees Section */}
+                                        {allAssignees
+                                          .filter(assignee => 
+                                            assignee.toLowerCase().includes(groupCollaborators[0].name.toLowerCase())
+                                          )
+                                          .sort()
+                                          .map((assignee) => (
+                                            <button
+                                              key={`assignee-${assignee}`}
+                                              className="w-full text-left px-3 py-0.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                                              onClick={() => {
+                                                setGroupCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, name: assignee, showNamesDropdown: false } : r));
+                                                setGroupRecipientErrors(prev => ({ ...prev, [`name-0`]: false }));
+                                              }}
+                                            >
+                                              <TbUser className="w-4 h-4 flex-shrink-0" />
+                                              {assignee}
+                                            </button>
+                                          ))}
+                                        
+                                        {/* Contract Parties Section */}
+                                        {(() => {
+                                          const mockContracts = [
+                                            'Robert Chen', 'Eastside Properties', 'GreenSpace Developers', 'BuildRight Construction',
+                                            'TechCorp', 'Property Holdings', 'Smith Family', 'Real Estate Co', 'InvestPro', 
+                                            'Property Group', 'Johnson Family', 'Home Sales', 'Office Solutions', 'Property Co',
+                                            'Corporate Holdings', 'Real Estate', 'Retail Corp', 'Marketing Solutions Inc', 'Legal Advisory LLC'
+                                          ];
+                                          
+                                          const filteredParties = mockContracts
+                                            .filter(party => 
+                                              party.toLowerCase().includes(groupCollaborators[0].name.toLowerCase()) &&
+                                              !allAssignees.includes(party)
+                                            )
+                                            .sort();
+                                          
+                                          return filteredParties.length > 0 ? (
+                                            <>
+                                              {filteredParties.map((party) => (
+                                                <button
+                                                  key={`party-${party}`}
+                                                  className="w-full text-left px-3 py-0.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                                                  onClick={() => {
+                                                    setGroupCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, name: party, showNamesDropdown: false } : r));
+                                                    setGroupRecipientErrors(prev => ({ ...prev, [`name-0`]: false }));
+                                                  }}
+                                                >
+                                                  <TbUser className="w-4 h-4 flex-shrink-0" />
+                                                  {party}
+                                                </button>
+                                              ))}
+                                            </>
+                                          ) : null;
+                                        })()}
+                                        
+                                        {/* No Matches Message */}
+                                        {(() => {
+                                          const allAssigneesFiltered = allAssignees.filter(assignee => 
+                                            assignee.toLowerCase().includes(groupCollaborators[0].name.toLowerCase())
+                                          );
+                                          const mockContracts = [
+                                            'Robert Chen', 'Eastside Properties', 'GreenSpace Developers', 'BuildRight Construction',
+                                            'TechCorp', 'Property Holdings', 'Smith Family', 'Real Estate Co', 'InvestPro', 
+                                            'Property Group', 'Johnson Family', 'Home Sales', 'Office Solutions', 'Property Co',
+                                            'Corporate Holdings', 'Real Estate', 'Retail Corp', 'Marketing Solutions Inc', 'Legal Advisory LLC'
+                                          ];
+                                          const filteredParties = mockContracts.filter(party => 
+                                            party.toLowerCase().includes(groupCollaborators[0].name.toLowerCase()) &&
+                                            !allAssignees.includes(party)
+                                          );
+                                          
+                                          return allAssigneesFiltered.length === 0 && filteredParties.length === 0 && groupCollaborators[0].name.length > 0 ? (
+                                            <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
+                                              No matches found
+                                            </div>
+                                          ) : null;
+                                        })()}
+                                      </div>
+                                    )}
+                                  </div>
+                                  {groupRecipientErrors[`name-0`] && (
+                                    <p className="text-red-600 text-xs mt-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                      Collaborator name is required
+                                    </p>
+                                  )}
+                                </div>
+                                
+                                <div className="w-1/2">
+                                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                    Collaborator Email <span className="text-red-500">*</span>
+                                  </label>
+                                  <input
+                                    type="email"
+                                    className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white"
+                                    placeholder="Enter collaborator email address..."
+                                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                                    value={groupCollaborators[0].email || ''}
+                                    onChange={e => {
+                                      setGroupCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, email: e.target.value } : r));
+                                      setGroupRecipientErrors(prev => ({ ...prev, [`email-0`]: false }));
+                                      setDuplicateGroupCollaboratorError(false);
+                                    }}
+                                  />
+                                  {groupRecipientErrors[`email-0`] && (
+                                    <p className="text-red-600 text-xs mt-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                      Collaborator email is required
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                              
+                            </div>
+
+                            {/* Added Collaborators Display */}
+                            <div className="mt-8 min-h-[120px]">
+                              {addedGroupCollaborators.length > 0 ? (
+                                <>
+                                  <div className="flex items-center gap-2 mb-5 ml-3">
+                                    <TbUsers className="h-5 w-5 text-gray-700 dark:text-gray-300" />
+                                    <span className="text-xs font-semibold text-gray-700 dark:text-gray-300" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                      Added Collaborators ({addedGroupCollaborators.length})
+                                    </span>
+                                  </div>
+                                  <div className="flex flex-wrap gap-1 -ml-6">
+                                    {addedGroupCollaborators.map((collaborator, idx) => {
+                                      const colorScheme = getCollaboratorBadgeColor(idx);
+                                      return (
+                                        <div 
+                                          key={idx} 
+                                          className={`h-10 w-10 rounded-lg ${colorScheme.bg} flex items-center justify-center border-2 ${colorScheme.border} relative group`}
+                                        >
+                                          <span className={`text-sm font-semibold ${colorScheme.text}`} style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                            {getInitials(collaborator.name)}
+                                          </span>
+                                          
+                                          {/* X button for removal - only visible on hover */}
+                                          <button 
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setAddedGroupCollaborators(prev => prev.filter((_, i) => i !== idx));
+                                            }}
+                                            className="absolute -top-2 -right-2 w-5 h-5 bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 rounded-lg flex items-center justify-center text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100 dark:hover:bg-red-900/30 border-2 border-red-200 dark:border-red-800"
+                                          >
+                                            ×
+                                          </button>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="text-center py-8 pb-8 text-gray-500 dark:text-gray-400 cursor-default select-none">
+                                  <TbUsers size={26} className="mx-auto mb-2 text-primary" />
+                                  <p className="text-sm" style={{ fontFamily: 'Avenir, sans-serif' }}>No collaborators yet</p>
+                                  <p className="text-xs" style={{ fontFamily: 'Avenir, sans-serif' }}>Add a collaborator by filling in the details above and clicking the "Add Collaborator" button</p>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Form Actions */}
+                            <div className="flex items-center justify-between w-full !mt-5">
+                              <div className="flex items-center">
+                                {groupFormStep > 1 && (
+                                  <button
+                                    onClick={() => setGroupFormStep(groupFormStep - 1)}
+                                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
+                                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                                  >
+                                    Previous
+                                  </button>
+                                )}
+                              </div>
+                              <div className="flex items-center" style={{ gap: '3px' }}>
+                                {groupFormStep === 2 && (
+                                  <div className="relative flex">
+                                    {/* Duplicate Collaborator Error */}
+                                    {duplicateGroupCollaboratorError && (
+                                      <p className="absolute bottom-full left-0 mb-1 text-xs text-red-600 font-medium cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                        {duplicateGroupCollaboratorError === 'both' ? 'Collaborator name & email already used' : 
+                                         duplicateGroupCollaboratorError === 'email' ? 'Collaborator email has already been used' : 
+                                         'Collaborator has already been added'}
+                                      </p>
+                                    )}
+                                    
+                                    <button
+                                      type="button"
+                                      onClick={handleAddGroupCollaborator}
+                                      disabled={!groupCollaborators[0].name.trim() || !groupCollaborators[0].email.trim()}
+                                      className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                                    >
+                                      <TbUserPlus className="w-4 h-4 mr-2" />
+                                      Add Collaborator
+                                    </button>
+                                  </div>
+                                )}
+                                {groupFormStep === 2 && (
+                                  <button
+                                    onClick={() => {
+                                      // Handle form submission here
+                                      console.log('Group form submitted:', { groupFormData, groupCollaborators });
+                                      setShowGroupCreateForm(false);
+                                      setGroupFormStep(1);
+                                      setGroupFormData({
+                                        name: '',
+                                        organization: '',
+                                        description: ''
+                                      });
+                                      setGroupCollaborators([{
+                                        name: '',
+                                        email: '',
+                                        showNamesDropdown: false,
+                                        namesDropdownRef: React.createRef<HTMLDivElement>(),
+                                        namesInputRef: React.createRef<HTMLInputElement>()
+                                      }]);
+                                    }}
+                                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+                                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                                  >
+                                    Create
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </form>
                         )}
                         
                         {/* Divider Line */}
