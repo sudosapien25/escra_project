@@ -81,6 +81,7 @@ env/
 *.db
 *.sqlite3
 db/
+!api-backend/db/
 
 # Logs
 *.log
