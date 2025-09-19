@@ -1528,7 +1528,7 @@ export default function LandingPage() {
             <div className="lg:col-span-2">
               <div className="flex items-center mb-4">
                 <img
-                  src="/primary escra (color) copy.png"
+                  src="/primary-escra-color.png"
                   alt="ESCRA Logo"
                   width={120}
                   height={40}
