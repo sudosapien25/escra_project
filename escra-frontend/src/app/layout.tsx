@@ -4,6 +4,7 @@ import { Toaster } from "react-hot-toast";
 import "./globals.css";
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
+import { NotificationProvider } from '@/context/NotificationContext';
 import dynamic from 'next/dynamic';
 
 // Create a client-only component for toolbar initialization
@@ -17,9 +18,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <html lang="en">
         <body>
           <AuthProvider>
-            {children}
-            <Toaster position="top-right" />
-            {process.env.NODE_ENV === 'development' && <StagewiseToolbar />}
+            <NotificationProvider>
+              {children}
+              <Toaster position="top-right" />
+              {process.env.NODE_ENV === 'development' && <StagewiseToolbar />}
+            </NotificationProvider>
           </AuthProvider>
         </body>
       </html>

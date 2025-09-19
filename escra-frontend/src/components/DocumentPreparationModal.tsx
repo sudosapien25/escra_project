@@ -1,9 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, Fragment } from 'react';
 import { 
-  LuEye, 
-  LuZoomIn, 
-  LuZoomOut, 
-  LuRotateCcw,
   LuDownload,
   LuChevronLeft,
   LuChevronRight,
@@ -20,12 +16,13 @@ import {
   LuCopyPlus,
   LuBringToFront
 } from 'react-icons/lu';
-import { HiOutlineDocumentText, HiOutlineTrash } from 'react-icons/hi';
+import { HiOutlineDocumentText } from 'react-icons/hi';
 import { HiMiniChevronDown, HiMiniChevronUp } from 'react-icons/hi2';
 import { FaCheck } from 'react-icons/fa';
 import { MdOutlineAttachEmail } from 'react-icons/md';
-import { TbUnlink, TbMailBolt, TbLinkPlus, TbLink } from 'react-icons/tb';
+import { TbUnlink, TbMailBolt, TbLinkPlus, TbLink, TbLayersLinked, TbMailPlus, TbChevronDown, TbZoomIn, TbZoomOut, TbEye, TbRotateRectangle, TbZoomReset, TbTrash } from 'react-icons/tb';
 import { Logo } from '@/components/common/Logo';
+import { Listbox, Transition } from '@headlessui/react';
 
 // Field Types
 export enum FieldType {
@@ -106,6 +103,7 @@ export interface Document {
 interface DocumentPreparationModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onBackToRequestSignature?: () => void;
   documentData: {
     recipients: any[];
     uploadedFiles: File[];
@@ -131,6 +129,7 @@ const generateFieldId = () => `field_${Date.now()}_${Math.random().toString(36).
 export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> = ({
   isOpen,
   onClose,
+  onBackToRequestSignature,
   documentData
 }) => {
   const [selectedField, setSelectedField] = useState<FieldType | null>(null);
@@ -169,6 +168,7 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
   const [showVariables, setShowVariables] = useState(false);
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const [selectedEmailTemplate, setSelectedEmailTemplate] = useState<string>('None');
+  const [selectedDocumentIndex, setSelectedDocumentIndex] = useState<number>(0);
 
   // Convert documentData recipients to our Recipient format
   useEffect(() => {
@@ -464,7 +464,7 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
               className="p-1.5 text-gray-600 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
               title="Remove"
             >
-              <HiOutlineTrash size={14} />
+                                      <TbTrash size={14} />
             </button>
           </div>
         )}
@@ -475,10 +475,10 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-2 sm:p-4">
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black bg-opacity-40 p-2 sm:p-4" style={{ paddingTop: '95px' }}>
       <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-[1600px] max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="sticky top-0 z-40 bg-gray-100 dark:bg-gray-900 px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="sticky top-0 z-40 bg-gray-100 dark:bg-gray-900 px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-3">
               <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white" style={{ fontFamily: 'Avenir, sans-serif' }}>
@@ -500,28 +500,75 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
           {currentStep === 'preparation' ? (
             <>
               {/* Left Sidebar - Field Palette */}
-              <div className="w-full lg:w-80 border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-4 sm:px-6 py-4 sm:py-6">
+              <div className="w-full lg:w-80 lg:border-r border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 px-4 sm:px-6 py-4 sm:py-6">
             <div className="space-y-6">
-              {/* Field Types */}
+              {/* Documents */}
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                  Field Types
+                  Documents
                 </h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {Object.values(FieldType).map((fieldType) => (
-                    <button
-                      key={fieldType}
-                      onClick={() => handleFieldSelect(fieldType)}
-                      className={`p-3 rounded-lg border-2 text-xs font-medium transition-colors ${
-                        selectedField === fieldType
-                          ? 'border-primary bg-primary/10 text-primary'
-                          : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500'
-                      }`}
-                      style={{ fontFamily: 'Avenir, sans-serif' }}
-                    >
-                      {FIELD_TYPE_LABELS[fieldType]}
-                    </button>
-                  ))}
+                <div className="space-y-2">
+                  <Listbox value={selectedDocumentIndex} onChange={setSelectedDocumentIndex}>
+                    <div className="relative">
+                      <Listbox.Button
+                        className="flex items-center justify-between w-full bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 font-medium text-xs"
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                      >
+                        <span className="block truncate">
+                          {documentData.selectedDocuments && documentData.selectedDocuments[selectedDocumentIndex] 
+                            ? `${documentData.selectedDocuments[selectedDocumentIndex].name || `Document ${selectedDocumentIndex + 1}`} (${documentData.selectedDocuments[selectedDocumentIndex].id})`
+                            : 'Select Document'
+                          }
+                        </span>
+                        <TbChevronDown className="text-gray-400 dark:text-gray-500" size={18} />
+                      </Listbox.Button>
+                      <Transition
+                        as={Fragment}
+                        leave="transition ease-in duration-100"
+                        leaveFrom="opacity-100"
+                        leaveTo="opacity-0"
+                      >
+                        <Listbox.Options className="absolute top-full right-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2">
+                          {documentData.selectedDocuments && documentData.selectedDocuments.map((doc: any, index: number) => (
+                            <Listbox.Option
+                              key={index}
+                              value={index}
+                              className={({ active }) =>
+                                `w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex flex-col ${
+                                  selectedDocumentIndex === index 
+                                    ? 'text-primary' 
+                                    : 'text-gray-700 dark:text-gray-300'
+                                }`
+                              }
+                            >
+                              {({ selected }) => (
+                                <>
+                                  <div className="flex items-center">
+                                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                                      {selected && (
+                                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                                          <FaCheck className="text-white" size={8} />
+                                        </div>
+                                      )}
+                                    </div>
+                                    <span 
+                                      className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate max-w-[200px]"
+                                      title={doc.name}
+                                    >
+                                      {doc.name} ({doc.id})
+                                    </span>
+                                  </div>
+                                  <div className="ml-6 text-gray-500 dark:text-gray-400 text-[10px]">
+                                    {doc.contractName} ({doc.contractId})
+                                  </div>
+                                </>
+                              )}
+                            </Listbox.Option>
+                          ))}
+                        </Listbox.Options>
+                      </Transition>
+                    </div>
+                  </Listbox>
                 </div>
               </div>
 
@@ -549,57 +596,94 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
                 </div>
               </div>
 
+              {/* Field Types */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                  Field Types
+                </h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {Object.values(FieldType).map((fieldType) => (
+                    <button
+                      key={fieldType}
+                      onClick={() => handleFieldSelect(fieldType)}
+                      className={`p-3 rounded-lg border-2 text-xs font-medium transition-colors ${
+                        selectedField === fieldType
+                          ? 'border-primary bg-primary/10 text-primary'
+                          : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500'
+                      }`}
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                    >
+                      {FIELD_TYPE_LABELS[fieldType]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Instructions */}
               <div className="bg-gray-100 dark:bg-gray-900 p-3 rounded-lg border-2 border-gray-200 dark:border-gray-600">
                 <h4 className="text-xs font-semibold text-gray-900 dark:text-white mb-2" style={{ fontFamily: 'Avenir, sans-serif' }}>
                   Instructions
                 </h4>
                 <ul className="text-xs text-gray-700 dark:text-gray-300 space-y-1">
-                  <li>• Select a field type</li>
-                  <li>• Choose a recipient</li>
-                  <li>• Click on the document to place fields</li>
-                  <li>• Drag fields to reposition them</li>
+                  <li>• Select document(s) to prepare</li>
+                  <li>• Choose recipient(s)</li>
+                  <li>• Select relevant field types</li>
+                  <li>• Drag fields into position on document</li>
+                  <li>• Click on document to place fields</li>
                 </ul>
               </div>
+
+
             </div>
           </div>
 
           {/* Center - Document Canvas */}
           <div className="flex-1 flex flex-col">
+            {/* Dividing line above zoom/rotation controls */}
+            <div className="w-full border-b border-gray-200 dark:border-gray-700"></div>
+            
             {/* Toolbar */}
             <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-2 sm:p-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleZoomOut}
-                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    title="Zoom Out"
+                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative group"
                   >
-                    <LuZoomOut className="w-4 h-4" />
+                    <TbZoomOut size={17} className="text-gray-700 dark:text-white" />
+                    <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                      Zoom Out
+                    </span>
                   </button>
                   <span className="text-sm text-gray-600 dark:text-gray-400 min-w-[60px] text-center">
                     {Math.round(zoom * 100)}%
                   </span>
                   <button
                     onClick={handleZoomIn}
-                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    title="Zoom In"
+                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative group"
                   >
-                    <LuZoomIn className="w-4 h-4" />
+                    <TbZoomIn size={17} className="text-gray-700 dark:text-white" />
+                    <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                      Zoom In
+                    </span>
                   </button>
                   <button
                     onClick={handleResetZoom}
-                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    title="Reset Zoom"
+                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative group"
                   >
-                    <LuEye className="w-4 h-4" />
+                    <TbZoomReset size={17} className="text-gray-700 dark:text-white" />
+                    <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                      Reset Zoom
+                    </span>
                   </button>
                   <button
                     onClick={handleRotate}
-                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    title="Rotate"
+                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative group"
                   >
-                    <LuRotateCcw className="w-4 h-4" />
+                    <TbRotateRectangle size={18} className="text-gray-700 dark:text-white" />
+                    <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                      Rotate
+                    </span>
                   </button>
                 </div>
                 <div className="flex items-center gap-2">
@@ -627,7 +711,7 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
             </div>
 
             {/* Document Canvas */}
-            <div className="flex-1 bg-gray-100 dark:bg-gray-900 p-6 overflow-auto">
+                            <div className="flex-1 bg-gray-100 dark:bg-gray-900 p-6 overflow-auto">
               <div className="space-y-6">
                 <div className="flex justify-center">
                   <div
@@ -672,25 +756,7 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
                   </div>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex justify-end gap-1 pb-4 sm:pb-0">
-                  <button
-                    onClick={onClose}
-                    className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
-                    style={{ fontFamily: 'Avenir, sans-serif' }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => {
-                      setCurrentStep('distribution');
-                    }}
-                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
-                    style={{ fontFamily: 'Avenir, sans-serif' }}
-                  >
-                    Continue
-                  </button>
-                </div>
+
               </div>
             </div>
           </div>
@@ -755,7 +821,7 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
                               ? 'bg-primary text-white border-primary'
                               : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-600'
                           }`}>
-                            <TbMailBolt size={20} />
+                            <TbMailPlus size={20} />
                           </div>
                           <div>
                             <div className="text-sm font-medium" style={{ fontFamily: 'Avenir, sans-serif' }}>Email</div>
@@ -778,7 +844,7 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
                               ? 'bg-primary text-white border-primary'
                               : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-600'
                           }`}>
-                            <TbLinkPlus size={20} />
+                            <TbLayersLinked size={20} />
                           </div>
                           <div>
                             <div className="text-sm font-medium" style={{ fontFamily: 'Avenir, sans-serif' }}>Signing Links</div>
@@ -790,16 +856,7 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
                   </div>
                 </div>
 
-                {/* Previous Button in Left Sidebar */}
-                <div className="pt-4 sm:pt-8">
-                  <button
-                    onClick={() => setCurrentStep('preparation')}
-                    className="px-4 sm:px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
-                    style={{ fontFamily: 'Avenir, sans-serif' }}
-                  >
-                    Previous
-                  </button>
-                </div>
+
               </div>
 
               {/* Center - Distribution Content */}
@@ -1141,46 +1198,73 @@ export const DocumentPreparationModal: React.FC<DocumentPreparationModalProps> =
                   </div>
                 </div>
 
-                {/* Fixed Action Buttons */}
-                <div className="bg-gray-100 dark:bg-gray-900 px-4 sm:px-6 pt-0 pb-6">
-                  <div className="flex justify-end gap-1">
-                    <button
-                      onClick={() => setCurrentStep('preparation')}
-                      className="lg:hidden px-4 sm:px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold mr-auto"
-                      style={{ fontFamily: 'Avenir, sans-serif' }}
-                    >
-                      Previous
-                    </button>
-                    <button
-                      onClick={onClose}
-                      className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
-                      style={{ fontFamily: 'Avenir, sans-serif' }}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleDistributionSubmit}
-                      disabled={isSubmitting}
-                      className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-semibold"
-                      style={{ fontFamily: 'Avenir, sans-serif' }}
-                    >
-                      {isSubmitting ? (
-                        <div className="flex items-center justify-center gap-2">
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                          Sending...
-                        </div>
-                      ) : (
-                        'Send'
-                      )}
-                    </button>
-                  </div>
-                </div>
+
               </div>
 
 
             </>
           )}
         </div>
+
+        {/* Sticky Footer - Show on both preparation and distribution steps */}
+        {(currentStep === 'preparation' || currentStep === 'distribution') && (
+          <div className={`sticky bottom-0 bg-gray-100 dark:bg-gray-900 px-6 pb-6 ${
+            currentStep === 'preparation' ? 'pt-6' : 'pt-0'
+          }`}>
+            {/* Horizontal divider line at top of footer - only show on preparation step */}
+            {currentStep === 'preparation' && (
+              <div className="absolute top-0 left-80 right-0 h-px bg-gray-200 dark:bg-gray-700 hidden lg:block"></div>
+            )}
+            <div className="flex justify-between items-center relative z-10">
+              <button
+                onClick={currentStep === 'preparation' 
+                  ? () => onBackToRequestSignature ? onBackToRequestSignature() : onClose()
+                  : () => setCurrentStep('preparation')
+                }
+                className="px-4 sm:px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
+                style={{ fontFamily: 'Avenir, sans-serif' }}
+              >
+                Previous
+              </button>
+              <div className="flex gap-1">
+                <button
+                  onClick={onClose}
+                  className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                >
+                  Cancel
+                </button>
+                {currentStep === 'preparation' ? (
+                  <button
+                    onClick={() => {
+                      setCurrentStep('distribution');
+                    }}
+                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                  >
+                    Continue
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleDistributionSubmit}
+                    disabled={isSubmitting}
+                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-semibold"
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                  >
+                    {isSubmitting ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Sending...
+                      </div>
+                    ) : (
+                      'Send'
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

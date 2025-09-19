@@ -83,6 +83,7 @@ export default function PricingPage() {
       yearlyPrice: 9,
       features: [
         '5 contracts per month',
+        '20 signers per month',
         '20 GB document storage',
         'Unlimited Recipients',
         '2FA Authentication',
@@ -98,6 +99,7 @@ export default function PricingPage() {
       yearlyPrice: 99,
       features: [
         '50 contracts per month',
+        '200 signers per month',
         '5 custom templates',
         '100 GB document storage',
         'Complete audit trail',
@@ -114,7 +116,8 @@ export default function PricingPage() {
       monthlyPrice: 350,
       yearlyPrice: 299,
       features: [
-        '500 contracts per month',
+        '250 contracts per month',
+        '1000 signers per month',
         'Up to 10 custom templates',
         '750 GB document storage',
         'Includes 3 members',
@@ -131,6 +134,7 @@ export default function PricingPage() {
       yearlyPrice: null,
       features: [
         'Unlimited contracts',
+        'Scaled signing capacity',
         '1 TB+ document storage',
         'Multi-team support',
         'Flexible user licensing',
@@ -211,7 +215,7 @@ export default function PricingPage() {
               <div
                 key={plan.name}
                 onClick={() => setSelectedPlan(plan.name)}
-                className={`relative rounded-2xl border border-gray-200 cursor-pointer transition-all group flex flex-col min-h-[600px] ${
+                className={`relative rounded-2xl border border-gray-200 cursor-pointer transition-all group flex flex-col min-h-[680px] ${
                   selectedPlan === plan.name
                     ? 'shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] bg-white'
                     : plan.popular
@@ -241,8 +245,13 @@ export default function PricingPage() {
                           ${billingPeriod === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice}
                         </span>
                         <span className="text-xs text-gray-600">
-                          /{billingPeriod === 'monthly' ? 'month' : 'year'}
+                          /month
                         </span>
+                        {billingPeriod === 'yearly' && (
+                          <div className="text-xs text-gray-600 mt-1">
+                            *Billed annually
+                          </div>
+                        )}
                       </>
                     ) : (
                       <span className="text-xl font-bold text-black">Custom</span>
@@ -263,7 +272,7 @@ export default function PricingPage() {
                 </div>
                 
                 {/* Button Section - Fixed Height */}
-                <div className={`${plan.name === 'Essential' ? 'h-16' : 'h-6'} flex items-end flex-col ${plan.name === 'Essential' ? 'space-y-1' : 'space-y-2'}`}>
+                <div className={`${plan.name === 'Essential' ? 'h-16' : 'h-12'} flex items-end flex-col ${plan.name === 'Essential' ? 'space-y-1' : 'space-y-2'}`}>
                   {plan.name === 'Essential' && (
                     <a
                       href="#"
@@ -272,9 +281,16 @@ export default function PricingPage() {
                       30-day free trial
                     </a>
                   )}
+                  {plan.name !== 'Essential' && (
+                    <p className="text-xs text-gray-500 text-center mb-2 w-full -mt-3">
+                      {plan.name === 'Pro' && "(Everything in the Essential tier + much more)"}
+                      {plan.name === 'Growth' && "(Everything in the Pro tier + much more)"}
+                      {plan.name === 'Enterprise' && "(Everything in the Growth tier + much more)"}
+                    </p>
+                  )}
                   <a
                     href="#"
-                    className={`block w-full rounded-lg px-4 py-2 text-center text-xs font-medium ${plan.buttonStyle}`}
+                    className={`block w-full rounded-lg px-4 py-2 text-center text-xs font-medium ${plan.buttonStyle} -mt-5`}
                   >
                     {plan.name === 'Enterprise' ? 'Contact us' : 'Get started'}
                   </a>

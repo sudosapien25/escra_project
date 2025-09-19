@@ -73,7 +73,7 @@ escra-frontend/
 ### 1. Authentication & User Management
 
 - JWT-based authentication with Auth0
-- Role-based access control (Admin, Creator, Editor, Viewer)
+- Role-based access control (Admin, Creator, Editor, Signer, Viewer)
 - User profile management
 - Role assignment interface
 - Multi-factor authentication (2FA)

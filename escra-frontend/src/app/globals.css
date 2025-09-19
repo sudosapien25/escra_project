@@ -102,11 +102,15 @@ input:-webkit-autofill:active,
 input:-webkit-autofill::first-line {
   -webkit-box-shadow: 0 0 0 30px rgb(255 255 255) inset !important;
   -webkit-text-fill-color: rgb(17 24 39) !important;
+  background-color: rgb(255 255 255) !important;
+  color: rgb(17 24 39) !important;
   font-family: 'Avenir', 'Avenir Next', 'Helvetica Neue', sans-serif !important;
   font-size: 0.75rem !important;
   font-weight: normal !important;
   line-height: 1.5 !important;
   transition: background-color 5000s ease-in-out 0s;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
 }
 
 /* Additional autofill selectors for better browser compatibility */
@@ -118,6 +122,31 @@ input:-webkit-autofill:active {
   -webkit-text-fill-color: inherit !important;
   font-family: inherit !important;
   font-size: inherit !important;
+}
+
+/* Specific autofill overrides for login/register inputs */
+input[type="email"]:-webkit-autofill,
+input[type="email"]:-webkit-autofill:hover,
+input[type="email"]:-webkit-autofill:focus,
+input[type="email"]:-webkit-autofill:active,
+input[type="password"]:-webkit-autofill,
+input[type="password"]:-webkit-autofill:hover,
+input[type="password"]:-webkit-autofill:focus,
+input[type="password"]:-webkit-autofill:active,
+input[type="text"]:-webkit-autofill,
+input[type="text"]:-webkit-autofill:hover,
+input[type="text"]:-webkit-autofill:focus,
+input[type="text"]:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px rgb(255 255 255) inset !important;
+  -webkit-text-fill-color: rgb(17 24 39) !important;
+  background-color: rgb(255 255 255) !important;
+  color: rgb(17 24 39) !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+  -webkit-text-stroke: 0 !important;
+  text-shadow: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  caret-color: rgb(17 24 39) !important;
 }
 
 /* Force autofill font styling with animation */
@@ -133,15 +162,104 @@ input:-webkit-autofill {
   animation-fill-mode: both;
 }
 
+/* Nuclear option - completely override autofill rendering */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px white inset !important;
+  -webkit-text-fill-color: #111827 !important;
+  background-color: white !important;
+  color: #111827 !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  line-height: inherit !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+  -webkit-text-stroke: 0 !important;
+  text-shadow: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  caret-color: #111827 !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+}
+
+/* Override autofill for inputs with gray background (like login page) */
+input.bg-gray-50:-webkit-autofill,
+input.bg-gray-50:-webkit-autofill:hover,
+input.bg-gray-50:-webkit-autofill:focus,
+input.bg-gray-50:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px rgb(249 250 251) inset !important;
+  -webkit-text-fill-color: #111827 !important;
+  background-color: rgb(249 250 251) !important;
+  color: #111827 !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  line-height: inherit !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+  -webkit-text-stroke: 0 !important;
+  text-shadow: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  caret-color: #111827 !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+}
+
 .contract-autocomplete-input::placeholder {
   color: #000 !important;
   opacity: 1;
+}
+
+/* Specific autofill fix for login page inputs */
+.login-input:-webkit-autofill,
+.login-input:-webkit-autofill:hover,
+.login-input:-webkit-autofill:focus,
+.login-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px white inset !important;
+  -webkit-text-fill-color: #111827 !important;
+  background-color: white !important;
+  color: #111827 !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+  -webkit-text-stroke: 0 !important;
+  text-shadow: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  caret-color: #111827 !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+
+/* Additional aggressive autofill override for login inputs */
+.login-input:-webkit-autofill::first-line {
+  -webkit-text-fill-color: #111827 !important;
+  color: #111827 !important;
+}
+
+/* Force text color on autofill for login inputs */
+.login-input:-webkit-autofill {
+  -webkit-text-fill-color: #111827 !important;
+  color: #111827 !important;
+  background-color: white !important;
+  -webkit-box-shadow: 0 0 0 1000px white inset !important;
 }
 
 /* Hide blue outline for all TipTap editors */
 .tiptap:focus {
   outline: none !important;
   box-shadow: none !important;
+}
+
+/* Prevent white flashing during sidebar transitions */
+aside {
+  background-color: inherit !important;
+  transition: background-color 0.15s ease-in-out !important;
+}
+
+/* Ensure sidebar maintains dark mode during transitions */
+.dark aside {
+  background-color: rgb(31 41 55) !important;
 }
 
 /* Style lists in TipTap editor */

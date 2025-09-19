@@ -1,24 +1,40 @@
 [
   {
-    "id": "7353",
-    "title": "Dunedin Home",
-    "parties": "Nicholas Aquino & Benjamin Aiello & Romanet Perez & Molly Aiello & Mandy Mangosteen",
+    "id": "5525",
+    "title": "Jimmy Ciarlo x Buffalo Bills",
+    "parties": "",
     "status": "Initiation",
     "updated": "Just now",
-    "value": "$350,000",
+    "value": "$2,500,000",
     "documents": 0,
-    "type": "Residential – Financed",
-    "buyer": "Nicholas Aquino",
-    "seller": "Benjamin Aiello",
+    "type": "Commercial – Cash or Financed",
+    "buyer": "Buyer 1: David Miller, Buyer 2: Sarah Miller",
+    "seller": "Seller 1: Alex Johnson, Seller 2: Emma Johnson",
+    "buyers": [
+      "David Miller",
+      "Sarah Miller"
+    ],
+    "sellers": [
+      "Alex Johnson",
+      "Emma Johnson"
+    ],
+    "buyerEmails": [
+      "wwwww",
+      "tttttttt"
+    ],
+    "sellerEmails": [
+      "qqqqqqq",
+      "eeeeeee"
+    ],
     "milestone": "Standard (6 milestones)",
     "notes": "",
     "closingDate": "",
-    "dueDate": "2025-07-24",
-    "propertyAddress": "1701 N Lois Avenue",
-    "propertyType": "Multi Family",
+    "dueDate": "2025-10-11",
+    "propertyAddress": "2202 N Lois Ave",
+    "propertyType": "Commercial",
     "escrowNumber": "123456",
-    "buyerEmail": "nicholas@escra.io",
-    "sellerEmail": "benjamin@escra.io",
+    "buyerEmail": "",
+    "sellerEmail": "",
     "earnestMoney": "$20,000",
     "downPayment": "$50,000",
     "loanAmount": "$1,200,000",
@@ -27,67 +43,145 @@
     "lenderName": "",
     "sellerFinancialInstitution": "Chase",
     "buyerFinancialInstitution": "BoA",
-    "buyerAccountNumber": "111111111111",
-    "sellerAccountNumber": "222222222222",
-    "buyerFinancialInstitutionRoutingNumber": "111111111",
-    "sellerFinancialInstitutionRoutingNumber": "222222222",
-    "titleCompany": "Busted Title",
+    "buyerAccountNumber": "",
+    "sellerAccountNumber": "",
+    "buyerFinancialInstitutionRoutingNumber": "",
+    "sellerFinancialInstitutionRoutingNumber": "",
+    "titleCompany": "ABC Title",
     "insuranceCompany": "XYZ Insurance",
     "inspectionPeriod": "30",
-    "contingencies": "Do it",
-    "city": "Dunedin",
+    "contingencies": "sdfadsfadsfdsfadf",
+    "city": "Tampa",
     "state": "FL",
     "zipCode": "33607",
     "country": "US",
-    "additionalParties": [
+    "industry": "Athletics",
+    "additionalParties": [],
+    "collaborators": [
       {
-        "name": "Romanet Perez",
-        "email": "perez.romanet@gmail.com",
-        "role": "Buyer Agent"
+        "name": "John Doe",
+        "email": "user@example.com",
+        "role": "Edit, View, Sign",
+        "contractRole": "Standard",
+        "permissions": [
+          "Edit",
+          "View",
+          "Sign"
+        ]
       },
       {
-        "name": "Molly Aiello",
-        "email": "molly.aiello@gmail.com",
-        "role": "Seller Agent"
+        "name": "Alex Johnson",
+        "email": "qqqqqqq",
+        "role": "Edit, Sign, View",
+        "contractRole": "Seller",
+        "permissions": [
+          "Edit",
+          "Sign",
+          "View"
+        ]
       },
       {
-        "name": "Mandy Mangosteen",
-        "email": "mandy@bustedtitle.com",
-        "role": "Closing Agent"
+        "name": "David Miller",
+        "email": "wwwww",
+        "role": "Edit, Sign, View",
+        "contractRole": "Buyer",
+        "permissions": [
+          "Edit",
+          "Sign",
+          "View"
+        ]
+      },
+      {
+        "name": "Emma Johnson",
+        "email": "eeeeeee",
+        "role": "Edit, Sign, View",
+        "contractRole": "Seller",
+        "permissions": [
+          "Edit",
+          "Sign",
+          "View"
+        ]
+      },
+      {
+        "name": "John Smith",
+        "email": "rrrrrrr",
+        "role": "View",
+        "contractRole": "Standard",
+        "permissions": [
+          "View"
+        ]
+      },
+      {
+        "name": "Sarah Miller",
+        "email": "tttttttt",
+        "role": "Edit, View",
+        "contractRole": "Buyer",
+        "permissions": [
+          "Edit",
+          "View"
+        ]
+      },
+      {
+        "name": "Sarah Johnson",
+        "email": "cccccc",
+        "role": "View",
+        "contractRole": "Standard",
+        "permissions": [
+          "View"
+        ]
       }
     ],
-    "party1Role": "Buyer",
-    "party2Role": "Seller",
-    "documentIds": []
+    "documentIds": [
+      "8049",
+      "8383",
+      "8707",
+      "8863"
+    ]
   },
   {
-    "id": "3256",
-    "title": "Madrid Villa",
-    "parties": "Nicholas Aquino & Benjamin Aiello & Salvador Dali",
+    "id": "3798",
+    "title": "Frank Gore Jr x Buffalo Bills",
+    "parties": "Alex Johnson & Sarah Johnson & David Miller & Sarah Miller",
     "status": "Initiation",
     "updated": "Just now",
     "value": "$2,500,000",
-    "documents": 0,
-    "type": "Residential – Financed",
-    "buyer": "Nicholas Aquino",
-    "seller": "Benjamin Aiello",
+    "documents": 6,
+    "type": "Player Contract",
+    "buyer": "Buyer 1: Alex Johnson, Buyer 2: Sarah Johnson",
+    "seller": "Seller 1: David Miller, Seller 2: Sarah Miller",
+    "buyers": [
+      "Alex Johnson",
+      "Sarah Johnson"
+    ],
+    "sellers": [
+      "David Miller",
+      "Sarah Miller"
+    ],
+    "buyerEmails": [
+      "nicholas@escra.io",
+      "wwwwww"
+    ],
+    "sellerEmails": [
+      "qqqqqqq",
+      "eeeee"
+    ],
     "milestone": "Standard (6 milestones)",
     "notes": "",
     "closingDate": "",
-    "dueDate": "2025-09-06",
+    "dueDate": "2025-09-27",
     "propertyAddress": "1701 N Lois Avenue",
-    "propertyType": "Multi Family",
+    "propertyType": "Commercial",
     "escrowNumber": "123456",
-    "buyerEmail": "nicholas@escra.io",
-    "sellerEmail": "benjamin@escra.io",
-    "earnestMoney": "$15,000",
+    "buyerEmail": "",
+    "sellerEmail": "",
+    "earnestMoney": "$20,000",
     "downPayment": "$125,000",
     "loanAmount": "$1,200,000",
     "interestRate": "5",
     "loanTerm": "30",
     "lenderName": "",
-    "sellerFinancialInstitution": "",
-    "buyerFinancialInstitution": "",
+    "sellerFinancialInstitution": "Chase",
+    "buyerFinancialInstitution": "BoA",
     "buyerAccountNumber": "222222222222",
     "sellerAccountNumber": "444444444444",
     "buyerFinancialInstitutionRoutingNumber": "111111111",
@@ -95,71 +189,71 @@
     "titleCompany": "ABC Title",
     "insuranceCompany": "XYZ Insurance",
     "inspectionPeriod": "30",
-    "contingencies": "not many",
+    "contingencies": "fgfdsgafgfsag",
     "city": "Tampa",
     "state": "FL",
     "zipCode": "33607",
     "country": "US",
-    "additionalParties": [
-      {
-        "name": "Salvador Dali",
-        "email": "dali@dali.com",
-        "role": "Seller"
-      }
-    ],
-    "party1Role": "Buyer",
-    "party2Role": "Seller Agent",
+    "industry": "Athletics",
+    "additionalParties": [],
+    "collaborators": "[{\"name\":\"John Doe\",\"email\":\"user@example.com\",\"role\":\"Edit, View, Sign\",\"contractRole\":\"Buyer\",\"permissions\":[\"Edit\",\"View\",\"Sign\"]},{\"name\":\"Alex Johnson\",\"email\":\"nicholas@escra.io\",\"role\":\"Edit, Sign, View\",\"contractRole\":\"Closing Agent\",\"permissions\":[\"Edit\",\"Sign\",\"View\"]},{\"name\":\"Emma Johnson\",\"email\":\"nicholas.aquino@protonmail.com\",\"role\":\"Edit, Sign, View\",\"contractRole\":\"Seller Agent\",\"permissions\":[\"Edit\",\"Sign\",\"View\"]},{\"name\":\"David Miller\",\"email\":\"qqqqqqq\",\"role\":\"Edit, Sign, View\",\"contractRole\":\"Seller\",\"permissions\":[\"Edit\",\"Sign\",\"View\"]},{\"name\":\"Sarah Johnson\",\"email\":\"wwwwww\",\"role\":\"View\",\"contractRole\":\"Buyer\",\"permissions\":[\"View\"]},{\"name\":\"Sarah Miller\",\"email\":\"eeeee\",\"role\":\"Edit, Sign, View\",\"contractRole\":\"Seller\",\"permissions\":[\"Edit\",\"Sign\",\"View\"]}]",
     "documentIds": []
   },
   {
-    "id": "5450",
-    "title": "Palmetto Home",
-    "parties": "Nicholas Aquino & Benjamin Aiello & Romy Perez",
+    "id": "4666",
+    "title": "Buffalo Historic Home",
+    "parties": "Nicholas Aquino & Benjamin Aiello",
     "status": "Initiation",
     "updated": "Just now",
-    "value": "$350,000",
-    "documents": 0,
+    "value": "$120,000",
+    "documents": 2,
     "type": "Residential – Financed",
-    "buyer": "Nicholas Aquino",
-    "seller": "Benjamin Aiello",
+    "buyer": "Buyer 1: Nicholas Aquino",
+    "seller": "Seller 1: Benjamin Aiello",
+    "buyers": [
+      "Nicholas Aquino"
+    ],
+    "sellers": [
+      "Benjamin Aiello"
+    ],
+    "buyerEmails": [
+      "nicholas@escra.io"
+    ],
+    "sellerEmails": [
+      "benjamin@escra.io"
+    ],
     "milestone": "Standard (6 milestones)",
     "notes": "",
     "closingDate": "",
-    "dueDate": "2025-08-29",
-    "propertyAddress": "1701 N Lois Avenue",
-    "propertyType": "Single Family",
+    "dueDate": "2025-10-11",
+    "propertyAddress": "39 Clearwater Drive",
+    "propertyType": "Multi Family",
     "escrowNumber": "123456",
-    "buyerEmail": "nicholas.aquino@protonmail.com",
-    "sellerEmail": "benjamin.aiello@escra.io",
-    "earnestMoney": "$15,000",
-    "downPayment": "$50,000",
-    "loanAmount": "$2,000,000",
+    "buyerEmail": "",
+    "sellerEmail": "",
+    "earnestMoney": "$20,000",
+    "downPayment": "$125,000",
+    "loanAmount": "$1,200,000",
     "interestRate": "5",
     "loanTerm": "30",
     "lenderName": "",
     "sellerFinancialInstitution": "Chase",
     "buyerFinancialInstitution": "BoA",
-    "buyerAccountNumber": "111111111111",
+    "buyerAccountNumber": "222222222222",
     "sellerAccountNumber": "444444444444",
     "buyerFinancialInstitutionRoutingNumber": "111111111",
-    "sellerFinancialInstitutionRoutingNumber": "333323233",
+    "sellerFinancialInstitutionRoutingNumber": "333333333",
     "titleCompany": "ABC Title",
     "insuranceCompany": "XYZ Insurance",
     "inspectionPeriod": "30",
-    "contingencies": "dsfdsfdsfdsfsdf",
-    "city": "Palmetto",
-    "state": "FL",
-    "zipCode": "33607",
+    "contingencies": "It is a very old house",
+    "city": "Buffalo",
+    "state": "NY",
+    "zipCode": "14228",
     "country": "US",
-    "additionalParties": [
-      {
-        "name": "Romy Perez",
-        "email": "perez.romanet@gmail.com",
-        "role": "Seller Agent"
-      }
-    ],
-    "party1Role": "Seller",
-    "party2Role": "Buyer",
+    "industry": "Real Estate",
+    "additionalParties": [],
+    "collaborators": "[{\"name\":\"Nicholas Aquino\",\"email\":\"nicholas@escra.io\",\"role\":\"Edit, Sign, View\",\"contractRole\":\"Buyer\",\"permissions\":[\"Edit\",\"Sign\",\"View\"]},{\"name\":\"Benjamin Aiello\",\"email\":\"benjamin@escra.io\",\"role\":\"Edit, Sign, View\",\"contractRole\":\"Seller\",\"permissions\":[\"Edit\",\"Sign\",\"View\"]},{\"name\":\"John Smith\",\"email\":\"gggggggg\",\"role\":\"View\",\"contractRole\":\"Buyer Agent\",\"permissions\":[\"View\"]},{\"name\":\"John Doe\",\"email\":\"user@example.com\",\"role\":\"Edit, View, Sign\",\"contractRole\":\"Seller Agent\",\"permissions\":[\"Edit\",\"View\",\"Sign\"]}]",
     "documentIds": []
   }
 ]

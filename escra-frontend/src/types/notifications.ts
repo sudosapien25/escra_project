@@ -13,7 +13,28 @@ export type NotificationType =
   | 'transaction_cancelled'
   | 'approaching_deadline'
   | 'overdue_action'
-  | 'security_alert';
+  | 'security_alert'
+  | 'contract_created'
+  | 'document_created'
+  | 'contract_voided'
+  | 'contract_deleted'
+  | 'document_deleted'
+  | 'document_added'
+  | 'task_created'
+  | 'task_deleted'
+  | 'signature_requested'
+  | 'signature_rejected'
+  | 'signature_voided'
+  | 'signature_completed'
+  | 'document_signed'
+  | 'passkey_added'
+  | 'passkey_removed'
+  | 'wallet_added'
+  | 'wallet_removed'
+  | 'api_token_added'
+  | 'api_token_removed'
+  | 'webhook_added'
+  | 'webhook_removed';
 
 export interface NotificationMeta {
   contractId?: string;

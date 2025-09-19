@@ -2,11 +2,11 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/common/Card';
-import { FaPlus, FaCopy, FaWallet, FaNetworkWired, FaBook, FaExternalLinkAlt, FaCogs, FaArrowRight, FaSearch, FaCheck } from 'react-icons/fa';
+import { FaPlus, FaCopy, FaWallet, FaNetworkWired, FaBook, FaExternalLinkAlt, FaCogs, FaArrowRight, FaCheck } from 'react-icons/fa';
 import { FaTimeline, FaFaucetDrip, FaRegSquareCheck, FaArrowUpRightFromSquare } from 'react-icons/fa6';
 import { HiOutlineExternalLink, HiOutlineDuplicate, HiOutlineViewBoards, HiOutlineDocumentSearch, HiOutlineDocumentText, HiOutlineClipboardList } from 'react-icons/hi';
 import { BiBookOpen } from 'react-icons/bi';
-import { HiMiniChevronDown } from 'react-icons/hi2';
+
 import { FaRegCalendarAlt, FaRegCheckCircle, FaRegFileAlt, FaCodeBranch, FaHashtag, FaCoins } from 'react-icons/fa';
 import { GrMoney } from 'react-icons/gr';
 import { Logo } from '@/components/common/Logo';
@@ -15,10 +15,13 @@ import { MdOutlineAddToPhotos, MdOutlineUpdate } from 'react-icons/md';
 import { mockContracts } from '@/data/mockContracts';
 import Image from 'next/image';
 import { LuSquareArrowOutUpRight, LuFileTerminal, LuBookText } from 'react-icons/lu';
-import { TbClockPin, TbShieldLock, TbDropletFilled, TbReportSearch, TbHistory, TbHistoryOff, TbClockEdit, TbTopologyBus } from 'react-icons/tb';
+import { TbClockPin, TbShieldLock, TbDropletFilled, TbReportSearch, TbHistory, TbHistoryOff, TbClockEdit, TbClockExclamation, TbTopologyBus, TbSearch, TbFileSearch, TbLayoutGrid, TbFilePlus, TbChevronDown, TbSquarePlus } from 'react-icons/tb';
 import { CgTerminal } from 'react-icons/cg';
 import { AiOutlineNodeExpand } from 'react-icons/ai';
 import { PiHandCoins } from 'react-icons/pi';
+import { useToast } from '@/components/ui/use-toast';
+import { Toaster } from '@/components/ui/toaster';
+import { useNotifications } from '@/context/NotificationContext';
 
 const BLOCK_HASH = "0x7ad9e3b8f2c1a4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9";
 const PROPOSER_HASH = "0xabc1234def5678fedcba9876543210abcdef1234567890fedcba0987654321ab";
@@ -249,6 +252,8 @@ export default function BlockchainPage() {
   const [selectedContracts, setSelectedContracts] = useState<string[]>([]);
   const [openContractDropdown, setOpenContractDropdown] = useState(false);
   const [contractSearch, setContractSearch] = useState('');
+  // Contracts state that includes both mock contracts and newly created contracts
+  const [contracts, setContracts] = useState(mockContracts);
   const statusDropdownRef = useRef<HTMLButtonElement>(null);
   const contractButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -256,6 +261,12 @@ export default function BlockchainPage() {
   const [activitySearchTerm, setActivitySearchTerm] = useState('');
   const [selectedActivityTypes, setSelectedActivityTypes] = useState<string[]>(['All']);
   const [showActivityTypeDropdown, setShowActivityTypeDropdown] = useState(false);
+  
+  // Toast notification system
+  const { toast } = useToast();
+  
+  // Notification system
+  const { addContractCreatedNotification, addDocumentCreatedNotification } = useNotifications();
   const [selectedActivityContracts, setSelectedActivityContracts] = useState<string[]>([]);
   const [openActivityContractDropdown, setOpenActivityContractDropdown] = useState(false);
   const [activityContractSearch, setActivityContractSearch] = useState('');
@@ -399,21 +410,126 @@ export default function BlockchainPage() {
     };
   }, [openActivityContractDropdown]);
 
+  // Function to add a new contract to the contracts list
+  const addNewContract = (newContract: any) => {
+    // Apply the same transformation as the original contracts variable
+    const transformedContract = {
+      title: newContract.title,
+      version: 'v1.0.0',
+      badges: [
+        { label: newContract.status === 'Complete' ? 'MainNet' : 'TestNet', color: newContract.status === 'Complete' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border border-green-800 dark:border-green-400' : 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400 border border-gray-800 dark:border-gray-400' },
+        { 
+          label: newContract.status, 
+          color: getStatusBadgeStyle(newContract.status)
+        },
+      ],
+      id: newContract.id,
+      description: `${newContract.type} contract between ${newContract.parties}`,
+      deployed: newContract.updated,
+      transactions: Math.floor(Math.random() * 200) + 20, // Random number between 20 and 220 for demo
+      status: newContract.status,
+    };
+    setContracts(prev => [transformedContract, ...prev]);
+  };
+
+  // Load enhanced contracts (including additional contracts) on component mount
+  useEffect(() => {
+    const loadEnhancedContracts = async () => {
+      try {
+        const response = await fetch('/api/contracts');
+        if (response.ok) {
+          const data = await response.json();
+          // Update contracts with enhanced data (mock + additional)
+          if (data.contracts && data.contracts.length > 0) {
+            // Apply the same transformation as the original contracts variable
+            const transformedContracts = data.contracts.map(contract => ({
+              title: contract.title,
+              version: 'v1.0.0',
+              badges: [
+                { label: contract.status === 'Complete' ? 'MainNet' : 'TestNet', color: contract.status === 'Complete' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border border-green-800 dark:border-green-400' : 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400 border border-gray-800 dark:border-gray-400' },
+                { 
+                  label: contract.status, 
+                  color: getStatusBadgeStyle(contract.status)
+                },
+              ],
+              id: contract.id,
+              description: `${contract.type} contract between ${contract.parties}`,
+              deployed: contract.updated,
+              transactions: Math.floor(Math.random() * 200) + 20, // Random number between 20 and 220 for demo
+              status: contract.status,
+            }));
+            setContracts(transformedContracts);
+          }
+        } else {
+          console.error('Failed to load enhanced contracts');
+          // Keep the initial mockContracts that are already loaded
+        }
+      } catch (error) {
+        console.error('Error loading enhanced contracts:', error);
+        // Keep the initial mockContracts that are already loaded
+      }
+    };
+
+    // Load enhanced contracts after a small delay
+    const timeoutId = setTimeout(loadEnhancedContracts, 100);
+    return () => clearTimeout(timeoutId);
+  }, []);
+
+  // Listen for new contract creation from modal
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'newContract' && event.newValue) {
+        try {
+          const newContract = JSON.parse(event.newValue);
+          // Add the new contract to the contracts list
+          addNewContract(newContract);
+          // Show toast notification
+          toast({
+            title: "Contract Created Successfully",
+            description: `"${newContract.title}" has been created with Contract ID #${newContract.id}`,
+            duration: 30000, // Match contracts page duration
+          });
+          
+          // Add notification for contract creation
+          addContractCreatedNotification(newContract.id, newContract.title);
+          
+          // Add notifications for documents if they exist
+          if (newContract.documentIds && newContract.documentIds.length > 0) {
+            // Note: In a real implementation, you would fetch document details here
+            // For now, we'll add a generic document notification
+            addDocumentCreatedNotification("doc_" + newContract.id, "Contract Documents", newContract.id, newContract.title);
+          }
+          
+          // Clear the storage after reading
+          localStorage.removeItem('newContract');
+        } catch (error) {
+          console.error('Error parsing new contract from storage:', error);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [toast, addContractCreatedNotification, addDocumentCreatedNotification]);
+
   return (
-    <div className="space-y-4 cursor-default select-none">
+    <>
+      <div className="space-y-2 cursor-default select-none">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0 mb-3 sm:mb-6 cursor-default select-none">
         <div className="pb-1 cursor-default select-none">
           <h1 className="text-[30px] font-bold text-black dark:text-white mb-0 cursor-default select-none">Blockchain</h1>
           <p className="text-gray-500 text-[16px] mt-0 cursor-default select-none">Review your smart contracts, on-chain activity & explorer integrations</p>
         </div>
-        <button
-          className="flex items-center justify-center w-full md:w-auto px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
-          onClick={() => setShowNewContractModal(true)}
-        >
-          <MdOutlineAddToPhotos className="mr-2 text-lg" />
-          New Contract
-        </button>
+        <div className="flex justify-end">
+          <button
+            className="flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+            onClick={() => setShowNewContractModal(true)}
+          >
+            <TbFilePlus className="mr-2 text-[22px]" />
+            New Contract
+          </button>
+        </div>
         <NewContractModal isOpen={showNewContractModal} onClose={() => setShowNewContractModal(false)} />
       </div>
 
@@ -453,7 +569,7 @@ export default function BlockchainPage() {
       </div>
 
       {/* Desktop: Horizontal layout */}
-      <div className="hidden lg:flex gap-1 cursor-default select-none mb-6">
+      <div className="hidden lg:flex gap-1 cursor-default select-none mb-0 mt-2">
         {[
           { key: 'smart-contracts', label: 'Smart Contracts' },
           { key: 'on-chain-activity', label: 'On-Chain Activity' },
@@ -477,7 +593,7 @@ export default function BlockchainPage() {
         ))}
       </div>
 
-      <hr className="my-3 md:my-6 border-gray-300 cursor-default select-none" />
+      <hr className="my-3 md:my-4 border-gray-300 cursor-default select-none" />
 
       {/* Tab Content */}
       {activeTab === 'smart-contracts' && (
@@ -487,10 +603,10 @@ export default function BlockchainPage() {
             <div className="lg:hidden space-y-2 cursor-default select-none">
               {/* Search Bar */}
               <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 w-full cursor-default select-none">
-                <FaSearch className="text-gray-400 mr-2" size={18} />
+                <TbSearch className="text-gray-400 mr-2" size={18} />
                 <input
                   type="text"
-                  placeholder="Search contracts, parties, or IDs"
+                  placeholder="Search contracts, parties, or IDs..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 dark:text-white placeholder-gray-400 font-medium"
@@ -513,8 +629,8 @@ export default function BlockchainPage() {
                       }
                     }}
                   >
-                    <span className="flex items-center"><TbHistory className="text-gray-400 text-base mr-2" />Status</span>
-                    <HiMiniChevronDown className="text-gray-400" size={16} />
+                    <span className="flex items-center"><TbHistory className="text-gray-400 mr-2" size={17} />Status</span>
+                    <TbChevronDown className="text-gray-400 dark:text-gray-500" size={18} />
                   </button>
                   {showStatusDropdown && (
                     <div 
@@ -579,53 +695,54 @@ export default function BlockchainPage() {
                       }
                     }}
                   >
-                    <span className="flex items-center"><HiOutlineDocumentSearch className="text-gray-400 text-base mr-2" />Contract</span>
-                    <HiMiniChevronDown className="text-gray-400" size={16} />
+                    <span className="flex items-center"><TbFileSearch className="text-gray-400 mr-2" size={17} />Contract</span>
+                    <TbChevronDown className="text-gray-400 dark:text-gray-500" size={18} />
                   </button>
                   {openContractDropdown && (
-                    <div 
-                      ref={contractDropdownContainerRef}
-                      className="absolute top-full right-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 contract-dropdown" 
-                      style={{ 
-                        fontFamily: 'Avenir, sans-serif'
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {/* Search Bar */}
-                      <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700">
-                        <div className="relative">
-                          <input
-                            type="text"
-                            placeholder="Search contracts..."
-                            value={contractSearch}
-                            onChange={(e) => setContractSearch(e.target.value)}
-                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-black dark:text-white bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                            style={{ fontFamily: 'Avenir, sans-serif' }}
-                          />
-                          <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                        </div>
-                      </div>
+                                    <div 
+                  ref={contractDropdownContainerRef}
+                  className="absolute top-full right-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 contract-dropdown" 
+                  style={{ 
+                    fontFamily: 'Avenir, sans-serif'
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Search Bar */}
+                  <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Search contracts..."
+                        value={contractSearch}
+                        onChange={(e) => setContractSearch(e.target.value)}
+                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-black dark:text-white bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                      />
+                      <TbSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    </div>
+                  </div>
 
-                      <button
-                        className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedContracts.length === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
-                        onClick={() => {
-                          setSelectedContracts([]);
-                        }}
-                      >
-                        <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                          {selectedContracts.length === 0 && (
-                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
-                              <FaCheck className="text-white" size={8} />
-                            </div>
-                          )}
+                  <button
+                    className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedContracts.length === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                    onClick={() => {
+                      setSelectedContracts([]);
+                    }}
+                  >
+                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                      {selectedContracts.length === 0 && (
+                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                          <FaCheck className="text-white" size={8} />
                         </div>
-                        All
-                      </button>
-                      {mockContracts
-                        .filter(contract => 
-                          contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
-                          contract.title.toLowerCase().includes(contractSearch.toLowerCase())
-                        )
+                      )}
+                    </div>
+                    All
+                  </button>
+                  {contracts
+                    .filter(contract => 
+                      contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
+                      contract.title.toLowerCase().includes(contractSearch.toLowerCase())
+                    )
+                    .sort((a, b) => Number(a.id) - Number(b.id))
                         .map(contract => (
                           <button
                             key={contract.id}
@@ -660,10 +777,10 @@ export default function BlockchainPage() {
             <div className="hidden lg:flex items-center gap-1">
               {/* Search Bar */}
               <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex-1 min-w-0">
-                <FaSearch className="text-gray-400 mr-2" size={18} />
+                <TbSearch className="text-gray-400 mr-2" size={18} />
                 <input
                   type="text"
-                  placeholder="Search contracts, parties, or IDs"
+                  placeholder="Search contracts, parties, or IDs..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 dark:text-white placeholder-gray-400 font-medium min-w-0"
@@ -687,9 +804,9 @@ export default function BlockchainPage() {
                       }
                     }}
                   >
-                    <TbHistory className="text-gray-400 w-4 h-4" />
+                    <TbHistory className="text-gray-400" size={18} />
                     <span>Status</span>
-                    <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+                    <TbChevronDown className="ml-1 text-gray-400 dark:text-gray-500" size={18} />
                   </button>
                   {showStatusDropdown && (
                     <div 
@@ -755,9 +872,9 @@ export default function BlockchainPage() {
                       }
                     }}
                   >
-                    <HiOutlineDocumentSearch className="text-gray-400 w-4 h-4" />
+                    <TbFileSearch className="text-gray-400" size={18} />
                     <span>Contract</span>
-                    <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+                    <TbChevronDown className="ml-1 text-gray-400 dark:text-gray-500" size={18} />
                   </button>
                   {openContractDropdown && (
                     <div 
@@ -779,30 +896,31 @@ export default function BlockchainPage() {
                             className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-black dark:text-white bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                             style={{ fontFamily: 'Avenir, sans-serif' }}
                           />
-                          <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                          <TbSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                         </div>
                       </div>
 
-                      <button
-                        className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedContracts.length === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
-                        onClick={() => {
-                          setSelectedContracts([]);
-                        }}
-                      >
-                        <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                          {selectedContracts.length === 0 && (
-                            <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
-                              <FaCheck className="text-white" size={8} />
-                            </div>
-                          )}
+                                        <button
+                    className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedContracts.length === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                    onClick={() => {
+                      setSelectedContracts([]);
+                    }}
+                  >
+                    <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                      {selectedContracts.length === 0 && (
+                        <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                          <FaCheck className="text-white" size={8} />
                         </div>
-                        All
-                      </button>
-                      {mockContracts
-                        .filter(contract => 
-                          contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
-                          contract.title.toLowerCase().includes(contractSearch.toLowerCase())
-                        )
+                      )}
+                    </div>
+                    All
+                  </button>
+                  {contracts
+                    .filter(contract => 
+                      contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
+                      contract.title.toLowerCase().includes(contractSearch.toLowerCase())
+                    )
+                    .sort((a, b) => Number(a.id) - Number(b.id))
                         .map(contract => (
                           <button
                             key={contract.id}
@@ -847,9 +965,13 @@ export default function BlockchainPage() {
                       <span className="text-[10px] text-gray-400 font-semibold flex-shrink-0" style={{ fontFamily: 'Avenir, sans-serif' }}>{contract.version}</span>
                     </div>
                     <div className="flex flex-wrap mt-2">
-                      {contract.badges.map((badge, i) => (
+                      {contract.badges?.map((badge, i) => (
                         <span key={i} className={`text-[10px] font-bold px-2 py-0.5 rounded border ${i > 0 ? 'ml-1' : ''} ${badge.color}`} style={{ fontFamily: 'Avenir, sans-serif' }}>{badge.label}</span>
-                      ))}
+                      )) || (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded border bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400 border-gray-800 dark:border-gray-400" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                          {contract.status || 'Unknown'}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <Image
@@ -899,7 +1021,7 @@ export default function BlockchainPage() {
                 </div>
                 <p className="text-[12px] text-gray-400 mb-3 truncate italic" style={{ fontFamily: 'Avenir, sans-serif' }} title={contract.description}>{contract.description}</p>
                 <div className="flex items-center text-[11px] text-black dark:text-white mb-2" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                  <span className="mr-4 flex items-center truncate"><TbClockEdit className="mr-1 text-gray-400 flex-shrink-0 text-base" />Last Updated: {contract.deployed}</span>
+                  <span className="mr-4 flex items-center truncate"><TbClockExclamation className="mr-1 text-gray-400 flex-shrink-0 text-base" />Last Updated: {contract.deployed}</span>
                   <span className="flex items-center truncate"><TbTopologyBus className="mr-1 text-gray-400 flex-shrink-0 text-base" />{contract.transactions} Transactions</span>
                 </div>
                 <div className="flex justify-between items-center pt-4 border-t border-gray-100 mt-4">
@@ -918,10 +1040,10 @@ export default function BlockchainPage() {
             <div className="lg:hidden space-y-2 cursor-default select-none">
               {/* Search Bar */}
               <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 w-full cursor-default select-none">
-                <FaSearch className="text-gray-400 mr-2" size={18} />
+                <TbSearch className="text-gray-400 mr-2" size={18} />
                 <input
                   type="text"
-                  placeholder="Search transactions, descriptions, or IDs"
+                  placeholder="Search transactions, descriptions, or IDs..."
                   value={activitySearchTerm}
                   onChange={(e) => setActivitySearchTerm(e.target.value)}
                   className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 dark:text-white placeholder-gray-400 font-medium"
@@ -944,8 +1066,8 @@ export default function BlockchainPage() {
                       }
                     }}
                   >
-                    <span className="flex items-center"><HiOutlineViewBoards className="text-gray-400 text-base mr-2" />Type</span>
-                    <HiMiniChevronDown className="text-gray-400" size={16} />
+                    <span className="flex items-center"><TbLayoutGrid className="text-gray-400 mr-2" size={17} />Type</span>
+                    <TbChevronDown className="text-gray-400 dark:text-gray-500" size={18} />
                   </button>
                   {showActivityTypeDropdown && (
                     <div 
@@ -1010,8 +1132,8 @@ export default function BlockchainPage() {
                       }
                     }}
                   >
-                    <span className="flex items-center"><HiOutlineDocumentSearch className="text-gray-400 text-base mr-2" />Contract</span>
-                    <HiMiniChevronDown className="text-gray-400" size={16} />
+                    <span className="flex items-center"><TbFileSearch className="text-gray-400 mr-2" size={17} />Contract</span>
+                    <TbChevronDown className="text-gray-400 dark:text-gray-500" size={18} />
                   </button>
                   {openActivityContractDropdown && (
                     <div 
@@ -1033,7 +1155,7 @@ export default function BlockchainPage() {
                             className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-black dark:text-white bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                             style={{ fontFamily: 'Avenir, sans-serif' }}
                           />
-                          <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                          <TbSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                         </div>
                       </div>
 
@@ -1052,11 +1174,12 @@ export default function BlockchainPage() {
                         </div>
                         All
                       </button>
-                      {mockContracts
+                      {contracts
                         .filter(contract => 
                           contract.id.toLowerCase().includes(activityContractSearch.toLowerCase()) ||
                           contract.title.toLowerCase().includes(activityContractSearch.toLowerCase())
                         )
+                        .sort((a, b) => Number(a.id) - Number(b.id))
                         .map(contract => (
                           <button
                             key={contract.id}
@@ -1091,10 +1214,10 @@ export default function BlockchainPage() {
             <div className="hidden lg:flex items-center gap-1">
               {/* Search Bar */}
               <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex-1 min-w-0">
-                <FaSearch className="text-gray-400 mr-2" size={18} />
+                <TbSearch className="text-gray-400 mr-2" size={18} />
                 <input
                   type="text"
-                  placeholder="Search transactions, descriptions, or IDs"
+                  placeholder="Search transactions, descriptions, or IDs..."
                   value={activitySearchTerm}
                   onChange={(e) => setActivitySearchTerm(e.target.value)}
                   className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 dark:text-white placeholder-gray-400 font-medium min-w-0"
@@ -1116,9 +1239,9 @@ export default function BlockchainPage() {
                       setOpenActivityContractDropdown(false);
                     }}
                   >
-                    <HiOutlineViewBoards className="text-gray-400 w-4 h-4" />
+                    <TbLayoutGrid className="text-gray-400" size={18} />
                     <span>Type</span>
-                    <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+                    <TbChevronDown className="ml-1 text-gray-400 dark:text-gray-500" size={18} />
                   </button>
                   {showActivityTypeDropdown && (
                     <div
@@ -1184,9 +1307,9 @@ export default function BlockchainPage() {
                       }
                     }}
                   >
-                    <HiOutlineDocumentSearch className="text-gray-400 w-4 h-4" />
+                    <TbFileSearch className="text-gray-400" size={18} />
                     <span>Contract</span>
-                    <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+                    <TbChevronDown className="ml-1 text-gray-400 dark:text-gray-500" size={18} />
                   </button>
                   {openActivityContractDropdown && (
                     <div
@@ -1208,7 +1331,7 @@ export default function BlockchainPage() {
                             className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-black dark:text-white bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                             style={{ fontFamily: 'Avenir, sans-serif' }}
                           />
-                          <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                          <TbSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                         </div>
                       </div>
 
@@ -1227,11 +1350,12 @@ export default function BlockchainPage() {
                         </div>
                         All
                       </button>
-                      {mockContracts
+                      {contracts
                         .filter(contract =>
                           contract.id.toLowerCase().includes(activityContractSearch.toLowerCase()) ||
                           contract.title.toLowerCase().includes(activityContractSearch.toLowerCase())
                         )
+                        .sort((a, b) => Number(a.id) - Number(b.id))
                         .map(contract => (
                           <button
                             key={contract.id}
@@ -2663,5 +2787,7 @@ export default function BlockchainPage() {
       )}
       </div>
     </div>
+    <Toaster />
+    </>
   );
 } 

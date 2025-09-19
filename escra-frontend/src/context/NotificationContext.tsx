@@ -1,108 +1,89 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Notification, NotificationType } from '../types/notifications';
-import { FaCheckCircle, FaExclamationTriangle, FaUserPlus, FaEdit, FaFileSignature, FaCommentDots, FaMoneyCheckAlt, FaTimesCircle, FaClock, FaLock, FaChartLine, FaCheck } from 'react-icons/fa';
-import { TbWritingSign, TbCloudUpload } from 'react-icons/tb';
+import { FaCheckCircle, FaExclamationTriangle, FaUserPlus, FaEdit, FaFileSignature, FaCommentDots, FaMoneyCheckAlt, FaTimesCircle, FaClock, FaLock, FaChartLine, FaCheck, FaSignature } from 'react-icons/fa';
+import { TbWritingSign, TbCloudUpload, TbFileText, TbFileDescription, TbApiApp, TbApiAppOff, TbWebhook, TbWebhookOff, TbTrash, TbCopyX, TbFileX, TbFilePlus, TbWalletOff, TbKeyOff, TbKey, TbWallet, TbSignature, TbSignatureOff, TbPlus, TbLibrary, TbLibraryPlus, TbSubtask, TbWritingSignOff, TbWand, TbPencilShare } from 'react-icons/tb';
 import { PiMoneyWavyBold } from 'react-icons/pi';
 import { AiOutlineFileDone } from 'react-icons/ai';
 import { HiOutlineClipboardCheck } from 'react-icons/hi';
 import { LuCalendarPlus } from 'react-icons/lu';
+import { HiOutlineKey } from 'react-icons/hi';
 
 // Map notification type to icon component
 const notificationIcons: Record<NotificationType, React.ReactNode> = {
-  contract_signed: <TbWritingSign className="text-primary text-2xl" />,
-  comment_added: <TbCloudUpload className="text-primary text-2xl" />,
-  wire_info_submitted: <PiMoneyWavyBold className="text-primary text-2xl" />,
+  contract_signed: <TbWritingSign className="text-primary text-xl" />,
+  comment_added: <TbCloudUpload className="text-primary text-xl" />,
+  wire_info_submitted: <PiMoneyWavyBold className="text-primary text-xl" />,
   contract_modified: <FaEdit className="text-primary text-xl" />,
   invited: <FaUserPlus className="text-primary text-xl" />,
   action_required: <FaExclamationTriangle className="text-yellow-500 text-xl" />,
   contract_rejected: <FaTimesCircle className="text-red-500 text-xl" />,
   role_change: <FaUserPlus className="text-primary text-xl" />,
-  all_signatures_complete: <HiOutlineClipboardCheck className="text-primary text-2xl" />,
-  funds_received: <PiMoneyWavyBold className="text-primary text-2xl" />,
+  all_signatures_complete: <HiOutlineClipboardCheck className="text-primary text-xl" />,
+  funds_received: <PiMoneyWavyBold className="text-primary text-xl" />,
   transaction_complete: <FaCheckCircle className="text-green-500 text-xl" />,
   transaction_cancelled: <FaTimesCircle className="text-red-500 text-xl" />,
-  approaching_deadline: <LuCalendarPlus className="text-primary text-2xl" />,
+  approaching_deadline: <LuCalendarPlus className="text-primary text-xl" />,
   overdue_action: <FaExclamationTriangle className="text-red-500 text-xl" />,
   security_alert: <FaLock className="text-red-500 text-xl" />,
+  contract_created: <TbFileText className="text-primary text-xl" />,
+  document_created: <TbLibrary className="text-primary text-xl" />,
+  contract_voided: <TbFileX className="text-red-500 text-xl" />,
+  contract_deleted: <FaTimesCircle className="text-red-500 text-xl" />,
+  document_deleted: <TbCopyX className="text-red-500 text-xl" />,
+  document_added: <TbLibraryPlus className="text-primary text-xl" />,
+  task_created: <TbSubtask className="text-primary text-xl" />,
+  task_deleted: <FaTimesCircle className="text-red-500 text-xl" />,
+  signature_requested: <TbPencilShare className="text-primary text-xl" />,
+  signature_rejected: <TbWritingSignOff className="text-red-500 text-xl" />,
+  signature_voided: <FaTimesCircle className="text-red-500 text-xl" />,
+  signature_completed: <TbSignature className="text-primary text-xl" />,
+  document_signed: <FaSignature className="text-primary text-xl" />,
+  passkey_added: <TbKey className="text-primary text-xl" />,
+  passkey_removed: <TbKeyOff className="text-red-500 text-xl" />,
+  wallet_added: <TbWallet className="text-primary text-xl" />,
+  wallet_removed: <TbWalletOff className="text-red-500 text-xl" />,
+  api_token_added: <TbApiApp className="text-primary text-xl" />,
+  api_token_removed: <TbApiAppOff className="text-red-500 text-xl" />,
+  webhook_added: <TbWebhook className="text-primary text-xl" />,
+  webhook_removed: <TbWebhookOff className="text-red-500 text-xl" />,
 };
 
-// Mock notifications
-const mockNotifications: Notification[] = [
-  {
-    id: '1',
-    type: 'wire_info_submitted',
-    title: 'Contract #8423 Wire Transfer Requested',
-    message: 'A wire transfer of $45,000 has been requested for Contract #8423.',
-    read: false,
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-    icon: 'wire_info_submitted',
-    link: '#',
-    meta: { contractId: '8423' },
-  },
-  {
-    id: '2',
-    type: 'contract_signed',
-    title: 'Sarah Johnson signed Contract #9102',
-    message: 'The lease agreement has been signed by the tenant.',
-    read: false,
-    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), // 5 hours ago
-    icon: 'contract_signed',
-    link: '#',
-    meta: { contractId: '9102' },
-  },
-  {
-    id: '3',
-    type: 'comment_added',
-    title: 'Document Upload: Inspection Report',
-    message: 'New document has been uploaded to Contract #7650.',
-    read: true,
-    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-    icon: 'comment_added',
-    link: '#',
-    meta: { contractId: '7650' },
-  },
-  {
-    id: '4',
-    type: 'all_signatures_complete',
-    title: 'Inspection Completed',
-    message: 'Property inspection for Contract #8423 has been completed.',
-    read: true,
-    timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
-    icon: 'all_signatures_complete',
-    link: '#',
-    meta: { contractId: '8423' },
-  },
-  {
-    id: '5',
-    type: 'funds_received',
-    title: 'Wire Transfer Complete',
-    message: 'A wire transfer of $92,000 for Contract #7124 has been completed.',
-    read: true,
-    timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
-    icon: 'funds_received',
-    link: '#',
-    meta: { contractId: '7124' },
-  },
-  {
-    id: '6',
-    type: 'approaching_deadline',
-    title: 'Meeting Scheduled',
-    message: 'Virtual closing meeting for Contract #9145 scheduled for May 25th, 10:00 AM.',
-    read: true,
-    timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
-    icon: 'approaching_deadline',
-    link: '#',
-    meta: { contractId: '9145' },
-  },
-];
+// Start with empty notifications array
+const mockNotifications: Notification[] = [];
 
 interface NotificationContextType {
   notifications: Notification[];
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
+  markAsUnread: (id: string) => void;
+  markAllAsUnread: () => void;
+  deleteNotification: (id: string) => void;
   unreadCount: number;
   filter: string;
   setFilter: (filter: string) => void;
+  addNotification: (notification: Omit<Notification, 'id' | 'timestamp'>) => void;
+  addContractCreatedNotification: (contractId: string, contractTitle: string) => void;
+  addDocumentCreatedNotification: (documentId: string, documentName: string, contractId: string, contractTitle: string) => void;
+  addContractVoidedNotification: (contractId: string, contractTitle: string) => void;
+  addContractDeletedNotification: (contractId: string, contractTitle: string) => void;
+  addDocumentDeletedNotification: (documentId: string, documentName: string, contractId: string, contractTitle: string) => void;
+  addTaskCreatedNotification: (taskId: string, taskName: string, contractId: string, contractTitle: string) => void;
+  addTaskDeletedNotification: (taskId: string, taskName: string, contractId: string, contractTitle: string) => void;
+  addTaskDocumentDeletedNotification: (documentName: string, taskId: string, taskName: string, contractId: string, contractName: string) => void;
+  addTaskDocumentAddedNotification: (documentName: string, taskId: string, taskName: string, contractId: string, contractName: string) => void;
+  addSignatureRequestedNotification: (signatureId: string, documentName: string, recipients: Array<{name: string, email: string}>) => void;
+  addSignatureRejectedNotification: (signatureId: string, documentName: string, recipients: Array<{name: string, email: string}>) => void;
+  addSignatureVoidedNotification: (signatureId: string, documentName: string, recipients: Array<{name: string, email: string}>) => void;
+  addSignatureCompletedNotification: (userName: string, userId: string, documentName: string, documentId: string, contractId: string, contractName: string) => void;
+  addDocumentSignedNotification: (documentId: string, documentName: string, contractId: string, contractTitle: string, signerName?: string) => void;
+  addPasskeyAddedNotification: (passkeyName: string) => void;
+  addPasskeyRemovedNotification: (passkeyName: string) => void;
+  addWalletAddedNotification: (walletName: string) => void;
+  addWalletRemovedNotification: (walletName: string) => void;
+  addApiTokenAddedNotification: (tokenName: string) => void;
+  addApiTokenRemovedNotification: (tokenName: string) => void;
+  addWebhookAddedNotification: (webhookUrl: string) => void;
+  addWebhookRemovedNotification: (webhookUrl: string) => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -119,10 +100,372 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
+  const markAsUnread = (id: string) => {
+    setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: false } : n));
+  };
+
+  const markAllAsUnread = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: false })));
+  };
+
+  const deleteNotification = (id: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  };
+
+  const addNotification = (notification: Omit<Notification, 'id' | 'timestamp'>) => {
+    const newNotification: Notification = {
+      ...notification,
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      timestamp: new Date().toISOString(),
+    };
+    setNotifications((prev) => [newNotification, ...prev]);
+  };
+
+  const addContractCreatedNotification = (contractId: string, contractTitle: string) => {
+    addNotification({
+      type: 'contract_created',
+      title: 'Contract Created Successfully',
+      message: `"${contractTitle}" has been created with Contract ID #${contractId}`,
+      read: false,
+      icon: 'contract_created',
+      link: `/contracts`,
+      meta: { contractId },
+    });
+  };
+
+  const addDocumentCreatedNotification = (documentId: string, documentName: string, contractId: string, contractTitle: string) => {
+    addNotification({
+      type: 'document_created',
+      title: 'Document Created Successfully',
+      message: `"${documentName}" with Document ID #${documentId} has been created for Contract ID #${contractId} - ${contractTitle}`,
+      read: false,
+      icon: 'document_created',
+      link: `/contracts`,
+      meta: { contractId, documentId },
+    });
+  };
+
+  const addContractVoidedNotification = (contractId: string, contractTitle: string) => {
+    addNotification({
+      type: 'contract_voided',
+      title: 'Contract Voided Successfully',
+      message: `"${contractTitle}" with Contract ID #${contractId} has been voided along with its associated documents`,
+      read: false,
+      icon: 'contract_voided',
+      link: `/contracts`,
+      meta: { contractId },
+    });
+  };
+
+  const addContractDeletedNotification = (contractId: string, contractTitle: string) => {
+    addNotification({
+      type: 'contract_deleted',
+      title: 'Contract Deleted Successfully',
+      message: `"${contractTitle}" with Contract ID #${contractId} has been deleted along with its associated documents`,
+      read: false,
+      icon: 'contract_deleted',
+      link: `/contracts`,
+      meta: { contractId },
+    });
+  };
+
+  const addDocumentDeletedNotification = (documentId: string, documentName: string, contractId: string, contractTitle: string) => {
+    addNotification({
+      type: 'document_deleted',
+      title: 'Document Deleted Successfully',
+      message: `"${documentName}" with Document ID #${documentId} associated with Contract ID #${contractId} - ${contractTitle} has been deleted`,
+      read: false,
+      icon: 'document_deleted',
+      link: `/contracts`,
+      meta: { contractId, documentId },
+    });
+  };
+
+  const addTaskCreatedNotification = (taskId: string, taskName: string, contractId: string, contractTitle: string) => {
+    addNotification({
+      type: 'task_created',
+      title: 'Task Created Successfully',
+      message: `"${taskName}" with Task ID #${taskId} has been created for Contract ID #${contractId} - ${contractTitle}`,
+      read: false,
+      icon: 'task_created',
+      link: `/workflows`,
+      meta: { contractId, taskId },
+    });
+  };
+
+  const addTaskDeletedNotification = (taskId: string, taskName: string, contractId: string, contractTitle: string) => {
+    addNotification({
+      type: 'task_deleted',
+      title: 'Task Deleted Successfully',
+      message: `"${taskName}" with Task ID #${taskId} associated with Contract ID #${contractId} - ${contractTitle} has been deleted`,
+      read: false,
+      icon: 'task_deleted',
+      link: `/workflows`,
+      meta: { contractId, taskId },
+    });
+  };
+
+  const addTaskDocumentDeletedNotification = (documentName: string, taskId: string, taskName: string, contractId: string, contractName: string) => {
+    addNotification({
+      type: 'document_deleted',
+      title: 'Document Deleted Successfully',
+      message: `"${documentName}" associated with Task #${taskId} - "${taskName}" for Contract ID #${contractId} - ${contractName} has been removed and deleted`,
+      read: false,
+      icon: 'document_deleted',
+      link: `/workflows`,
+      meta: { taskId, documentName, contractId },
+    });
+  };
+
+  const addTaskDocumentAddedNotification = (documentName: string, taskId: string, taskName: string, contractId: string, contractName: string) => {
+    addNotification({
+      type: 'document_added',
+      title: 'Document Added Successfully',
+      message: `"${documentName}" has been added to Task ID #${taskId} - "${taskName}" and associated with Contract ID #${contractId} - ${contractName}`,
+      read: false,
+      icon: 'document_added',
+      link: `/workflows`,
+      meta: { taskId, documentName, contractId },
+    });
+  };
+
+  const addSignatureRequestedNotification = (signatureId: string, documentName: string, recipients: Array<{name: string, email: string}>) => {
+    // Filter out recipients with empty names
+    const validRecipients = recipients.filter(recipient => recipient.name && recipient.name.trim() !== '');
+    
+    // Create bulleted list of recipients
+    const recipientsList = validRecipients.map(recipient => 
+      `• ${recipient.name} at ${recipient.email}`
+    ).join('\n');
+    
+    const message = validRecipients.length > 0 
+      ? `Requests for signature have been sent to:\n${recipientsList}`
+      : `"${documentName}" has been sent for signature`;
+    
+    addNotification({
+      type: 'signature_requested',
+      title: 'Signatures Requested Successfully',
+      message: message,
+      read: false,
+      icon: 'signature_requested',
+      link: `/signatures`,
+      meta: { signatureId, documentName, recipientCount: validRecipients.length },
+    });
+  };
+
+  const addSignatureRejectedNotification = (signatureId: string, documentName: string, recipients: Array<{name: string, email: string}>) => {
+    // Filter out recipients with empty names
+    const validRecipients = recipients.filter(recipient => recipient.name && recipient.name.trim() !== '');
+    
+    // Create bulleted list of recipients
+    const recipientsList = validRecipients.map(recipient => 
+      `• ${recipient.name} at ${recipient.email}`
+    ).join('\n');
+    
+    const message = validRecipients.length > 0 
+      ? `Request for signature to the following individuals has been rejected:\n${recipientsList}`
+      : `"${documentName}" signature request has been rejected`;
+    
+    addNotification({
+      type: 'signature_rejected',
+      title: 'Signature Request Rejected',
+      message: message,
+      read: false,
+      icon: 'signature_rejected',
+      link: `/signatures`,
+      meta: { signatureId, documentName, recipientCount: validRecipients.length },
+    });
+  };
+
+  const addSignatureVoidedNotification = (signatureId: string, documentName: string, recipients: Array<{name: string, email: string}>) => {
+    // Filter out recipients with empty names
+    const validRecipients = recipients.filter(recipient => recipient.name && recipient.name.trim() !== '');
+    
+    // Create bulleted list of recipients
+    const recipientsList = validRecipients.map(recipient => 
+      `• ${recipient.name} at ${recipient.email}`
+    ).join('\n');
+    
+    const message = validRecipients.length > 0 
+      ? `Request for signature to the following individuals has been voided and canceled:\n${recipientsList}`
+      : `"${documentName}" signature request has been voided and canceled`;
+    
+    addNotification({
+      type: 'signature_voided',
+      title: 'Signature Request Voided Successfully',
+      message: message,
+      read: false,
+      icon: 'signature_voided',
+      link: `/signatures`,
+      meta: { signatureId, documentName, recipientCount: validRecipients.length },
+    });
+  };
+
+  const addSignatureCompletedNotification = (userName: string, userId: string, documentName: string, documentId: string, contractId: string, contractName: string) => {
+    addNotification({
+      type: 'signature_completed',
+      title: 'Signature Completed',
+      message: `"${userName}" with User ID #${userId} has successfully signed "${documentName}" with Document ID #${documentId} for Contract ID #${contractId} - ${contractName}`,
+      read: false,
+      icon: 'signature_completed',
+      link: `/signatures`,
+      meta: { userName, userId, documentName, documentId, contractId, contractName },
+    });
+  };
+
+  const addDocumentSignedNotification = (documentId: string, documentName: string, contractId: string, contractName: string, signerName?: string) => {
+    const message = signerName 
+      ? `${signerName} has successfully signed Document ID #${documentId} - ${documentName} for Contract ID #${contractId} - ${contractName}`
+      : `You have successfully signed Document ID #${documentId} - ${documentName} for Contract ID #${contractId} - ${contractName}`;
+    
+    const title = signerName 
+      ? 'Recipient Signed Document Successfully'
+      : 'You Signed Document Successfully';
+    
+    addNotification({
+      type: 'document_signed',
+      title: title,
+      message: message,
+      read: false,
+      icon: 'document_signed',
+      link: `/signatures`,
+      meta: { documentId, documentName, contractId, contractName, signerName },
+    });
+  };
+
+  const addPasskeyAddedNotification = (passkeyName: string) => {
+    addNotification({
+      type: 'passkey_added',
+      title: 'Passkey Added Successfully',
+      message: `"${passkeyName}" has been added successfully to your account`,
+      read: false,
+      icon: 'passkey_added',
+      link: `/admin-settings`,
+      meta: { passkeyName },
+    });
+  };
+
+  const addPasskeyRemovedNotification = (passkeyName: string) => {
+    addNotification({
+      type: 'passkey_removed',
+      title: 'Passkey Removed Successfully',
+      message: `"${passkeyName}" has been removed successfully from your account`,
+      read: false,
+      icon: 'passkey_removed',
+      link: `/admin-settings`,
+      meta: { passkeyName },
+    });
+  };
+
+  const addWalletAddedNotification = (walletName: string) => {
+    addNotification({
+      type: 'wallet_added',
+      title: 'Wallet Added Successfully',
+      message: `"${walletName}" has been added successfully to your account`,
+      read: false,
+      icon: 'wallet_added',
+      link: `/admin-settings`,
+      meta: { walletName },
+    });
+  };
+
+  const addWalletRemovedNotification = (walletName: string) => {
+    addNotification({
+      type: 'wallet_removed',
+      title: 'Wallet Removed Successfully',
+      message: `"${walletName}" has been removed successfully from your account`,
+      read: false,
+      icon: 'wallet_removed',
+      link: `/admin-settings`,
+      meta: { walletName },
+    });
+  };
+
+  const addApiTokenAddedNotification = (tokenName: string) => {
+    addNotification({
+      type: 'api_token_added',
+      title: 'API Token Added Successfully',
+      message: `"${tokenName}" has been added successfully to your account`,
+      read: false,
+      icon: 'api_token_added',
+      link: `/admin-settings`,
+      meta: { tokenName },
+    });
+  };
+
+  const addApiTokenRemovedNotification = (tokenName: string) => {
+    addNotification({
+      type: 'api_token_removed',
+      title: 'API Token Removed Successfully',
+      message: `"${tokenName}" has been removed successfully from your account`,
+      read: false,
+      icon: 'api_token_removed',
+      link: `/admin-settings`,
+      meta: { tokenName },
+    });
+  };
+
+  const addWebhookAddedNotification = (webhookUrl: string) => {
+    addNotification({
+      type: 'webhook_added',
+      title: 'Webhook Added Successfully',
+      message: `Webhook for URL "${webhookUrl}" has been added successfully`,
+      read: false,
+      icon: 'webhook_added',
+      link: `/admin-settings`,
+      meta: { webhookUrl },
+    });
+  };
+
+  const addWebhookRemovedNotification = (webhookUrl: string) => {
+    addNotification({
+      type: 'webhook_removed',
+      title: 'Webhook Removed Successfully',
+      message: `Webhook for URL "${webhookUrl}" has been removed successfully`,
+      read: false,
+      icon: 'webhook_removed',
+      link: `/admin-settings`,
+      meta: { webhookUrl },
+    });
+  };
+
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
-    <NotificationContext.Provider value={{ notifications, markAsRead, markAllAsRead, unreadCount, filter, setFilter }}>
+    <NotificationContext.Provider value={{ 
+      notifications, 
+      markAsRead, 
+      markAllAsRead, 
+      markAsUnread,
+      markAllAsUnread,
+      deleteNotification,
+      unreadCount, 
+      filter, 
+      setFilter,
+      addNotification,
+      addContractCreatedNotification,
+      addDocumentCreatedNotification,
+      addContractVoidedNotification,
+      addContractDeletedNotification,
+      addDocumentDeletedNotification,
+      addTaskCreatedNotification,
+      addTaskDeletedNotification,
+      addTaskDocumentDeletedNotification,
+    addTaskDocumentAddedNotification,
+      addSignatureRequestedNotification,
+      addSignatureRejectedNotification,
+      addSignatureVoidedNotification,
+      addSignatureCompletedNotification,
+      addDocumentSignedNotification,
+      addPasskeyAddedNotification,
+      addPasskeyRemovedNotification,
+      addWalletAddedNotification,
+      addWalletRemovedNotification,
+      addApiTokenAddedNotification,
+      addApiTokenRemovedNotification,
+      addWebhookAddedNotification,
+      addWebhookRemovedNotification
+    }}>
       {children}
     </NotificationContext.Provider>
   );

@@ -6,8 +6,8 @@ import Image from 'next/image';
 import DecryptedText from '@/components/DecryptedText';
 import { HiMiniChevronRight } from 'react-icons/hi2';
 import { HiOutlineIdentification, HiOutlineKey, HiOutlineCube, HiOutlineCog, HiOutlineDocumentText, HiOutlineClipboardCheck, HiOutlineServer, HiOutlineFingerPrint, HiOutlineLockClosed, HiOutlineChip, HiOutlineChevronLeft, HiOutlineChevronRight, HiOutlineDuplicate } from 'react-icons/hi';
-import { TbBuildingEstate, TbWorld, TbSettingsAutomation, TbServerSpark, TbAdjustmentsAlt, TbAtom, TbBolt, TbAbacus, TbWindow, TbEyeSearch, TbShieldSearch, TbShield, TbLock, TbShieldCheck, TbServer, TbNetwork, TbShieldStar, TbEngine, TbScale, TbWall, TbShieldLock, TbClipboardSearch, TbBuildingCommunity, TbBallAmericanFootball, TbManualGearbox, TbTool, TbGitBranch } from 'react-icons/tb';
-import { LuBriefcaseBusiness, LuConstruction, LuTrello, LuBlocks, LuIdCard, LuCpu, LuAtom, LuLayers3 } from 'react-icons/lu';
+import { TbBuildingEstate, TbWorld, TbSettingsAutomation, TbServerSpark, TbAdjustmentsAlt, TbAtom, TbBolt, TbAbacus, TbWindow, TbEyeSearch, TbShieldSearch, TbShield, TbLock, TbShieldCheck, TbServer, TbNetwork, TbShieldStar, TbEngine, TbScale, TbWall, TbShieldLock, TbClipboardSearch, TbBuildingCommunity, TbBallAmericanFootball, TbManualGearbox, TbTool, TbGitBranch, TbCoins, TbSchema, TbKey, TbStethoscope, TbChevronRight, TbFingerprint, TbChevronLeft, TbCopy, TbBriefcase, TbBarrierBlock, TbBlocks, TbId, TbStack2, TbTrophy, TbForklift } from 'react-icons/tb';
+import { LuBriefcaseBusiness, LuConstruction, LuTrello, LuBlocks, LuIdCard, LuCpu, LuAtom, LuLayers3, LuHardHat } from 'react-icons/lu';
 import { GrMoney, GrUserWorker } from 'react-icons/gr';
 import { VscLaw } from 'react-icons/vsc';
 import { MdOutlineSportsFootball, MdOutlineMovieFilter, MdOutlineHealthAndSafety } from 'react-icons/md';
@@ -99,12 +99,12 @@ export default function LandingPage() {
     },
     {
       name: 'Corporate',
-      icon: LuBriefcaseBusiness,
+      icon: TbBriefcase,
       description: 'Enterprise, employment & vendor agreements with automated compliance tracking and multi-stakeholder approval workflows'
     },
     {
       name: 'Finance',
-      icon: GrMoney,
+      icon: TbCoins,
       description: 'Advisory, Lending, M&A agreements with instant settlement capabilities and regulatory compliance automation'
     },
     {
@@ -119,7 +119,7 @@ export default function LandingPage() {
     },
     {
       name: 'Labor',
-      icon: GrUserWorker,
+      icon: LuHardHat,
       description: 'Dispute resolution, collective-bargaining & union agreements with transparent voting systems and automated enforcement'
     },
     {
@@ -129,22 +129,22 @@ export default function LandingPage() {
     },
     {
       name: 'Athletics',
-      icon: TbBallAmericanFootball,
+      icon: TbTrophy,
       description: 'Front-offices, leagues, player contracts & endorsements with performance-based automation and endorsement tracking'
     },
     {
       name: 'Construction',
-      icon: LuConstruction,
+      icon: TbBarrierBlock,
       description: 'Building, project & subcontractor agreements with milestone-based payments and automated quality assurance checks'
     },
     {
       name: 'Healthcare',
-      icon: MdOutlineHealthAndSafety,
+      icon: TbStethoscope,
       description: 'Medical provider & health service agreements with HIPAA-compliant data handling and automated billing verification'
     },
     {
       name: 'Manufacturing',
-      icon: TbTool,
+      icon: TbForklift,
       description: 'Production, supply & equipment agreements with quality control automation and supply chain transparency'
     },
     {
@@ -366,7 +366,7 @@ export default function LandingPage() {
               Get started
             </a>
             <a href="#" className="px-4 py-2 text-sm border border-black rounded-lg hover:bg-primary hover:text-white hover:border-transparent hover:italic transition-all flex items-center font-medium">
-              Learn more <HiMiniChevronRight className="w-4 h-4 ml-2" />
+              Learn more <TbChevronRight className="w-4 h-4 ml-2" />
             </a>
           </div>
           
@@ -401,7 +401,7 @@ export default function LandingPage() {
             {/* Identity Verification */}
             <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200 hover:shadow-xl transition-shadow">
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                <LuIdCard className="w-6 h-6 text-primary" />
+                <TbId className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Identity Verification</h3>
               <p className="text-gray-600 text-sm leading-relaxed">
@@ -412,7 +412,7 @@ export default function LandingPage() {
             {/* Cryptographic Signature Verification */}
             <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200 hover:shadow-xl transition-shadow">
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                <HiOutlineKey className="w-6 h-6 text-primary" />
+                <TbKey className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Cryptographic Signature Verification</h3>
               <p className="text-gray-600 text-sm leading-relaxed">
@@ -423,7 +423,7 @@ export default function LandingPage() {
             {/* Blockchain Integration */}
             <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200 hover:shadow-xl transition-shadow">
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                <LuBlocks className="w-6 h-6 text-primary" />
+                <TbBlocks className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Blockchain Integration</h3>
               <p className="text-gray-600 text-sm leading-relaxed">
@@ -635,7 +635,7 @@ export default function LandingPage() {
             {/* Cryptographic Identity Chain */}
             <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200 hover:shadow-xl transition-shadow">
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                <HiOutlineFingerPrint className="w-6 h-6 text-primary" />
+                <TbFingerprint className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Cryptographic Identity Chain</h3>
               <p className="text-gray-600 text-sm leading-relaxed mb-3">
@@ -652,7 +652,7 @@ export default function LandingPage() {
             {/* Immutable Audit Architecture */}
             <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200 hover:shadow-xl transition-shadow">
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                <PiLockKeyBold className="w-6 h-6 text-primary" />
+                <TbSchema className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Immutable Audit Architecture</h3>
               <p className="text-gray-600 text-sm leading-relaxed mb-3">
@@ -910,7 +910,7 @@ export default function LandingPage() {
                 className="absolute left-0 z-10 h-10 w-10 rounded-lg bg-gray-500 shadow-lg border-2 border-gray-200 hover:shadow-xl transition-shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transform -translate-x-1/2"
                 disabled={currentIndustryIndex === 0}
               >
-                <HiOutlineChevronLeft className="w-5 h-5 text-white" />
+                <TbChevronLeft className="w-5 h-5 text-white" />
               </button>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
@@ -935,7 +935,7 @@ export default function LandingPage() {
                 className="absolute right-0 z-10 h-10 w-10 rounded-lg bg-gray-500 shadow-lg border-2 border-gray-200 hover:shadow-xl transition-shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transform translate-x-1/2"
                 disabled={currentIndustryIndex + 4 >= industries.length}
               >
-                <HiOutlineChevronRight className="w-5 h-5 text-white" />
+                <TbChevronRight className="w-5 h-5 text-white" />
               </button>
             </div>
           </div>
@@ -950,7 +950,7 @@ export default function LandingPage() {
             {/* Multi-Layer Identity Protection */}
             <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200 hover:shadow-xl transition-shadow">
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                <LuLayers3 className="w-6 h-6 text-primary" />
+                <TbStack2 className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Multi-Layer Identity Protection</h3>
               <p className="text-gray-600 text-sm leading-relaxed mb-4">
@@ -1569,7 +1569,7 @@ export default function LandingPage() {
                             onMouseLeave={() => setHoveredEmail(false)}
                             aria-label="Copy email address"
                           >
-                            <HiOutlineDuplicate className="w-4 h-4" />
+                            <TbCopy className="w-4 h-4" />
                           </button>
                           {copiedEmail && (
                             <div className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none z-10">

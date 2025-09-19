@@ -1,25 +1,25 @@
 'use client';
 
 import React, { useState, useRef, useEffect, RefObject, createRef } from 'react';
-import { FaSearch, FaUser, FaFilter, FaSort, FaCheckCircle, FaPlus, FaTimes, FaChevronDown, FaChevronUp, FaCheck } from 'react-icons/fa';
+import { FaUser, FaFilter, FaSort, FaCheckCircle, FaPlus, FaTimes, FaChevronUp, FaCheck } from 'react-icons/fa';
 import { FaRegSquareCheck } from 'react-icons/fa6';
-import { HiOutlineEye, HiOutlineDownload, HiOutlineViewBoards, HiOutlineTrash, HiOutlineUpload, HiOutlineDocumentText, HiOutlineBell, HiOutlineCog, HiOutlineDuplicate, HiOutlineDocumentSearch, HiOutlineUserGroup, HiOutlineX } from 'react-icons/hi';
-import { HiMiniChevronUpDown, HiMiniChevronDown } from 'react-icons/hi2';
-import { LuPen, LuCalendarClock, LuBellRing, LuPenLine, LuCalendarFold, LuEraser } from 'react-icons/lu';
-import { MdCancelPresentation } from 'react-icons/md';
+import { HiOutlineViewBoards, HiOutlineDocumentText, HiOutlineBell, HiOutlineCog, HiOutlineDuplicate, HiOutlineDocumentSearch, HiOutlineUserGroup, HiOutlineX } from 'react-icons/hi';
+import { HiMiniChevronUpDown } from 'react-icons/hi2';
+import { LuCalendarClock, LuBellRing, LuPenLine, LuCalendarFold } from 'react-icons/lu';
+
 import { FaRegClock } from 'react-icons/fa';
 import { BsPerson } from 'react-icons/bs';
 import { PiWarningDiamondBold } from 'react-icons/pi';
 import clsx from 'clsx';
 import { IconBaseProps } from 'react-icons';
-import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbClockPin, TbPencilShare, TbPencilPlus, TbClockEdit, TbStatusChange, TbHistory } from 'react-icons/tb';
+import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbClockPin, TbPencilShare, TbPencilPlus, TbClockEdit, TbStatusChange, TbHistory, TbCalendarExclamation, TbPencilCheck, TbDownload, TbSearch, TbFileSearch, TbLibrary, TbEraser, TbTrash, TbChevronDown, TbChevronsLeft, TbChevronsRight, TbClockExclamation, TbUserShare, TbUserSearch, TbUserUp, TbCopyCheck, TbCopyMinus, TbLibraryMinus, TbEye, TbUpload, TbPencil, TbUserEdit, TbSquareX } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
 import { TiUserAddOutline } from 'react-icons/ti';
 import { Modal } from '@/components/common/Modal';
 import { RiLayoutColumnLine, RiDashboardLine, RiBox3Line, RiUserSharedLine, RiUserSearchLine } from 'react-icons/ri';
 import { FaSignature } from 'react-icons/fa';
-import { HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight, HiChevronDown } from 'react-icons/hi';
+import { HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight } from 'react-icons/hi';
 import { MdOutlineLightMode, MdOutlineDarkMode } from 'react-icons/md';
 import { FaDochub } from 'react-icons/fa6';
 import { SiAdobe } from 'react-icons/si';
@@ -27,6 +27,7 @@ import { mockContracts } from '@/data/mockContracts';
 import { useAssigneeStore } from '@/data/assigneeStore';
 import { useDocumentStore } from '@/data/documentNameStore';
 import { useAuth } from '@/context/AuthContext';
+import { useNotifications } from '@/context/NotificationContext';
 import { useToast } from '@/components/ui/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Logo } from '@/components/common/Logo';
@@ -56,6 +57,7 @@ export default function SignaturesPage() {
   const { getAllDocuments } = useDocumentStore();
   const { getAssignee } = useAssigneeStore();
   const { toast } = useToast();
+  const { addSignatureRequestedNotification, addSignatureVoidedNotification, addDocumentSignedNotification } = useNotifications();
   
   const [activeTab, setActiveTab] = useState('all');
   const [inboxTab, setInboxTab] = useState('all');
@@ -80,6 +82,8 @@ export default function SignaturesPage() {
   const [showDocuSignModal, setShowDocuSignModal] = useState(false);
   const [showDocumentPreparationModal, setShowDocumentPreparationModal] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [collaborators, setCollaborators] = useState<Array<{name: string, email: string, contractRole: string}>>([]);
+  const [selectedCollaborators, setSelectedCollaborators] = useState<string[]>([]);
   const [docuSignUploadedFiles, setDocuSignUploadedFiles] = useState<File[]>([]);
   const [editingFileName, setEditingFileName] = useState<string | null>(null);
   const [editingDocuSignFileName, setEditingDocuSignFileName] = useState<string | null>(null);
@@ -142,6 +146,8 @@ export default function SignaturesPage() {
   const [showContractDropdown, setShowContractDropdown] = useState(false);
   const [selectedContracts, setSelectedContracts] = useState<string[]>([]);
   const [contractSearch, setContractSearch] = useState('');
+  // Contracts state that includes both mock contracts and newly created contracts
+  const [contracts, setContracts] = useState(mockContracts);
   const contractDropdownRef = useRef<HTMLDivElement>(null);
   // State for dynamic recipient cards
   type Recipient = {
@@ -155,6 +161,7 @@ export default function SignaturesPage() {
     signerRoleDropdownRef: RefObject<HTMLDivElement>;
     contractRoleButtonRef: RefObject<HTMLButtonElement>;
     contractRoleDropdownRef: RefObject<HTMLDivElement>;
+    collaboratorIndex?: number; // Index of the collaborator this recipient came from (for color matching)
   };
   const [recipients, setRecipients] = useState<Recipient[]>([
     {
@@ -334,6 +341,56 @@ export default function SignaturesPage() {
   const [showPdfViewer, setShowPdfViewer] = useState(false);
   const [selectedPdf, setSelectedPdf] = useState<{ name: string; url: string; id?: string } | null>(null);
   
+  // Function to add a new contract to the contracts list
+  const addNewContract = (newContract: any) => {
+    setContracts(prev => [newContract, ...prev]);
+  };
+
+  // Load enhanced contracts (including additional contracts) on component mount
+  useEffect(() => {
+    const loadEnhancedContracts = async () => {
+      try {
+        const response = await fetch('/api/contracts');
+        if (response.ok) {
+          const data = await response.json();
+          // Update contracts with enhanced data (mock + additional)
+          if (data.contracts && data.contracts.length > 0) {
+            setContracts(data.contracts);
+          }
+        } else {
+          console.error('Failed to load enhanced contracts');
+          // Keep the initial mockContracts that are already loaded
+        }
+      } catch (error) {
+        console.error('Error loading enhanced contracts:', error);
+        // Keep the initial mockContracts that are already loaded
+      }
+    };
+
+    // Load enhanced contracts after a small delay
+    const timeoutId = setTimeout(loadEnhancedContracts, 100);
+    return () => clearTimeout(timeoutId);
+  }, []);
+
+  // Listen for new contracts from localStorage or other sources
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'newContract' && e.newValue) {
+        try {
+          const newContract = JSON.parse(e.newValue);
+          addNewContract(newContract);
+          // Clear the storage after reading
+          localStorage.removeItem('newContract');
+        } catch (error) {
+          console.error('Error parsing new contract:', error);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   // Load signatures data on component mount
   useEffect(() => {
     const loadEnhancedSignatures = async () => {
@@ -1094,6 +1151,115 @@ export default function SignaturesPage() {
     setShowToolSelectorModal(true);
   };
 
+  // Test function to generate signature notification toasts
+  const generateTestSignatureToasts = () => {
+    // Test signature request with multiple recipients
+    const testSignatureId = "SIG-9876";
+    const testDocumentName = "Test Purchase Agreement.pdf";
+    const testRecipients = [
+      { name: "John Smith", email: "john.smith@example.com" },
+      { name: "Jane Doe", email: "jane.doe@example.com" },
+      { name: "Mike Johnson", email: "mike.johnson@example.com" },
+      { name: "Sarah Wilson", email: "sarah.wilson@example.com" },
+      { name: "David Brown", email: "david.brown@example.com" }
+    ];
+
+    // Create bulleted list of recipients for toast
+    const recipientsList = testRecipients.map(recipient => 
+      `• ${recipient.name} at ${recipient.email}`
+    ).join('\n');
+    
+    const toastDescription = `Requests for signature have been sent to:\n${recipientsList}`;
+
+    // Show success feedback
+    toast({
+      title: "Signatures Requested Successfully",
+      description: (
+        <div className="whitespace-pre-line">
+          {toastDescription}
+        </div>
+      ),
+      duration: 5000,
+    });
+
+    // Add notification to header
+    addSignatureRequestedNotification(
+      testSignatureId,
+      testDocumentName,
+      testRecipients
+    );
+
+    // Test signature voided notification after a delay
+    setTimeout(() => {
+      const voidedToastDescription = `Request for signature to the following individuals has been voided and canceled:\n${recipientsList}`;
+
+      toast({
+        title: "Signature Request Voided Successfully",
+        description: (
+          <div className="whitespace-pre-line">
+            {voidedToastDescription}
+          </div>
+        ),
+        variant: "voided",
+        duration: 5000,
+      });
+
+      // Add voided notification to header
+      addSignatureVoidedNotification(
+        testSignatureId,
+        testDocumentName,
+        testRecipients
+      );
+    }, 2000); // 2 second delay
+
+    // Test document signed notification (self-signing) after a delay
+    setTimeout(() => {
+      const signedToastDescription = `You have successfully signed Document ID #SIG-9876 - ${testDocumentName} for Contract ID #CON-1234 - Test Contract`;
+
+      toast({
+        title: "You Signed Document Successfully",
+        description: (
+          <div className="whitespace-pre-line">
+            {signedToastDescription}
+          </div>
+        ),
+        duration: 5000,
+      });
+
+      // Add signed notification to header
+      addDocumentSignedNotification(
+        "SIG-9876",
+        testDocumentName,
+        "CON-1234",
+        "Test Contract"
+      );
+    }, 4000); // 4 second delay
+
+    // Test document signed notification (other user signing) after a delay
+    setTimeout(() => {
+      const otherSignedToastDescription = `John Smith has successfully signed Document ID #SIG-5432 - Test Closing Disclosure.pdf for Contract ID #CON-5678 - Test Property Contract`;
+
+      toast({
+        title: "Recipient Signed Document Successfully",
+        description: (
+          <div className="whitespace-pre-line">
+            {otherSignedToastDescription}
+          </div>
+        ),
+        duration: 5000,
+      });
+
+      // Add signed notification to header
+      addDocumentSignedNotification(
+        "SIG-5432",
+        "Test Closing Disclosure.pdf",
+        "CON-5678",
+        "Test Property Contract",
+        "John Smith"
+      );
+    }, 6000); // 6 second delay
+  };
+
   // Handle click outside for contract dropdown
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -1320,7 +1486,22 @@ export default function SignaturesPage() {
   };
 
   // Helper function to get distinct colors for signature cards
-  const getSignatureCardBorderColor = (index: number, isDocuSign: boolean = false) => {
+  const getSignatureCardBorderColor = (index: number, isDocuSign: boolean = false, recipient?: Recipient) => {
+    // If recipient has a collaboratorIndex, use the collaborator color
+    if (recipient?.collaboratorIndex !== undefined) {
+      const collaboratorColors = [
+        '#0d9488', // teal-600 (matches collaborator badge)
+        '#3b82f6', // blue-600 (matches collaborator badge)
+        '#8b5cf6', // violet-600 (matches collaborator badge)
+        '#ea580c', // orange-600 (matches collaborator badge)
+        '#16a34a', // green-600 (matches collaborator badge)
+        '#db2777', // pink-600 (matches collaborator badge)
+        '#4f46e5', // indigo-600 (matches collaborator badge)
+        '#ca8a04', // yellow-600 (matches collaborator badge)
+      ];
+      return collaboratorColors[recipient.collaboratorIndex % collaboratorColors.length];
+    }
+    
     if (index === 0) {
       // First card uses brand color
       return isDocuSign ? '#3b82f6' : '#0d9488'; // blue-500 for DocuSign, teal-600 for Escra
@@ -1341,9 +1522,214 @@ export default function SignaturesPage() {
     return colors[(index - 1) % colors.length];
   };
 
-  // Function to populate recipient cards when documents are selected
-  const populateRecipientCardsFromDocument = (documentId: string, isDocuSign: boolean = false) => {
-    console.log('populateRecipientCardsFromDocument called with:', { documentId, isDocuSign });
+  const getCollaboratorBadgeColor = (index: number) => {
+    const colors = [
+      { bg: 'bg-teal-50 dark:bg-teal-900/30', border: 'border-teal-200 dark:border-teal-800', text: 'text-teal-500 dark:text-teal-400' },
+      { bg: 'bg-blue-100 dark:bg-blue-900/30', border: 'border-blue-200 dark:border-blue-800', text: 'text-blue-500 dark:text-blue-400' },
+      { bg: 'bg-purple-100 dark:bg-purple-900/30', border: 'border-purple-200 dark:border-purple-800', text: 'text-purple-500 dark:text-purple-400' },
+      { bg: 'bg-orange-100 dark:bg-orange-900/30', border: 'border-orange-200 dark:border-orange-800', text: 'text-orange-500 dark:text-orange-400' },
+      { bg: 'bg-green-100 dark:bg-green-900/30', border: 'border-green-200 dark:border-green-800', text: 'text-green-500 dark:text-green-400' },
+      { bg: 'bg-pink-100 dark:bg-pink-900/30', border: 'border-pink-200 dark:border-pink-800', text: 'text-pink-500 dark:text-pink-400' },
+      { bg: 'bg-indigo-100 dark:bg-indigo-900/30', border: 'border-indigo-200 dark:border-indigo-800', text: 'text-indigo-500 dark:text-indigo-400' },
+      { bg: 'bg-yellow-100 dark:bg-yellow-900/30', border: 'border-yellow-200 dark:border-yellow-800', text: 'text-yellow-500 dark:text-yellow-400' }
+    ];
+    return colors[index % colors.length];
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const handleCollaboratorToggle = (collaboratorName: string) => {
+    console.log('=== handleCollaboratorToggle called for:', collaboratorName, '===');
+    
+    setSelectedCollaborators(prev => {
+      console.log('Previous selected collaborators:', prev);
+      
+      if (prev.includes(collaboratorName)) {
+        console.log('Removing collaborator:', collaboratorName);
+        // Remove collaborator from selection
+        const newSelection = prev.filter(name => name !== collaboratorName);
+        
+        // Remove the recipient card for this specific collaborator and ensure at least one empty card remains
+        setRecipients(prevRecipients => {
+          console.log('Removing recipient card for:', collaboratorName);
+          
+          // Remove the recipient card for this collaborator
+          const remainingRecipients = prevRecipients.filter(recipient => 
+            recipient.name !== collaboratorName
+          );
+          
+          // Always ensure at least one empty recipient card exists
+          if (remainingRecipients.length === 0) {
+            return [{
+              name: '',
+              email: '',
+              signerRole: 'Signer Role',
+              contractRole: 'Contract Role',
+              showSignerRoleDropdown: false,
+              showContractRoleDropdown: false,
+              signerRoleButtonRef: createRef<HTMLButtonElement>(),
+              signerRoleDropdownRef: createRef<HTMLDivElement>(),
+              contractRoleButtonRef: createRef<HTMLButtonElement>(),
+              contractRoleDropdownRef: createRef<HTMLDivElement>(),
+            }];
+          }
+          
+          return remainingRecipients;
+        });
+        
+        return newSelection;
+      } else {
+        console.log('Adding collaborator:', collaboratorName);
+        // Add collaborator to selection
+        const newSelection = [...prev, collaboratorName];
+        
+        // Find the collaborator data and index
+        const collaboratorIndex = collaborators.findIndex(c => c.name === collaboratorName);
+        const collaborator = collaborators[collaboratorIndex];
+        if (collaborator) {
+          console.log('Found collaborator data:', collaborator, 'at index:', collaboratorIndex);
+          
+          // Find the first available empty recipient card, or create a new one if none exist
+          setRecipients(prevRecipients => {
+            console.log('Current recipients before update:', prevRecipients);
+            
+            // Check if this collaborator already has a recipient card to prevent duplicates
+            const existingRecipientIndex = prevRecipients.findIndex(r => r.name === collaborator.name);
+            if (existingRecipientIndex !== -1) {
+              console.log('Collaborator already has a recipient card at index:', existingRecipientIndex, 'Skipping creation');
+              return prevRecipients;
+            }
+            
+            // Look for the first empty recipient card (prioritize index 0)
+            const emptyRecipientIndex = prevRecipients.findIndex(r => !r.name.trim());
+            console.log('Found empty recipient at index:', emptyRecipientIndex);
+            
+            if (emptyRecipientIndex !== -1) {
+              // Use the first available empty recipient card - populate with ONLY this collaborator's data
+              console.log('Using existing empty recipient card at index:', emptyRecipientIndex);
+              const updatedRecipients = prevRecipients.map((recipient, index) => 
+                index === emptyRecipientIndex 
+                  ? { ...recipient, name: collaborator.name, email: collaborator.email, signerRole: 'Needs to Sign', contractRole: collaborator.contractRole, collaboratorIndex }
+                  : recipient
+              );
+              console.log('Updated recipients after using existing card:', updatedRecipients);
+              return updatedRecipients;
+            } else {
+              // Create exactly ONE new recipient card if no empty ones exist
+              console.log('Creating new recipient card for:', collaborator.name);
+              const newRecipient: Recipient = {
+                name: collaborator.name,
+                email: collaborator.email,
+                signerRole: 'Needs to Sign',
+                contractRole: collaborator.contractRole,
+                collaboratorIndex,
+                showSignerRoleDropdown: false,
+                showContractRoleDropdown: false,
+                signerRoleButtonRef: createRef<HTMLButtonElement>(),
+                signerRoleDropdownRef: createRef<HTMLDivElement>(),
+                contractRoleButtonRef: createRef<HTMLButtonElement>(),
+                contractRoleDropdownRef: createRef<HTMLDivElement>(),
+              };
+              const updatedRecipients = [...prevRecipients, newRecipient];
+              console.log('Updated recipients after creating new card:', updatedRecipients);
+              return updatedRecipients;
+            }
+          });
+        }
+        
+        return newSelection;
+      }
+    });
+  };
+
+  const handleSelectAllCollaborators = () => {
+    if (selectedCollaborators.length === collaborators.length) {
+      // If all are selected, deselect all
+      setSelectedCollaborators([]);
+      
+      // Remove all collaborator-based recipient cards and leave exactly one empty card
+      setRecipients(prevRecipients => {
+        // Keep only recipient cards that were NOT created from collaborators
+        const manualRecipients = prevRecipients.filter(recipient => 
+          !collaborators.some(c => c.name === recipient.name)
+        );
+        
+        // Always return exactly one empty recipient card
+        return [{
+          name: '',
+          email: '',
+          signerRole: 'Signer Role',
+          contractRole: 'Contract Role',
+          showSignerRoleDropdown: false,
+          showContractRoleDropdown: false,
+          signerRoleButtonRef: createRef<HTMLButtonElement>(),
+          signerRoleDropdownRef: createRef<HTMLDivElement>(),
+          contractRoleButtonRef: createRef<HTMLButtonElement>(),
+          contractRoleDropdownRef: createRef<HTMLDivElement>(),
+        }];
+      });
+    } else {
+      // Select all
+      setSelectedCollaborators(collaborators.map(c => c.name));
+      
+      // Populate existing empty recipient cards first, then create new ones as needed
+      setRecipients(prevRecipients => {
+        const manualRecipients = prevRecipients.filter(recipient => 
+          !collaborators.some(c => c.name === recipient.name)
+        );
+        
+        // Find empty recipient cards to populate
+        const emptyRecipients = manualRecipients.filter(r => !r.name.trim());
+        const filledRecipients = manualRecipients.filter(r => r.name.trim());
+        
+        // Populate empty cards first
+        const populatedRecipients = emptyRecipients.map((recipient, index) => {
+          if (index < collaborators.length) {
+            const collaborator = collaborators[index];
+            return {
+              ...recipient,
+              name: collaborator.name,
+              email: collaborator.email,
+              signerRole: 'Needs to Sign',
+              contractRole: collaborator.contractRole,
+              collaboratorIndex: index,
+            };
+          }
+          return recipient;
+        });
+        
+        // Create new cards for remaining collaborators
+        const remainingCollaborators = collaborators.slice(emptyRecipients.length);
+        const newRecipients: Recipient[] = remainingCollaborators.map((collaborator, index) => ({
+          name: collaborator.name,
+          email: collaborator.email,
+          signerRole: 'Needs to Sign',
+          contractRole: collaborator.contractRole,
+          collaboratorIndex: emptyRecipients.length + index,
+          showSignerRoleDropdown: false,
+          showContractRoleDropdown: false,
+          signerRoleButtonRef: createRef<HTMLButtonElement>(),
+          signerRoleDropdownRef: createRef<HTMLDivElement>(),
+          contractRoleButtonRef: createRef<HTMLButtonElement>(),
+          contractRoleDropdownRef: createRef<HTMLDivElement>(),
+        }));
+        
+        return [...filledRecipients, ...populatedRecipients, ...newRecipients];
+      });
+    }
+  };
+
+  // Function to populate collaborators when documents are selected
+  const populateCollaboratorsFromDocument = (documentId: string, isDocuSign: boolean = false) => {
+    console.log('populateCollaboratorsFromDocument called with:', { documentId, isDocuSign });
+    console.log('Current collaborators state before:', collaborators);
     
     // Find the document
     const document = allDocuments.find(doc => doc.id === documentId);
@@ -1364,7 +1750,7 @@ export default function SignaturesPage() {
           
           if (fullContract) {
             console.log('Found full contract data:', fullContract);
-            createRecipientsFromFullContract(fullContract, isDocuSign);
+            createCollaboratorsFromFullContract(fullContract, isDocuSign);
             return;
           }
         }
@@ -1377,112 +1763,68 @@ export default function SignaturesPage() {
       console.log('Fallback to mockContracts:', contract);
       
       if (contract) {
-        createRecipientsFromBasicContract(contract, isDocuSign);
+        createCollaboratorsFromBasicContract(contract, isDocuSign);
       }
     };
 
     fetchContractData();
   };
 
-  // Function to create recipients from full contract data (with emails and roles)
-  const createRecipientsFromFullContract = (contract: any, isDocuSign: boolean) => {
-    const recipients: Recipient[] = [];
+  // Function to create collaborators from full contract data (with emails and roles)
+  const createCollaboratorsFromFullContract = (contract: any, isDocuSign: boolean) => {
+    const collaborators: Array<{name: string, email: string, contractRole: string}> = [];
     
     // Add first party (buyer) - typically needs to sign
     if (contract.buyer) {
-      recipients.push({
+      collaborators.push({
         name: contract.buyer,
         email: contract.buyerEmail || '',
-        signerRole: 'Needs to Sign', // Default for buyer
         contractRole: contract.party1Role || 'Buyer',
-        showSignerRoleDropdown: false,
-        showContractRoleDropdown: false,
-        signerRoleButtonRef: createRef<HTMLButtonElement>(),
-        signerRoleDropdownRef: createRef<HTMLDivElement>(),
-        contractRoleButtonRef: createRef<HTMLButtonElement>(),
-        contractRoleDropdownRef: createRef<HTMLDivElement>(),
       });
     }
     
     // Add second party (seller) - typically needs to sign
     if (contract.seller) {
-      recipients.push({
+      collaborators.push({
         name: contract.seller,
         email: contract.sellerEmail || '',
-        signerRole: 'Needs to Sign', // Default for seller
         contractRole: contract.party2Role || 'Seller',
-        showSignerRoleDropdown: false,
-        showContractRoleDropdown: false,
-        signerRoleButtonRef: createRef<HTMLButtonElement>(),
-        signerRoleDropdownRef: createRef<HTMLDivElement>(),
-        contractRoleButtonRef: createRef<HTMLButtonElement>(),
-        contractRoleDropdownRef: createRef<HTMLDivElement>(),
       });
     }
     
-    // Add additional parties with appropriate signer roles based on their contract roles
+    // Add additional parties
     if (contract.additionalParties && contract.additionalParties.length > 0) {
       contract.additionalParties.forEach((party: any) => {
-        // Determine signer role based on contract role
-        let signerRole = 'Needs to Sign'; // Default
-        if (party.role === 'Buyer Agent' || party.role === 'Seller Agent') {
-          signerRole = 'Receives a Copy'; // Agents typically receive copies
-        } else if (party.role === 'Closing Agent') {
-          signerRole = 'Needs to Sign'; // Closing agents need to sign
-        } else if (party.role === 'Inspector' || party.role === 'Appraiser') {
-          signerRole = 'Receives a Copy'; // Inspectors/appraisers typically receive copies
-        }
-        
-        recipients.push({
+        collaborators.push({
           name: party.name,
           email: party.email || '',
-          signerRole: signerRole,
           contractRole: party.role || 'Standard',
-          showSignerRoleDropdown: false,
-          showContractRoleDropdown: false,
-          signerRoleButtonRef: createRef<HTMLButtonElement>(),
-          signerRoleDropdownRef: createRef<HTMLDivElement>(),
-          contractRoleButtonRef: createRef<HTMLButtonElement>(),
-          contractRoleDropdownRef: createRef<HTMLDivElement>(),
         });
       });
     }
     
-    console.log('Created recipients from full contract:', recipients);
+    console.log('Created collaborators from full contract:', collaborators);
     
-    // Update the appropriate recipient state
-    if (isDocuSign) {
-      setDocuSignRecipients(recipients);
-    } else {
-      setRecipients(recipients);
-    }
+    // Update the collaborators state
+    setCollaborators(collaborators);
+    console.log('Collaborators state updated to:', collaborators);
   };
 
-  // Function to create recipients from basic contract data (fallback)
-  const createRecipientsFromBasicContract = (contract: any, isDocuSign: boolean) => {
+  // Function to create collaborators from basic contract data (fallback)
+  const createCollaboratorsFromBasicContract = (contract: any, isDocuSign: boolean) => {
     const parties = contract.parties ? contract.parties.split(' & ').map((p: string) => p.trim()) : [];
     
-    const recipients: Recipient[] = parties.map((party: string, index: number) => ({
+    const collaborators: Array<{name: string, email: string, contractRole: string}> = parties.map((party: string, index: number) => ({
       name: party,
       email: '', // Will be empty since basic contracts don't have email data
-      signerRole: 'Needs to Sign',
       contractRole: index === 0 ? 'Buyer' : index === 1 ? 'Seller' : 'Standard',
-      showSignerRoleDropdown: false,
-      showContractRoleDropdown: false,
-      signerRoleButtonRef: createRef<HTMLButtonElement>(),
-      signerRoleDropdownRef: createRef<HTMLDivElement>(),
-      contractRoleButtonRef: createRef<HTMLButtonElement>(),
-      contractRoleDropdownRef: createRef<HTMLDivElement>(),
     }));
     
-    console.log('Created recipients from basic contract:', recipients);
+    console.log('Created collaborators from basic contract:', collaborators);
     
-    // Update the appropriate recipient state
-    if (isDocuSign) {
-      setDocuSignRecipients(recipients);
-    } else {
-      setRecipients(recipients);
-    }
+    // Update the collaborators state
+    setCollaborators(collaborators);
+    console.log('Collaborators state updated to:', collaborators);
   };
 
   // Function to handle document selection and populate recipients
@@ -1499,10 +1841,25 @@ export default function SignaturesPage() {
         
         console.log('DocuSign new selection:', newSelection);
         
-        // If this is the first document being selected, populate recipients
+        // If this is the first document being selected, populate collaborators
         if (newSelection.length === 1 && !prev.includes(docId)) {
-          console.log('Populating DocuSign recipients for first document');
-          populateRecipientCardsFromDocument(docId, true);
+          console.log('Populating DocuSign collaborators for first document');
+          populateCollaboratorsFromDocument(docId, true);
+        }
+        
+        // Clear collaborators if all documents are removed
+        if (newSelection.length === 0) {
+          setCollaborators([]);
+          setSelectedCollaborators([]);
+          
+          // Clear recipient card data from collaborators (but keep the card structure)
+          setRecipients(prevRecipients => 
+            prevRecipients.map(recipient => 
+              collaborators.some(c => c.name === recipient.name)
+                ? { ...recipient, name: '', email: '', signerRole: 'Signer Role', contractRole: 'Contract Role' }
+                : recipient
+            )
+          );
         }
         
         return newSelection;
@@ -1521,10 +1878,25 @@ export default function SignaturesPage() {
           setDocumentError(false);
         }
         
-        // If this is the first document being selected, populate recipients
+        // If this is the first document being selected, populate collaborators
         if (newSelection.length === 1 && !prev.includes(docId)) {
-          console.log('Populating Escra recipients for first document');
-          populateRecipientCardsFromDocument(docId, false);
+          console.log('Populating Escra collaborators for first document');
+          populateCollaboratorsFromDocument(docId, false);
+        }
+        
+        // Clear collaborators if all documents are removed
+        if (newSelection.length === 0) {
+          setCollaborators([]);
+          setSelectedCollaborators([]);
+          
+          // Clear recipient card data from collaborators (but keep the card structure)
+          setRecipients(prevRecipients => 
+            prevRecipients.map(recipient => 
+              collaborators.some(c => c.name === recipient.name)
+                ? { ...recipient, name: '', email: '', signerRole: 'Signer Role', contractRole: 'Contract Role' }
+                : recipient
+            )
+          );
         }
         
         return newSelection;
@@ -1643,7 +2015,11 @@ export default function SignaturesPage() {
     setDocumentSearch('');
     setDocuSignDocumentSearch('');
     
-    // Reset recipients
+    // Reset collaborators
+    setCollaborators([]);
+    setSelectedCollaborators([]);
+    
+    // Reset recipients (this will clear all, including those from collaborators)
     setRecipients([{
       name: '',
       email: '',
@@ -1786,12 +2162,33 @@ export default function SignaturesPage() {
         // Add to state
         setSignaturesData(prev => [newSignatureRequest, ...prev]);
 
+        // Create bulleted list of recipients for toast
+        const validRecipients = cleanRecipients.filter(recipient => recipient.name && recipient.name.trim() !== '');
+        const recipientsList = validRecipients.map(recipient => 
+          `• ${recipient.name} at ${recipient.email}`
+        ).join('\n');
+        
+        const toastDescription = validRecipients.length > 0 
+          ? `Requests for signature have been sent to:\n${recipientsList}`
+          : `"${newSignatureRequest.document}" has been sent for signature`;
+
         // Show success feedback
         toast({
-          title: "Signature request created successfully",
-          description: `"${newSignatureRequest.document}" has been sent for signature`,
+          title: "Signatures Requested Successfully",
+          description: (
+            <div className="whitespace-pre-line">
+              {toastDescription}
+            </div>
+          ),
           duration: 5000,
         });
+
+        // Add notification to header
+        addSignatureRequestedNotification(
+          newSignatureRequest.id,
+          newSignatureRequest.document,
+          cleanRecipients
+        );
       } else {
         throw new Error('Failed to save signature request');
       }
@@ -1858,12 +2255,33 @@ export default function SignaturesPage() {
         // Add to state
         setSignaturesData(prev => [newSignatureRequest, ...prev]);
 
+        // Create bulleted list of recipients for toast
+        const validRecipients = cleanRecipients.filter(recipient => recipient.name && recipient.name.trim() !== '');
+        const recipientsList = validRecipients.map(recipient => 
+          `• ${recipient.name} at ${recipient.email}`
+        ).join('\n');
+        
+        const toastDescription = validRecipients.length > 0 
+          ? `Requests for signature have been sent to:\n${recipientsList}`
+          : `"${newSignatureRequest.document}" has been sent to DocuSign for signature`;
+
         // Show success feedback
         toast({
-          title: "DocuSign signature request created successfully",
-          description: `"${newSignatureRequest.document}" has been sent to DocuSign for signature`,
+          title: "Signatures Requested Successfully",
+          description: (
+            <div className="whitespace-pre-line">
+              {toastDescription}
+            </div>
+          ),
           duration: 5000,
         });
+
+        // Add notification to header
+        addSignatureRequestedNotification(
+          newSignatureRequest.id,
+          newSignatureRequest.document,
+          cleanRecipients
+        );
       } else {
         throw new Error('Failed to save DocuSign signature request');
       }
@@ -1894,6 +2312,9 @@ export default function SignaturesPage() {
 
   const deleteSignature = async (signatureId: string, documentName: string) => {
     try {
+      // Find the signature before deleting to get recipient information
+      const signatureToDelete = signaturesData.find(s => s.id === signatureId);
+      
       // Delete the signature from the backend
       const response = await fetch('/api/signatures', {
         method: 'DELETE',
@@ -1915,12 +2336,34 @@ export default function SignaturesPage() {
         setSelectedDocument(null);
       }
 
-      // Show success message with detailed information
-      const deletedSignature = signaturesData.find(s => s.id === signatureId);
+      // Create bulleted list of recipients for toast
+      const validRecipients = signatureToDelete?.recipients?.filter(recipient => recipient.name && recipient.name.trim() !== '') || [];
+      const recipientsList = validRecipients.map(recipient => 
+        `• ${recipient.name} at ${recipient.email}`
+      ).join('\n');
+      
+      const toastDescription = validRecipients.length > 0 
+        ? `Request for signature to the following individuals has been voided and canceled:\n${recipientsList}`
+        : `"${documentName}" signature request has been voided and canceled`;
+
+      // Show success message with recipient information
       toast({
-        title: "Signature Request Deleted",
-        description: `"${documentName}" (Document ID: ${deletedSignature?.documentId || 'N/A'}, Contract: ${deletedSignature?.contract || 'N/A'}, Contract ID: ${deletedSignature?.contractId || 'N/A'}) has been permanently deleted.`,
+        title: "Signature Request Voided Successfully",
+        description: (
+          <div className="whitespace-pre-line">
+            {toastDescription}
+          </div>
+        ),
+        variant: "voided",
+        duration: 5000,
       });
+
+      // Add notification to header
+      addSignatureVoidedNotification(
+        signatureId,
+        documentName,
+        signatureToDelete?.recipients || []
+      );
 
     } catch (error) {
       console.error('Error deleting signature:', error);
@@ -1999,6 +2442,17 @@ export default function SignaturesPage() {
         title: isCompleted ? "Document Signed Successfully" : "Signature Added Successfully",
         description: message,
       });
+
+      // Add notification for document signing
+      // For self-signing, pass undefined as signerName to show "You have successfully signed..."
+      // For others signing, pass the current user's name
+      addDocumentSignedNotification(
+        selectedDocument.documentId || selectedDocument.id,
+        selectedDocument.document,
+        selectedDocument.contractId,
+        selectedDocument.contract,
+        undefined // Self-signing, so no signer name
+      );
       
     } catch (error) {
       console.error("Error signing document:", error);
@@ -2026,14 +2480,24 @@ export default function SignaturesPage() {
           <h1 className="text-[30px] font-bold text-black dark:text-white mb-1 cursor-default select-none">Signatures</h1>
           <p className="text-gray-500 dark:text-gray-400 text-[16px] mt-0 cursor-default select-none">Manage electronic signatures for all your contracts</p>
         </div>
-        <button
-          onClick={handleRequestSignatureClick}
-          className="flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold mb-0"
-          style={{ fontFamily: 'Avenir, sans-serif' }}
-        >
-          <TbPencilPlus className="mr-2 text-xl" />
-          <span className="whitespace-nowrap">Request Signature</span>
-        </button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <button
+            onClick={handleRequestSignatureClick}
+            className="flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold mb-0"
+            style={{ fontFamily: 'Avenir, sans-serif' }}
+          >
+            <TbPencilPlus className="mr-2 text-[22px]" />
+            <span className="whitespace-nowrap">Request Signature</span>
+          </button>
+          <button
+            onClick={generateTestSignatureToasts}
+            className="flex items-center justify-center px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm font-semibold mb-0"
+            style={{ fontFamily: 'Avenir, sans-serif' }}
+          >
+            <FaSignature className="mr-2 text-[22px]" />
+            <span className="whitespace-nowrap">Test Notifications</span>
+          </button>
+        </div>
       </div>
 
       <hr className="my-3 sm:my-6 border-gray-300 cursor-default select-none" />
@@ -2041,46 +2505,18 @@ export default function SignaturesPage() {
       {/* Scrollable Content Area */}
       <div className="overflow-y-auto max-h-[calc(100vh-300px)] [&::-webkit-scrollbar]:hidden">
         {/* Signature Filter Tabs */}
-      {/* Mobile: Stacked layout */}
-      <div className="lg:hidden cursor-default select-none mb-6">
-        <div className="flex flex-col gap-2 cursor-default select-none">
-          {signatureFilterTabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setSignatureFilterTab(tab)}
-              className={`flex items-center justify-between w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 font-medium text-xs shadow-sm whitespace-nowrap transition-all duration-300 ${
-                signatureFilterTab === tab 
-                  ? 'bg-white dark:bg-gray-800 text-teal-500 dark:text-teal-400 border-2 border-gray-200 dark:border-gray-700' 
-                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
-              }`}
-              style={{ fontFamily: 'Avenir, sans-serif' }}
-            >
-              <span className="flex items-center">
-                <span className={`inline-block transition-all duration-300 ${signatureFilterTab === tab ? 'opacity-100 mr-1.5' : 'opacity-0 w-0 mr-0'}`} style={{width: signatureFilterTab === tab ? 16 : 0}}>
-                  {signatureFilterTab === tab && <Logo width={16} height={16} className="pointer-events-none" />}
-                </span>
-                {tab}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Desktop: Horizontal layout */}
-      <div className="hidden lg:flex gap-1 cursor-default select-none mb-6">
+      {/* Signature Filter Tabs */}
+      <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700 w-fit mb-4">
         {signatureFilterTabs.map((tab) => (
           <button
             key={tab}
             onClick={() => setSignatureFilterTab(tab)}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all duration-300 font-sans flex items-center justify-center ${
-              signatureFilterTab === tab 
-                ? 'bg-white dark:bg-gray-800 text-teal-500 dark:text-teal-400 min-w-[90px] border-2 border-gray-200 dark:border-gray-700' 
-                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 w-fit border border-gray-200 dark:border-gray-700'
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center justify-center ${
+              signatureFilterTab === tab
+                ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
             }`}
           >
-            <span className={`inline-block transition-all duration-300 ${signatureFilterTab === tab ? 'opacity-100 mr-1.5' : 'opacity-0 w-0 mr-0'}`} style={{width: signatureFilterTab === tab ? 16 : 0}}>
-              {signatureFilterTab === tab && <Logo width={16} height={16} className="pointer-events-none" />}
-            </span>
             {tab}
           </button>
         ))}
@@ -2091,7 +2527,7 @@ export default function SignaturesPage() {
         {/* Action Required */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
           <div className="h-10 w-10 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center border-2 border-orange-200 dark:border-orange-800 cursor-default select-none">
-            <PiWarningDiamondBold size={20} className="text-orange-500 dark:text-orange-400" />
+            <TbClockExclamation size={21} className="text-orange-500 dark:text-orange-400" />
           </div>
           <div className="flex flex-col items-start h-full cursor-default select-none">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Action Required</p>
@@ -2104,7 +2540,7 @@ export default function SignaturesPage() {
         {/* Waiting for Others */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
           <div className="h-10 w-10 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center border-2 border-yellow-200 dark:border-yellow-800 cursor-default select-none">
-            <TbClockEdit size={20} className="text-yellow-500 dark:text-yellow-400" />
+            <TbClockEdit size={21} className="text-yellow-500 dark:text-yellow-400" />
           </div>
           <div className="flex flex-col items-start h-full cursor-default select-none">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Waiting on Others</p>
@@ -2117,7 +2553,7 @@ export default function SignaturesPage() {
         {/* Expiring Soon */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
           <div className="h-10 w-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center border-2 border-red-200 dark:border-red-800 cursor-default select-none">
-            <LuCalendarClock size={20} className="text-red-500 dark:text-red-400" />
+            <TbCalendarExclamation size={21} className="text-red-500 dark:text-red-400" />
           </div>
           <div className="flex flex-col items-start h-full cursor-default select-none">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Expiring Soon</p>
@@ -2130,7 +2566,7 @@ export default function SignaturesPage() {
         {/* Completed */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-4 shadow-sm h-full cursor-default select-none">
           <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center border-2 border-green-200 dark:border-green-800 cursor-default select-none">
-            <FaRegSquareCheck size={20} className="text-green-500 dark:text-green-400" />
+            <TbPencilCheck size={20} className="text-green-500 dark:text-green-400" />
           </div>
           <div className="flex flex-col items-start h-full cursor-default select-none">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 font-sans cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Completed</p>
@@ -2149,10 +2585,10 @@ export default function SignaturesPage() {
         <div className="lg:hidden">
           {/* Search Bar */}
           <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 w-full">
-            <FaSearch className="text-gray-400 mr-2" size={18} />
+            <TbSearch className="text-gray-400 mr-2" size={18} />
             <input
               type="text"
-              placeholder="Search documents, recipients, contracts or IDs"
+              placeholder="Search documents, recipients, contracts or IDs..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 dark:text-white placeholder-gray-400 font-medium"
@@ -2178,8 +2614,8 @@ export default function SignaturesPage() {
                   }
                 }}
               >
-                                    <span className="flex items-center"><TbHistory className="text-gray-400 text-base mr-2" />Status</span>
-                <HiMiniChevronDown className="text-gray-400" size={16} />
+                                    <span className="flex items-center"><TbHistory className="text-gray-400 mr-2" size={17} />Status</span>
+                <TbChevronDown className="text-gray-400 dark:text-gray-500" size={18} />
               </button>
               {showStatusDropdown && (
                 <div ref={mobileStatusDropdownRef} className="absolute top-full right-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" style={{ fontFamily: 'Avenir, sans-serif' }}>
@@ -2236,8 +2672,8 @@ export default function SignaturesPage() {
                   }
                 }}
               >
-                <span className="flex items-center"><HiOutlineDocumentSearch className="text-gray-400 text-base mr-2" />Contract</span>
-                <HiMiniChevronDown className="text-gray-400" size={16} />
+                <span className="flex items-center"><TbFileSearch className="text-gray-400 mr-2" size={17} />Contract</span>
+                <TbChevronDown className="text-gray-400 dark:text-gray-500" size={18} />
               </button>
               {openContractDropdown && (
                 <div 
@@ -2258,7 +2694,7 @@ export default function SignaturesPage() {
                         className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-700 dark:text-white bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       />
-                      <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                      <TbSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                     </div>
                   </div>
 
@@ -2278,11 +2714,12 @@ export default function SignaturesPage() {
                     </div>
                     All
                   </button>
-                  {mockContracts
+                  {contracts
                     .filter(contract => 
                       contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
                       contract.title.toLowerCase().includes(contractSearch.toLowerCase())
                     )
+                    .sort((a, b) => Number(a.id) - Number(b.id))
                     .map(contract => (
                       <button
                         key={contract.id}
@@ -2329,8 +2766,8 @@ export default function SignaturesPage() {
                   }
                 }}
               >
-                <span className="flex items-center"><RiUserSharedLine className="text-gray-400 text-base mr-2" />Sender</span>
-                <HiMiniChevronDown className="text-gray-400" size={16} />
+                <span className="flex items-center"><TbUserShare className="text-gray-400 mr-2" size={17} />Sender</span>
+                <TbChevronDown className="text-gray-400 dark:text-gray-500" size={18} />
               </button>
               {showSenderDropdown && (
                 <div 
@@ -2378,8 +2815,8 @@ export default function SignaturesPage() {
                   }
                 }}
               >
-                <span className="flex items-center"><RiUserSearchLine className="text-gray-400 text-base mr-2" />Assignee</span>
-                <HiMiniChevronDown className="text-gray-400" size={16} />
+                <span className="flex items-center"><TbUserSearch className="text-gray-400 mr-2" size={17} />Assignee</span>
+                <TbChevronDown className="text-gray-400 dark:text-gray-500" size={18} />
               </button>
               {showAssigneeDropdown && (
                 <div ref={mobileAssigneeDropdownRef} className="absolute top-full right-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" style={{ fontFamily: 'Avenir, sans-serif' }}>
@@ -2467,8 +2904,8 @@ export default function SignaturesPage() {
                   }
                 }}
               >
-                <span className="flex items-center"><TbClockPin className="text-gray-400 text-base mr-2" />{selectedRecentlyUpdated}</span>
-                <HiMiniChevronDown className="text-gray-400" size={16} />
+                <span className="flex items-center"><TbClockPin className="text-gray-400 mr-2" size={17} />{selectedRecentlyUpdated}</span>
+                <TbChevronDown className="text-gray-400 dark:text-gray-500" size={18} />
               </button>
               {openRecentlyUpdatedDropdown && (
                 <div 
@@ -2506,10 +2943,10 @@ export default function SignaturesPage() {
         <div className="hidden lg:flex items-center gap-1 cursor-default select-none">
           {/* Search Bar */}
           <div className="flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 flex-1 min-w-0 cursor-default select-none">
-            <FaSearch className="text-gray-400 mr-2" size={18} />
+            <TbSearch className="text-gray-400 mr-2" size={18} />
             <input
               type="text"
-              placeholder="Search documents, recipients, contracts or IDs"
+              placeholder="Search documents, recipients, contracts or IDs..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="flex-1 bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-xs text-gray-700 dark:text-white placeholder-gray-400 font-medium min-w-0"
@@ -2535,9 +2972,9 @@ export default function SignaturesPage() {
             }
           }}
         >
-                                                      <TbHistory className="text-gray-400 w-4 h-4" />
+                                                      <TbHistory className="text-gray-400" size={18} />
                     <span>Status</span>
-                <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+                <TbChevronDown className="ml-1 text-gray-400 dark:text-gray-500" size={18} />
               </button>
               {showStatusDropdown && (
                 <div ref={statusDropdownRef} className="absolute top-full right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" style={{ fontFamily: 'Avenir, sans-serif' }}>
@@ -2593,9 +3030,9 @@ export default function SignaturesPage() {
             }
           }}
               >
-                <HiOutlineDocumentSearch className="text-gray-400 w-4 h-4" />
+                <TbFileSearch className="text-gray-400" size={18} />
                 <span>Contract</span>
-                <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+                <TbChevronDown className="ml-1 text-gray-400 dark:text-gray-500" size={18} />
               </button>
                         {openContractDropdown && (
             <div 
@@ -2614,7 +3051,7 @@ export default function SignaturesPage() {
                         className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-700 dark:text-white bg-white dark:bg-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                         style={{ fontFamily: 'Avenir, sans-serif' }}
                       />
-                      <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                      <TbSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                     </div>
                   </div>
 
@@ -2634,11 +3071,12 @@ export default function SignaturesPage() {
                     </div>
                     All
                   </button>
-                  {mockContracts
+                  {contracts
                     .filter(contract => 
                       contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
                       contract.title.toLowerCase().includes(contractSearch.toLowerCase())
                     )
+                    .sort((a, b) => Number(a.id) - Number(b.id))
                     .map(contract => (
                       <button
                         key={contract.id}
@@ -2684,9 +3122,9 @@ export default function SignaturesPage() {
               }
             }}
           >
-                <RiUserSharedLine className="text-gray-400 w-4 h-4" />
+                <TbUserShare className="text-gray-400" size={18} />
                 <span>Sender</span>
-                <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+                <TbChevronDown className="ml-1 text-gray-400 dark:text-gray-500" size={18} />
               </button>
                         {showSenderDropdown && (
             <div 
@@ -2733,9 +3171,9 @@ export default function SignaturesPage() {
             }
           }}
         >
-                <RiUserSearchLine className="text-gray-400 w-4 h-4" />
+                <TbUserSearch className="text-gray-400" size={18} />
                 <span>Assignee</span>
-                <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+                <TbChevronDown className="ml-1 text-gray-400 dark:text-gray-500" size={18} />
               </button>
                         {showAssigneeDropdown && (
             <div ref={assigneeDropdownRef} className="absolute top-full right-0 mt-2 w-44 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2" style={{ fontFamily: 'Avenir, sans-serif' }}>
@@ -2821,9 +3259,9 @@ export default function SignaturesPage() {
                   }
                 }}
               >
-                <TbClockPin className="text-gray-400 w-4 h-4" />
+                <TbClockPin className="text-gray-400" size={18} />
                 <span>{selectedRecentlyUpdated}</span>
-                <HiMiniChevronDown className="ml-1 text-gray-400" size={16} />
+                <TbChevronDown className="ml-1 text-gray-400 dark:text-gray-500" size={18} />
               </button>
               {openRecentlyUpdatedDropdown && (
                 <div 
@@ -3130,7 +3568,7 @@ export default function SignaturesPage() {
                                       toggleRecipientsExpansion(row.id);
                                     }}
                                   >
-                                    <HiMiniChevronDown 
+                                    <TbChevronDown 
                                       size={14} 
                                       className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
                                     />
@@ -3173,7 +3611,7 @@ export default function SignaturesPage() {
                                 openPdfViewer(row.document, row.id);
                               }}
                             >
-                              <HiOutlineEye className="text-sm sm:text-base transition-colors" />
+                              <TbEye className="text-sm sm:text-base transition-colors" />
                               <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                 View
                               </span>
@@ -3199,7 +3637,7 @@ export default function SignaturesPage() {
                                 // Add download action here
                               }}
                             >
-                              <HiOutlineDownload className="text-sm sm:text-base transition-colors" />
+                              <TbDownload className="text-sm sm:text-base transition-colors" />
                               <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                 Download
                               </span>
@@ -3212,7 +3650,7 @@ export default function SignaturesPage() {
                                 deleteSignature(row.id, row.document);
                               }}
                             >
-                              <MdCancelPresentation className="text-sm sm:text-base transition-colors" />
+                              <TbSquareX className="h-4 w-4 transition-colors" />
                               <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                 Void
                               </span>
@@ -3245,7 +3683,7 @@ export default function SignaturesPage() {
                         <option value={20}>20</option>
                       </select>
                       <div className="absolute inset-y-0 right-1 flex items-center pointer-events-none">
-                        <HiChevronDown className="w-3 h-3 text-gray-400" />
+                        <TbChevronDown className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                       </div>
                     </div>
                   </div>
@@ -3253,17 +3691,11 @@ export default function SignaturesPage() {
                     Page 1 of 1
                   </div>
                   <div className="flex space-x-1">
-                    <button className="p-1 text-gray-400 cursor-not-allowed">
-                      <HiOutlineChevronDoubleLeft className="w-3 h-3" />
+                    <button className="p-1 text-gray-400 dark:text-gray-500 cursor-not-allowed">
+                      <TbChevronsLeft className="w-4 h-4" />
                     </button>
-                    <button className="p-1 text-gray-400 cursor-not-allowed">
-                      <HiOutlineChevronDoubleLeft className="w-3 h-3 rotate-180" />
-                    </button>
-                    <button className="p-1 text-gray-400 cursor-not-allowed">
-                      <HiOutlineChevronDoubleRight className="w-3 h-3 rotate-180" />
-                    </button>
-                    <button className="p-1 text-gray-400 cursor-not-allowed">
-                      <HiOutlineChevronDoubleRight className="w-3 h-3" />
+                    <button className="p-1 text-gray-400 dark:text-gray-500 cursor-not-allowed">
+                      <TbChevronsRight className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -3659,11 +4091,11 @@ export default function SignaturesPage() {
 
       {/* Request Signature Modal */}
       {showRequestSignatureModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black bg-opacity-40" style={{ paddingTop: '95px' }}>
           <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden">
             {/* Sticky Header */}
-            <div className="sticky top-0 z-40 bg-gray-50 dark:bg-gray-900 px-6 py-4">
-              <div className="flex items-start justify-between">
+            <div className="sticky top-0 z-40 bg-gray-50 dark:bg-gray-900 px-6 py-4 sm:pt-8 sm:pb-2">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="h-10 w-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800">
                     <TbPencilPlus size={20} className="text-teal-500 dark:text-teal-400" />
@@ -3674,7 +4106,7 @@ export default function SignaturesPage() {
                   </div>
                 </div>
                 <button
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-full ml-4 mt-1"
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-full -mt-3"
                     onClick={() => { 
                       setShowRequestSignatureModal(false); 
                       resetModalData();
@@ -3690,7 +4122,7 @@ export default function SignaturesPage() {
 
             <div className="flex flex-col flex-1 min-h-0">
               <div className="overflow-y-auto p-6 flex-1 bg-gray-50 dark:bg-gray-900 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
-                <form onSubmit={async (e) => { 
+                <form id="request-signature-form" onSubmit={async (e) => { 
                   e.preventDefault(); 
                   
                   // Validate recipients before proceeding
@@ -3707,7 +4139,7 @@ export default function SignaturesPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       {/* Left Column: Add Documents Box */}
                     <div 
-                        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 relative"
+                        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 relative h-[440px]"
                       onDragOver={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -3726,20 +4158,20 @@ export default function SignaturesPage() {
                         setUploadedFiles(prev => [...prev, ...files]);
                       }}
                     >
-                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 relative z-10" style={{ fontFamily: 'Avenir, sans-serif' }}>Add Documents</h3>
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 relative z-10" style={{ fontFamily: 'Avenir, sans-serif' }}>Select Documents</h3>
                         
-                        {/* Upload interface - always visible */}
-                      <div className="flex flex-col items-center mb-4">
+                        {/* Upload interface - moved down vertically */}
+                      <div className="flex flex-col items-center justify-center h-full -mt-8">
                           <div className="h-11 w-11 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800 mb-2">
-                            <HiOutlineDocumentText size={22} className="text-teal-500 dark:text-teal-400" />
+                            <TbLibrary size={22} className="text-teal-500 dark:text-teal-400" />
                         </div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400 font-semibold">Drop your files here or...</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 font-semibold mb-2" style={{ fontFamily: 'Avenir, sans-serif' }}>Drop your files here or...</div>
                         {isDraggingOver && (
                           <div className="absolute inset-x-0 flex flex-col items-center justify-center" style={{ top: '0', height: '100%' }}>
                             <div className="h-full w-full flex flex-col items-center justify-center bg-white/95 dark:bg-gray-800/95 rounded-lg" style={{ marginTop: '1px' }}>
                               <div className="-mt-4">
                                 <div className="h-11 w-11 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center border-2 border-teal-200 dark:border-teal-800 mb-1.5 mx-auto">
-                                  <HiOutlineUpload size={22} className="text-teal-500 dark:text-teal-400" />
+                                  <TbUpload size={22} className="text-teal-500 dark:text-teal-400" />
                                 </div>
                                 <div className="text-xs text-gray-700 dark:text-gray-300 font-semibold text-center" style={{ fontFamily: 'Avenir, sans-serif' }}>
                                   Supported Formats: PDF, DOC, DOCX, OR JPG (max. 10 MB each)
@@ -3748,8 +4180,7 @@ export default function SignaturesPage() {
                             </div>
                           </div>
                         )}
-                      </div>
-                      <div className={`flex justify-center gap-1 ${isDraggingOver ? 'blur-sm' : ''}`}>
+                        <div className={`flex justify-center gap-1 ${isDraggingOver ? 'blur-sm' : ''}`}>
                         <div className="relative" ref={documentDropdownRef}>
                           <button
                             type="button"
@@ -3757,21 +4188,24 @@ export default function SignaturesPage() {
                               className="flex items-center gap-2 px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-xs font-semibold border border-transparent"
                           >
                             Select
-                            <HiMiniChevronDown size={17} className="text-white -mt-[1px]" />
+                            <TbChevronDown size={17} className="text-white -mt-[1px]" />
                           </button>
                           {showDocumentDropdown && (
                               <div className="absolute z-50 mt-1 w-[300px] bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
                               <div className="p-2">
-                                <input
-                                  type="text"
-                                  placeholder="Search documents..."
-                                  value={documentSearch}
-                                  onChange={(e) => setDocumentSearch(e.target.value)}
+                                <div className="relative">
+                                  <input
+                                    type="text"
+                                    placeholder="Search documents..."
+                                    value={documentSearch}
+                                    onChange={(e) => setDocumentSearch(e.target.value)}
                                     className="w-full px-3 py-2 text-xs border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-800 text-gray-700 dark:text-white"
-                                  onClick={(e) => e.stopPropagation()}
-                                />
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
+                                  <TbSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                                </div>
                               </div>
-                              <div className="max-h-[300px] overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
+                              <div className="max-h-[300px] overflow-y-auto [&::-webkit-scrollbar]:hidden">
                                 {filteredDocuments.map((doc) => (
                                   <button
                                     key={doc.id}
@@ -3806,10 +4240,10 @@ export default function SignaturesPage() {
                               className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors"
                             style={{ fontFamily: 'Avenir, sans-serif' }}
                           >
-                            <HiOutlineUpload className="text-base text-primary" /> Upload
+                            <TbUpload className="text-base text-primary" /> Upload
                           </button>
                           {showUploadDropdown && (
-                              <div className="absolute z-50 mt-1 w-[200px] bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700">
+                              <div className="absolute z-50 mt-1 w-[200px] bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:hidden">
                                 <div className="py-2">
                                   <label htmlFor="file-upload" className="block px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer">
                                   <div className="flex items-center gap-2">
@@ -3846,30 +4280,31 @@ export default function SignaturesPage() {
                             </div>
                           )}
                         </div>
-                      </div>
-                      {documentError && (
-                        <div className="flex justify-center mt-2">
-                          <p className="text-xs text-red-600 font-medium cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                            Select an existing or upload a new document
-                          </p>
                         </div>
-                      )}
+                        {documentError && (
+                          <div className="flex justify-center mt-1.5">
+                            <p className="text-xs text-red-600 font-medium cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                              Select an existing or upload a new document
+                            </p>
+                          </div>
+                        )}
+                      </div>
                       </div>
 
                       {/* Right Column: Documents Box */}
-                      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>Documents</h3>
+                      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 h-[440px]">
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>Review Documents</h3>
                         
                         {/* Show document thumbnails when documents are selected */}
                         {(selectedDocuments.length > 0 || uploadedFiles.length > 0) ? (
-                          <div className="space-y-3">
+                          <div className="space-y-3 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ height: 'calc(440px - 100px)', minHeight: '280px' }}>
                             {/* Selected Documents */}
                           {selectedDocuments.map(docId => {
                             const doc = allDocuments.find(d => d.id === docId);
                             return doc ? (
-                                <div key={docId} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600">
+                                <div key={docId} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
                                   <div className="flex items-center gap-3">
-                                    <HiOutlineDocumentText className="w-5 h-5 text-primary" />
+                                    <TbLibrary className="w-5 h-5 text-primary" />
                                     <div className="flex-1 min-w-0">
                                       <div 
                                         className="font-semibold text-xs text-black dark:text-white truncate max-w-[140px]"
@@ -3882,7 +4317,7 @@ export default function SignaturesPage() {
                                   </div>
                                   <div className="flex items-center justify-center space-x-1">
                                     <button type="button" className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
-                                      <HiOutlineEye className="h-4 w-4 transition-colors" />
+                                      <TbEye className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                         View
                                       </span>
@@ -3906,7 +4341,7 @@ export default function SignaturesPage() {
                                         }
                                       }}
                                     >
-                                      <HiOutlineDownload className="h-4 w-4 transition-colors" />
+                                      <TbDownload className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                         Download
                                       </span>
@@ -3915,6 +4350,36 @@ export default function SignaturesPage() {
                                       type="button"
                                       onClick={() => {
                                         setSelectedDocuments(prev => prev.filter(id => id !== docId));
+                                        // Clear collaborators when documents are removed
+                                        setCollaborators([]);
+                                        setSelectedCollaborators([]);
+                                        
+                                        // Clear recipient card data from collaborators (but keep the card structure)
+                                        setRecipients(prevRecipients => {
+                                          const clearedRecipients = prevRecipients.map(recipient => 
+                                            collaborators.some(c => c.name === recipient.name)
+                                              ? { ...recipient, name: '', email: '', signerRole: 'Signer Role', contractRole: 'Contract Role' }
+                                              : recipient
+                                          );
+                                          
+                                          // Ensure at least one empty recipient card exists
+                                          if (clearedRecipients.length === 0) {
+                                            return [{
+                                              name: '',
+                                              email: '',
+                                              signerRole: 'Signer Role',
+                                              contractRole: 'Contract Role',
+                                              showSignerRoleDropdown: false,
+                                              showContractRoleDropdown: false,
+                                              signerRoleButtonRef: createRef<HTMLButtonElement>(),
+                                              signerRoleDropdownRef: createRef<HTMLDivElement>(),
+                                              contractRoleButtonRef: createRef<HTMLButtonElement>(),
+                                              contractRoleDropdownRef: createRef<HTMLDivElement>(),
+                                            }];
+                                          }
+                                          
+                                          return clearedRecipients;
+                                        });
                                         // Clear all recipient cards and reset first card when documents are removed
                                         setRecipients([{
                                           name: '',
@@ -3931,9 +4396,9 @@ export default function SignaturesPage() {
                                       }}
                                       className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group"
                                     >
-                                      <HiOutlineTrash className="h-4 w-4 transition-colors" />
+                                      <TbLibraryMinus className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                                        Delete
+                                        Remove
                                       </span>
                                     </button>
                                   </div>
@@ -3950,9 +4415,9 @@ export default function SignaturesPage() {
                               const associatedAssignee = uploadedFileAssignees[fileKey];
                               
                               return (
-                                <div key={idx} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600">
+                                <div key={idx} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
                                   <div className="flex items-center gap-3">
-                                    <HiOutlineDocumentText className="w-5 h-5 text-primary" />
+                                    <TbLibrary className="w-5 h-5 text-primary" />
                                     <div className="flex-1 min-w-0">
                                       {isEditing ? (
                                         <div className="flex items-center gap-2">
@@ -4004,7 +4469,7 @@ export default function SignaturesPage() {
                                             onClick={() => handleStartEditFileName(file, idx)}
                                             className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-primary transition-all p-1 flex-shrink-0"
                                           >
-                                            <LuPen className="w-3 h-3" />
+                                            <TbPencil size={16} />
                                           </button>
                                         </div>
                                       )}
@@ -4023,7 +4488,7 @@ export default function SignaturesPage() {
                                   </div>
                                   <div className="flex items-center justify-center space-x-1">
                                     <button type="button" className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
-                                      <HiOutlineEye className="h-4 w-4 transition-colors" />
+                                      <TbEye className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                         View
                                       </span>
@@ -4036,19 +4501,51 @@ export default function SignaturesPage() {
                                         downloadUploadedFile(file);
                                       }}
                                     >
-                                      <HiOutlineDownload className="h-4 w-4 transition-colors" />
+                                      <TbDownload className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                         Download
                                       </span>
                                     </button>
                                     <button
                                       type="button"
-                                      onClick={() => setUploadedFiles(prev => prev.filter((_, i) => i !== idx))}
+                                      onClick={() => {
+                                        setUploadedFiles(prev => prev.filter((_, i) => i !== idx));
+                                        // Clear collaborators when uploaded files are removed
+                                        setCollaborators([]);
+                                        setSelectedCollaborators([]);
+                                        
+                                        // Clear recipient card data from collaborators (but keep the card structure)
+                                        setRecipients(prevRecipients => {
+                                          const clearedRecipients = prevRecipients.map(recipient => 
+                                            collaborators.some(c => c.name === recipient.name)
+                                              ? { ...recipient, name: '', email: '', signerRole: 'Signer Role', contractRole: 'Contract Role' }
+                                              : recipient
+                                          );
+                                          
+                                          // Ensure at least one empty recipient card exists
+                                          if (clearedRecipients.length === 0) {
+                                            return [{
+                                              name: '',
+                                              email: '',
+                                              signerRole: 'Signer Role',
+                                              contractRole: 'Contract Role',
+                                              showSignerRoleDropdown: false,
+                                              showContractRoleDropdown: false,
+                                              signerRoleButtonRef: createRef<HTMLButtonElement>(),
+                                              signerRoleDropdownRef: createRef<HTMLDivElement>(),
+                                              contractRoleButtonRef: createRef<HTMLButtonElement>(),
+                                              contractRoleDropdownRef: createRef<HTMLDivElement>(),
+                                            }];
+                                          }
+                                          
+                                          return clearedRecipients;
+                                        });
+                                      }}
                                       className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group"
                                     >
-                                      <HiOutlineTrash className="h-4 w-4 transition-colors" />
+                                      <TbLibraryMinus className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                                        Delete
+                                        Remove
                                       </span>
                                     </button>
                                   </div>
@@ -4057,10 +4554,10 @@ export default function SignaturesPage() {
                             })}
                           </div>
                         ) : (
-                          <div className="flex flex-col items-center justify-center py-8 text-gray-500 dark:text-gray-400">
-                            <HiOutlineDocumentText size={26} className="mb-2" />
-                            <p className="text-sm">No documents selected</p>
-                            <p className="text-xs">Select or upload documents from the left panel</p>
+                          <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400 -mt-8">
+                            <TbLibrary size={26} className="mb-2 text-primary" />
+                            <p className="text-sm" style={{ fontFamily: 'Avenir, sans-serif' }}>No documents selected</p>
+                            <p className="text-xs" style={{ fontFamily: 'Avenir, sans-serif' }}>Select or upload documents in the left panel</p>
                           </div>
                         )}
                       </div>
@@ -4068,7 +4565,7 @@ export default function SignaturesPage() {
 
                     {/* Add Recipients Box */}
                     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>Add Recipients</h3>
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-6" style={{ fontFamily: 'Avenir, sans-serif' }}>Select Recipients</h3>
                       <div className="space-y-4">
                         {/* I am the only signer checkbox */}
                         <div className="flex items-center gap-2">
@@ -4118,6 +4615,57 @@ export default function SignaturesPage() {
                           </label>
                         </div>
                         
+                        {/* Collaborator badges container - like email To field */}
+                        {/* Debug: collaborators.length = {collaborators.length} */}
+                        {collaborators.length > 0 && (
+                          <div className="mt-4 p-3 bg-white dark:bg-gray-800 rounded-lg">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs font-semibold text-gray-700 dark:text-gray-300" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                Collaborators {selectedCollaborators.length > 0 && `(${selectedCollaborators.length} selected)`}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={handleSelectAllCollaborators}
+                                className="text-xs font-semibold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors flex items-center gap-1"
+                                style={{ fontFamily: 'Avenir, sans-serif' }}
+                              >
+                                {selectedCollaborators.length === collaborators.length ? (
+                                  <TbCopyMinus className="h-5 w-5 text-primary" />
+                                ) : (
+                                  <TbCopyCheck className="h-5 w-5" />
+                                )}
+                                <span className={selectedCollaborators.length === collaborators.length ? 'text-primary' : ''}>
+                                  {selectedCollaborators.length === collaborators.length ? 'Deselect All' : 'Select All'}
+                                </span>
+                              </button>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {collaborators.map((collaborator, idx) => (
+                                <div
+                                  key={idx}
+                                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${getCollaboratorBadgeColor(idx).border} ${getCollaboratorBadgeColor(idx).bg} shadow-sm cursor-pointer hover:shadow-md transition-all`}
+                                  onClick={() => handleCollaboratorToggle(collaborator.name)}
+                                >
+                                  {/* Checkbox */}
+                                  <div className={`w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center ${selectedCollaborators.includes(collaborator.name) ? 'bg-primary' : 'border border-gray-300'}`}>
+                                    {selectedCollaborators.includes(collaborator.name) && (
+                                      <FaCheck className="text-white" size={8} />
+                                    )}
+                                  </div>
+                                  {/* Initials */}
+                                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-semibold ${getCollaboratorBadgeColor(idx).text}`}>
+                                    {getInitials(collaborator.name)}
+                                  </div>
+                                  {/* Name and email */}
+                                  <span className={`text-xs font-medium ${getCollaboratorBadgeColor(idx).text}`} style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                    {collaborator.name} ({collaborator.email})
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
                         {/* Render all recipient cards */}
                         {recipients.map((recipient, idx) => (
                           <div key={idx} className="flex items-start gap-3">
@@ -4137,7 +4685,7 @@ export default function SignaturesPage() {
                                 />
                               </div>
                             )}
-                            <div className="flex-1 relative bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 shadow-sm" style={{ borderLeft: `3px solid ${getSignatureCardBorderColor(idx, false)}` }}>
+                            <div className="flex-1 relative bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 shadow-sm" style={{ borderLeft: `3px solid ${getSignatureCardBorderColor(idx, false, recipient)}` }}>
                             {/* Header with role controls and delete button */}
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                               <div className="flex flex-col sm:flex-row gap-1">
@@ -4150,9 +4698,9 @@ export default function SignaturesPage() {
                                     onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showSignerRoleDropdown: !r.showSignerRoleDropdown } : r))}
                                     tabIndex={0}
                                   >
-                                    <LuPen className="w-3 h-3 text-white" />
+                                    <TbPencil size={16} className="text-white" />
                                     <span>{recipient.signerRole || 'Signer Role'}</span>
-                                    <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px] text-white" />
+                                    <TbChevronDown size={14} className="inline-block align-middle -mt-[1px] text-white" />
                                   </button>
                                   {recipient.showSignerRoleDropdown && (
                                     <div
@@ -4191,8 +4739,9 @@ export default function SignaturesPage() {
                                     onClick={() => setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showContractRoleDropdown: !r.showContractRoleDropdown } : r))}
                                     tabIndex={0}
                                   >
+                                    <TbUserEdit size={16} className="text-white" />
                                     <span>{recipient.contractRole || 'Contract Role'}</span>
-                                    <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px] text-white" />
+                                    <TbChevronDown size={14} className="inline-block align-middle -mt-[1px] text-white" />
                                   </button>
                                   {recipient.showContractRoleDropdown && (
                                     <div
@@ -4230,7 +4779,7 @@ export default function SignaturesPage() {
                                     tabIndex={0}
                                   >
                                     <span>Customize</span>
-                                    <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px]" />
+                                    <TbChevronDown size={14} className="inline-block align-middle -mt-[1px]" />
                                   </button>
                                 </div>
                               </div>
@@ -4245,7 +4794,7 @@ export default function SignaturesPage() {
                                     setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, name: '', email: '' } : r));
                                   }}
                                 >
-                                  <LuEraser className="w-4 h-4" />
+                                  <TbEraser className="w-4 h-4" />
                                   <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                     Erase
                                   </span>
@@ -4259,7 +4808,7 @@ export default function SignaturesPage() {
                                   }} 
                                   disabled={recipients.length === 1}
                                 >
-                                    <HiOutlineTrash className="w-4 h-4" />
+                                    <TbTrash className="w-4 h-4" />
                                     <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                       Delete
                                     </span>
@@ -4333,16 +4882,16 @@ export default function SignaturesPage() {
                     </div>
 
                     {/* Signature Details Box */}
-                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6">
                       <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>Signature Details</h3>
                       
                       <div className="space-y-4">
                         {/* Assignee and Due Date Row */}
-                        <div className="flex gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {/* Assignee Field */}
-                          <div>
+                          <div className="min-w-0">
                             <div className="text-gray-500 dark:text-gray-400 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Assignee <span className="text-red-500">*</span></div>
-                            <div className="relative" style={{ width: '200px', minWidth: '200px' }} ref={signatureAssigneeDropdownRef}>
+                            <div className="relative w-full" ref={signatureAssigneeDropdownRef}>
                               <input
                                 type="text"
                                 className="w-full h-[34px] px-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs transition-colors cursor-text focus:ring-2 focus:ring-primary focus:border-primary pr-10"
@@ -4367,10 +4916,10 @@ export default function SignaturesPage() {
                                 style={{ fontFamily: 'Avenir, sans-serif' }}
                                 autoComplete="off"
                               />
-                              <HiMiniChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                              <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                               
                               {showSignatureAssigneeDropdown && (
-                                <div className="absolute left-0 top-full mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none w-full [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                <div className="absolute left-0 top-full mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none w-full [&::-webkit-scrollbar]:hidden" style={{ fontFamily: 'Avenir, sans-serif' }}>
                                   {allAssignees.length > 0 ? (
                                     <>
                                       {allAssignees.map((assignee: string) => (
@@ -4419,9 +4968,9 @@ export default function SignaturesPage() {
                           </div>
 
                           {/* Due Date Field */}
-                          <div>
+                          <div className="min-w-0">
                             <div className="text-gray-500 dark:text-gray-400 text-xs mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>Due Date <span className="text-red-500">*</span></div>
-                            <div className="relative flex items-center" style={{ width: '200px', minWidth: '200px' }}>
+                            <div className="relative flex items-center w-full">
                               <input
                                 type="date"
                                 className="w-full px-4 py-2 pr-10 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs text-black dark:text-white bg-white dark:bg-gray-900 [&::-webkit-calendar-picker-indicator]:hidden"
@@ -4451,50 +5000,56 @@ export default function SignaturesPage() {
 
 
 
-                    <div className="flex justify-end gap-1">
-                      <button
-                        type="button"
-                        onClick={() => { 
-                          setShowRequestSignatureModal(false); 
-                          setUploadedFiles([]); 
-                          setSelectedDocuments([]); 
-                          setRecipients([{
-                            name: '',
-                            email: '',
-                            signerRole: 'Signer Role',
-                            contractRole: '',
-                            showSignerRoleDropdown: false,
-                            showContractRoleDropdown: false,
-                            signerRoleButtonRef: createRef<HTMLButtonElement>(),
-                            signerRoleDropdownRef: createRef<HTMLDivElement>(),
-                            contractRoleButtonRef: createRef<HTMLButtonElement>(),
-                            contractRoleDropdownRef: createRef<HTMLDivElement>(),
-                          }]);
-                          setIsOnlySigner(false);
-                          setSetSigningOrder(false);
-                          setEditingFileName(null);
-                          setShowDocumentDropdown(false);
-                          setDocumentSearch('');
-                          setIsDraggingOver(false);
-                          setDueDate('');
-                          setSubject('');
-                          setMessage('');
-                        }}
-                        className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
-                        style={{ fontFamily: 'Avenir, sans-serif' }}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
-                        style={{ fontFamily: 'Avenir, sans-serif' }}
-                      >
-                        Prepare Document
-                      </button>
-                    </div>
+
                   </div>
                 </form>
+              </div>
+
+              {/* Sticky Footer */}
+              <div className="sticky bottom-0 bg-gray-50 dark:bg-gray-900 px-6 pt-0 pb-6">
+                <div className="flex justify-end gap-1">
+                  <button
+                    type="button"
+                    onClick={() => { 
+                      setShowRequestSignatureModal(false); 
+                      setUploadedFiles([]); 
+                      setSelectedDocuments([]); 
+                      setRecipients([{
+                        name: '',
+                        email: '',
+                        signerRole: 'Signer Role',
+                        contractRole: '',
+                        showSignerRoleDropdown: false,
+                        showContractRoleDropdown: false,
+                        signerRoleButtonRef: createRef<HTMLButtonElement>(),
+                        signerRoleDropdownRef: createRef<HTMLDivElement>(),
+                        contractRoleButtonRef: createRef<HTMLButtonElement>(),
+                        contractRoleDropdownRef: createRef<HTMLDivElement>(),
+                      }]);
+                      setIsOnlySigner(false);
+                      setSetSigningOrder(false);
+                      setEditingFileName(null);
+                      setShowDocumentDropdown(false);
+                      setDocumentSearch('');
+                      setIsDraggingOver(false);
+                      setDueDate('');
+                      setSubject('');
+                      setMessage('');
+                    }}
+                    className="px-5 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    form="request-signature-form"
+                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                  >
+                    Prepare Document
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -4506,8 +5061,8 @@ export default function SignaturesPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
           <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-[calc(100%-1rem)] max-w-[1400px] mx-4 my-8 max-h-[90vh] flex flex-col overflow-hidden">
             {/* Sticky Header */}
-            <div className="sticky top-0 z-40 bg-gray-50 dark:bg-gray-900 px-6 py-4">
-              <div className="flex items-start justify-between">
+            <div className="sticky top-0 z-40 bg-gray-50 dark:bg-gray-900 px-6 py-4 sm:pt-8 sm:pb-2">
+              <div className="flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-3">
                     <div className="h-8 w-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
@@ -4518,7 +5073,7 @@ export default function SignaturesPage() {
                   <p className="text-gray-500 text-xs leading-tight cursor-default select-none ml-11">Fill in the request details to get started</p>
                 </div>
                                   <button
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-full ml-4 mt-1"
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-full -mt-3"
                     onClick={() => { 
                       setShowDocuSignModal(false); 
                       resetModalData();
@@ -4573,7 +5128,7 @@ export default function SignaturesPage() {
                           setDocuSignUploadedFiles(prev => [...prev, ...files]);
                         }}
                       >
-                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 relative z-10" style={{ fontFamily: 'Avenir, sans-serif' }}>Add Documents</h3>
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 relative z-10" style={{ fontFamily: 'Avenir, sans-serif' }}>Select Documents</h3>
                         
                         {/* Upload interface - always visible */}
                         <div className="flex flex-col items-center mb-4">
@@ -4586,7 +5141,7 @@ export default function SignaturesPage() {
                               <div className="h-full w-full flex flex-col items-center justify-center bg-white/95 dark:bg-gray-800/95 rounded-lg" style={{ marginTop: '1px' }}>
                                 <div className="-mt-4">
                                   <div className="h-11 w-11 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center border-2 border-blue-200 dark:border-blue-800 mb-1.5 mx-auto">
-                                    <HiOutlineUpload size={22} className="text-blue-500 dark:text-blue-400" />
+                                    <TbUpload size={22} className="text-blue-500 dark:text-blue-400" />
                                   </div>
                                   <div className="text-xs text-gray-700 dark:text-gray-300 font-semibold text-center" style={{ fontFamily: 'Avenir, sans-serif' }}>
                                     Supported Formats: PDF, DOC, DOCX, OR JPG (max. 10 MB each)
@@ -4604,21 +5159,24 @@ export default function SignaturesPage() {
                               className="flex items-center gap-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-xs font-semibold border border-transparent"
                             >
                               Select
-                              <HiMiniChevronDown size={17} className="text-white -mt-[1px]" />
+                              <TbChevronDown size={17} className="text-white -mt-[1px]" />
                             </button>
                             {showDocuSignDocumentDropdown && (
                               <div className="absolute z-50 mt-1 w-[300px] bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
                                 <div className="p-2">
-                                  <input
-                                    type="text"
-                                    placeholder="Search documents..."
-                                    value={docuSignDocumentSearch}
-                                    onChange={(e) => setDocuSignDocumentSearch(e.target.value)}
-                                    className="w-full px-3 py-2 text-xs border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-800 text-gray-700 dark:text-white"
-                                    onClick={(e) => e.stopPropagation()}
-                                  />
+                                  <div className="relative">
+                                    <input
+                                      type="text"
+                                      placeholder="Search documents..."
+                                      value={docuSignDocumentSearch}
+                                      onChange={(e) => setDocuSignDocumentSearch(e.target.value)}
+                                      className="w-full px-3 py-2 text-xs border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-800 text-gray-700 dark:text-white"
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                    <TbSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                                  </div>
                                 </div>
-                                <div className="max-h-[300px] overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
+                                <div className="max-h-[300px] overflow-y-auto [&::-webkit-scrollbar]:hidden">
                                   {allDocuments
                                     .filter(doc => {
                                       const search = docuSignDocumentSearch.toLowerCase();
@@ -4664,10 +5222,10 @@ export default function SignaturesPage() {
                               className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 font-semibold text-xs hover:bg-gray-200 transition-colors"
                               style={{ fontFamily: 'Avenir, sans-serif' }}
                             >
-                              <HiOutlineUpload className="text-base text-blue-500" /> Upload
+                              <TbUpload className="text-base text-blue-500" /> Upload
                             </button>
                             {showDocuSignUploadDropdown && (
-                              <div className="absolute z-50 mt-1 w-[200px] bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700">
+                              <div className="absolute z-50 mt-1 w-[200px] bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:hidden">
                                 <div className="py-2">
                                   <label htmlFor="docuSign-file-upload" className="block px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer">
                                     <div className="flex items-center gap-2">
@@ -4709,7 +5267,7 @@ export default function SignaturesPage() {
 
                       {/* Right Column: Documents Box */}
                       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>Documents</h3>
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>Review Documents</h3>
                         
                         {/* Show document thumbnails when documents are selected */}
                         {(docuSignSelectedDocuments.length > 0 || docuSignUploadedFiles.length > 0) ? (
@@ -4733,7 +5291,7 @@ export default function SignaturesPage() {
                                   </div>
                                   <div className="flex items-center justify-center space-x-1">
                                     <button type="button" className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
-                                      <HiOutlineEye className="h-4 w-4 transition-colors" />
+                                      <TbEye className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                         View
                                       </span>
@@ -4757,7 +5315,7 @@ export default function SignaturesPage() {
                                         }
                                       }}
                                     >
-                                      <HiOutlineDownload className="h-4 w-4 transition-colors" />
+                                      <TbDownload className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                         Download
                                       </span>
@@ -4782,9 +5340,9 @@ export default function SignaturesPage() {
                                       }}
                                       className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group"
                                     >
-                                      <HiOutlineTrash className="h-4 w-4 transition-colors" />
+                                      <TbLibraryMinus className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                                        Delete
+                                        Remove
                                       </span>
                                     </button>
                                   </div>
@@ -4855,7 +5413,7 @@ export default function SignaturesPage() {
                                             onClick={() => handleStartEditFileName(file, idx, true)}
                                             className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-blue-500 transition-all p-1 flex-shrink-0"
                                           >
-                                            <LuPen className="w-3 h-3" />
+                                            <TbPencil size={16} />
                                           </button>
                                         </div>
                                       )}
@@ -4874,7 +5432,7 @@ export default function SignaturesPage() {
                                   </div>
                                   <div className="flex items-center justify-center space-x-1">
                                     <button type="button" className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group">
-                                      <HiOutlineEye className="h-4 w-4 transition-colors" />
+                                      <TbEye className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                         View
                                       </span>
@@ -4887,7 +5445,7 @@ export default function SignaturesPage() {
                                         downloadUploadedFile(file);
                                       }}
                                     >
-                                      <HiOutlineDownload className="h-4 w-4 transition-colors" />
+                                      <TbDownload className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                         Download
                                       </span>
@@ -4897,9 +5455,9 @@ export default function SignaturesPage() {
                                       onClick={() => setDocuSignUploadedFiles(prev => prev.filter((_, i) => i !== idx))}
                                       className="border border-gray-300 rounded-md px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group"
                                     >
-                                      <HiOutlineTrash className="h-4 w-4 transition-colors" />
+                                      <TbLibraryMinus className="h-4 w-4 transition-colors" />
                                       <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                                        Delete
+                                        Remove
                                       </span>
                                     </button>
                                   </div>
@@ -4919,7 +5477,7 @@ export default function SignaturesPage() {
 
                     {/* Add Recipients Box */}
                     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4" style={{ fontFamily: 'Avenir, sans-serif' }}>Add Recipients</h3>
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-6" style={{ fontFamily: 'Avenir, sans-serif' }}>Select Recipients</h3>
                       <div className="space-y-4">
                         {/* I am the only signer checkbox */}
                         <div className="flex items-center gap-2">
@@ -4988,7 +5546,7 @@ export default function SignaturesPage() {
                                 />
                               </div>
                             )}
-                            <div className="flex-1 relative bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 shadow-sm" style={{ borderLeft: `3px solid ${getSignatureCardBorderColor(idx, true)}` }}>
+                            <div className="flex-1 relative bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 shadow-sm" style={{ borderLeft: `3px solid ${getSignatureCardBorderColor(idx, true, recipient)}` }}>
                             {/* Header with role controls and delete button */}
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                               <div className="flex flex-col sm:flex-row gap-1">
@@ -5001,9 +5559,9 @@ export default function SignaturesPage() {
                                     onClick={() => setDocuSignRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showSignerRoleDropdown: !r.showSignerRoleDropdown } : r))}
                                     tabIndex={0}
                                   >
-                                    <LuPen className="w-3 h-3 text-white" />
+                                    <TbPencil size={16} className="text-white" />
                                     <span>{recipient.signerRole || 'Signer Role'}</span>
-                                    <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px] text-white" />
+                                    <TbChevronDown size={14} className="inline-block align-middle -mt-[1px] text-white" />
                                   </button>
                                   {recipient.showSignerRoleDropdown && (
                                     <div
@@ -5034,8 +5592,9 @@ export default function SignaturesPage() {
                                     onClick={() => setDocuSignRecipients(prev => prev.map((r, i) => i === idx ? { ...r, showContractRoleDropdown: !r.showContractRoleDropdown } : r))}
                                     tabIndex={0}
                                   >
+                                    <TbUserEdit size={16} className="text-white" />
                                     <span>{recipient.contractRole || 'Contract Role'}</span>
-                                    <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px] text-white" />
+                                    <TbChevronDown size={14} className="inline-block align-middle -mt-[1px] text-white" />
                                   </button>
                                   {recipient.showContractRoleDropdown && (
                                     <div
@@ -5065,7 +5624,7 @@ export default function SignaturesPage() {
                                     tabIndex={0}
                                   >
                                     <span>Customize</span>
-                                    <HiMiniChevronDown size={14} className="inline-block align-middle -mt-[1px]" />
+                                    <TbChevronDown size={14} className="inline-block align-middle -mt-[1px]" />
                                   </button>
                                 </div>
                               </div>
@@ -5080,7 +5639,7 @@ export default function SignaturesPage() {
                                     setDocuSignRecipients(prev => prev.map((r, i) => i === idx ? { ...r, name: '', email: '' } : r));
                                   }}
                                 >
-                                  <LuEraser className="w-4 h-4" />
+                                  <TbEraser className="w-4 h-4" />
                                   <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                     Erase
                                   </span>
@@ -5094,7 +5653,7 @@ export default function SignaturesPage() {
                                   }} 
                                   disabled={docuSignRecipients.length === 1}
                                 >
-                                  <HiOutlineTrash className="w-4 h-4" />
+                                  <TbTrash className="w-4 h-4" />
                                   <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                                     Delete
                                   </span>
@@ -5286,12 +5845,12 @@ export default function SignaturesPage() {
                         ) : (
                           <span className="text-gray-400">Select a contract...</span>
                         )}
-                        <HiMiniChevronDown className="text-gray-400" size={16} />
+                        <TbChevronDown className="text-gray-400 dark:text-gray-500" size={18} />
                       </button>
                       {showModalContractDropdown && (
-                        <div className="absolute top-full left-0 mt-1 min-w-[280px] w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2 contract-dropdown">
-                          {/* Search Bar */}
-                          <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+                        <div className="absolute top-full left-0 mt-1 min-w-[280px] w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 contract-dropdown">
+                          {/* Fixed Search Bar */}
+                          <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800">
                             <div className="relative">
                               <input
                                 type="text"
@@ -5301,34 +5860,36 @@ export default function SignaturesPage() {
                                 className={`w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-700 dark:text-white bg-white dark:bg-gray-900 transition-colors ${isDocuSignUpload ? 'focus:ring-2 focus:ring-blue-500 focus:border-blue-500' : 'focus:ring-2 focus:ring-primary focus:border-primary'}`}
                                 style={{ fontFamily: 'Avenir, sans-serif' }}
                               />
-                              <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                              <TbSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                             </div>
                           </div>
-
-                          {mockContracts
-                            .filter(contract => 
-                              contract.id.toLowerCase().includes(modalContractSearch.toLowerCase()) ||
-                              contract.title.toLowerCase().includes(modalContractSearch.toLowerCase())
-                            )
-                            .map(contract => (
-                              <button
-                                key={contract.id}
-                                className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center whitespace-nowrap truncate ${currentUploadingContract === contract.id ? (isDocuSignUpload ? 'text-blue-500' : 'text-primary') : 'text-gray-700 dark:text-gray-300'}`}
-                                onClick={() => {
-                                  setCurrentUploadingContract(contract.id);
-                                  setShowModalContractDropdown(false);
-                                }}
-                              >
-                                <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                                  {currentUploadingContract === contract.id && (
-                                    <div className={`w-3 h-3 rounded-sm flex items-center justify-center ${isDocuSignUpload ? 'bg-blue-500' : 'bg-primary'}`}>
-                                      <FaCheck className="text-white" size={8} />
-                                    </div>
-                                  )}
-                                </div>
-                                {contract.id} - {contract.title}
-                              </button>
-                            ))}
+                          {/* Scrollable Contracts List */}
+                          <div className="max-h-40 overflow-y-auto [&::-webkit-scrollbar]:hidden">
+                            {mockContracts
+                              .filter(contract => 
+                                contract.id.toLowerCase().includes(modalContractSearch.toLowerCase()) ||
+                                contract.title.toLowerCase().includes(modalContractSearch.toLowerCase())
+                              )
+                              .map(contract => (
+                                <button
+                                  key={contract.id}
+                                  className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center whitespace-nowrap truncate ${currentUploadingContract === contract.id ? (isDocuSignUpload ? 'text-blue-500' : 'text-primary') : 'text-gray-700 dark:text-gray-300'}`}
+                                  onClick={() => {
+                                    setCurrentUploadingContract(contract.id);
+                                    setShowModalContractDropdown(false);
+                                  }}
+                                >
+                                  <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                                    {currentUploadingContract === contract.id && (
+                                      <div className={`w-3 h-3 rounded-sm flex items-center justify-center ${isDocuSignUpload ? 'bg-blue-500' : 'bg-primary'}`}>
+                                        <FaCheck className="text-white" size={8} />
+                                      </div>
+                                    )}
+                                  </div>
+                                  {contract.id} - {contract.title}
+                                </button>
+                              ))}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -5349,7 +5910,7 @@ export default function SignaturesPage() {
                         autoComplete="off"
                       />
                       {showModalAssigneeDropdown && (
-                        <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                        <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 max-h-48 overflow-y-auto cursor-default select-none [&::-webkit-scrollbar]:hidden" style={{ fontFamily: 'Avenir, sans-serif' }}>
                           {allAssignees.length > 0 ? (
                             <>
                               {allAssignees.map((assignee: string) => (
@@ -5483,10 +6044,14 @@ export default function SignaturesPage() {
       <DocumentPreparationModal
         isOpen={showDocumentPreparationModal}
         onClose={() => setShowDocumentPreparationModal(false)}
+        onBackToRequestSignature={() => {
+          setShowDocumentPreparationModal(false);
+          setShowRequestSignatureModal(true);
+        }}
         documentData={{
           recipients: recipients,
           uploadedFiles: uploadedFiles,
-          selectedDocuments: selectedDocuments,
+          selectedDocuments: selectedDocuments.map(docId => allDocuments.find(doc => doc.id === docId)).filter(Boolean),
         }}
       />
 

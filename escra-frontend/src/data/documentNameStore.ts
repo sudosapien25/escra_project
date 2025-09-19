@@ -100,7 +100,43 @@ export const useDocumentStore = create<DocumentStore>((set, get) => {
   
   // Save migrated documents back to localStorage if any changes were made
   if (typeof window !== 'undefined' && Object.keys(parsedDocuments).length !== Object.keys(migratedDocuments).length) {
-    localStorage.setItem('documentStore', JSON.stringify(migratedDocuments));
+    try {
+      const documentsJson = JSON.stringify(migratedDocuments);
+      
+      // Check if the data is too large for localStorage
+      const estimatedSize = new Blob([documentsJson]).size;
+      const maxSize = 5 * 1024 * 1024; // 5MB limit
+      
+      if (estimatedSize > maxSize) {
+        console.warn(`Document store size (${Math.round(estimatedSize / 1024 / 1024 * 100) / 100}MB) exceeds localStorage limit. Storing without content.`);
+        
+        // Store documents without content to avoid quota issues
+        const documentsWithoutContent = Object.fromEntries(
+          Object.entries(migratedDocuments).map(([id, doc]) => [
+            id, 
+            { ...doc, content: '' } // Remove content to save space
+          ])
+        );
+        localStorage.setItem('documentStore', JSON.stringify(documentsWithoutContent));
+      } else {
+        localStorage.setItem('documentStore', documentsJson);
+      }
+    } catch (quotaError) {
+      if (quotaError.name === 'QuotaExceededError') {
+        console.warn('localStorage quota exceeded. Storing documents without content to save space.');
+        
+        // Store documents without content to avoid quota issues
+        const documentsWithoutContent = Object.fromEntries(
+          Object.entries(migratedDocuments).map(([id, doc]) => [
+            id, 
+            { ...doc, content: '' } // Remove content to save space
+          ])
+        );
+        localStorage.setItem('documentStore', JSON.stringify(documentsWithoutContent));
+      } else {
+        throw quotaError;
+      }
+    }
   }
 
   return {
@@ -139,9 +175,45 @@ export const useDocumentStore = create<DocumentStore>((set, get) => {
         const newDocuments = { ...get().documents, [documentId]: storedDocument };
         set({ documents: newDocuments });
 
-        // Persist to localStorage
+        // Persist to localStorage with quota management
         if (typeof window !== 'undefined') {
-          localStorage.setItem('documentStore', JSON.stringify(newDocuments));
+          try {
+            const documentsJson = JSON.stringify(newDocuments);
+            
+            // Check if the data is too large for localStorage
+            const estimatedSize = new Blob([documentsJson]).size;
+            const maxSize = 5 * 1024 * 1024; // 5MB limit
+            
+            if (estimatedSize > maxSize) {
+              console.warn(`Document store size (${Math.round(estimatedSize / 1024 / 1024 * 100) / 100}MB) exceeds localStorage limit. Storing without content.`);
+              
+              // Store documents without content to avoid quota issues
+              const documentsWithoutContent = Object.fromEntries(
+                Object.entries(newDocuments).map(([id, doc]) => [
+                  id, 
+                  { ...doc, content: '' } // Remove content to save space
+                ])
+              );
+              localStorage.setItem('documentStore', JSON.stringify(documentsWithoutContent));
+            } else {
+              localStorage.setItem('documentStore', documentsJson);
+            }
+          } catch (quotaError) {
+            if (quotaError.name === 'QuotaExceededError') {
+              console.warn('localStorage quota exceeded. Storing documents without content to save space.');
+              
+              // Store documents without content to avoid quota issues
+              const documentsWithoutContent = Object.fromEntries(
+                Object.entries(newDocuments).map(([id, doc]) => [
+                  id, 
+                  { ...doc, content: '' } // Remove content to save space
+                ])
+              );
+              localStorage.setItem('documentStore', JSON.stringify(documentsWithoutContent));
+            } else {
+              throw quotaError;
+            }
+          }
         }
 
         return documentId;
@@ -166,7 +238,43 @@ export const useDocumentStore = create<DocumentStore>((set, get) => {
         set({ documents: newDocuments });
 
         if (typeof window !== 'undefined') {
-          localStorage.setItem('documentStore', JSON.stringify(newDocuments));
+          try {
+            const documentsJson = JSON.stringify(newDocuments);
+            
+            // Check if the data is too large for localStorage
+            const estimatedSize = new Blob([documentsJson]).size;
+            const maxSize = 5 * 1024 * 1024; // 5MB limit
+            
+            if (estimatedSize > maxSize) {
+              console.warn(`Document store size (${Math.round(estimatedSize / 1024 / 1024 * 100) / 100}MB) exceeds localStorage limit. Storing without content.`);
+              
+              // Store documents without content to avoid quota issues
+              const documentsWithoutContent = Object.fromEntries(
+                Object.entries(newDocuments).map(([id, doc]) => [
+                  id, 
+                  { ...doc, content: '' } // Remove content to save space
+                ])
+              );
+              localStorage.setItem('documentStore', JSON.stringify(documentsWithoutContent));
+            } else {
+              localStorage.setItem('documentStore', documentsJson);
+            }
+          } catch (quotaError) {
+            if (quotaError.name === 'QuotaExceededError') {
+              console.warn('localStorage quota exceeded. Storing documents without content to save space.');
+              
+              // Store documents without content to avoid quota issues
+              const documentsWithoutContent = Object.fromEntries(
+                Object.entries(newDocuments).map(([id, doc]) => [
+                  id, 
+                  { ...doc, content: '' } // Remove content to save space
+                ])
+              );
+              localStorage.setItem('documentStore', JSON.stringify(documentsWithoutContent));
+            } else {
+              throw quotaError;
+            }
+          }
         }
       }
     },
@@ -177,7 +285,43 @@ export const useDocumentStore = create<DocumentStore>((set, get) => {
       set({ documents: remainingDocuments });
 
       if (typeof window !== 'undefined') {
-        localStorage.setItem('documentStore', JSON.stringify(remainingDocuments));
+        try {
+          const documentsJson = JSON.stringify(remainingDocuments);
+          
+          // Check if the data is too large for localStorage
+          const estimatedSize = new Blob([documentsJson]).size;
+          const maxSize = 5 * 1024 * 1024; // 5MB limit
+          
+          if (estimatedSize > maxSize) {
+            console.warn(`Document store size (${Math.round(estimatedSize / 1024 / 1024 * 100) / 100}MB) exceeds localStorage limit. Storing without content.`);
+            
+            // Store documents without content to avoid quota issues
+            const documentsWithoutContent = Object.fromEntries(
+              Object.entries(remainingDocuments).map(([id, doc]) => [
+                id, 
+                { ...doc, content: '' } // Remove content to save space
+              ])
+            );
+            localStorage.setItem('documentStore', JSON.stringify(documentsWithoutContent));
+          } else {
+            localStorage.setItem('documentStore', documentsJson);
+          }
+        } catch (quotaError) {
+          if (quotaError.name === 'QuotaExceededError') {
+            console.warn('localStorage quota exceeded. Storing documents without content to save space.');
+            
+            // Store documents without content to avoid quota issues
+            const documentsWithoutContent = Object.fromEntries(
+              Object.entries(remainingDocuments).map(([id, doc]) => [
+                id, 
+                { ...doc, content: '' } // Remove content to save space
+              ])
+            );
+            localStorage.setItem('documentStore', JSON.stringify(documentsWithoutContent));
+          } else {
+            throw quotaError;
+          }
+        }
       }
     },
 
