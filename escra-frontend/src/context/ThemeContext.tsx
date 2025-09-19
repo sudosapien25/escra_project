@@ -15,10 +15,24 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window !== 'undefined') {
       const savedTheme = localStorage.getItem('theme');
+
       if (savedTheme) {
-        return JSON.parse(savedTheme);
+        try {
+          const parsed = JSON.parse(savedTheme);
+          if (typeof parsed === 'object' && parsed !== null && 'isDark' in parsed) {
+            return { isDark: Boolean((parsed as Theme).isDark) };
+          }
+        } catch (error) {
+          if (savedTheme === 'dark') {
+            return { isDark: true };
+          }
+          if (savedTheme === 'light') {
+            return { isDark: false };
+          }
+        }
       }
     }
+
     return { isDark: false };
   });
 

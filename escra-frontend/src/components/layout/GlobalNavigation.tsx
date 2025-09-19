@@ -65,7 +65,7 @@ export default function GlobalNavigation() {
         <div className="text-xl font-medium tracking-tight">
           <Link href="/">
             <Image
-              src="/primary escra (color) copy.png"
+              src="/primary-escra-color.png"
               alt="ESCRA Logo"
               width={160}
               height={53}
