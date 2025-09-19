@@ -36,7 +36,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useDocumentStore } from '@/data/documentNameStore';
 import { useRouter } from 'next/navigation';
 import { PiMoneyWavyBold, PiBankBold, PiSignatureBold, PiCaretUpDownBold, PiCaretUpDown } from 'react-icons/pi';
-import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbChevronsDownRight, TbMailPlus, TbLibraryPlus, TbLibraryMinus, TbSquareX, TbStatusChange, TbDragDrop, TbHistory, TbBell, TbSquarePlus } from 'react-icons/tb';
+import { TbDeviceDesktopPlus, TbBrandGoogleDrive, TbBrandOnedrive, TbChevronsDownRight, TbMailPlus, TbLibraryPlus, TbLibraryMinus, TbSquareX, TbStatusChange, TbDragDrop, TbHistory, TbBell, TbSquarePlus, TbCodeVariablePlus, TbSubtask } from 'react-icons/tb';
 import { SiBox } from 'react-icons/si';
 import { SlSocialDropbox } from 'react-icons/sl';
 import { FaCheckCircle } from 'react-icons/fa';
@@ -11773,8 +11773,8 @@ const ContractsPage: React.FC = () => {
                 <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 cursor-default select-none">
                   <div className="flex items-center justify-between mb-4 cursor-default select-none">
                     <h3 className="text-sm font-semibold text-gray-900 dark:text-white cursor-default select-none">Tasks</h3>
-                    <button className="flex items-center gap-2 px-2 py-1 rounded-lg border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-primary text-gray-700 dark:text-white font-semibold text-xs hover:bg-gray-200 dark:hover:bg-primary-dark transition-colors cursor-pointer" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                      <span className="text-base font-bold text-primary dark:text-white">+</span> New Task
+                    <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-transparent bg-gray-100 dark:bg-primary text-gray-700 dark:text-white font-semibold text-xs hover:bg-gray-200 dark:hover:bg-primary-dark transition-colors cursor-pointer" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                      <TbCodeVariablePlus className="w-5 h-5 text-primary dark:text-white" /> New Task
                     </button>
                   </div>
                   <div className="overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ height: '477px', minHeight: '280px' }}>
@@ -11886,7 +11886,7 @@ const ContractsPage: React.FC = () => {
                         </div>
                       ) : (
                         <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400 -mt-8">
-                          <TbLayoutGrid size={26} className="mb-2 text-primary" />
+                          <TbSubtask size={26} className="mb-2 text-primary" />
                           <p className="text-sm" style={{ fontFamily: 'Avenir, sans-serif' }}>No tasks for this contract</p>
                           <p className="text-xs" style={{ fontFamily: 'Avenir, sans-serif' }}>Click "New Task" to add one</p>
                         </div>

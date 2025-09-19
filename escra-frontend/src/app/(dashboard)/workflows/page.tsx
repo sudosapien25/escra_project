@@ -2368,7 +2368,7 @@ export default function WorkflowsPage() {
                     {newTaskSubtasks.length > 0 && (
                       <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-3 cursor-default select-none" style={{ fontFamily: 'Avenir, sans-serif' }}>Added Subtasks ({newTaskSubtasks.length})</h4>
                     )}
-                    <div className={`${newTaskSubtasks.length > 0 ? `grid grid-cols-2 gap-2 ${newTaskSubtasks.length > 4 ? 'max-h-72 overflow-y-auto [&::-webkit-scrollbar]:hidden' : ''}` : 'space-y-2'} cursor-default select-none`}>
+                    <div className={`${newTaskSubtasks.length > 0 ? `grid grid-cols-2 gap-2 items-start ${newTaskSubtasks.length > 4 ? 'max-h-72 overflow-y-auto [&::-webkit-scrollbar]:hidden' : ''}` : 'space-y-2'} cursor-default select-none`}>
                       {newTaskSubtasks.map((subtask, idx) => (
                         <div key={subtask.id} className="bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-700 transition-colors">
                           {editingSubtaskIndex === idx ? (

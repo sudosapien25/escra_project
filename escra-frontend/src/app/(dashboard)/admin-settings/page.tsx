@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { FaUser, FaCheck } from 'react-icons/fa';
-import { TbCameraCog, TbActivity, TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbBuildingCommunity, TbBallAmericanFootball, TbTool, TbWallet, TbLock, TbKey, TbApiApp, TbDevicesX, TbKeyOff, TbWalletOff, TbPlug, TbPlugOff, TbApiOff, TbWebhookOff, TbApiAppOff, TbForklift, TbWashDryFlat, TbUsers, TbUsersGroup, TbUsersPlus, TbBuildingPlus, TbUserOff, TbBuilding, TbBuildingOff, TbBuildingCog, TbChevronDown, TbChevronUp, TbUserPlus, TbUserCog, TbMailShare, TbUpload, TbBarrierBlock, TbBriefcase, TbStethoscope, TbCoins, TbScale, TbScaleOff, TbTrophy, TbDotsVertical, TbUserMinus, TbUser, TbGavel, TbWallpaperOff } from 'react-icons/tb';
+import { TbCameraCog, TbActivity, TbBuildingEstate, TbShoppingBagEdit, TbWorld, TbBuildingCommunity, TbBallAmericanFootball, TbTool, TbWallet, TbLock, TbKey, TbApiApp, TbDevicesX, TbKeyOff, TbWalletOff, TbPlug, TbPlugOff, TbApiOff, TbWebhookOff, TbApiAppOff, TbForklift, TbWashDryFlat, TbUsers, TbUsersGroup, TbUsersPlus, TbUsersMinus, TbBuildingPlus, TbUserOff, TbBuilding, TbBuildingOff, TbBuildingCog, TbChevronDown, TbChevronUp, TbUserPlus, TbUserCog, TbMailShare, TbUpload, TbBarrierBlock, TbBriefcase, TbStethoscope, TbCoins, TbScale, TbScaleOff, TbTrophy, TbDotsVertical, TbUserMinus, TbUser, TbGavel, TbWallpaperOff, TbX } from 'react-icons/tb';
 import { HiChevronDown, HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight, HiOutlineKey, HiOutlineDuplicate, HiStatusOffline } from 'react-icons/hi';
 import { MdOutlineGeneratingTokens, MdWebhook, MdOutlineSportsFootball, MdOutlineMovieFilter, MdOutlineHealthAndSafety, MdCancelPresentation } from 'react-icons/md';
 import { HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
@@ -33,7 +33,7 @@ const TABS = [
   { key: 'billing', label: 'Billing' },
 ];
 
-const USER_ROLES = ['Viewer', 'Signer', 'Editor', 'Creator', 'Admin'];
+const USER_ROLES = ['Viewer', 'Signer', 'Editor', 'Admin'];
 const DOCUMENT_LANGUAGES = ['English', 'Spanish', 'French', 'Italian'];
 const SIGNATURE_SETTINGS = ['Draw', 'Type', 'Upload'];
 const SIGNING_CERTIFICATE_OPTIONS = ['Yes', 'No'];
@@ -717,7 +717,7 @@ const policiesData = [
   }
 ];
 
-// Mock collaborators data
+// Mock collaborators data with groups
 const collaboratorsData = [
   {
     name: 'John Smith',
@@ -725,7 +725,8 @@ const collaboratorsData = [
     role: 'Editor',
     status: 'Active',
     lastActive: '2 hours ago',
-    avatar: 'JS'
+    avatar: 'JS',
+    group: 'Marketing Team'
   },
   {
     name: 'Sarah Johnson',
@@ -733,7 +734,8 @@ const collaboratorsData = [
     role: 'Signer',
     status: 'Active',
     lastActive: '1 day ago',
-    avatar: 'SJ'
+    avatar: 'SJ',
+    group: 'Marketing Team'
   },
   {
     name: 'Mike Wilson',
@@ -741,15 +743,60 @@ const collaboratorsData = [
     role: 'Viewer',
     status: 'Pending',
     lastActive: 'Never',
-    avatar: 'MW'
+    avatar: 'MW',
+    group: 'Marketing Team'
   },
   {
     name: 'Emily Davis',
     email: 'emily.davis@company.com',
-    role: 'Creator',
+    role: 'Admin',
     status: 'Active',
     lastActive: '3 hours ago',
-    avatar: 'ED'
+    avatar: 'ED',
+    group: 'Development Team'
+  },
+  {
+    name: 'David Brown',
+    email: 'david.brown@company.com',
+    role: 'Editor',
+    status: 'Active',
+    lastActive: '1 hour ago',
+    avatar: 'DB',
+    group: 'Development Team'
+  },
+  {
+    name: 'Lisa Anderson',
+    email: 'lisa.anderson@company.com',
+    role: 'Viewer',
+    status: 'Active',
+    lastActive: '3 hours ago',
+    avatar: 'LA',
+    group: 'Sales Team'
+  }
+];
+
+// Mock groups data
+const groupsData = [
+  {
+    id: 'marketing-team',
+    name: 'Marketing Team',
+    description: 'Handles all marketing activities and campaigns',
+    memberCount: 3,
+    color: 'teal'
+  },
+  {
+    id: 'development-team',
+    name: 'Development Team',
+    description: 'Software development and technical operations',
+    memberCount: 2,
+    color: 'blue'
+  },
+  {
+    id: 'sales-team',
+    name: 'Sales Team',
+    description: 'Customer acquisition and relationship management',
+    memberCount: 1,
+    color: 'purple'
   }
 ];
 
@@ -870,11 +917,18 @@ export default function AdminSettingsPage() {
   const [showOrganizationDropdown, setShowOrganizationDropdown] = useState(false);
   const [configuredOrganization, setConfiguredOrganization] = useState<string | null>(null);
   const organizationDropdownRef = useRef<HTMLDivElement>(null);
+  const [selectedGroupFilters, setSelectedGroupFilters] = useState<Record<string, string[]>>({});
+  const [showGroupDropdowns, setShowGroupDropdowns] = useState<Record<string, boolean>>({});
+  const groupDropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const [showAddCollaboratorDropdowns, setShowAddCollaboratorDropdowns] = useState<Record<string, boolean>>({});
+  const addCollaboratorDropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const addCollaboratorButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   // Mock organizations data
   const organizationsData = [
     {
       id: 'personal',
+      orgId: 'ORG-9T2Q-K3WN',
       name: 'Personal',
       initials: 'ES',
       description: 'Your personal organization.',
@@ -882,6 +936,7 @@ export default function AdminSettingsPage() {
     },
     {
       id: 'company',
+      orgId: 'ORG-7H4M-P8XZ',
       name: 'Acme Corp',
       initials: 'AC',
       description: 'Main company organization.',
@@ -889,6 +944,7 @@ export default function AdminSettingsPage() {
     },
     {
       id: 'client',
+      orgId: 'ORG-5R9L-N2VY',
       name: 'Client Services',
       initials: 'CS',
       description: 'Client-facing organization.',
@@ -900,6 +956,8 @@ export default function AdminSettingsPage() {
   const [userId, setUserId] = useState('1234567890');
   const [copiedUserId, setCopiedUserId] = useState<string | null>(null);
   const [hoveredUserId, setHoveredUserId] = useState<string | null>(null);
+  const [copiedOrgId, setCopiedOrgId] = useState<string | null>(null);
+  const [hoveredOrgId, setHoveredOrgId] = useState<string | null>(null);
                   const [connectedWallets, setConnectedWallets] = useState([
                   { id: '0', provider: 'Escra', name: 'Escra Default Wallet', address: 'ESCR1234567890ABCDEFGHIJKLMNOP', connected: true },
                   { id: '1', provider: 'Pera Wallet', name: 'Mobile Wallet', address: 'ABCD1234EFGH5678IJKL9012MNOP3456', connected: false },
@@ -946,17 +1004,32 @@ export default function AdminSettingsPage() {
     website: '',
     industries: [] as string[]
   });
+  const [organizationGroups, setOrganizationGroups] = useState<Array<{
+    id: string;
+    groupId: string;
+    name: string;
+    description: string;
+    color: string;
+  }>>([]);
+  const [expandedGroupCards, setExpandedGroupCards] = useState<{[key: string]: boolean}>({});
+  const [organizationGroupFormData, setOrganizationGroupFormData] = useState({
+    name: '',
+    description: ''
+  });
   const [organizationCollaborators, setOrganizationCollaborators] = useState([
     { 
       name: '', 
       email: '', 
       contractPermissions: [] as string[], 
+      group: '',
       showNamesDropdown: false, 
       namesDropdownRef: React.createRef<HTMLDivElement>(), 
       contractRoleInputRef: React.createRef<HTMLDivElement>(), 
       contractRoleDropdownRef: React.createRef<HTMLDivElement>(), 
       namesInputRef: React.createRef<HTMLInputElement>(), 
-      showContractRoleDropdown: false 
+      showContractRoleDropdown: false,
+      showGroupDropdown: false,
+      groupDropdownRef: React.createRef<HTMLDivElement>()
     }
   ]);
   const [showOrganizationPermissionsDropdown, setShowOrganizationPermissionsDropdown] = useState(false);
@@ -969,6 +1042,13 @@ export default function AdminSettingsPage() {
   // Group inline form state
   const [showGroupCreateForm, setShowGroupCreateForm] = useState(false);
   const [groupFormStep, setGroupFormStep] = useState(1);
+  const [showAddGroupModal, setShowAddGroupModal] = useState(false);
+  const [addGroupModalStep, setAddGroupModalStep] = useState(1);
+  const [addGroupModalFormData, setAddGroupModalFormData] = useState({
+    name: '',
+    organization: '',
+    description: ''
+  });
   const [groupFormData, setGroupFormData] = useState({
     name: '',
     organization: '',
@@ -978,17 +1058,71 @@ export default function AdminSettingsPage() {
     { 
       name: '', 
       email: '', 
+      group: '',
       showNamesDropdown: false, 
-      namesDropdownRef: React.createRef<HTMLDivElement>(), 
-      namesInputRef: React.createRef<HTMLInputElement>()
+      showGroupDropdown: false,
+      namesDropdownRef: React.createRef<HTMLDivElement>(),
+      namesInputRef: React.createRef<HTMLInputElement>(),
+      groupDropdownRef: React.createRef<HTMLDivElement>()
     }
   ]);
+  const [addedGroupCollaborators, setAddedGroupCollaborators] = useState<any[]>([]);
+  const [addGroupModalCollaborators, setAddGroupModalCollaborators] = useState([
+    { 
+      name: '', 
+      email: '', 
+      group: '',
+      contractPermissions: [],
+      showNamesDropdown: false,
+      namesDropdownRef: React.createRef<HTMLDivElement>(),
+      contractRoleInputRef: React.createRef<HTMLDivElement>(),
+      contractRoleDropdownRef: React.createRef<HTMLDivElement>(),
+      namesInputRef: React.createRef<HTMLInputElement>(),
+      showContractRoleDropdown: false,
+      showGroupDropdown: false,
+      groupDropdownRef: React.createRef<HTMLDivElement>()
+    }
+  ]);
+  const [addedAddGroupModalCollaborators, setAddedAddGroupModalCollaborators] = useState<any[]>([]);
+  const [duplicateAddGroupModalCollaboratorError, setDuplicateAddGroupModalCollaboratorError] = useState<string | null>(null);
+  const [addedAddGroupModalGroups, setAddedAddGroupModalGroups] = useState<any[]>([]);
+  const [expandedAddGroupModalGroupCards, setExpandedAddGroupModalGroupCards] = useState<Record<string, boolean>>({});
+  const [groupGroups, setGroupGroups] = useState<any[]>([]);
+  const [groupGroupFormData, setGroupGroupFormData] = useState({
+    name: ''
+  });
+  const [expandedGroupGroupCards, setExpandedGroupGroupCards] = useState<Record<string, boolean>>({});
   const [groupRecipientErrors, setGroupRecipientErrors] = useState<{[key: string]: boolean}>({});
   const [duplicateGroupCollaboratorError, setDuplicateGroupCollaboratorError] = useState<string | false>(false);
-  const [addedGroupCollaborators, setAddedGroupCollaborators] = useState<any[]>([]);
   const [showManageGroupCollaboratorsModal, setShowManageGroupCollaboratorsModal] = useState(false);
   const [showGroupOrganizationDropdown, setShowGroupOrganizationDropdown] = useState(false);
+  const [showAddGroupModalOrganizationDropdown, setShowAddGroupModalOrganizationDropdown] = useState(false);
   const groupOrganizationDropdownRef = useRef<HTMLDivElement>(null);
+  const addGroupModalOrganizationDropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Add existing collaborator modal state
+  const [showAddExistingCollaboratorModal, setShowAddExistingCollaboratorModal] = useState(false);
+  const [addExistingCollaboratorModalData, setAddExistingCollaboratorModalData] = useState({
+    organizationId: '',
+    collaboratorName: '',
+    group: '',
+    email: ''
+  });
+  const [showAddExistingCollaboratorNamesDropdown, setShowAddExistingCollaboratorNamesDropdown] = useState(false);
+  const [showAddExistingCollaboratorGroupDropdown, setShowAddExistingCollaboratorGroupDropdown] = useState(false);
+  const addExistingCollaboratorNamesDropdownRef = useRef<HTMLDivElement>(null);
+  const addExistingCollaboratorGroupDropdownRef = useRef<HTMLDivElement>(null);
+  const [addedExistingCollaborators, setAddedExistingCollaborators] = useState<any[]>([]);
+  const [duplicateExistingCollaboratorError, setDuplicateExistingCollaboratorError] = useState<string | null>(null);
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+  
+  // Function to toggle group collapse state
+  const toggleGroupCollapse = (groupKey: string) => {
+    setCollapsedGroups(prev => ({
+      ...prev,
+      [groupKey]: !prev[groupKey]
+    }));
+  };
   
   // Billing state
   const [billingPeriod, setBillingPeriod] = useState('monthly');
@@ -1168,10 +1302,8 @@ export default function AdminSettingsPage() {
         setShowWalletProviderDropdown(false);
       }
       
-      // Close organization dropdown if click is outside
-      if (organizationDropdownRef.current && !organizationDropdownRef.current.contains(target)) {
-        setShowOrganizationDropdown(false);
-      }
+      // Organization dropdown click outside handling moved to separate handler
+      
       
       // Close organization actions dropdown if click is outside
       if (showOrganizationActionsDropdown) {
@@ -1456,6 +1588,60 @@ export default function AdminSettingsPage() {
     setOrganizationFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleOrganizationGroupFormChange = (field: string, value: any) => {
+    setOrganizationGroupFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const addOrganizationGroup = () => {
+    if (organizationGroupFormData.name.trim()) {
+      // Get distinct color for this group
+      const colors = ['teal', 'blue', 'purple', 'orange', 'green', 'pink', 'indigo', 'cyan'];
+      const usedColors = organizationGroups.map(g => g.color);
+      const availableColors = colors.filter(color => !usedColors.includes(color));
+      const groupColor = availableColors.length > 0 ? availableColors[0] : colors[organizationGroups.length % colors.length];
+      
+      const newGroup = {
+        id: `group-${Date.now()}`,
+        groupId: generateGroupId(),
+        name: organizationGroupFormData.name.trim(),
+        description: organizationGroupFormData.description.trim(),
+        color: groupColor
+      };
+      setOrganizationGroups(prev => [...prev, newGroup]);
+      setOrganizationGroupFormData({ name: '', description: '' });
+    }
+  };
+
+  const removeOrganizationGroup = (groupId: string) => {
+    setOrganizationGroups(prev => prev.filter(group => group.id !== groupId));
+    // Clean up expanded state for deleted group
+    setExpandedGroupCards(prev => {
+      const newState = { ...prev };
+      delete newState[groupId];
+      return newState;
+    });
+  };
+
+  const updateOrganizationGroup = (groupId: string, field: string, value: string) => {
+    setOrganizationGroups(prev => prev.map(group => 
+      group.id === groupId ? { ...group, [field]: value } : group
+    ));
+  };
+
+  const toggleGroupCard = (groupId: string) => {
+    setExpandedGroupCards(prev => ({
+      ...prev,
+      [groupId]: !prev[groupId]
+    }));
+  };
+
+  const closeGroupCard = (groupId: string) => {
+    setExpandedGroupCards(prev => ({
+      ...prev,
+      [groupId]: false
+    }));
+  };
+
   const handleOrganizationCollaboratorChange = (index: number, field: string, value: any) => {
     setOrganizationCollaborators(prev => prev.map((collaborator, i) => 
       i === index ? { ...collaborator, [field]: value } : collaborator
@@ -1467,12 +1653,15 @@ export default function AdminSettingsPage() {
       name: '', 
       email: '', 
       contractPermissions: [], 
+      group: '',
       showNamesDropdown: false, 
       namesDropdownRef: React.createRef<HTMLDivElement>(), 
       contractRoleInputRef: React.createRef<HTMLDivElement>(), 
       contractRoleDropdownRef: React.createRef<HTMLDivElement>(),
       namesInputRef: React.createRef<HTMLInputElement>(),
-      showContractRoleDropdown: false
+      showContractRoleDropdown: false,
+      showGroupDropdown: false,
+      groupDropdownRef: React.createRef<HTMLDivElement>()
     }]);
   };
 
@@ -1492,28 +1681,54 @@ export default function AdminSettingsPage() {
     setGroupFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleAddGroupModalFormChange = (field: string, value: any) => {
+    setAddGroupModalFormData(prev => ({ ...prev, [field]: value }));
+  };
+
   const handleGroupCollaboratorChange = (index: number, field: string, value: any) => {
     setGroupCollaborators(prev => prev.map((collaborator, i) => 
       i === index ? { ...collaborator, [field]: value } : collaborator
     ));
   };
 
+  const handleAddGroupModalCollaboratorChange = (index: number, field: string, value: any) => {
+    setAddGroupModalCollaborators(prev => prev.map((collaborator, i) => 
+      i === index ? { ...collaborator, [field]: value } : collaborator
+    ));
+  };
+
+  const toggleAddGroupModalGroupCard = (groupId: string) => {
+    setExpandedAddGroupModalGroupCards(prev => ({
+      ...prev,
+      [groupId]: !prev[groupId]
+    }));
+  };
+
+  const updateAddGroupModalGroup = (groupId: string, field: string, value: string) => {
+    setAddedAddGroupModalGroups(prev => prev.map(group => 
+      group.id === groupId ? { ...group, [field]: value } : group
+    ));
+  };
+
+  const handleGroupGroupFormChange = (field: string, value: string) => {
+    setGroupGroupFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   const addGroupCollaborator = () => {
     setGroupCollaborators(prev => [...prev, { 
       name: '', 
       email: '', 
+      group: '',
       showNamesDropdown: false, 
-      namesDropdownRef: React.createRef<HTMLDivElement>(), 
-      namesInputRef: React.createRef<HTMLInputElement>()
+      showGroupDropdown: false,
+      namesDropdownRef: React.createRef<HTMLDivElement>(),
+      namesInputRef: React.createRef<HTMLInputElement>(),
+      groupDropdownRef: React.createRef<HTMLDivElement>()
     }]);
   };
-
-  const removeGroupCollaborator = (index: number) => {
-    if (groupCollaborators.length > 1) {
-      setGroupCollaborators(prev => prev.filter((_, i) => i !== index));
-    }
-  };
-
 
   const handleAddGroupCollaborator = () => {
     const collaborator = groupCollaborators[0];
@@ -1526,13 +1741,7 @@ export default function AdminSettingsPage() {
       c.email.toLowerCase() === collaborator.email.toLowerCase()
     );
     
-    if (isDuplicateName && isDuplicateEmail) {
-      setDuplicateGroupCollaboratorError('both');
-      return;
-    } else if (isDuplicateEmail) {
-      setDuplicateGroupCollaboratorError('email');
-      return;
-    } else if (isDuplicateName) {
+    if (isDuplicateName || isDuplicateEmail) {
       setDuplicateGroupCollaboratorError('name');
       return;
     }
@@ -1547,14 +1756,76 @@ export default function AdminSettingsPage() {
     setGroupCollaborators(prev => prev.map((r, i) => i === 0 ? { 
       ...r, 
       name: '', 
-      email: '', 
-      showNamesDropdown: false
+      email: '',
+      group: '',
+      showNamesDropdown: false 
     } : r));
     
-    // Clear any errors
-    setGroupRecipientErrors({});
     setDuplicateGroupCollaboratorError(false);
   };
+
+  const removeGroupCollaborator = (index: number) => {
+    if (groupCollaborators.length > 1) {
+      setGroupCollaborators(prev => prev.filter((_, i) => i !== index));
+    }
+  };
+
+  const addGroupGroup = () => {
+    if (!groupFormData.name.trim()) return;
+    
+    // Generate group ID with same nomenclature as organization groups
+    const groupId = generateGroupId();
+    
+    // Get distinct color for this group
+    const colors = ['teal', 'blue', 'purple', 'orange', 'green', 'pink', 'indigo', 'cyan'];
+    const usedColors = groupGroups.map(g => g.color);
+    const availableColors = colors.filter(color => !usedColors.includes(color));
+    const groupColor = availableColors.length > 0 ? availableColors[0] : colors[groupGroups.length % colors.length];
+    
+    const newGroup = {
+      id: `group-group-${Date.now()}`,
+      groupId: groupId,
+      name: groupFormData.name,
+      organizationId: groupFormData.organization,
+      color: groupColor
+    };
+    
+    setGroupGroups(prev => [...prev, newGroup]);
+    setGroupFormData(prev => ({ ...prev, name: '' }));
+  };
+
+  const toggleGroupGroupCard = (groupId: string) => {
+    setExpandedGroupGroupCards(prev => {
+      const newState: Record<string, boolean> = {};
+      
+      // Close all other cards first
+      Object.keys(prev).forEach(id => {
+        newState[id] = false;
+      });
+      
+      // Toggle the clicked card
+      newState[groupId] = !prev[groupId];
+      
+      return newState;
+    });
+  };
+
+  const removeGroupGroup = (groupId: string) => {
+    setGroupGroups(prev => prev.filter(group => group.id !== groupId));
+    setExpandedGroupGroupCards(prev => {
+      const newState = { ...prev };
+      delete newState[groupId];
+      return newState;
+    });
+  };
+
+  const updateGroupGroup = (groupId: string, field: string, value: string) => {
+    setGroupGroups(prev => prev.map(group => 
+      group.id === groupId ? { ...group, [field]: value } : group
+    ));
+  };
+
+
 
   // Helper functions for organization collaborators (matching contracts page)
   const getInitials = (name: string) => {
@@ -1564,6 +1835,25 @@ export default function AdminSettingsPage() {
       .join('')
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  // Generate unique organization ID
+  const generateOrganizationId = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 11; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return `ORG-${result.slice(0, 4)}-${result.slice(4)}`;
+  };
+
+  const generateGroupId = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 8; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return `GRP-${result.slice(0, 4)}-${result.slice(4)}`;
   };
 
   const getCollaboratorBadgeColor = (index: number) => {
@@ -1581,6 +1871,8 @@ export default function AdminSettingsPage() {
 
   const handleAddOrganizationCollaborator = () => {
     const collaborator = organizationCollaborators[0];
+    
+    console.log('Adding collaborator:', collaborator);
     
     // Check for duplicates
     const isDuplicateName = addedOrganizationCollaborators.some(c => 
@@ -1607,14 +1899,16 @@ export default function AdminSettingsPage() {
       isEditingEmail: false
     }]);
     
-    // Reset form
+    // Reset form but preserve group selection
     setOrganizationCollaborators(prev => prev.map((r, i) => i === 0 ? { 
       ...r, 
       name: '', 
       email: '', 
       contractPermissions: [],
       showNamesDropdown: false,
-      showContractRoleDropdown: false
+      showContractRoleDropdown: false,
+      showGroupDropdown: false
+      // Note: We keep the group field so user doesn't have to reselect it
     } : r));
     
     setDuplicateOrganizationCollaboratorError(false);
@@ -1626,10 +1920,128 @@ export default function AdminSettingsPage() {
     'Lisa Anderson', 'Chris Taylor', 'Jessica Martinez', 'Ryan Thompson', 'Amanda White'
   ];
 
+  // Cleanup group dropdown refs when organizations change
+  useEffect(() => {
+    return () => {
+      // Clean up refs when component unmounts or organizations change
+      groupDropdownRefs.current = {};
+    };
+  }, [organizationsData]);
+
+  // Click outside handler for organization and group toggles
+  useEffect(() => {
+    function handleToggleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+      
+      // Check if click is outside organization dropdown
+      if (showOrganizationDropdown && organizationDropdownRef.current && !organizationDropdownRef.current.contains(target)) {
+        setShowOrganizationDropdown(false);
+      }
+      
+      // Check if click is outside any group dropdown
+      Object.entries(showGroupDropdowns).forEach(([orgId, isOpen]) => {
+        if (isOpen) {
+          const dropdown = document.querySelector(`[data-group-dropdown="${orgId}"]`);
+          if (dropdown && !dropdown.contains(target)) {
+            setShowGroupDropdowns(prev => ({ ...prev, [orgId]: false }));
+          }
+        }
+      });
+    }
+
+    document.addEventListener('mousedown', handleToggleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleToggleClickOutside);
+    };
+  }, [showOrganizationDropdown, showGroupDropdowns]);
+
+  // Click outside handler for Add Collaborator dropdowns
+  useEffect(() => {
+    function handleAddCollaboratorDropdownClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+      
+      // Check if any add collaborator dropdown is open
+      const hasOpenDropdown = Object.values(showAddCollaboratorDropdowns).some(isOpen => isOpen);
+      if (!hasOpenDropdown) return;
+      
+      // Check if click is outside any add collaborator dropdown
+      let clickedOutsideAll = true;
+      Object.entries(showAddCollaboratorDropdowns).forEach(([orgId, isOpen]) => {
+        if (isOpen) {
+          const buttonRef = addCollaboratorButtonRefs.current[orgId];
+          const dropdownRef = addCollaboratorDropdownRefs.current[orgId];
+          if ((buttonRef && buttonRef.contains(target)) || (dropdownRef && dropdownRef.contains(target))) {
+            clickedOutsideAll = false;
+          }
+        }
+      });
+      
+      if (clickedOutsideAll) {
+        // Close all open add collaborator dropdowns
+        setShowAddCollaboratorDropdowns(prev => {
+          const newState = { ...prev };
+          Object.keys(newState).forEach(orgId => {
+            newState[orgId] = false;
+          });
+          return newState;
+        });
+      }
+    }
+
+    document.addEventListener('mousedown', handleAddCollaboratorDropdownClickOutside);
+    document.addEventListener('click', handleAddCollaboratorDropdownClickOutside);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleAddCollaboratorDropdownClickOutside);
+      document.removeEventListener('click', handleAddCollaboratorDropdownClickOutside);
+    };
+  }, [showAddCollaboratorDropdowns]);
+
+  // Click outside handler for group group cards
+  useEffect(() => {
+    function handleGroupGroupCardClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+      
+      // Check if any group group card is open
+      const hasOpenCard = Object.values(expandedGroupGroupCards).some(isOpen => isOpen);
+      if (!hasOpenCard) return;
+      
+      // Check if click is outside any group group card
+      let clickedOutsideAll = true;
+      Object.entries(expandedGroupGroupCards).forEach(([groupId, isOpen]) => {
+        if (isOpen) {
+          const cardElement = document.querySelector(`[data-group-id="${groupId}"]`);
+          if (cardElement && cardElement.contains(target)) {
+            clickedOutsideAll = false;
+          }
+        }
+      });
+      
+      if (clickedOutsideAll) {
+        // Close all open group group cards
+        setExpandedGroupGroupCards(prev => {
+          const newState = { ...prev };
+          Object.keys(newState).forEach(groupId => {
+            newState[groupId] = false;
+          });
+          return newState;
+        });
+      }
+    }
+
+    // Only listen to mousedown events, not click events, to avoid conflicts with form interactions
+    document.addEventListener('mousedown', handleGroupGroupCardClickOutside);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleGroupGroupCardClickOutside);
+    };
+  }, [expandedGroupGroupCards]);
+
   // Click outside handler for organization form dropdowns and collaborator name dropdown
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as Node;
+      
       
       // Check if click is inside any organization form dropdown
       if (
@@ -1644,7 +2056,15 @@ export default function AdminSettingsPage() {
         // Group form dropdowns
         groupOrganizationDropdownRef.current?.contains(target) ||
         groupCollaborators[0]?.namesInputRef?.current?.contains(target) ||
-        groupCollaborators[0]?.namesDropdownRef?.current?.contains(target)
+        groupCollaborators[0]?.namesDropdownRef?.current?.contains(target) ||
+        // Add group modal dropdowns
+        addGroupModalOrganizationDropdownRef.current?.contains(target) ||
+        addGroupModalCollaborators[0]?.namesInputRef?.current?.contains(target) ||
+        addGroupModalCollaborators[0]?.namesDropdownRef?.current?.contains(target) ||
+        addGroupModalCollaborators[0]?.groupDropdownRef?.current?.contains(target) ||
+        // Add existing collaborator modal dropdowns
+        addExistingCollaboratorNamesDropdownRef.current?.contains(target) ||
+        addExistingCollaboratorGroupDropdownRef.current?.contains(target)
       ) {
         // Click inside any organization form dropdown or collaborator input: do nothing
         return;
@@ -1674,6 +2094,12 @@ export default function AdminSettingsPage() {
       if (organizationCollaborators[0]?.showNamesDropdown) {
         setOrganizationCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, showNamesDropdown: false } : r));
       }
+      if (organizationCollaborators[0]?.showGroupDropdown) {
+        const groupDropdownRef = organizationCollaborators[0]?.groupDropdownRef?.current;
+        if (groupDropdownRef && !groupDropdownRef.contains(target)) {
+          setOrganizationCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, showGroupDropdown: false } : r));
+        }
+      }
       
       // Close group form dropdowns
       if (showGroupOrganizationDropdown) {
@@ -1682,13 +2108,67 @@ export default function AdminSettingsPage() {
       if (groupCollaborators[0]?.showNamesDropdown) {
         setGroupCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, showNamesDropdown: false } : r));
       }
+      if (groupCollaborators[0]?.showGroupDropdown) {
+        const groupDropdownRef = groupCollaborators[0]?.groupDropdownRef?.current;
+        if (groupDropdownRef && !groupDropdownRef.contains(target)) {
+          setGroupCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, showGroupDropdown: false } : r));
+        }
+      }
+      
+      // Close add group modal dropdowns
+      if (showAddGroupModalOrganizationDropdown) {
+        setShowAddGroupModalOrganizationDropdown(false);
+      }
+      if (addGroupModalCollaborators[0]?.showNamesDropdown) {
+        setAddGroupModalCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, showNamesDropdown: false } : r));
+      }
+      if (addGroupModalCollaborators[0]?.showGroupDropdown) {
+        const groupDropdownRef = addGroupModalCollaborators[0]?.groupDropdownRef?.current;
+        if (groupDropdownRef && !groupDropdownRef.contains(target)) {
+          setAddGroupModalCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, showGroupDropdown: false } : r));
+        }
+      }
+      
+      // Close add existing collaborator modal dropdowns
+      if (showAddExistingCollaboratorNamesDropdown) {
+        setShowAddExistingCollaboratorNamesDropdown(false);
+      }
+      if (showAddExistingCollaboratorGroupDropdown) {
+        const groupDropdownRef = addExistingCollaboratorGroupDropdownRef.current;
+        if (groupDropdownRef && !groupDropdownRef.contains(target)) {
+          setShowAddExistingCollaboratorGroupDropdown(false);
+        }
+      }
+      
+      // Close expanded group cards when clicking outside
+      Object.keys(expandedGroupCards).forEach(groupId => {
+        if (expandedGroupCards[groupId]) {
+          const groupCard = document.querySelector(`[data-group-id="${groupId}"]`);
+          if (groupCard && !groupCard.contains(target)) {
+            closeGroupCard(groupId);
+          }
+        }
+      });
+      
+      // Close expanded add group modal group cards when clicking outside
+      Object.keys(expandedAddGroupModalGroupCards).forEach(groupId => {
+        if (expandedAddGroupModalGroupCards[groupId]) {
+          const groupCard = document.querySelector(`[data-group-id="${groupId}"]`);
+          if (groupCard && !groupCard.contains(target)) {
+            setExpandedAddGroupModalGroupCards(prev => ({
+              ...prev,
+              [groupId]: false
+            }));
+          }
+        }
+      });
     }
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showCompanyTypeDropdown, showStateDropdown, showCountryDropdown, showIndustriesDropdown, showOrganizationPermissionsDropdown, organizationCollaborators[0]?.showNamesDropdown, showGroupOrganizationDropdown, groupCollaborators[0]?.showNamesDropdown]);
+  }, [showCompanyTypeDropdown, showStateDropdown, showCountryDropdown, showIndustriesDropdown, showOrganizationPermissionsDropdown, organizationCollaborators[0]?.showNamesDropdown, organizationCollaborators[0]?.showGroupDropdown, showGroupOrganizationDropdown, groupCollaborators[0]?.showNamesDropdown, groupCollaborators[0]?.showGroupDropdown, showAddGroupModalOrganizationDropdown, addGroupModalCollaborators[0]?.showNamesDropdown, addGroupModalCollaborators[0]?.showGroupDropdown, expandedGroupCards, expandedAddGroupModalGroupCards, showAddExistingCollaboratorNamesDropdown, showAddExistingCollaboratorGroupDropdown]);
 
   return (
     <div className="flex h-screen">
@@ -3250,12 +3730,11 @@ export default function AdminSettingsPage() {
                           className="appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 text-sm font-semibold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary dark:focus:ring-0 dark:focus:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer flex items-center justify-between w-full gap-3"
                           style={{ fontFamily: 'Avenir, sans-serif' }}
                         >
-                          <span>
+                          <span className="flex items-center">
+                            <TbBuilding className="w-4 h-4 mr-2 text-gray-500" />
                             {selectedOrganizationFilter.includes('all') 
-                              ? `All (${organizationsData.length})` 
-                              : selectedOrganizationFilter.length === 1
-                                ? organizationsData.find(org => org.id === selectedOrganizationFilter[0])?.name || 'All'
-                                : `${selectedOrganizationFilter.map(id => organizationsData.find(org => org.id === id)?.name).filter(Boolean).join(', ')} (${selectedOrganizationFilter.length})`
+                              ? `All Organizations (${organizationsData.length})` 
+                              : `Selected Organizations (${selectedOrganizationFilter.length})`
                             }
                           </span>
                           <TbChevronDown className="w-4 h-4 text-gray-400" />
@@ -3267,7 +3746,7 @@ export default function AdminSettingsPage() {
                               className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedOrganizationFilter.includes('all') ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                               onClick={() => {
                                 setSelectedOrganizationFilter(['all']);
-                                setShowOrganizationDropdown(false);
+                                // Don't close dropdown - allow multiple selections
                               }}
                             >
                               <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
@@ -3305,6 +3784,12 @@ export default function AdminSettingsPage() {
                                     </div>
                                   )}
                                 </div>
+                                <TbBuilding className={`w-4 h-4 mr-2 ${
+                                  org.color === 'cyan' ? 'text-cyan-500' :
+                                  org.color === 'blue' ? 'text-blue-500' :
+                                  org.color === 'green' ? 'text-green-500' :
+                                  'text-gray-500'
+                                }`} />
                                 {org.name}
                               </button>
                             ))}
@@ -3352,9 +3837,12 @@ export default function AdminSettingsPage() {
                         setGroupCollaborators([{
                           name: '',
                           email: '',
+                          group: '',
                           showNamesDropdown: false,
+                          showGroupDropdown: false,
                           namesDropdownRef: React.createRef<HTMLDivElement>(),
-                          namesInputRef: React.createRef<HTMLInputElement>()
+                          namesInputRef: React.createRef<HTMLInputElement>(),
+                          groupDropdownRef: React.createRef<HTMLDivElement>()
                         }]);
                       }}
                       className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
@@ -3391,19 +3879,24 @@ export default function AdminSettingsPage() {
                           website: '',
                           industries: []
                         });
+                        setOrganizationGroups([]);
+                        setOrganizationGroupFormData({ name: '', description: '' });
                         setOrganizationCollaborators([{
                           name: '',
                           email: '',
                           contractPermissions: [],
+                          group: '',
                           showNamesDropdown: false,
                           namesDropdownRef: React.createRef<HTMLDivElement>(),
                           contractRoleInputRef: React.createRef<HTMLDivElement>(),
                           contractRoleDropdownRef: React.createRef<HTMLDivElement>(),
                           namesInputRef: React.createRef<HTMLInputElement>(),
-                          showContractRoleDropdown: false
+                          showContractRoleDropdown: false,
+                          showGroupDropdown: false,
+                          groupDropdownRef: React.createRef<HTMLDivElement>()
                         }]);
                       }}
-                      className="text-gray-400 hover:text-gray-600 p-2 rounded-full"
+                      className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors rounded-full"
                     >
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -3421,7 +3914,7 @@ export default function AdminSettingsPage() {
                       <div className="w-full overflow-x-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
                         <div className="flex items-center justify-between mb-6 min-w-0">
                           <div className="flex items-center space-x-2 w-full flex-nowrap">
-                            {[1, 2].map((step, idx) => (
+                            {[1, 2, 3].map((step, idx) => (
                             <React.Fragment key={step}>
                               <button
                                 type="button"
@@ -3436,9 +3929,10 @@ export default function AdminSettingsPage() {
                                   {organizationFormStep === step && <Logo width={18} height={18} className="pointer-events-none" />}
                                 </span>
                                 {step === 1 && 'Step 1: Details'}
-                                {step === 2 && 'Step 2: Collaborators'}
+                                {step === 2 && 'Step 2: Groups'}
+                                {step === 3 && 'Step 3: Collaborators'}
                               </button>
-                              {idx < 1 && <div className="flex-1 h-0.5 bg-gray-200 dark:bg-gray-600 mx-1 sm:mx-2" />}
+                              {idx < 2 && <div className="flex-1 h-0.5 bg-gray-200 dark:bg-gray-600 mx-1 sm:mx-2" />}
                             </React.Fragment>
                             ))}
                           </div>
@@ -3448,7 +3942,7 @@ export default function AdminSettingsPage() {
                       {/* Form Content */}
                       <div className="space-y-6 pt-4">
                         {organizationFormStep === 1 && (
-                          <form className="space-y-4">
+                          <form className="space-y-6 mb-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                               <div>
                                 <label className="block text-xs font-medium text-black dark:text-white mb-1">Organization Name <span className="text-red-500">*</span></label>
@@ -3764,7 +4258,7 @@ export default function AdminSettingsPage() {
                             </div>
                             
                             {/* Cancel and Continue Buttons - Step 1 */}
-                            <div className="flex items-center justify-between w-full !mt-5">
+                            <div className="flex justify-between pt-2">
                               <button
                                 onClick={() => {
                                   setShowOrganizationCreateForm(false);
@@ -3781,16 +4275,21 @@ export default function AdminSettingsPage() {
                                     website: '',
                                     industries: []
                                   });
+                                  setOrganizationGroups([]);
+                                  setOrganizationGroupFormData({ name: '', description: '' });
                                   setOrganizationCollaborators([{
                                     name: '',
                                     email: '',
                                     contractPermissions: [],
+                                    group: '',
                                     showNamesDropdown: false,
                                     namesDropdownRef: React.createRef<HTMLDivElement>(),
                                     contractRoleInputRef: React.createRef<HTMLDivElement>(),
                                     contractRoleDropdownRef: React.createRef<HTMLDivElement>(),
                                     namesInputRef: React.createRef<HTMLInputElement>(),
-                                    showContractRoleDropdown: false
+                                    showContractRoleDropdown: false,
+                                    showGroupDropdown: false,
+                                    groupDropdownRef: React.createRef<HTMLDivElement>()
                                   }]);
                                 }}
                                 className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
@@ -3810,78 +4309,227 @@ export default function AdminSettingsPage() {
                         )}
 
                         {organizationFormStep === 2 && (
-                          <form className="space-y-4">
-                            {/* I am working solo checkbox */}
-                            <div className="flex items-center gap-2 mb-6">
-                              <div className="w-5 h-5 border border-gray-300 rounded flex items-center justify-center cursor-pointer" onClick={() => {
-                                const newValue = !isWorkingSolo;
-                                setIsWorkingSolo(newValue);
-                                
-                                // If checking the box, automatically add current user as collaborator
-                                if (newValue && user) {
-                                  const currentUserCollaborator = {
-                                    name: user.name,
-                                    email: user.email,
-                                    contractPermissions: ['Edit', 'View', 'Sign'],
-                                    isEditingEmail: false
-                                  };
-                                  
-                                  // Check if user is already added as collaborator
-                                  const existingUser = addedOrganizationCollaborators.find(collaborator => 
-                                    collaborator.email.toLowerCase() === user.email.toLowerCase()
-                                  );
-                                  
-                                  if (!existingUser) {
-                                    setAddedOrganizationCollaborators(prev => [...prev, currentUserCollaborator]);
-                                  }
-                                } else if (!newValue && user) {
-                                  // If unchecking the box, remove current user as collaborator
-                                  setAddedOrganizationCollaborators(prev => prev.filter(collaborator => 
-                                    collaborator.email.toLowerCase() !== user.email.toLowerCase()
-                                  ));
-                                }
-                              }}>
-                                {isWorkingSolo && (
-                                  <div className="w-4 h-4 bg-primary rounded-sm flex items-center justify-center">
-                                    <FaCheck className="text-white" size={10} />
-                                  </div>
-                                )}
+                          <form className="space-y-6 -mb-6">
+                            <div className="grid grid-cols-2 gap-6">
+                              {/* Group Name Field - Left Column */}
+                              <div>
+                                <label className="block text-xs font-medium text-black dark:text-white mb-1">Group Name <span className="text-red-500">*</span></label>
+                                <input
+                                  type="text"
+                                  value={organizationGroupFormData.name}
+                                  onChange={(e) => handleOrganizationGroupFormChange('name', e.target.value)}
+                                  className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                                  placeholder="Enter group name..."
+                                />
                               </div>
-                              <label 
-                                className="text-xs font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
-                                style={{ fontFamily: 'Avenir, sans-serif' }}
-                                onClick={() => {
-                                  const newValue = !isWorkingSolo;
-                                  setIsWorkingSolo(newValue);
-                                  
-                                  // If checking the box, automatically add current user as collaborator
-                                  if (newValue && user) {
-                                    const currentUserCollaborator = {
-                                      name: user.name,
-                                      email: user.email,
-                                      contractPermissions: ['Edit', 'View', 'Sign'],
-                                      isEditingEmail: false
-                                    };
-                                    
-                                    // Check if user is already added as collaborator
-                                    const existingUser = addedOrganizationCollaborators.find(collaborator => 
-                                      collaborator.email.toLowerCase() === user.email.toLowerCase()
-                                    );
-                                    
-                                    if (!existingUser) {
-                                      setAddedOrganizationCollaborators(prev => [...prev, currentUserCollaborator]);
-                                    }
-                                  } else if (!newValue && user) {
-                                    // If unchecking the box, remove current user as collaborator
-                                    setAddedOrganizationCollaborators(prev => prev.filter(collaborator => 
-                                      collaborator.email.toLowerCase() !== user.email.toLowerCase()
-                                    ));
-                                  }
-                                }}
-                              >
-                                I am working solo
-                              </label>
+                              
+                              {/* Empty right column for spacing */}
+                              <div></div>
                             </div>
+
+                            {/* Description Field - Full Width */}
+                            <div>
+                              <label className="block text-xs font-medium text-black dark:text-white mb-1">Description</label>
+                              <textarea
+                                value={organizationGroupFormData.description}
+                                onChange={(e) => handleOrganizationGroupFormChange('description', e.target.value)}
+                                className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs resize-none"
+                                placeholder="Enter group description..."
+                                rows={3}
+                              />
+                            </div>
+
+                            {/* Added Groups Section */}
+                            <div className="mt-6">
+                              {organizationGroups.length > 0 && (
+                                <div className="flex items-center justify-between mb-3">
+                                  <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                    Added Groups ({organizationGroups.length})
+                                  </h3>
+                                </div>
+                              )}
+                              
+                              {organizationGroups.length === 0 ? (
+                                <div className="text-center py-8 pb-8 text-gray-500 dark:text-gray-400 cursor-default select-none">
+                                  <TbUsersGroup size={32} className="mx-auto mb-2 text-primary" />
+                                  <p className="text-sm" style={{ fontFamily: 'Avenir, sans-serif' }}>No groups yet</p>
+                                  <p className="text-xs" style={{ fontFamily: 'Avenir, sans-serif' }}>Add a group to this organization by filling in the details above and click the "Add Group" button</p>
+                                </div>
+                              ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
+                                  {organizationGroups.map((group) => {
+                                    const isExpanded = expandedGroupCards[group.id] || false;
+                                    return (
+                                      <div 
+                                        key={group.id} 
+                                        data-group-id={group.id}
+                                        className="bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-700 transition-all duration-200 cursor-pointer"
+                                        onClick={() => toggleGroupCard(group.id)}
+                                      >
+                                        {!isExpanded ? (
+                                          // Collapsed view
+                                          <div className="flex items-center gap-3">
+                                            <TbUsersGroup className={`w-5 h-5 ${
+                                              group.color === 'teal' ? 'text-teal-500' :
+                                              group.color === 'blue' ? 'text-blue-500' :
+                                              group.color === 'purple' ? 'text-purple-500' :
+                                              group.color === 'orange' ? 'text-orange-500' :
+                                              group.color === 'green' ? 'text-green-500' :
+                                              group.color === 'pink' ? 'text-pink-500' :
+                                              group.color === 'indigo' ? 'text-indigo-500' :
+                                              group.color === 'cyan' ? 'text-cyan-500' :
+                                              'text-gray-500'
+                                            }`} />
+                                            <div className="flex-1 min-w-0">
+                                              <div className="font-semibold text-sm text-gray-900 dark:text-white truncate" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                                {group.name}
+                                              </div>
+                                            </div>
+                                            <TbChevronDown className="w-4 h-4 text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0" />
+                                          </div>
+                                        ) : (
+                                          // Expanded view
+                                          <div onClick={(e) => e.stopPropagation()}>
+                                            {/* Group ID */}
+                                            <div className="mb-3">
+                                              <div className="flex items-center justify-between mb-1">
+                                                <div className="text-gray-500 dark:text-gray-400 text-xs">Group ID</div>
+                                                <button
+                                                  type="button"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    toggleGroupCard(group.id);
+                                                  }}
+                                                  className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+                                                >
+                                                  <TbChevronUp className="w-4 h-4" />
+                                                </button>
+                                              </div>
+                                              <div className="flex items-center">
+                                                <span className="text-xs font-mono text-gray-900 dark:text-white truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-default select-none">
+                                                  {group.groupId}
+                                                </span>
+                                                <div className="relative">
+                                                  <button
+                                                    type="button"
+                                                    className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer relative group"
+                                                    onClick={() => {
+                                                      navigator.clipboard.writeText(group.groupId);
+                                                      setCopiedOrgId(group.groupId);
+                                                      setTimeout(() => setCopiedOrgId(null), 1500);
+                                                    }}
+                                                    onMouseEnter={() => setHoveredOrgId(group.groupId)}
+                                                    onMouseLeave={() => setHoveredOrgId(null)}
+                                                    aria-label="Copy group ID"
+                                                  >
+                                                    <HiOutlineDuplicate className="w-4 h-4" />
+                                                    {copiedOrgId === group.groupId ? (
+                                                      <span className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none font-sans">
+                                                        Copied!
+                                                      </span>
+                                                    ) : (
+                                                      <span className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap font-sans">
+                                                        Copy
+                                                      </span>
+                                                    )}
+                                                  </button>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            
+                                            {/* Group Name */}
+                                            <div className="mb-3">
+                                              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Group Name</label>
+                                              <input
+                                                type="text"
+                                                value={group.name}
+                                                onChange={(e) => updateOrganizationGroup(group.id, 'name', e.target.value)}
+                                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                                                onClick={(e) => e.stopPropagation()}
+                                              />
+                                            </div>
+                                            
+                                            {/* Group Description */}
+                                            <div className="mb-3">
+                                              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                                              <textarea
+                                                value={group.description}
+                                                onChange={(e) => updateOrganizationGroup(group.id, 'description', e.target.value)}
+                                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs resize-none"
+                                                rows={2}
+                                                onClick={(e) => e.stopPropagation()}
+                                              />
+                                            </div>
+                                            
+                                            {/* Remove Button */}
+                                            <div className="flex justify-end">
+                                              <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  removeOrganizationGroup(group.id);
+                                                }}
+                                                className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1 relative group"
+                                              >
+                                                <TbUsersMinus className="w-4 h-4" />
+                                                <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                                  Remove
+                                                </span>
+                                              </button>
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Navigation Buttons */}
+                            <div className="flex justify-between -mt-2">
+                              <button
+                                type="button"
+                                onClick={() => { 
+                                  if (organizationFormStep === 2) {
+                                    setOrganizationFormStep(1);
+                                  } else if (organizationFormStep === 3) {
+                                    setOrganizationFormStep(2);
+                                  }
+                                  setCountrySearchTerm(''); 
+                                  setStateSearchTerm(''); 
+                                }}
+                                className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
+                                style={{ fontFamily: 'Avenir, sans-serif' }}
+                              >
+                                Previous
+                              </button>
+                              <div className="flex items-center" style={{ gap: '3px' }}>
+                                <button
+                                  type="button"
+                                  onClick={addOrganizationGroup}
+                                  disabled={!organizationGroupFormData.name.trim()}
+                                  className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                                >
+                                  <TbUsersPlus className="w-4 h-4 mr-2" />
+                                  Add Group
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setOrganizationFormStep(organizationFormStep + 1)}
+                                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+                                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                                >
+                                  Continue
+                                </button>
+                              </div>
+                            </div>
+                          </form>
+                        )}
+
+                        {organizationFormStep === 3 && (
+                          <form className="space-y-6 -mb-6">
                             
                             {/* Single form fields */}
                             <div className="relative mb-4">
@@ -4008,9 +4656,89 @@ export default function AdminSettingsPage() {
                                       Collaborator name is required
                                     </p>
                                   )}
-                                
-                                  {/* Email Field */}
-                                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 mt-6" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                  
+                                  {/* Group Field */}
+                                  <div className="mt-4">
+                                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                      Group
+                                    </label>
+                                    <div className="relative" ref={organizationCollaborators[0].groupDropdownRef}>
+                                      <input
+                                        type="text"
+                                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white pr-10 cursor-pointer caret-transparent"
+                                        placeholder="Select group..."
+                                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                                        value={organizationCollaborators[0].group}
+                                        readOnly
+                                        onClick={() => {
+                                          console.log('Group dropdown clicked, current groups:', organizationGroups);
+                                          setOrganizationCollaborators(prev => prev.map((r, i) => i === 0 ? { 
+                                            ...r, 
+                                            showGroupDropdown: !r.showGroupDropdown,
+                                            showNamesDropdown: false,
+                                            showContractRoleDropdown: false
+                                          } : r));
+                                          setShowOrganizationPermissionsDropdown(false);
+                                        }}
+                                      />
+                                      <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
+                                      
+                                      {/* Groups Dropdown */}
+                                      {organizationCollaborators[0].showGroupDropdown && (
+                                        <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
+                                          {organizationGroups.length > 0 ? (
+                                            organizationGroups.map((group) => (
+                                              <button
+                                                key={group.id}
+                                                className="w-full text-left px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                                                onClick={(e) => {
+                                                  e.preventDefault();
+                                                  e.stopPropagation();
+                                                  console.log('Group selected:', group.name);
+                                                  setOrganizationCollaborators(prev => prev.map((r, i) => i === 0 ? { 
+                                                    ...r, 
+                                                    group: group.name,
+                                                    showGroupDropdown: false 
+                                                  } : r));
+                                                  console.log('Group set in state');
+                                                }}
+                                              >
+                                                <TbUsersGroup className="w-4 h-4 flex-shrink-0" />
+                                                {group.name}
+                                              </button>
+                                            ))
+                                          ) : (
+                                            <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
+                                              No groups available, add groups in Step 2...
+                                            </div>
+                                          )}
+                                          
+                                          {/* Add Group Button */}
+                                          <div className="border-t border-gray-200 dark:border-gray-600 mt-1">
+                                            <button
+                                              type="button"
+                                              className="w-full text-left px-3 py-2 text-xs font-medium text-primary hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                                              onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                setOrganizationCollaborators(prev => prev.map((r, i) => i === 0 ? { 
+                                                  ...r, 
+                                                  showGroupDropdown: false 
+                                                } : r));
+                                                setOrganizationFormStep(2);
+                                              }}
+                                            >
+                                              <TbUsersPlus className="w-4 h-4 flex-shrink-0" />
+                                              Add Group
+                                            </button>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="w-1/2">
+                                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
                                     Collaborator Email <span className="text-red-500">*</span>
                                   </label>
                                   <input
@@ -4031,142 +4759,108 @@ export default function AdminSettingsPage() {
                                     </p>
                                   )}
                                 </div>
-                                <div className="w-1/2">
-                                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                                    Contract Permissions <span className="text-red-500">*</span>
-                                  </label>
-                                  <div className="relative w-full">
-                                    {/* Permissions Field with Selected Permissions Inside */}
-                                    <div 
-                                      ref={organizationCollaborators[0].contractRoleInputRef}
-                                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs font-medium text-gray-700 dark:text-gray-300 focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-colors bg-white dark:bg-gray-900 flex items-center justify-between cursor-pointer"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        setShowOrganizationPermissionsDropdown(!showOrganizationPermissionsDropdown);
-                                        // Close names dropdown when opening permissions dropdown
-                                        setOrganizationCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, showNamesDropdown: false } : r));
-                                      }}
-                                      style={{ fontFamily: 'Avenir, sans-serif' }}
-                                    >
-                                      <div className="flex-1 flex items-center overflow-hidden">
-                                        {organizationCollaborators[0].contractPermissions.length > 0 ? (
-                                          <span className="text-gray-900 dark:text-white">
-                                            {sortOrganizationPermissions(organizationCollaborators[0].contractPermissions).join(', ')}
-                                          </span>
-                                        ) : (
-                                          <span className="text-gray-500">Define collaborator contract permissions...</span>
-                                        )}
-                                      </div>
-                                      <TbChevronDown 
-                                        className="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0 ml-2" 
-                                      />
-                                    </div>
-                                    
-                                    {/* Permissions Dropdown */}
-                                    {showOrganizationPermissionsDropdown && (
-                                      <div
-                                        key="permissions-dropdown"
-                                        ref={organizationCollaborators[0].contractRoleDropdownRef}
-                                        className="absolute top-full left-0 right-0 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-2"
-                                        style={{ 
-                                          top: 'calc(100% + 4px)',
-                                          fontFamily: 'Avenir, sans-serif'
-                                        }}
-                                      >
-                                        {['Edit', 'View', 'Sign'].map((permission) => (
-                                          <button
-                                            key={permission}
-                                            className={`w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${organizationCollaborators[0].contractPermissions.includes(permission) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
-                                            onClick={(e) => {
-                                              e.preventDefault();
-                                              e.stopPropagation();
-                                              setOrganizationCollaborators(prev => prev.map((r, i) => i === 0 ? {
-                                                ...r,
-                                                contractPermissions: r.contractPermissions.includes(permission)
-                                                  ? r.contractPermissions.filter(p => p !== permission)
-                                                  : [...r.contractPermissions, permission]
-                                              } : r));
-                                              setOrganizationRecipientErrors(prev => ({ ...prev, [`contractPermissions-0`]: false }));
-                                              // Don't close the dropdown - allow multiple selections
-                                            }}
-                                          >
-                                            <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
-                                              {organizationCollaborators[0].contractPermissions.includes(permission) && (
-                                                <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
-                                                  <FaCheck className="text-white" size={8} />
-                                                </div>
-                                              )}
-                                            </div>
-                                            {permission}
-                                          </button>
-                                        ))}
-                                      </div>
-                                    )}
-                                    
-                                    {organizationRecipientErrors[`contractPermissions-0`] && (
-                                      <p className="text-red-600 text-xs mt-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                                        Permissions must be defined
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
                               </div>
                             </div>
 
                             {/* Added Collaborators Display */}
-                            <div className="pt-2.5 min-h-[120px]">
+                            <div className="pt-2 min-h-[160px]">
+                              {addedOrganizationCollaborators.length > 0 && (
+                                <div className="flex items-center gap-2 mb-4 ml-3">
+                                  <TbUsers className="h-5 w-5 text-gray-700 dark:text-gray-300" />
+                                  <span className="text-xs font-semibold text-gray-700 dark:text-gray-300" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                    Added Collaborators ({addedOrganizationCollaborators.length})
+                                  </span>
+                                </div>
+                              )}
+                              
                               {addedOrganizationCollaborators.length > 0 ? (
                                 <>
-                                  <button 
-                                    className="flex items-center gap-2 mb-3 bg-white dark:bg-gray-800 rounded-lg px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-0 active:transform-none transition-colors cursor-pointer"
-                                    onClick={() => setShowManageOrganizationCollaboratorsModal(true)}
-                                    style={{ fontFamily: 'Avenir, sans-serif' }}
-                                  >
-                                    <TbUsers className="h-5 w-5" />
-                                    <span className="text-xs font-semibold">Manage</span>
-                                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-                                      ({addedOrganizationCollaborators.length})
-                                    </span>
-                                  </button>
-                                  <div className="flex flex-wrap gap-1">
-                                    {addedOrganizationCollaborators.map((collaborator, idx) => {
-                                      const colorScheme = getCollaboratorBadgeColor(idx);
-                                      return (
-                                        <div 
-                                          key={idx} 
-                                          className={`h-10 w-10 rounded-lg ${colorScheme.bg} flex items-center justify-center border-2 ${colorScheme.border} relative group cursor-pointer`}
-                                          onClick={() => setShowManageOrganizationCollaboratorsModal(true)}
-                                        >
-                                          <span className={`text-sm font-semibold ${colorScheme.text}`} style={{ fontFamily: 'Avenir, sans-serif' }}>
-                                            {getInitials(collaborator.name)}
-                                          </span>
-                                          
-                                          {/* X button for removal - only visible on hover */}
-                                          <button 
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              
-                                              // Check if the collaborator being removed is the current user
-                                              const collaboratorToRemove = addedOrganizationCollaborators[idx];
-                                              const isCurrentUser = user && collaboratorToRemove.email.toLowerCase() === user.email.toLowerCase();
-                                              
-                                              // Remove the collaborator
-                                              setAddedOrganizationCollaborators(prev => prev.filter((_, i) => i !== idx));
-                                              
-                                              // If removing current user, uncheck the "I am working solo" box
-                                              if (isCurrentUser) {
-                                                setIsWorkingSolo(false);
-                                              }
-                                            }}
-                                            className="absolute -top-2 -right-2 w-5 h-5 bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 rounded-lg flex items-center justify-center text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100 dark:hover:bg-red-900/30 border-2 border-red-200 dark:border-red-800"
-                                          >
-                                            ×
-                                          </button>
+                                  {/* Group collaborators by their assigned groups */}
+                                  {(() => {
+                                    // Group collaborators by their group
+                                    const groupedCollaborators = addedOrganizationCollaborators.reduce((groups, collaborator) => {
+                                      const groupName = collaborator.group || 'No Group';
+                                      if (!groups[groupName]) {
+                                        groups[groupName] = [];
+                                      }
+                                      groups[groupName].push(collaborator);
+                                      return groups;
+                                    }, {} as Record<string, typeof addedOrganizationCollaborators>);
+
+                                    const groupNames = Object.keys(groupedCollaborators);
+                                    
+                                    return (
+                                      <div className="space-y-4">
+                                        {/* Display groups in 3-column layout */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ml-4">
+                                          {groupNames.map((groupName, groupIndex) => {
+                                            const collaborators = groupedCollaborators[groupName];
+                                            return (
+                                              <div key={groupName} className="space-y-2">
+                                                {/* Group header with name, count, and icon */}
+                                                <div 
+                                                  className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-lg px-3 py-2 text-gray-700 dark:text-gray-300"
+                                                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                                                >
+                                                  <TbUsersGroup className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                                                  <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                                    {groupName}
+                                                  </span>
+                                                  <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                                                    ({collaborators.length})
+                                                  </span>
+                                                </div>
+                                                
+                                                {/* Collaborator badges for this group */}
+                                                <div className="flex flex-wrap gap-1">
+                                                  {collaborators.map((collaborator: any, idx: number) => {
+                                                    const colorScheme = getCollaboratorBadgeColor(idx);
+                                                    return (
+                                                      <div 
+                                                        key={`${groupName}-${idx}`} 
+                                                        className={`h-10 w-10 rounded-lg ${colorScheme.bg} flex items-center justify-center border-2 ${colorScheme.border} relative group cursor-pointer`}
+                                                        onClick={() => setShowManageOrganizationCollaboratorsModal(true)}
+                                                      >
+                                                        <span className={`text-sm font-semibold ${colorScheme.text}`} style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                                          {getInitials(collaborator.name)}
+                                                        </span>
+                                                        
+                                                        {/* X button for removal - only visible on hover */}
+                                                        <button 
+                                                          type="button"
+                                                          onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            
+                                                            // Check if the collaborator being removed is the current user
+                                                            const isCurrentUser = user && collaborator.email.toLowerCase() === user.email.toLowerCase();
+                                                            
+                                                            // Remove the collaborator
+                                                            setAddedOrganizationCollaborators(prev => prev.filter((c) => c !== collaborator));
+                                                            
+                                                            // Clear any validation errors
+                                                            setDuplicateOrganizationCollaboratorError(false);
+                                                            
+                                                            // If removing current user, uncheck the "I am working solo" box
+                                                            if (isCurrentUser) {
+                                                              setIsWorkingSolo(false);
+                                                            }
+                                                          }}
+                                                          className="absolute -top-2 -right-2 w-5 h-5 bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 rounded-lg flex items-center justify-center text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100 dark:hover:bg-red-900/30 border-2 border-red-200 dark:border-red-800"
+                                                        >
+                                                          ×
+                                                        </button>
+                                                      </div>
+                                                    );
+                                                  })}
+                                                </div>
+                                              </div>
+                                            );
+                                          })}
                                         </div>
-                                      );
-                                    })}
-                                  </div>
+                                      </div>
+                                    );
+                                  })()}
                                 </>
                               ) : (
                                 <div className="text-center py-8 pb-8 text-gray-500 dark:text-gray-400 cursor-default select-none">
@@ -4177,26 +4871,18 @@ export default function AdminSettingsPage() {
                               )}
                             </div>
 
-                            {/* Step 2 specific content - no buttons here */}
+                            {/* Step 3 specific content - no buttons here */}
                           </form>
                         )}
 
                         {/* Form Actions */}
                         {organizationFormStep > 1 && (
-                        <div className="flex items-center justify-between">
+                        <div className={`flex justify-between -mt-4 ${organizationFormStep === 3 ? 'pb-0' : ''}`}>
                           <div className="flex items-center gap-2">
-                            {organizationFormStep > 1 && (
-                              <button
-                                onClick={() => { setOrganizationFormStep(1); setCountrySearchTerm(''); setStateSearchTerm(''); }}
-                                className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
-                                style={{ fontFamily: 'Avenir, sans-serif' }}
-                              >
-                                Previous
-                              </button>
-                            )}
+                            {/* Previous button removed - now handled in individual step forms */}
                           </div>
                           <div className="flex items-center" style={{ gap: '3px' }}>
-                            {organizationFormStep === 2 && (
+                            {organizationFormStep === 3 && (
                               <div className="relative flex">
                                 {/* Duplicate Collaborator Error */}
                                 {duplicateOrganizationCollaboratorError && (
@@ -4210,7 +4896,7 @@ export default function AdminSettingsPage() {
                                 <button
                                   type="button"
                                   onClick={handleAddOrganizationCollaborator}
-                                  disabled={!organizationCollaborators[0].name.trim() || organizationCollaborators[0].contractPermissions.length === 0 || !organizationCollaborators[0].email.trim()}
+                                  disabled={!organizationCollaborators[0].name.trim() || !organizationCollaborators[0].email.trim()}
                                   className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                                   style={{ fontFamily: 'Avenir, sans-serif' }}
                                 >
@@ -4219,11 +4905,20 @@ export default function AdminSettingsPage() {
                                 </button>
                               </div>
                             )}
-                            {organizationFormStep === 2 && (
+                            {organizationFormStep === 3 && (
                               <button
                                 onClick={() => {
                                   // Handle form submission here
-                                  console.log('Organization form submitted:', { organizationFormData, organizationCollaborators });
+                                  const newOrgId = generateOrganizationId();
+                                  const newOrganization = {
+                                    ...organizationFormData,
+                                    orgId: newOrgId
+                                  };
+                                  console.log('Organization form submitted:', { newOrganization, organizationGroups, organizationCollaborators });
+                                  
+                                  // Here you would typically add the new organization to your organizationsData
+                                  // For now, we'll just log it and close the form
+                                  
                                   setShowOrganizationCreateForm(false);
                                   setOrganizationFormStep(1);
                                   setOrganizationFormData({
@@ -4238,19 +4933,25 @@ export default function AdminSettingsPage() {
                                     website: '',
                                     industries: []
                                   });
+                                  setOrganizationGroups([]);
+                                  setOrganizationGroupFormData({ name: '', description: '' });
                                   setOrganizationCollaborators([{
                                     name: '',
                                     email: '',
                                     contractPermissions: [],
+                                    group: '',
                                     showNamesDropdown: false,
                                     namesDropdownRef: React.createRef<HTMLDivElement>(),
                                     contractRoleInputRef: React.createRef<HTMLDivElement>(),
                                     contractRoleDropdownRef: React.createRef<HTMLDivElement>(),
                                     namesInputRef: React.createRef<HTMLInputElement>(),
-                                    showContractRoleDropdown: false
+                                    showContractRoleDropdown: false,
+                                    showGroupDropdown: false,
+                                    groupDropdownRef: React.createRef<HTMLDivElement>()
                                   }]);
                                 }}
-                                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+                                disabled={!organizationFormData.name.trim() || !organizationFormData.type.trim() || addedOrganizationCollaborators.length < 2}
+                                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary"
                                 style={{ fontFamily: 'Avenir, sans-serif' }}
                               >
                                 Create
@@ -4303,7 +5004,10 @@ export default function AdminSettingsPage() {
                       {/* Form Content */}
                       <div className="space-y-6 pt-4">
                         {groupFormStep === 1 && (
-                          <form className="space-y-4">
+                          <form 
+                            className="space-y-6"
+                            onSubmit={(e) => e.preventDefault()}
+                          >
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                               <div>
                                 <label className="block text-xs font-medium text-black dark:text-white mb-1">Group Name <span className="text-red-500">*</span></label>
@@ -4356,9 +5060,236 @@ export default function AdminSettingsPage() {
                                 rows={4}
                               />
                             </div>
-                            
+
+                            {/* Added Groups Section */}
+                            <div className="mt-6">
+                              {groupGroups.length > 0 && (
+                                <div className="flex items-center justify-between mb-3">
+                                  <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                    Added Groups ({groupGroups.length})
+                                  </h3>
+                                </div>
+                              )}
+                              
+                              {groupGroups.length === 0 ? (
+                                <div className="text-center py-8 pb-8 text-gray-500 dark:text-gray-400 cursor-default select-none">
+                                  <TbUsersGroup size={32} className="mx-auto mb-2 text-primary" />
+                                  <p className="text-sm" style={{ fontFamily: 'Avenir, sans-serif' }}>No groups yet</p>
+                                  <p className="text-xs" style={{ fontFamily: 'Avenir, sans-serif' }}>Add a group by filling in the details above and click the "Add Group" button</p>
+                                </div>
+                              ) : (
+                                <div className="space-y-4">
+                                  {(() => {
+                                    // Group groups by organization while maintaining organization order
+                                    const groupedByOrg = groupGroups.reduce((acc, group) => {
+                                      const orgId = group.organizationId || groupFormData.organization;
+                                      if (!acc[orgId]) {
+                                        acc[orgId] = [];
+                                      }
+                                      acc[orgId].push(group);
+                                      return acc;
+                                    }, {} as Record<string, any[]>);
+
+                                    // Get organizations in the order they appear in organizationsData, but only show those with groups
+                                    const orgsWithGroups = organizationsData
+                                      .filter(org => groupedByOrg[org.id] && groupedByOrg[org.id].length > 0)
+                                      .map(org => ({ org, groups: groupedByOrg[org.id] }));
+
+                                    // Group organizations into rows of 3
+                                    const orgRows = [];
+                                    for (let i = 0; i < orgsWithGroups.length; i += 3) {
+                                      orgRows.push(orgsWithGroups.slice(i, i + 3));
+                                    }
+
+                                    return (
+                                      <div className="space-y-6">
+                                        {orgRows.map((row, rowIndex) => (
+                                          <div key={rowIndex} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                            {row.map(({ org, groups }) => {
+                                              const organization = org;
+                                              
+                                              return (
+                                                <div key={org.id} className="space-y-3">
+                                                  {/* Organization Info */}
+                                                  <div className="flex items-center gap-2">
+                                                    <TbBuilding className={`w-4 h-4 ${
+                                                      organization?.color === 'cyan' ? 'text-cyan-500' :
+                                                      organization?.color === 'blue' ? 'text-blue-500' :
+                                                      organization?.color === 'purple' ? 'text-purple-500' :
+                                                      organization?.color === 'orange' ? 'text-orange-500' :
+                                                      organization?.color === 'green' ? 'text-green-500' :
+                                                      organization?.color === 'pink' ? 'text-pink-500' :
+                                                      organization?.color === 'indigo' ? 'text-indigo-500' :
+                                                      organization?.color === 'teal' ? 'text-teal-500' :
+                                                      'text-primary'
+                                                    }`} />
+                                                    <span className="text-xs font-semibold text-gray-700 dark:text-gray-300" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                                      {organization?.name || 'Selected Organization'}
+                                                    </span>
+                                                  </div>
+                                                  
+                                                  {/* Groups for this organization */}
+                                                  <div className="space-y-2 ml-4">
+                                            {groups.map((group: any) => {
+                                              const isExpanded = expandedGroupGroupCards[group.id] || false;
+                                              return (
+                                                <div 
+                                                  key={group.id} 
+                                                  data-group-id={group.id}
+                                                  className="bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-700 transition-all duration-200 cursor-pointer"
+                                                  onClick={() => toggleGroupGroupCard(group.id)}
+                                                >
+                                                  {!isExpanded ? (
+                                                    // Collapsed view
+                                                    <div className="flex items-center gap-3">
+                                                      <TbUsersGroup className={`w-5 h-5 ${
+                                                        group.color === 'teal' ? 'text-teal-500' :
+                                                        group.color === 'blue' ? 'text-blue-500' :
+                                                        group.color === 'purple' ? 'text-purple-500' :
+                                                        group.color === 'orange' ? 'text-orange-500' :
+                                                        group.color === 'green' ? 'text-green-500' :
+                                                        group.color === 'pink' ? 'text-pink-500' :
+                                                        group.color === 'indigo' ? 'text-indigo-500' :
+                                                        group.color === 'cyan' ? 'text-cyan-500' :
+                                                        'text-gray-500'
+                                                      }`} />
+                                                      <div className="flex-1 min-w-0">
+                                                        <div className="font-semibold text-sm text-gray-900 dark:text-white truncate" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                                          {group.name}
+                                                        </div>
+                                                      </div>
+                                                      <TbChevronDown className="w-4 h-4 text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0" />
+                                                    </div>
+                                                  ) : (
+                                                    // Expanded view - Editing mode
+                                                    <div 
+                                                      onClick={(e) => e.stopPropagation()}
+                                                      onKeyDown={(e) => e.stopPropagation()}
+                                                      onKeyUp={(e) => e.stopPropagation()}
+                                                    >
+                                                      {/* Group ID */}
+                                                      <div className="mb-3">
+                                                        <div className="flex items-center justify-between mb-1">
+                                                          <div className="text-gray-500 dark:text-gray-400 text-xs">Group ID</div>
+                                                          <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                              e.stopPropagation();
+                                                              toggleGroupGroupCard(group.id);
+                                                            }}
+                                                            className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+                                                          >
+                                                            <TbChevronUp className="w-4 h-4" />
+                                                          </button>
+                                                        </div>
+                                                        <div className="flex items-center">
+                                                          <span className="text-xs font-mono text-gray-900 dark:text-white truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-default select-none">
+                                                            {group.groupId || group.id}
+                                                          </span>
+                                                          <div className="relative">
+                                                            <button
+                                                              type="button"
+                                                              className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer relative group"
+                                                              onClick={() => {
+                                                                const idToCopy = group.groupId || group.id;
+                                                                navigator.clipboard.writeText(idToCopy);
+                                                                setCopiedOrgId(group.id);
+                                                                setTimeout(() => setCopiedOrgId(null), 1500);
+                                                              }}
+                                                              onMouseEnter={() => setHoveredOrgId(group.id)}
+                                                              onMouseLeave={() => setHoveredOrgId(null)}
+                                                              aria-label="Copy group ID"
+                                                            >
+                                                              <HiOutlineDuplicate className="w-4 h-4" />
+                                                              {copiedOrgId === group.id ? (
+                                                                <span className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none font-sans">
+                                                                  Copied!
+                                                                </span>
+                                                              ) : (
+                                                                <span className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap font-sans">
+                                                                  Copy
+                                                                </span>
+                                                              )}
+                                                            </button>
+                                                          </div>
+                                                        </div>
+                                                      </div>
+                                                      
+                                                      {/* Group Name */}
+                                                      <div className="mb-3">
+                                                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Group Name</label>
+                                                        <input
+                                                          type="text"
+                                                          value={group.name}
+                                                          onChange={(e) => updateGroupGroup(group.id, 'name', e.target.value)}
+                                                          onKeyDown={(e) => {
+                                                            e.stopPropagation();
+                                                            if (e.key === 'Enter') {
+                                                              e.preventDefault();
+                                                            }
+                                                          }}
+                                                          onKeyUp={(e) => e.stopPropagation()}
+                                                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                                                          onClick={(e) => e.stopPropagation()}
+                                                        />
+                                                      </div>
+                                                      
+                                                      {/* Group Description */}
+                                                      <div className="mb-3">
+                                                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                                                        <textarea
+                                                          value={group.description || ''}
+                                                          onChange={(e) => updateGroupGroup(group.id, 'description', e.target.value)}
+                                                          onKeyDown={(e) => {
+                                                            e.stopPropagation();
+                                                            if (e.key === 'Enter') {
+                                                              e.preventDefault();
+                                                            }
+                                                          }}
+                                                          onKeyUp={(e) => e.stopPropagation()}
+                                                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs resize-none"
+                                                          rows={2}
+                                                          onClick={(e) => e.stopPropagation()}
+                                                        />
+                                                      </div>
+                                                      
+                                                      {/* Remove Button */}
+                                                      <div className="flex justify-end">
+                                                        <button
+                                                          type="button"
+                                                          onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            removeGroupGroup(group.id);
+                                                          }}
+                                                          className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1 relative group"
+                                                        >
+                                                          <TbUsersMinus className="w-4 h-4" />
+                                                          <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                                            Remove
+                                                          </span>
+                                                        </button>
+                                                      </div>
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              );
+                                            })}
+                                                  </div>
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    );
+                                  })()}
+                                </div>
+                              )}
+                            </div>
+
+
                             {/* Cancel and Continue Buttons - Step 1 */}
-                            <div className="flex items-center justify-between w-full !mt-5">
+                            <div className="flex items-center justify-between w-full !mt-8">
                               <button
                                 onClick={() => {
                                   setShowGroupCreateForm(false);
@@ -4368,184 +5299,286 @@ export default function AdminSettingsPage() {
                                     organization: '',
                                     description: ''
                                   });
+                                  setGroupGroups([]);
+                                  setGroupGroupFormData({ name: '' });
+                                  setExpandedGroupGroupCards({});
                                   setGroupCollaborators([{
                                     name: '',
                                     email: '',
+                                    group: '',
                                     showNamesDropdown: false,
+                                    showGroupDropdown: false,
                                     namesDropdownRef: React.createRef<HTMLDivElement>(),
-                                    namesInputRef: React.createRef<HTMLInputElement>()
+                                    namesInputRef: React.createRef<HTMLInputElement>(),
+                                    groupDropdownRef: React.createRef<HTMLDivElement>()
                                   }]);
+                                  setAddedGroupCollaborators([]);
                                 }}
                                 className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
                                 style={{ fontFamily: 'Avenir, sans-serif' }}
                               >
                                 Cancel
                               </button>
-                              <button
-                                onClick={() => setGroupFormStep(groupFormStep + 1)}
-                                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
-                                style={{ fontFamily: 'Avenir, sans-serif' }}
-                              >
-                                Continue
-                              </button>
+                              <div className="flex items-center" style={{ gap: '3px' }}>
+                                <button
+                                  type="button"
+                                  onClick={addGroupGroup}
+                                  disabled={!groupFormData.name.trim()}
+                                  className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                                >
+                                  <TbUsersPlus className="w-4 h-4 mr-2" />
+                                  Add Group
+                                </button>
+                                <button
+                                  onClick={() => setGroupFormStep(groupFormStep + 1)}
+                                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+                                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                                >
+                                  Continue
+                                </button>
+                              </div>
                             </div>
                           </form>
                         )}
 
                         {groupFormStep === 2 && (
-                          <form>
+                          <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
                             
                             {/* Single form fields */}
                             <div className="relative mb-4">
-                              {/* Form fields */}
-                              <div className="flex gap-6">
-                                <div className="w-1/2">
-                                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                                    Collaborator Name <span className="text-red-500">*</span>
-                                  </label>
-                                  <div className="relative">
-                                    <input
-                                      ref={groupCollaborators[0].namesInputRef}
-                                      type="text"
-                                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white pr-10"
-                                      placeholder="Enter collaborator name..."
-                                      style={{ fontFamily: 'Avenir, sans-serif' }}
-                                      value={groupCollaborators[0].name}
-                                      onChange={e => {
-                                        setGroupCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, name: e.target.value } : r));
-                                        setGroupRecipientErrors(prev => ({ ...prev, [`name-0`]: false }));
-                                        setDuplicateGroupCollaboratorError(false);
-                                      }}
-                                      onClick={() => {
-                                        setGroupCollaborators(prev => prev.map((r, i) => i === 0 ? { 
-                                          ...r, 
-                                          showNamesDropdown: !r.showNamesDropdown
-                                        } : r));
-                                      }}
-                                      autoComplete="off"
-                                    />
-                                    <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
-                                    
-                                    {/* Names/Emails Autocomplete Dropdown */}
-                                    {groupCollaborators[0].showNamesDropdown && (
-                                      <div 
-                                        ref={groupCollaborators[0].namesDropdownRef}
-                                        className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500"
-                                      >
-                                        {/* Assignees Section */}
-                                        {allAssignees
-                                          .filter(assignee => 
-                                            assignee.toLowerCase().includes(groupCollaborators[0].name.toLowerCase())
-                                          )
-                                          .sort()
-                                          .map((assignee) => (
-                                            <button
-                                              key={`assignee-${assignee}`}
-                                              className="w-full text-left px-3 py-0.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
-                                              onClick={() => {
-                                                setGroupCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, name: assignee, showNamesDropdown: false } : r));
-                                                setGroupRecipientErrors(prev => ({ ...prev, [`name-0`]: false }));
-                                              }}
-                                            >
-                                              <TbUser className="w-4 h-4 flex-shrink-0" />
-                                              {assignee}
-                                            </button>
-                                          ))}
-                                        
-                                        {/* Contract Parties Section */}
-                                        {(() => {
-                                          const mockContracts = [
-                                            'Robert Chen', 'Eastside Properties', 'GreenSpace Developers', 'BuildRight Construction',
-                                            'TechCorp', 'Property Holdings', 'Smith Family', 'Real Estate Co', 'InvestPro', 
-                                            'Property Group', 'Johnson Family', 'Home Sales', 'Office Solutions', 'Property Co',
-                                            'Corporate Holdings', 'Real Estate', 'Retail Corp', 'Marketing Solutions Inc', 'Legal Advisory LLC'
-                                          ];
+                              {/* Form fields - 2 column layout */}
+                              <div className="grid grid-cols-2 gap-6">
+                                {/* Left Column */}
+                                <div className="space-y-6">
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                      Collaborator Name <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="relative">
+                                      <input
+                                        ref={groupCollaborators[0].namesInputRef}
+                                        type="text"
+                                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white pr-10"
+                                        placeholder="Enter collaborator name..."
+                                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                                        value={groupCollaborators[0].name}
+                                        onChange={e => {
+                                          setGroupCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, name: e.target.value } : r));
+                                          setGroupRecipientErrors(prev => ({ ...prev, [`name-0`]: false }));
+                                          setDuplicateGroupCollaboratorError(false);
+                                        }}
+                                        onClick={() => {
+                                          setGroupCollaborators(prev => prev.map((r, i) => i === 0 ? { 
+                                            ...r, 
+                                            showNamesDropdown: !r.showNamesDropdown
+                                          } : r));
+                                        }}
+                                        autoComplete="off"
+                                      />
+                                      <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
+                                      
+                                      {/* Names/Emails Autocomplete Dropdown */}
+                                      {groupCollaborators[0].showNamesDropdown && (
+                                        <div 
+                                          ref={groupCollaborators[0].namesDropdownRef}
+                                          className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500"
+                                        >
+                                          {/* Assignees Section */}
+                                          {allAssignees
+                                            .filter(assignee => 
+                                              assignee.toLowerCase().includes(groupCollaborators[0].name.toLowerCase())
+                                            )
+                                            .sort()
+                                            .map((assignee) => (
+                                              <button
+                                                key={`assignee-${assignee}`}
+                                                className="w-full text-left px-3 py-0.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                                                onClick={() => {
+                                                  setGroupCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, name: assignee, showNamesDropdown: false } : r));
+                                                  setGroupRecipientErrors(prev => ({ ...prev, [`name-0`]: false }));
+                                                }}
+                                              >
+                                                <TbUser className="w-4 h-4 flex-shrink-0" />
+                                                {assignee}
+                                              </button>
+                                            ))}
                                           
-                                          const filteredParties = mockContracts
-                                            .filter(party => 
+                                          {/* Contract Parties Section */}
+                                          {(() => {
+                                            const mockContracts = [
+                                              'Robert Chen', 'Eastside Properties', 'GreenSpace Developers', 'BuildRight Construction',
+                                              'TechCorp', 'Property Holdings', 'Smith Family', 'Real Estate Co', 'InvestPro', 
+                                              'Property Group', 'Johnson Family', 'Home Sales', 'Office Solutions', 'Property Co',
+                                              'Corporate Holdings', 'Real Estate', 'Retail Corp', 'Marketing Solutions Inc', 'Legal Advisory LLC'
+                                            ];
+                                            
+                                            const filteredParties = mockContracts
+                                              .filter(party => 
+                                                party.toLowerCase().includes(groupCollaborators[0].name.toLowerCase()) &&
+                                                !allAssignees.includes(party)
+                                              )
+                                              .sort();
+                                            
+                                            return filteredParties.length > 0 ? (
+                                              <>
+                                                {filteredParties.map((party) => (
+                                                  <button
+                                                    key={`party-${party}`}
+                                                    className="w-full text-left px-3 py-0.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                                                    onClick={() => {
+                                                      setGroupCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, name: party, showNamesDropdown: false } : r));
+                                                      setGroupRecipientErrors(prev => ({ ...prev, [`name-0`]: false }));
+                                                    }}
+                                                  >
+                                                    <TbUser className="w-4 h-4 flex-shrink-0" />
+                                                    {party}
+                                                  </button>
+                                                ))}
+                                              </>
+                                            ) : null;
+                                          })()}
+                                          
+                                          {/* No Matches Message */}
+                                          {(() => {
+                                            const allAssigneesFiltered = allAssignees.filter(assignee => 
+                                              assignee.toLowerCase().includes(groupCollaborators[0].name.toLowerCase())
+                                            );
+                                            const mockContracts = [
+                                              'Robert Chen', 'Eastside Properties', 'GreenSpace Developers', 'BuildRight Construction',
+                                              'TechCorp', 'Property Holdings', 'Smith Family', 'Real Estate Co', 'InvestPro', 
+                                              'Property Group', 'Johnson Family', 'Home Sales', 'Office Solutions', 'Property Co',
+                                              'Corporate Holdings', 'Real Estate', 'Retail Corp', 'Marketing Solutions Inc', 'Legal Advisory LLC'
+                                            ];
+                                            const filteredParties = mockContracts.filter(party => 
                                               party.toLowerCase().includes(groupCollaborators[0].name.toLowerCase()) &&
                                               !allAssignees.includes(party)
-                                            )
-                                            .sort();
-                                          
-                                          return filteredParties.length > 0 ? (
-                                            <>
-                                              {filteredParties.map((party) => (
-                                                <button
-                                                  key={`party-${party}`}
-                                                  className="w-full text-left px-3 py-0.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
-                                                  onClick={() => {
-                                                    setGroupCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, name: party, showNamesDropdown: false } : r));
-                                                    setGroupRecipientErrors(prev => ({ ...prev, [`name-0`]: false }));
-                                                  }}
-                                                >
-                                                  <TbUser className="w-4 h-4 flex-shrink-0" />
-                                                  {party}
-                                                </button>
-                                              ))}
-                                            </>
-                                          ) : null;
-                                        })()}
-                                        
-                                        {/* No Matches Message */}
-                                        {(() => {
-                                          const allAssigneesFiltered = allAssignees.filter(assignee => 
-                                            assignee.toLowerCase().includes(groupCollaborators[0].name.toLowerCase())
-                                          );
-                                          const mockContracts = [
-                                            'Robert Chen', 'Eastside Properties', 'GreenSpace Developers', 'BuildRight Construction',
-                                            'TechCorp', 'Property Holdings', 'Smith Family', 'Real Estate Co', 'InvestPro', 
-                                            'Property Group', 'Johnson Family', 'Home Sales', 'Office Solutions', 'Property Co',
-                                            'Corporate Holdings', 'Real Estate', 'Retail Corp', 'Marketing Solutions Inc', 'Legal Advisory LLC'
-                                          ];
-                                          const filteredParties = mockContracts.filter(party => 
-                                            party.toLowerCase().includes(groupCollaborators[0].name.toLowerCase()) &&
-                                            !allAssignees.includes(party)
-                                          );
-                                          
-                                          return allAssigneesFiltered.length === 0 && filteredParties.length === 0 && groupCollaborators[0].name.length > 0 ? (
-                                            <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
-                                              No matches found
-                                            </div>
-                                          ) : null;
-                                        })()}
-                                      </div>
+                                            );
+                                            
+                                            return allAssigneesFiltered.length === 0 && filteredParties.length === 0 && groupCollaborators[0].name.length > 0 ? (
+                                              <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
+                                                No matches found
+                                              </div>
+                                            ) : null;
+                                          })()}
+                                        </div>
+                                      )}
+                                    </div>
+                                    {groupRecipientErrors[`name-0`] && (
+                                      <p className="text-red-600 text-xs mt-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                        Collaborator name is required
+                                      </p>
                                     )}
                                   </div>
-                                  {groupRecipientErrors[`name-0`] && (
-                                    <p className="text-red-600 text-xs mt-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                                      Collaborator name is required
-                                    </p>
-                                  )}
+                                  
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                      Group
+                                    </label>
+                                    <div className="relative" ref={groupCollaborators[0].groupDropdownRef}>
+                                      <input
+                                        type="text"
+                                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white pr-10 cursor-pointer caret-transparent"
+                                        placeholder="Select group..."
+                                        style={{ fontFamily: 'Avenir, sans-serif' }}
+                                        value={groupCollaborators[0].group}
+                                        readOnly
+                                        onClick={() => {
+                                          console.log('Group dropdown clicked, current groups:', groupGroups);
+                                          setGroupCollaborators(prev => prev.map((r, i) => i === 0 ? { 
+                                            ...r, 
+                                            showGroupDropdown: !r.showGroupDropdown,
+                                            showNamesDropdown: false
+                                          } : r));
+                                        }}
+                                      />
+                                      <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
+                                      
+                                      {/* Groups Dropdown */}
+                                      {groupCollaborators[0].showGroupDropdown && (
+                                        <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
+                                          {groupGroups.length > 0 ? (
+                                            groupGroups.map((group) => (
+                                              <button
+                                                key={group.id}
+                                                className="w-full text-left px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                                                onClick={(e) => {
+                                                  e.preventDefault();
+                                                  e.stopPropagation();
+                                                  console.log('Group selected:', group.name);
+                                                  setGroupCollaborators(prev => prev.map((r, i) => i === 0 ? { 
+                                                    ...r, 
+                                                    group: group.name,
+                                                    showGroupDropdown: false 
+                                                  } : r));
+                                                  console.log('Group set in state');
+                                                }}
+                                              >
+                                                <TbUsersGroup className="w-4 h-4 flex-shrink-0" />
+                                                {group.name}
+                                              </button>
+                                            ))
+                                          ) : (
+                                            <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
+                                              No groups available, add groups in Step 1...
+                                            </div>
+                                          )}
+                                          
+                                          {/* Add Group Button */}
+                                          <div className="border-t border-gray-200 dark:border-gray-600 mt-1">
+                                            <button
+                                              type="button"
+                                              className="w-full text-left px-3 py-2 text-xs font-medium text-primary hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                                              onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                setGroupCollaborators(prev => prev.map((r, i) => i === 0 ? { 
+                                                  ...r, 
+                                                  showGroupDropdown: false 
+                                                } : r));
+                                                setGroupFormStep(1);
+                                              }}
+                                            >
+                                              <TbUsersPlus className="w-4 h-4 flex-shrink-0" />
+                                              Add Group
+                                            </button>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
                                 </div>
-                                
-                                <div className="w-1/2">
-                                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                                    Collaborator Email <span className="text-red-500">*</span>
-                                  </label>
-                                  <input
-                                    type="email"
-                                    className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white"
-                                    placeholder="Enter collaborator email address..."
-                                    style={{ fontFamily: 'Avenir, sans-serif' }}
-                                    value={groupCollaborators[0].email || ''}
-                                    onChange={e => {
-                                      setGroupCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, email: e.target.value } : r));
-                                      setGroupRecipientErrors(prev => ({ ...prev, [`email-0`]: false }));
-                                      setDuplicateGroupCollaboratorError(false);
-                                    }}
-                                  />
-                                  {groupRecipientErrors[`email-0`] && (
-                                    <p className="text-red-600 text-xs mt-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
-                                      Collaborator email is required
-                                    </p>
-                                  )}
+
+                                {/* Right Column */}
+                                <div className="space-y-4">
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                      Collaborator Email <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                      type="email"
+                                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white"
+                                      placeholder="Enter collaborator email address..."
+                                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                                      value={groupCollaborators[0].email || ''}
+                                      onChange={e => {
+                                        setGroupCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, email: e.target.value } : r));
+                                        setGroupRecipientErrors(prev => ({ ...prev, [`email-0`]: false }));
+                                        setDuplicateGroupCollaboratorError(false);
+                                      }}
+                                    />
+                                    {groupRecipientErrors[`email-0`] && (
+                                      <p className="text-red-600 text-xs mt-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                        Collaborator email is required
+                                      </p>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                               
                             </div>
 
-                            {/* Added Collaborators Display */}
+                            {/* Added Collaborators Display - Organized by Organization and Groups */}
                             <div className="mt-8 min-h-[120px]">
                               {addedGroupCollaborators.length > 0 ? (
                                 <>
@@ -4555,32 +5588,121 @@ export default function AdminSettingsPage() {
                                       Added Collaborators ({addedGroupCollaborators.length})
                                     </span>
                                   </div>
-                                  <div className="flex flex-wrap gap-1 -ml-6">
-                                    {addedGroupCollaborators.map((collaborator, idx) => {
-                                      const colorScheme = getCollaboratorBadgeColor(idx);
-                                      return (
-                                        <div 
-                                          key={idx} 
-                                          className={`h-10 w-10 rounded-lg ${colorScheme.bg} flex items-center justify-center border-2 ${colorScheme.border} relative group`}
-                                        >
-                                          <span className={`text-sm font-semibold ${colorScheme.text}`} style={{ fontFamily: 'Avenir, sans-serif' }}>
-                                            {getInitials(collaborator.name)}
-                                          </span>
-                                          
-                                          {/* X button for removal - only visible on hover */}
-                                          <button 
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setAddedGroupCollaborators(prev => prev.filter((_, i) => i !== idx));
-                                            }}
-                                            className="absolute -top-2 -right-2 w-5 h-5 bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 rounded-lg flex items-center justify-center text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100 dark:hover:bg-red-900/30 border-2 border-red-200 dark:border-red-800"
-                                          >
-                                            ×
-                                          </button>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
+                                  
+                                  {/* Group collaborators by organization and then by groups */}
+                                  {(() => {
+                                    // First group by organization
+                                    const orgGroupedCollaborators = addedGroupCollaborators.reduce((acc, collaborator, idx) => {
+                                      const groupName = collaborator.group || 'unassigned';
+                                      const group = groupName === 'unassigned' ? null : groupGroups.find((g: any) => g.name === groupName);
+                                      const orgId = group ? group.organizationId : 'unassigned';
+                                      
+                                      if (!acc[orgId]) {
+                                        acc[orgId] = {};
+                                      }
+                                      
+                                      if (!acc[orgId][groupName]) {
+                                        acc[orgId][groupName] = [];
+                                      }
+                                      
+                                      acc[orgId][groupName].push({ ...collaborator, originalIndex: idx });
+                                      return acc;
+                                    }, {} as Record<string, Record<string, any[]>>);
+
+                                    // Convert to array and group by 3 organizations per row
+                                    const orgEntries = Object.entries(orgGroupedCollaborators);
+                                    const orgRows = [];
+                                    for (let i = 0; i < orgEntries.length; i += 3) {
+                                      orgRows.push(orgEntries.slice(i, i + 3));
+                                    }
+
+                                    return (
+                                      <div className="space-y-6">
+                                        {orgRows.map((row, rowIndex) => (
+                                          <div key={rowIndex} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start ml-6">
+                                            {row.map(([orgId, groupCollaborators]) => {
+                                              const organization = orgId === 'unassigned' ? null : organizationsData.find(org => org.id === orgId);
+                                              
+                                              return (
+                                                <div key={orgId} className="flex flex-col space-y-4">
+                                                  {/* Organization Header */}
+                                                  {organization && (
+                                                    <div className="flex items-center gap-2">
+                                                      <TbBuilding className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                                                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-200" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                                        {organization.name}
+                                                      </span>
+                                                    </div>
+                                                  )}
+                                                  
+                                                  {/* Groups under this organization */}
+                                                  <div className="space-y-3">
+                                                    {Object.entries(groupCollaborators as Record<string, any[]>).map(([groupName, collaborators]) => {
+                                                      const group = groupName === 'unassigned' ? null : groupGroups.find((g: any) => g.name === groupName);
+                                                      
+                                                      return (
+                                                        <div key={groupName} className="space-y-2">
+                                                          {/* Group header */}
+                                                          <div className="flex items-center gap-2 ml-4">
+                                                            {group ? (
+                                                              <TbUsersGroup className={`w-4 h-4 ${
+                                                                group.color === 'teal' ? 'text-teal-500' :
+                                                                group.color === 'blue' ? 'text-blue-500' :
+                                                                group.color === 'purple' ? 'text-purple-500' :
+                                                                group.color === 'orange' ? 'text-orange-500' :
+                                                                group.color === 'green' ? 'text-green-500' :
+                                                                group.color === 'pink' ? 'text-pink-500' :
+                                                                group.color === 'indigo' ? 'text-indigo-500' :
+                                                                group.color === 'cyan' ? 'text-cyan-500' :
+                                                                'text-gray-500'
+                                                              }`} />
+                                                            ) : (
+                                                              <TbUsers className="w-4 h-4 text-gray-500" />
+                                                            )}
+                                                            <span className="text-xs font-semibold text-gray-700 dark:text-gray-300" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                                              {group ? group.name : 'Unassigned'} ({collaborators.length})
+                                                            </span>
+                                                          </div>
+                                                          
+                                                          {/* Collaborators in this group */}
+                                                          <div className="flex flex-wrap gap-1 ml-1">
+                                                            {collaborators.map((collaborator: any) => {
+                                                              const colorScheme = getCollaboratorBadgeColor(collaborator.originalIndex);
+                                                              return (
+                                                                <div 
+                                                                  key={collaborator.originalIndex} 
+                                                                  className={`h-10 w-10 rounded-lg ${colorScheme.bg} flex items-center justify-center border-2 ${colorScheme.border} relative group`}
+                                                                >
+                                                                  <span className={`text-sm font-semibold ${colorScheme.text}`} style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                                                    {getInitials(collaborator.name)}
+                                                                  </span>
+                                                                  
+                                                                  {/* X button for removal - only visible on hover */}
+                                                                  <button 
+                                                                    onClick={(e) => {
+                                                                      e.stopPropagation();
+                                                                      setAddedGroupCollaborators(prev => prev.filter((_, i) => i !== collaborator.originalIndex));
+                                                                    }}
+                                                                    className="absolute -top-2 -right-2 w-5 h-5 bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 rounded-lg flex items-center justify-center text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100 dark:hover:bg-red-900/30 border-2 border-red-200 dark:border-red-800"
+                                                                  >
+                                                                    ×
+                                                                  </button>
+                                                                </div>
+                                                              );
+                                                            })}
+                                                          </div>
+                                                        </div>
+                                                      );
+                                                    })}
+                                                  </div>
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    );
+                                  })()}
                                 </>
                               ) : (
                                 <div className="text-center py-8 pb-8 text-gray-500 dark:text-gray-400 cursor-default select-none">
@@ -4592,7 +5714,7 @@ export default function AdminSettingsPage() {
                             </div>
                             
                             {/* Form Actions */}
-                            <div className="flex items-center justify-between w-full !mt-5">
+                            <div className="flex items-center justify-between w-full !mt-8">
                               <div className="flex items-center">
                                 {groupFormStep > 1 && (
                                   <button
@@ -4643,12 +5765,16 @@ export default function AdminSettingsPage() {
                                       setGroupCollaborators([{
                                         name: '',
                                         email: '',
+                                        group: '',
                                         showNamesDropdown: false,
+                                        showGroupDropdown: false,
                                         namesDropdownRef: React.createRef<HTMLDivElement>(),
-                                        namesInputRef: React.createRef<HTMLInputElement>()
+                                        namesInputRef: React.createRef<HTMLInputElement>(),
+                                        groupDropdownRef: React.createRef<HTMLDivElement>()
                                       }]);
                                     }}
-                                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold"
+                                    disabled={!groupFormData.name.trim() || !groupFormData.organization.trim() || addedGroupCollaborators.length < 2}
+                                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary"
                                     style={{ fontFamily: 'Avenir, sans-serif' }}
                                   >
                                     Create
@@ -4694,7 +5820,6 @@ export default function AdminSettingsPage() {
                               <div className="flex items-center">
                                 <div className="text-sm font-semibold text-gray-900 dark:text-white">{org.name}</div>
                               </div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{org.description}</div>
                             </div>
                           </div>
                           <div className="relative" data-org-dropdown={org.id}>
@@ -4753,6 +5878,45 @@ export default function AdminSettingsPage() {
                             </div>
                             <div className="mb-6">
                               <form className="space-y-6">
+                  {/* Organization ID Field */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 -mt-4">
+                    <div>
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">Organization ID</div>
+                      <div className="flex items-center">
+                        <span className="text-xs font-mono text-gray-900 dark:text-white truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-default select-none">
+                          {org.orgId}
+                        </span>
+                        <div className="relative">
+                          <button
+                            type="button"
+                            className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer relative group"
+                            onClick={() => {
+                              navigator.clipboard.writeText(org.orgId);
+                              setCopiedOrgId(org.orgId);
+                              setTimeout(() => setCopiedOrgId(null), 1500);
+                            }}
+                            onMouseEnter={() => setHoveredOrgId(org.orgId)}
+                            onMouseLeave={() => setHoveredOrgId(null)}
+                            aria-label="Copy organization ID"
+                          >
+                            <HiOutlineDuplicate className="w-4 h-4" />
+                            {copiedOrgId === org.orgId ? (
+                              <span className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none font-sans">
+                                Copied!
+                              </span>
+                            ) : (
+                              <span className="absolute -top-1 left-full ml-2 bg-gray-900 text-white text-xs px-2 py-1 rounded cursor-default select-none opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap font-sans">
+                                Copy
+                              </span>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      {/* Empty right column for Organization ID row */}
+                    </div>
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                       <div>
                                     <label className="block text-xs font-medium text-black dark:text-white mb-1">Organization Name</label>
@@ -5056,18 +6220,186 @@ export default function AdminSettingsPage() {
                                   <p className="text-gray-600 dark:text-gray-400 text-xs">Manage collaborators who have access to this organization</p>
                                 </div>
                                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-0">
-                                  <button 
-                                    className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 dark:border-transparent bg-white dark:bg-primary text-gray-900 dark:text-white font-semibold text-sm hover:bg-gray-50 dark:hover:bg-primary-dark transition-colors cursor-pointer"
-                                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                                  {/* Group Filter Dropdown */}
+                                  <div 
+                                    className="relative" 
+                                    data-group-dropdown={org.id}
+                                    ref={el => {
+                                      if (el) {
+                                        groupDropdownRefs.current[org.id] = el;
+                                      }
+                                    }}
                                   >
-                                    <TbMailShare className="w-4 h-4 text-primary dark:text-white" /> Invite
-                                  </button>
+                                    <button
+                                      onClick={() => setShowGroupDropdowns(prev => ({ ...prev, [org.id]: !prev[org.id] }))}
+                                      className="appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-1.5 text-sm font-semibold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary dark:focus:ring-0 dark:focus:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer flex items-center justify-between gap-3"
+                                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                                    >
+                                      <span className="flex items-center">
+                                        <TbUsersGroup className="w-4 h-4 mr-2 text-gray-500" />
+                                        {selectedGroupFilters[org.id]?.includes('all') || !selectedGroupFilters[org.id]?.length
+                                          ? `All Groups (${groupsData.length})` 
+                                          : `Selected Groups (${selectedGroupFilters[org.id].length})`
+                                        }
+                                      </span>
+                                      <TbChevronDown className="w-4 h-4 text-gray-400" />
+                                    </button>
+                                    
+                                    {showGroupDropdowns[org.id] && (
+                                      <div className="absolute right-0 mt-1 w-52 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
+                                        <button
+                                          className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedGroupFilters[org.id]?.includes('all') || !selectedGroupFilters[org.id]?.length ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                                          onClick={() => {
+                                            setSelectedGroupFilters(prev => ({ ...prev, [org.id]: ['all'] }));
+                                            // Don't close dropdown - allow multiple selections
+                                          }}
+                                        >
+                                          <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                                            {(selectedGroupFilters[org.id]?.includes('all') || !selectedGroupFilters[org.id]?.length) && (
+                                              <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                                                <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                </svg>
+                                              </div>
+                                            )}
+                                          </div>
+                                          <TbUsersGroup className="w-4 h-4 mr-2 text-gray-500" />
+                                          All ({groupsData.length})
+                                        </button>
+                                        {groupsData.map((group) => (
+                                          <button
+                                            key={group.id}
+                                            className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center ${selectedGroupFilters[org.id]?.includes(group.id) ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}
+                                            onClick={() => {
+                                              setSelectedGroupFilters(prev => {
+                                                const current = prev[org.id] || ['all'];
+                                                if (current.includes('all')) {
+                                                  return { ...prev, [org.id]: [group.id] };
+                                                } else if (current.includes(group.id)) {
+                                                  const newFilters = current.filter(id => id !== group.id);
+                                                  return { ...prev, [org.id]: newFilters.length > 0 ? newFilters : ['all'] };
+                                                } else {
+                                                  return { ...prev, [org.id]: [...current, group.id] };
+                                                }
+                                              });
+                                              // Don't close dropdown - allow multiple selections
+                                            }}
+                                          >
+                                            <div className="w-4 h-4 border border-gray-300 rounded mr-2 flex items-center justify-center">
+                                              {selectedGroupFilters[org.id]?.includes(group.id) && (
+                                                <div className="w-3 h-3 bg-primary rounded-sm flex items-center justify-center">
+                                                  <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                  </svg>
+                                                </div>
+                                              )}
+                                            </div>
+                                            <TbUsersGroup className={`w-4 h-4 mr-2 ${
+                                              group.color === 'teal' ? 'text-teal-500' :
+                                              group.color === 'blue' ? 'text-blue-500' :
+                                              group.color === 'purple' ? 'text-purple-500' :
+                                              group.color === 'orange' ? 'text-orange-500' :
+                                              group.color === 'green' ? 'text-green-500' :
+                                              group.color === 'pink' ? 'text-pink-500' :
+                                              group.color === 'indigo' ? 'text-indigo-500' :
+                                              'text-gray-500'
+                                            }`} />
+                                            {group.name}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                  
                                   <button 
-                                    className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 dark:border-transparent bg-white dark:bg-primary text-gray-900 dark:text-white font-semibold text-xs hover:bg-gray-50 dark:hover:bg-primary-dark transition-colors cursor-pointer sm:ml-1"
+                                    className="flex items-center gap-2 px-4 py-1.5 rounded-lg border border-gray-300 dark:border-transparent bg-white dark:bg-primary text-gray-900 dark:text-white font-semibold text-sm hover:bg-gray-50 dark:hover:bg-primary-dark transition-colors cursor-pointer sm:ml-1"
                                     style={{ fontFamily: 'Avenir, sans-serif' }}
+                                    onClick={() => {
+                                      setShowAddGroupModal(true);
+                                      setAddGroupModalStep(1);
+                                      setAddGroupModalFormData({
+                                        name: '',
+                                        organization: '',
+                                        description: ''
+                                      });
+                                      setAddGroupModalCollaborators([{
+                                        name: '',
+                                        email: '',
+                                        group: '',
+                                        contractPermissions: [],
+                                        showNamesDropdown: false,
+                                        namesDropdownRef: React.createRef<HTMLDivElement>(),
+                                        contractRoleInputRef: React.createRef<HTMLDivElement>(),
+                                        contractRoleDropdownRef: React.createRef<HTMLDivElement>(),
+                                        namesInputRef: React.createRef<HTMLInputElement>(),
+                                        showContractRoleDropdown: false,
+                                        showGroupDropdown: false,
+                                        groupDropdownRef: React.createRef<HTMLDivElement>()
+                                      }]);
+                                      setAddedAddGroupModalCollaborators([]);
+                                      setDuplicateAddGroupModalCollaboratorError(null);
+                                      setAddedAddGroupModalGroups([]);
+                                      setExpandedAddGroupModalGroupCards({});
+                                    }}
                                   >
-                                    <TbUserPlus className="text-base text-primary dark:text-white" /> Add
+                                    <TbUsersPlus className="w-4 h-4 text-primary dark:text-white" /> Add Group
                                   </button>
+                                  <div className="relative">
+                                    <button 
+                                      ref={el => {
+                                        if (el) {
+                                          addCollaboratorButtonRefs.current[org.id] = el;
+                                        }
+                                      }}
+                                      className="flex items-center gap-2 px-4 py-1.5 rounded-lg border border-gray-300 dark:border-transparent bg-white dark:bg-primary text-gray-900 dark:text-white font-semibold text-sm hover:bg-gray-50 dark:hover:bg-primary-dark transition-colors cursor-pointer sm:ml-1"
+                                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                                      onClick={() => setShowAddCollaboratorDropdowns(prev => ({ ...prev, [org.id]: !prev[org.id] }))}
+                                    >
+                                      <TbUserPlus className="w-4 h-4 text-primary dark:text-white" /> Add Collaborator
+                                      <TbChevronDown className="text-sm text-primary dark:text-white" />
+                                    </button>
+                                    
+                                    {/* Add Collaborator Dropdown */}
+                                    {showAddCollaboratorDropdowns[org.id] && (
+                                      <div
+                                        ref={el => {
+                                          if (el) {
+                                            addCollaboratorDropdownRefs.current[org.id] = el;
+                                          }
+                                        }}
+                                        className="absolute top-full right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 z-[9999] py-2 w-full"
+                                      >
+                                        <button
+                                          type="button"
+                                          className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center text-gray-700 dark:text-gray-300"
+                                          onClick={() => {
+                                            setShowAddCollaboratorDropdowns(prev => ({ ...prev, [org.id]: false }));
+                                            setAddExistingCollaboratorModalData({
+                                              organizationId: org.id,
+                                              collaboratorName: '',
+                                              group: '',
+                                              email: ''
+                                            });
+                                            setShowAddExistingCollaboratorModal(true);
+                                          }}
+                                        >
+                                          <TbUserPlus className="h-4 w-4 mr-2" />
+                                          Add Existing
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center text-gray-700 dark:text-gray-300"
+                                          onClick={() => {
+                                            setShowAddCollaboratorDropdowns(prev => ({ ...prev, [org.id]: false }));
+                                            // TODO: Implement invite new collaborator functionality
+                                          }}
+                                        >
+                                          <TbMailShare className="h-4 w-4 mr-2" />
+                                          Invite New
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -5077,100 +6409,231 @@ export default function AdminSettingsPage() {
                                 <table className="w-full">
                                   <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700">
                                     <tr>
-                                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-2/5">Name</th>
-                                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5">Role</th>
-                                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5">Status</th>
+                                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/3">Name</th>
+                                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5">Role</th>
+                                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5">Status</th>
                                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5">Last Active</th>
                                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/5">Actions</th>
                                     </tr>
+                                    <tr>
+                                      <th colSpan={5} className="px-0 py-0 border-b-2 border-gray-200 dark:border-gray-600"></th>
+                                    </tr>
                                   </thead>
-                                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                    {collaboratorsData.map((collaborator, index) => (
-                                      <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                        <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-2/5">
-                                          <div className="flex items-center">
-                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center border-2 mr-3 ${
-                                              index === 0 ? 'bg-teal-50 dark:bg-teal-900/30 border-teal-200 dark:border-teal-800' :
-                                              index === 1 ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800' :
-                                              index === 2 ? 'bg-purple-100 dark:bg-purple-900/30 border-purple-200 dark:border-purple-800' :
-                                              index === 3 ? 'bg-orange-100 dark:bg-orange-900/30 border-orange-200 dark:border-orange-800' :
-                                              index === 4 ? 'bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-800' :
-                                              index === 5 ? 'bg-pink-100 dark:bg-pink-900/30 border-pink-200 dark:border-pink-800' :
-                                              index === 6 ? 'bg-indigo-100 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-800' :
-                                              'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-800'
-                                            }`}>
-                                              <span className={`font-semibold text-xs ${
-                                                index === 0 ? 'text-teal-500 dark:text-teal-400' :
-                                                index === 1 ? 'text-blue-500 dark:text-blue-400' :
-                                                index === 2 ? 'text-purple-500 dark:text-purple-400' :
-                                                index === 3 ? 'text-orange-500 dark:text-orange-400' :
-                                                index === 4 ? 'text-green-500 dark:text-green-400' :
-                                                index === 5 ? 'text-pink-500 dark:text-pink-400' :
-                                                index === 6 ? 'text-indigo-500 dark:text-indigo-400' :
-                                                'text-yellow-500 dark:text-yellow-400'
-                                              }`}>{collaborator.avatar}</span>
-                                            </div>
-                                            <div>
-                                              <div className="font-medium">{collaborator.name}</div>
-                                              <div className="text-gray-500 dark:text-gray-400">{collaborator.email}</div>
-                                            </div>
-                                          </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/5">
-                                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                            collaborator.role === 'Admin' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
-                                            collaborator.role === 'Editor' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
-                                            collaborator.role === 'Viewer' ? 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' :
-                                            'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                          }`}>
-                                            {collaborator.role}
-                                          </span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/5">
-                                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                            collaborator.status === 'Active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                                            'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-                                          }`}>
-                                            {collaborator.status}
-                                          </span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/5">
-                                          {collaborator.lastActive}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/5">
-                                          <div className="flex items-center space-x-1">
-                                            <button
-                                              className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group flex items-center justify-center"
-                                            >
-                                              <TbUserCog size={14} />
-                                              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                                                Edit
-                                              </span>
-                                            </button>
-                                            <button
-                                              onClick={() => {
-                                                toast({
-                                                  title: "Collaborator removed",
-                                                  description: `${collaborator.name} has been removed from the organization`,
-                                                  duration: 5000,
-                                                  variant: "destructive",
-                                                });
-                                                
-                                                // Remove from local state (in a real app, this would call an API)
-                                                const newCollaboratorsData = collaboratorsData.filter((_, i) => i !== index);
-                                                // Note: In a real implementation, you'd update state here
-                                              }}
-                                              className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group flex items-center justify-center"
-                                            >
-                                              <TbUserOff size={14} />
-                                              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                                                Remove
-                                              </span>
-                                            </button>
-                                          </div>
-                                        </td>
-                                      </tr>
-                                    ))}
+                                  <tbody className="bg-white dark:bg-gray-800">
+                                    {(() => {
+                                      // Filter collaborators based on selected group filters
+                                      const selectedGroups = selectedGroupFilters[org.id] || ['all'];
+                                      const filteredCollaborators = selectedGroups.includes('all') 
+                                        ? collaboratorsData 
+                                        : collaboratorsData.filter(collaborator => {
+                                            const groupName = collaborator.group || 'No Group';
+                                            const groupData = groupsData.find(g => g.name === groupName);
+                                            return groupData && selectedGroups.includes(groupData.id);
+                                          });
+
+                                      // Group collaborators by their groups
+                                      const groupedCollaborators = filteredCollaborators.reduce((groups, collaborator) => {
+                                        const groupName = collaborator.group || 'No Group';
+                                        if (!groups[groupName]) {
+                                          groups[groupName] = [];
+                                        }
+                                        groups[groupName].push(collaborator);
+                                        return groups;
+                                      }, {} as Record<string, typeof collaboratorsData>);
+
+                                      const rows: JSX.Element[] = [];
+                                      let rowIndex = 0;
+
+                                      // If no collaborators match the filter, show a message
+                                      if (Object.keys(groupedCollaborators).length === 0) {
+                                        rows.push(
+                                          <tr key="no-collaborators">
+                                            <td colSpan={5} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                                              <TbUsers size={32} className="mx-auto mb-2 text-gray-400" />
+                                              <div className="text-sm">No collaborators found for the selected groups</div>
+                                            </td>
+                                          </tr>
+                                        );
+                                      }
+
+                                      Object.entries(groupedCollaborators).forEach(([groupName, collaborators], groupIndex) => {
+                                        // Find group data
+                                        const groupData = groupsData.find(g => g.name === groupName);
+                                        const groupColor = groupData?.color || 'gray';
+                                        
+                                        // Add group header row
+                                        const groupKey = `${org.id}-${groupName}`;
+                                        const isCollapsed = collapsedGroups[groupKey] || false;
+                                        
+                                        // Add divider line before group if previous group was collapsed
+                                        if (groupIndex > 0) {
+                                          const previousGroupName = Object.keys(groupedCollaborators)[groupIndex - 1];
+                                          const previousGroupKey = `${org.id}-${previousGroupName}`;
+                                          const previousGroupCollapsed = collapsedGroups[previousGroupKey] || false;
+                                          
+                                          if (previousGroupCollapsed) {
+                                            rows.push(
+                                              <tr key={`divider-${groupName}`}>
+                                                <td colSpan={5} className="px-0 py-0 border-b border-gray-200 dark:border-gray-600"></td>
+                                              </tr>
+                                            );
+                                          }
+                                        }
+                                        
+                                        rows.push(
+                                          <tr key={`group-${groupName}`} className="bg-gray-50 dark:bg-gray-700 border-0">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white w-1/3">
+                                              <div className="flex items-center">
+                                                <TbUsersGroup className={`w-5 h-5 mr-3 ${
+                                                  groupColor === 'teal' ? 'text-teal-500' :
+                                                  groupColor === 'blue' ? 'text-blue-500' :
+                                                  groupColor === 'purple' ? 'text-purple-500' :
+                                                  groupColor === 'orange' ? 'text-orange-500' :
+                                                  groupColor === 'green' ? 'text-green-500' :
+                                                  groupColor === 'pink' ? 'text-pink-500' :
+                                                  groupColor === 'indigo' ? 'text-indigo-500' :
+                                                  'text-gray-500'
+                                                }`} />
+                                                <div className="flex items-center">
+                                                  <div className="font-bold">{groupName}</div>
+                                                  <button
+                                                    onClick={() => toggleGroupCollapse(groupKey)}
+                                                    className="ml-2 p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
+                                                  >
+                                                    {isCollapsed ? (
+                                                      <TbChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                                                    ) : (
+                                                      <TbChevronUp className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                                                    )}
+                                                  </button>
+                                                </div>
+                                                <div className="text-xs text-gray-500 dark:text-gray-400 ml-3">
+                                                  {collaborators.length} member{collaborators.length !== 1 ? 's' : ''}
+                                                </div>
+                                              </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 w-1/5">
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 w-1/5">
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 w-1/5">
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white w-1/5">
+                                              <div className="flex items-center space-x-1">
+                                                <button
+                                                  className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group flex items-center justify-center"
+                                                >
+                                                  <TbUsersMinus size={14} />
+                                                  <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                                    Remove
+                                                  </span>
+                                                </button>
+                                              </div>
+                                            </td>
+                                          </tr>
+                                        );
+                                        
+                                        // Add divider row after each group header for consistent thickness
+                                        rows.push(
+                                          <tr key={`group-divider-${groupName}`}>
+                                            <td colSpan={5} className="px-0 py-0 border-b border-gray-200 dark:border-gray-600"></td>
+                                          </tr>
+                                        );
+
+                                        // Add collaborator rows for this group (only if not collapsed)
+                                        if (!isCollapsed) {
+                                          collaborators.forEach((collaborator, collaboratorIndex) => {
+                                          const colorIndex = (rowIndex + collaboratorIndex) % 8;
+                                          rows.push(
+                                            <tr key={`${groupName}-${collaboratorIndex}`} className="hover:bg-gray-50 dark:hover:bg-gray-700 border-0">
+                                              <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/3">
+                                                <div className="flex items-center pl-6">
+                                                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center border-2 mr-3 ${
+                                                    colorIndex === 0 ? 'bg-teal-50 dark:bg-teal-900/30 border-teal-200 dark:border-teal-800' :
+                                                    colorIndex === 1 ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800' :
+                                                    colorIndex === 2 ? 'bg-purple-100 dark:bg-purple-900/30 border-purple-200 dark:border-purple-800' :
+                                                    colorIndex === 3 ? 'bg-orange-100 dark:bg-orange-900/30 border-orange-200 dark:border-orange-800' :
+                                                    colorIndex === 4 ? 'bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-800' :
+                                                    colorIndex === 5 ? 'bg-pink-100 dark:bg-pink-900/30 border-pink-200 dark:border-pink-800' :
+                                                    colorIndex === 6 ? 'bg-indigo-100 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-800' :
+                                                    'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-800'
+                                                  }`}>
+                                                    <span className={`font-semibold text-xs ${
+                                                      colorIndex === 0 ? 'text-teal-500 dark:text-teal-400' :
+                                                      colorIndex === 1 ? 'text-blue-500 dark:text-blue-400' :
+                                                      colorIndex === 2 ? 'text-purple-500 dark:text-purple-400' :
+                                                      colorIndex === 3 ? 'text-orange-500 dark:text-orange-400' :
+                                                      colorIndex === 4 ? 'text-green-500 dark:text-green-400' :
+                                                      colorIndex === 5 ? 'text-pink-500 dark:text-pink-400' :
+                                                      colorIndex === 6 ? 'text-indigo-500 dark:text-indigo-400' :
+                                                      'text-yellow-500 dark:text-yellow-400'
+                                                    }`}>{collaborator.avatar}</span>
+                                                  </div>
+                                                  <div>
+                                                    <div className="font-medium">{collaborator.name}</div>
+                                                    <div className="text-gray-500 dark:text-gray-400">{collaborator.email}</div>
+                                                  </div>
+                                                </div>
+                                              </td>
+                                              <td className="px-6 py-4 whitespace-nowrap text-center text-xs w-1/5">
+                                                <span className="text-gray-900 dark:text-white">
+                                                  {collaborator.role}
+                                                </span>
+                                              </td>
+                                              <td className="px-6 py-4 whitespace-nowrap text-center text-xs w-1/5">
+                                                <span className={`${
+                                                  collaborator.status === 'Active' ? 'text-green-600 dark:text-green-400' :
+                                                  collaborator.status === 'Pending' ? 'text-yellow-600 dark:text-yellow-400' :
+                                                  'text-gray-900 dark:text-white'
+                                                }`}>
+                                                  {collaborator.status}
+                                                </span>
+                                              </td>
+                                              <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/5">
+                                                {collaborator.lastActive}
+                                              </td>
+                                              <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 dark:text-white w-1/5">
+                                                <div className="flex items-center space-x-1">
+                                                  <button
+                                                    className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-primary dark:hover:text-primary relative group flex items-center justify-center"
+                                                  >
+                                                    <TbUserCog size={14} />
+                                                    <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                                      Edit
+                                                    </span>
+                                                  </button>
+                                                  <button
+                                                    onClick={() => {
+                                                      toast({
+                                                        title: "Collaborator removed",
+                                                        description: `${collaborator.name} has been removed from the organization`,
+                                                        duration: 5000,
+                                                        variant: "destructive",
+                                                      });
+                                                      
+                                                      // Remove from local state (in a real app, this would call an API)
+                                                      const newCollaboratorsData = collaboratorsData.filter((_, i) => i !== rowIndex + collaboratorIndex);
+                                                      // Note: In a real implementation, you'd update state here
+                                                    }}
+                                                    className="border border-gray-300 rounded-md px-1 sm:px-1.5 py-1 text-gray-700 dark:text-gray-300 hover:border-red-500 hover:text-red-500 transition-colors bg-transparent dark:bg-gray-800 dark:hover:border-red-500 dark:hover:text-red-500 relative group flex items-center justify-center"
+                                                  >
+                                                    <TbUserMinus size={14} />
+                                                    <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                                      Remove
+                                                    </span>
+                                                  </button>
+                                                </div>
+                                              </td>
+                                            </tr>
+                                          );
+                                        });
+                                        }
+
+                                        rowIndex += collaborators.length;
+                                      });
+
+                                      return rows;
+                                    })()}
                                   </tbody>
                                 </table>
                               </div>
@@ -5179,7 +6642,7 @@ export default function AdminSettingsPage() {
                                   <div className="flex items-center gap-2">
                                     <TbUsers size={16} className="text-gray-600 dark:text-gray-400" />
                                     <div className="text-xs text-gray-700 dark:text-gray-300">
-                                      {collaboratorsData.length} collaborators have been configured for this organization
+                                      {collaboratorsData.length} collaborators across {groupsData.length} groups
                                     </div>
                                   </div>
                                 </div>
@@ -5894,6 +7357,1265 @@ export default function AdminSettingsPage() {
         </div>
       )}
       
+      {/* Add Group Modal */}
+      {showAddGroupModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <TbUsersPlus className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-black dark:text-white leading-tight">Add Group</h2>
+                  <p className="text-gray-500 text-xs leading-tight cursor-default select-none">Fill in group details & add collaborators</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowAddGroupModal(false);
+                  setAddGroupModalStep(1);
+                  setAddGroupModalFormData({ name: '', organization: '', description: '' });
+                  setAddGroupModalCollaborators([{
+                    name: '',
+                    email: '',
+                    group: '',
+                    contractPermissions: [],
+                    showNamesDropdown: false,
+                    namesDropdownRef: React.createRef<HTMLDivElement>(),
+                    contractRoleInputRef: React.createRef<HTMLDivElement>(),
+                    contractRoleDropdownRef: React.createRef<HTMLDivElement>(),
+                    namesInputRef: React.createRef<HTMLInputElement>(),
+                    showContractRoleDropdown: false,
+                    showGroupDropdown: false,
+                    groupDropdownRef: React.createRef<HTMLDivElement>()
+                  }]);
+                  setAddedAddGroupModalCollaborators([]);
+                  setDuplicateAddGroupModalCollaboratorError(null);
+                  setAddedAddGroupModalGroups([]);
+                  setExpandedAddGroupModalGroupCards({});
+                }}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              >
+                <TbX className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+              {/* Stepper */}
+              <div className="w-full overflow-x-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500">
+                <div className="flex items-center justify-between mb-4 min-w-0">
+                  <div className="flex items-center space-x-2 w-full flex-nowrap">
+                    {[1, 2].map((step, idx) => (
+                    <React.Fragment key={step}>
+                      <button
+                        type="button"
+                        onClick={() => setAddGroupModalStep(step)}
+                        className={`flex items-center gap-2 rounded-xl font-semibold border transition-all duration-300 text-sm px-3 sm:px-4 py-2 whitespace-nowrap flex-shrink-0
+                          ${addGroupModalStep === step
+                            ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 ring-1 ring-inset ring-gray-200 dark:ring-gray-600 shadow-sm'
+                            : 'text-gray-500 dark:text-gray-400 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700'
+                          }`}
+                      >
+                        <span className={`inline-block transition-all duration-300 ${addGroupModalStep === step ? 'opacity-100 mr-2' : 'opacity-0 w-0 mr-0'}`} style={{width: addGroupModalStep === step ? 18 : 0}}>
+                          {addGroupModalStep === step && <Logo width={18} height={18} className="pointer-events-none" />}
+                        </span>
+                        {step === 1 && 'Step 1: Details'}
+                        {step === 2 && 'Step 2: Collaborators'}
+                      </button>
+                      {idx < 1 && <div className="flex-1 h-0.5 bg-gray-200 dark:bg-gray-600 mx-1 sm:mx-2" />}
+                    </React.Fragment>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Form Content */}
+              <div className="space-y-6 pt-4">
+                {addGroupModalStep === 1 && (
+                  <form className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-xs font-medium text-black dark:text-white mb-1">Group Name <span className="text-red-500">*</span></label>
+                        <input 
+                          type="text" 
+                          value={addGroupModalFormData.name}
+                          onChange={(e) => handleAddGroupModalFormChange('name', e.target.value)}
+                          className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs" 
+                          placeholder="Enter group name..." 
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-black dark:text-white mb-1">Organization <span className="text-red-500">*</span></label>
+                        <div className="relative w-full" ref={addGroupModalOrganizationDropdownRef}>
+                          <input
+                            type="text"
+                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs pr-10 cursor-pointer caret-transparent"
+                            placeholder="Select organization..."
+                            value={organizationsData.find(org => org.id === addGroupModalFormData.organization)?.name || ''}
+                            readOnly
+                            onClick={() => setShowAddGroupModalOrganizationDropdown(!showAddGroupModalOrganizationDropdown)}
+                          />
+                          <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          {showAddGroupModalOrganizationDropdown && (
+                            <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-track]:dark:bg-gray-800 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:dark:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-400 [&::-webkit-scrollbar-thumb:hover]:dark:bg-gray-500 [&::-webkit-scrollbar]:hidden" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                              {organizationsData.map(org => (
+                                <button
+                                  key={org.id}
+                                  className={`w-full text-left px-3 py-2 text-xs font-medium ${addGroupModalFormData.organization === org.id ? 'bg-primary/10 text-primary' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                                  onClick={() => {
+                                    handleAddGroupModalFormChange('organization', org.id);
+                                    setShowAddGroupModalOrganizationDropdown(false);
+                                  }}
+                                >
+                                  {org.name}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-black dark:text-white mb-1">Description</label>
+                      <textarea 
+                        value={addGroupModalFormData.description}
+                        onChange={(e) => handleAddGroupModalFormChange('description', e.target.value)}
+                        className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs resize-none" 
+                        placeholder="Enter group description..."
+                        rows={4}
+                      />
+                    </div>
+
+                    {/* Added Groups Section */}
+                    <div className="mt-6">
+                      {addedAddGroupModalGroups && addedAddGroupModalGroups.length > 0 && (
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                            Added Groups ({addedAddGroupModalGroups.length})
+                          </h3>
+                        </div>
+                      )}
+                      
+                      {!addedAddGroupModalGroups || addedAddGroupModalGroups.length === 0 ? (
+                        <div className="text-center py-8 pb-8 text-gray-500 dark:text-gray-400 cursor-default select-none">
+                          <TbUsersGroup size={32} className="mx-auto mb-2 text-primary" />
+                          <p className="text-sm" style={{ fontFamily: 'Avenir, sans-serif' }}>No groups yet</p>
+                          <p className="text-xs" style={{ fontFamily: 'Avenir, sans-serif' }}>Add a group by filling in the details above and click the "Add Group" button</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {(() => {
+                            // Group groups by organization while maintaining organization order
+                            const groupedByOrg = addedAddGroupModalGroups.reduce((acc, group) => {
+                              const orgId = group.organizationId || addGroupModalFormData.organization;
+                              if (!acc[orgId]) {
+                                acc[orgId] = [];
+                              }
+                              acc[orgId].push(group);
+                              return acc;
+                            }, {} as Record<string, any[]>);
+
+                            // Get organizations in the order they appear in organizationsData, but only show those with groups
+                            const orgsWithGroups = organizationsData
+                              .filter(org => groupedByOrg[org.id] && groupedByOrg[org.id].length > 0)
+                              .map(org => ({ org, groups: groupedByOrg[org.id] }));
+
+                            // Group organizations into rows of 3
+                            const orgRows = [];
+                            for (let i = 0; i < orgsWithGroups.length; i += 3) {
+                              orgRows.push(orgsWithGroups.slice(i, i + 3));
+                            }
+
+                            return (
+                              <div className="space-y-6">
+                                {orgRows.map((row, rowIndex) => (
+                                  <div key={rowIndex} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {row.map(({ org, groups }) => {
+                                      const organization = org;
+                                      
+                                      return (
+                                        <div key={org.id} className="space-y-3">
+                                          {/* Organization Info */}
+                                          <div className="flex items-center gap-2">
+                                            <TbBuilding className={`w-4 h-4 ${
+                                              organization?.color === 'cyan' ? 'text-cyan-500' :
+                                              organization?.color === 'blue' ? 'text-blue-500' :
+                                              organization?.color === 'purple' ? 'text-purple-500' :
+                                              organization?.color === 'orange' ? 'text-orange-500' :
+                                              organization?.color === 'green' ? 'text-green-500' :
+                                              organization?.color === 'pink' ? 'text-pink-500' :
+                                              organization?.color === 'indigo' ? 'text-indigo-500' :
+                                              organization?.color === 'teal' ? 'text-teal-500' :
+                                              'text-primary'
+                                            }`} />
+                                            <span className="text-xs font-semibold text-gray-700 dark:text-gray-300" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                              {organization?.name || 'Selected Organization'}
+                                            </span>
+                                          </div>
+                                          
+                                          {/* Groups for this organization */}
+                                          <div className="space-y-2 ml-4">
+                                            {groups.map((group: any) => {
+                                              const isExpanded = expandedAddGroupModalGroupCards[group.id] || false;
+                                              return (
+                                                <div 
+                                                  key={group.id} 
+                                                  data-group-id={group.id}
+                                                  className="bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-700 transition-all duration-200 cursor-pointer"
+                                                  onClick={() => toggleAddGroupModalGroupCard(group.id)}
+                                                >
+                                  {!isExpanded ? (
+                                    // Collapsed view
+                                    <div className="flex items-center gap-3">
+                                      <TbUsersGroup className={`w-5 h-5 ${
+                                        group.color === 'teal' ? 'text-teal-500' :
+                                        group.color === 'blue' ? 'text-blue-500' :
+                                        group.color === 'purple' ? 'text-purple-500' :
+                                        group.color === 'orange' ? 'text-orange-500' :
+                                        group.color === 'green' ? 'text-green-500' :
+                                        group.color === 'pink' ? 'text-pink-500' :
+                                        group.color === 'indigo' ? 'text-indigo-500' :
+                                        group.color === 'cyan' ? 'text-cyan-500' :
+                                        'text-gray-500'
+                                      }`} />
+                                      <div className="flex-1 min-w-0">
+                                        <div className="font-semibold text-sm text-gray-900 dark:text-white truncate" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                          {group.name}
+                                        </div>
+                                      </div>
+                                      <TbChevronDown className="w-4 h-4 text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0" />
+                                    </div>
+                                  ) : (
+                                    // Expanded view - Editing mode
+                                    <div 
+                                      onClick={(e) => e.stopPropagation()}
+                                      onKeyDown={(e) => e.stopPropagation()}
+                                      onKeyUp={(e) => e.stopPropagation()}
+                                    >
+                                      {/* Group ID */}
+                                      <div className="mb-3">
+                                        <div className="flex items-center justify-between mb-1">
+                                          <div className="text-gray-500 dark:text-gray-400 text-xs">Group ID</div>
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              toggleAddGroupModalGroupCard(group.id);
+                                            }}
+                                            className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+                                          >
+                                            <TbChevronUp className="w-4 h-4" />
+                                          </button>
+                                        </div>
+                                        <div className="flex items-center">
+                                          <span className="text-xs font-mono text-gray-900 dark:text-white truncate hover:whitespace-normal hover:overflow-visible hover:max-w-none transition-all duration-200 cursor-default select-none">
+                                            {group.groupId || group.id}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      
+                                      {/* Group Name */}
+                                      <div className="mb-3">
+                                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Group Name</label>
+                                        <input
+                                          type="text"
+                                          value={group.name}
+                                          onChange={(e) => updateAddGroupModalGroup(group.id, 'name', e.target.value)}
+                                          onKeyDown={(e) => {
+                                            e.stopPropagation();
+                                            if (e.key === 'Enter') {
+                                              e.preventDefault();
+                                            }
+                                          }}
+                                          onKeyUp={(e) => e.stopPropagation()}
+                                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs"
+                                          onClick={(e) => e.stopPropagation()}
+                                        />
+                                      </div>
+                                      
+                                      {/* Description */}
+                                      <div className="mb-3">
+                                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                                        <textarea
+                                          value={group.description}
+                                          onChange={(e) => updateAddGroupModalGroup(group.id, 'description', e.target.value)}
+                                          onKeyDown={(e) => {
+                                            e.stopPropagation();
+                                            if (e.key === 'Enter') {
+                                              e.preventDefault();
+                                            }
+                                          }}
+                                          onKeyUp={(e) => e.stopPropagation()}
+                                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-xs resize-none"
+                                          rows={2}
+                                          onClick={(e) => e.stopPropagation()}
+                                        />
+                                      </div>
+                                      
+                                      {/* Remove Button */}
+                                      <div className="flex justify-end">
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setAddedAddGroupModalGroups(prev => prev.filter(g => g.id !== group.id));
+                                            setExpandedAddGroupModalGroupCards(prev => {
+                                              const newState = { ...prev };
+                                              delete newState[group.id];
+                                              return newState;
+                                            });
+                                          }}
+                                          className="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-500 transition-colors p-1 relative group"
+                                        >
+                                          <TbUsersMinus className="w-4 h-4" />
+                                          <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-gray-200 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                            Remove
+                                          </span>
+                                        </button>
+                                      </div>
+                                    </div>
+                                  )}
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
+                    </div>
+
+                  </form>
+                )}
+
+                {addGroupModalStep === 2 && (
+                  <form className="space-y-6">
+                    {/* Single form fields */}
+                    <div className="relative mb-4">
+                      {/* Form fields */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Left Column */}
+                        <div className="space-y-6">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                              Collaborator Name <span className="text-red-500">*</span>
+                            </label>
+                            <div className="relative">
+                              <input
+                                ref={addGroupModalCollaborators[0].namesInputRef}
+                                type="text"
+                                className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white pr-10"
+                                placeholder="Enter collaborator name..."
+                                style={{ fontFamily: 'Avenir, sans-serif' }}
+                                value={addGroupModalCollaborators[0].name}
+                                onChange={e => {
+                                  setAddGroupModalCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, name: e.target.value } : r));
+                                  setDuplicateAddGroupModalCollaboratorError(null);
+                                }}
+                                onClick={() => {
+                                  setAddGroupModalCollaborators(prev => prev.map((r, i) => i === 0 ? { 
+                                    ...r, 
+                                    showNamesDropdown: !r.showNamesDropdown,
+                                    showContractRoleDropdown: false,
+                                    showGroupDropdown: false
+                                  } : r));
+                                }}
+                              />
+                              <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                              
+                              {/* Names/Emails Autocomplete Dropdown */}
+                              {addGroupModalCollaborators[0].showNamesDropdown && (
+                                <div 
+                                  ref={addGroupModalCollaborators[0].namesDropdownRef}
+                                  className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:hidden"
+                                >
+                                  {/* Assignees Section */}
+                                  {allAssignees
+                                    .filter(assignee => 
+                                      assignee.toLowerCase().includes(addGroupModalCollaborators[0].name.toLowerCase())
+                                    )
+                                    .sort()
+                                    .map((assignee) => (
+                                      <button
+                                        key={assignee}
+                                        className="w-full text-left px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          setAddGroupModalCollaborators(prev => prev.map((r, i) => i === 0 ? { 
+                                            ...r, 
+                                            name: assignee,
+                                            showNamesDropdown: false 
+                                          } : r));
+                                        }}
+                                      >
+                                        <TbUser className="w-4 h-4 flex-shrink-0" />
+                                        {assignee}
+                                      </button>
+                                    ))}
+                                  
+                                  {/* Other Parties Section */}
+                                  {(() => {
+                                    const mockContracts = [
+                                      'Robert Chen', 'Eastside Properties', 'GreenSpace Developers', 'BuildRight Construction',
+                                      'Metro Realty Group', 'Urban Development LLC', 'Premier Construction', 'Elite Properties',
+                                      'Corporate Holdings', 'Real Estate', 'Retail Corp', 'Marketing Solutions Inc', 'Legal Advisory LLC'
+                                    ];
+                                    
+                                    const filteredParties = mockContracts
+                                      .filter(party => 
+                                        party.toLowerCase().includes(addGroupModalCollaborators[0].name.toLowerCase()) &&
+                                        !allAssignees.includes(party)
+                                      )
+                                      .sort();
+                                    
+                                    return filteredParties.map((party) => (
+                                      <button
+                                        key={party}
+                                        className="w-full text-left px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          setAddGroupModalCollaborators(prev => prev.map((r, i) => i === 0 ? { 
+                                            ...r, 
+                                            name: party,
+                                            showNamesDropdown: false 
+                                          } : r));
+                                        }}
+                                      >
+                                        <TbBuilding className="w-4 h-4 flex-shrink-0" />
+                                        {party}
+                                      </button>
+                                    ));
+                                  })()}
+                                  
+                                  {/* No Matches Message */}
+                                  {(() => {
+                                    const allAssigneesFiltered = allAssignees.filter(assignee => 
+                                      assignee.toLowerCase().includes(addGroupModalCollaborators[0].name.toLowerCase())
+                                    );
+                                    const mockContracts = [
+                                      'Robert Chen', 'Eastside Properties', 'GreenSpace Developers', 'BuildRight Construction',
+                                      'Metro Realty Group', 'Urban Development LLC', 'Premier Construction', 'Elite Properties',
+                                      'Corporate Holdings', 'Real Estate', 'Retail Corp', 'Marketing Solutions Inc', 'Legal Advisory LLC'
+                                    ];
+                                    const filteredParties = mockContracts.filter(party => 
+                                      party.toLowerCase().includes(addGroupModalCollaborators[0].name.toLowerCase()) &&
+                                      !allAssignees.includes(party)
+                                    );
+                                    
+                                    return allAssigneesFiltered.length === 0 && filteredParties.length === 0 && addGroupModalCollaborators[0].name.length > 0 ? (
+                                      <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
+                                        No matches found
+                                      </div>
+                                    ) : null;
+                                  })()}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                              Group
+                            </label>
+                            <div className="relative" ref={addGroupModalCollaborators[0].groupDropdownRef}>
+                              <input
+                                type="text"
+                                className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white pr-10 cursor-pointer caret-transparent"
+                                placeholder="Select group..."
+                                style={{ fontFamily: 'Avenir, sans-serif' }}
+                                value={addGroupModalCollaborators[0].group}
+                                readOnly
+                                onClick={() => {
+                                  setAddGroupModalCollaborators(prev => prev.map((r, i) => i === 0 ? { 
+                                    ...r, 
+                                    showGroupDropdown: !r.showGroupDropdown,
+                                    showNamesDropdown: false
+                                  } : r));
+                                }}
+                              />
+                              <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
+                              
+                              {/* Groups Dropdown */}
+                              {addGroupModalCollaborators[0].showGroupDropdown && (
+                                <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:hidden">
+                                  {addedAddGroupModalGroups.length > 0 ? (
+                                    addedAddGroupModalGroups.map((group) => (
+                                      <button
+                                        key={group.id}
+                                        className="w-full text-left px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          setAddGroupModalCollaborators(prev => prev.map((r, i) => i === 0 ? { 
+                                            ...r, 
+                                            group: group.name,
+                                            showGroupDropdown: false 
+                                          } : r));
+                                        }}
+                                      >
+                                        <TbUsersGroup className="w-4 h-4 flex-shrink-0" />
+                                        {group.name}
+                                      </button>
+                                    ))
+                                  ) : (
+                                    <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
+                                      No groups available, add groups in Step 1...
+                                    </div>
+                                  )}
+                                  
+                                  {/* Add Group Button */}
+                                  <div className="border-t border-gray-200 dark:border-gray-600 mt-1">
+                                    <button
+                                      type="button"
+                                      className="w-full text-left px-3 py-2 text-xs font-medium text-primary hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setAddGroupModalCollaborators(prev => prev.map((r, i) => i === 0 ? { 
+                                          ...r, 
+                                          showGroupDropdown: false 
+                                        } : r));
+                                        setAddGroupModalStep(1);
+                                      }}
+                                    >
+                                      <TbUsersPlus className="w-4 h-4 flex-shrink-0" />
+                                      Add Group
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Right Column */}
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                            Email Address <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="email"
+                            className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white"
+                            placeholder="Enter email address..."
+                            style={{ fontFamily: 'Avenir, sans-serif' }}
+                            value={addGroupModalCollaborators[0].email}
+                            onChange={e => {
+                              setAddGroupModalCollaborators(prev => prev.map((r, i) => i === 0 ? { ...r, email: e.target.value } : r));
+                              setDuplicateAddGroupModalCollaboratorError(null);
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+
+                    {/* Added Collaborators Display */}
+                    <div className="pt-2 min-h-[160px]">
+                      {addedAddGroupModalCollaborators.length > 0 && (
+                        <div className="flex items-center gap-2 mb-4 ml-3">
+                          <TbUsers className="h-5 w-5 text-gray-700 dark:text-gray-300" />
+                          <span className="text-xs font-semibold text-gray-700 dark:text-gray-300" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                            Added Collaborators ({addedAddGroupModalCollaborators.length})
+                          </span>
+                        </div>
+                      )}
+                      
+                      {addedAddGroupModalCollaborators.length > 0 ? (
+                        <div className="space-y-4">
+                          {(() => {
+                            // First group by organization
+                            const orgGroupedCollaborators = addedAddGroupModalCollaborators.reduce((acc, collaborator, idx) => {
+                              const groupName = collaborator.group || 'unassigned';
+                              const group = groupName === 'unassigned' ? null : addedAddGroupModalGroups.find((g: any) => g.name === groupName);
+                              const orgId = group ? group.organizationId : 'unassigned';
+                              
+                              if (!acc[orgId]) {
+                                acc[orgId] = {};
+                              }
+                              
+                              if (!acc[orgId][groupName]) {
+                                acc[orgId][groupName] = [];
+                              }
+                              
+                              acc[orgId][groupName].push({ ...collaborator, originalIndex: idx });
+                              return acc;
+                            }, {} as Record<string, Record<string, any[]>>);
+
+                            // Convert to array and group by 3 organizations per row
+                            const orgEntries = Object.entries(orgGroupedCollaborators);
+                            const orgRows = [];
+                            for (let i = 0; i < orgEntries.length; i += 3) {
+                              orgRows.push(orgEntries.slice(i, i + 3));
+                            }
+
+                            return (
+                              <div className="space-y-6">
+                                {orgRows.map((row, rowIndex) => (
+                                  <div key={rowIndex} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start ml-6">
+                                    {row.map(([orgId, groupCollaborators]) => {
+                                      const organization = orgId === 'unassigned' ? null : organizationsData.find(org => org.id === orgId);
+                                      
+                                      return (
+                                        <div key={orgId} className="flex flex-col space-y-4">
+                                          {/* Organization Header */}
+                                          {organization && (
+                                            <div className="flex items-center gap-2">
+                                              <TbBuilding className={`w-4 h-4 ${
+                                                organization?.color === 'cyan' ? 'text-cyan-500' :
+                                                organization?.color === 'blue' ? 'text-blue-500' :
+                                                organization?.color === 'purple' ? 'text-purple-500' :
+                                                organization?.color === 'orange' ? 'text-orange-500' :
+                                                organization?.color === 'green' ? 'text-green-500' :
+                                                organization?.color === 'pink' ? 'text-pink-500' :
+                                                organization?.color === 'indigo' ? 'text-indigo-500' :
+                                                organization?.color === 'teal' ? 'text-teal-500' :
+                                                'text-primary'
+                                              }`} />
+                                              <span className="text-sm font-semibold text-gray-800 dark:text-gray-200" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                                {organization.name}
+                                              </span>
+                                            </div>
+                                          )}
+                                          
+                                          {/* Groups under this organization */}
+                                          <div className="space-y-3">
+                                            {Object.entries(groupCollaborators as Record<string, any[]>).map(([groupName, collaborators]) => {
+                                              const group = groupName === 'unassigned' ? null : addedAddGroupModalGroups.find((g: any) => g.name === groupName);
+                                              
+                                              return (
+                                                <div key={groupName} className="space-y-2">
+                                                  {/* Group header */}
+                                                  <div className="flex items-center gap-2 ml-4">
+                                                    {group ? (
+                                                      <TbUsersGroup className={`w-4 h-4 ${
+                                                        group.color === 'teal' ? 'text-teal-500' :
+                                                        group.color === 'blue' ? 'text-blue-500' :
+                                                        group.color === 'purple' ? 'text-purple-500' :
+                                                        group.color === 'orange' ? 'text-orange-500' :
+                                                        group.color === 'green' ? 'text-green-500' :
+                                                        group.color === 'pink' ? 'text-pink-500' :
+                                                        group.color === 'indigo' ? 'text-indigo-500' :
+                                                        group.color === 'cyan' ? 'text-cyan-500' :
+                                                        'text-gray-500'
+                                                      }`} />
+                                                    ) : (
+                                                      <TbUsers className="w-4 h-4 text-gray-400" />
+                                                    )}
+                                                    <span className="text-xs font-medium text-gray-600 dark:text-gray-400" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                                      {groupName === 'unassigned' ? 'Unassigned' : groupName}
+                                                    </span>
+                                                  </div>
+                                                  
+                                                  {/* Collaborators under this group */}
+                                                  <div className="flex flex-wrap gap-1 ml-1">
+                                                    {collaborators.map((collaborator: any) => {
+                                                      const colorScheme = getCollaboratorBadgeColor(collaborator.originalIndex);
+                                                      return (
+                                                        <div 
+                                                          key={collaborator.originalIndex} 
+                                                          className={`h-10 w-10 rounded-lg ${colorScheme.bg} flex items-center justify-center border-2 ${colorScheme.border} relative group`}
+                                                        >
+                                                          <span className={`text-sm font-semibold ${colorScheme.text}`} style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                                            {getInitials(collaborator.name)}
+                                                          </span>
+                                                          
+                                                          {/* X button for removal - only visible on hover */}
+                                                          <button 
+                                                            onClick={(e) => {
+                                                              e.stopPropagation();
+                                                              setAddedAddGroupModalCollaborators(prev => prev.filter((_, i) => i !== collaborator.originalIndex));
+                                                            }}
+                                                            className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                                                          >
+                                                            <TbX className="w-3 h-3" />
+                                                          </button>
+                                                        </div>
+                                                      );
+                                                    })}
+                                                  </div>
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 pb-8 text-gray-500 dark:text-gray-400 cursor-default select-none">
+                          <TbUsers size={26} className="mx-auto mb-2 text-primary" />
+                          <p className="text-sm" style={{ fontFamily: 'Avenir, sans-serif' }}>No collaborators yet</p>
+                          <p className="text-xs" style={{ fontFamily: 'Avenir, sans-serif' }}>Add a collaborator by filling in the details above and clicking the "Add Collaborator" button</p>
+                        </div>
+                      )}
+                    </div>
+                  </form>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex justify-between items-center p-6 bg-white dark:bg-gray-800">
+              <div className="flex items-center gap-2">
+                {addGroupModalStep > 1 && (
+                  <button
+                    onClick={() => setAddGroupModalStep(addGroupModalStep - 1)}
+                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                  >
+                    Previous
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center" style={{ gap: '3px' }}>
+                {addGroupModalStep === 1 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Handle adding group to the list
+                      const newGroup = {
+                        id: `group-${Date.now()}`,
+                        groupId: generateGroupId(),
+                        name: addGroupModalFormData.name.trim(),
+                        description: addGroupModalFormData.description.trim(),
+                        organizationId: addGroupModalFormData.organization,
+                        color: 'teal' // Default color
+                      };
+                      setAddedAddGroupModalGroups(prev => [...prev, newGroup]);
+                      setAddGroupModalFormData({ name: '', organization: '', description: '' });
+                    }}
+                    disabled={!addGroupModalFormData.name.trim() || !addGroupModalFormData.organization.trim()}
+                    className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                  >
+                    <TbUsersPlus className="w-4 h-4 mr-2" />
+                    Add Group
+                  </button>
+                )}
+                {addGroupModalStep === 2 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const collaborator = addGroupModalCollaborators[0];
+                      if (collaborator.name.trim() && collaborator.email.trim()) {
+                        setAddedAddGroupModalCollaborators(prev => [...prev, {
+                          name: collaborator.name.trim(),
+                          email: collaborator.email.trim(),
+                          group: collaborator.group || '',
+                          contractPermissions: collaborator.contractPermissions || []
+                        }]);
+                        setAddGroupModalCollaborators(prev => prev.map((r, i) => i === 0 ? { 
+                          ...r, 
+                          name: '', 
+                          email: '',
+                          group: '',
+                          contractPermissions: []
+                        } : r));
+                        setDuplicateAddGroupModalCollaboratorError(null);
+                      }
+                    }}
+                    disabled={!addGroupModalCollaborators[0].name.trim() || !addGroupModalCollaborators[0].email.trim() || !addGroupModalCollaborators[0].group.trim()}
+                    className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                  >
+                    <TbUserPlus className="w-4 h-4 mr-2" />
+                    Add Collaborator
+                  </button>
+                )}
+                {addGroupModalStep < 2 ? (
+                  <button
+                    onClick={() => setAddGroupModalStep(addGroupModalStep + 1)}
+                    disabled={addedAddGroupModalGroups.length < 1}
+                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                  >
+                    Continue
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      // Handle form submission here
+                      console.log('Add Group Modal submitted:', { 
+                        formData: addGroupModalFormData, 
+                        collaborators: addedAddGroupModalCollaborators 
+                      });
+                      
+                      // Close modal and reset
+                      setShowAddGroupModal(false);
+                      setAddGroupModalStep(1);
+                      setAddGroupModalFormData({ name: '', organization: '', description: '' });
+                      setAddGroupModalCollaborators([{
+                        name: '',
+                        email: '',
+                        group: '',
+                        contractPermissions: [],
+                        showNamesDropdown: false,
+                        namesDropdownRef: React.createRef<HTMLDivElement>(),
+                        contractRoleInputRef: React.createRef<HTMLDivElement>(),
+                        contractRoleDropdownRef: React.createRef<HTMLDivElement>(),
+                        namesInputRef: React.createRef<HTMLInputElement>(),
+                        showContractRoleDropdown: false,
+                        showGroupDropdown: false,
+                        groupDropdownRef: React.createRef<HTMLDivElement>()
+                      }]);
+                      setAddedAddGroupModalCollaborators([]);
+                      setDuplicateAddGroupModalCollaboratorError(null);
+                      setAddedAddGroupModalGroups([]);
+                      setExpandedAddGroupModalGroupCards({});
+                    }}
+                    disabled={!addGroupModalFormData.name.trim() || !addGroupModalFormData.organization.trim() || addedAddGroupModalCollaborators.length < 1}
+                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ fontFamily: 'Avenir, sans-serif' }}
+                  >
+                    Create Group
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Existing Collaborator Modal */}
+      {showAddExistingCollaboratorModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <TbUserPlus className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-black dark:text-white leading-tight">Add Existing Collaborator</h2>
+                  <p className="text-gray-500 text-xs leading-tight cursor-default select-none">Fill in details & add collaborators to "{organizationsData.find(org => org.id === addExistingCollaboratorModalData.organizationId)?.name || 'Organization'}" organization</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowAddExistingCollaboratorModal(false);
+                  setAddExistingCollaboratorModalData({
+                    organizationId: '',
+                    collaboratorName: '',
+                    group: '',
+                    email: ''
+                  });
+                  setShowAddExistingCollaboratorNamesDropdown(false);
+                  setShowAddExistingCollaboratorGroupDropdown(false);
+                }}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <TbX className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="px-6 pb-6">
+              <form className="space-y-6">
+                {/* Form fields */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Left Column */}
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                        Collaborator Name <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white pr-10"
+                          placeholder="Enter collaborator name..."
+                          style={{ fontFamily: 'Avenir, sans-serif' }}
+                          value={addExistingCollaboratorModalData.collaboratorName}
+                          onChange={e => {
+                            setAddExistingCollaboratorModalData(prev => ({ ...prev, collaboratorName: e.target.value }));
+                            setDuplicateExistingCollaboratorError(null);
+                          }}
+                          onClick={() => {
+                            setShowAddExistingCollaboratorNamesDropdown(!showAddExistingCollaboratorNamesDropdown);
+                            setShowAddExistingCollaboratorGroupDropdown(false);
+                          }}
+                        />
+                        <HiChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        
+                        {/* Names/Emails Autocomplete Dropdown */}
+                        {showAddExistingCollaboratorNamesDropdown && (
+                          <div 
+                            ref={addExistingCollaboratorNamesDropdownRef}
+                            className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:hidden"
+                          >
+                            {/* Assignees Section */}
+                            {allAssignees
+                              .filter(assignee => 
+                                assignee.toLowerCase().includes(addExistingCollaboratorModalData.collaboratorName.toLowerCase())
+                              )
+                              .sort()
+                              .map((assignee) => (
+                                <button
+                                  key={assignee}
+                                  className="w-full text-left px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setAddExistingCollaboratorModalData(prev => ({ 
+                                      ...prev, 
+                                      collaboratorName: assignee
+                                    }));
+                                    setShowAddExistingCollaboratorNamesDropdown(false);
+                                  }}
+                                >
+                                  <TbUser className="w-4 h-4 flex-shrink-0" />
+                                  {assignee}
+                                </button>
+                              ))}
+                            
+                            {/* Other Parties Section */}
+                            {(() => {
+                              const mockContracts = [
+                                'Robert Chen', 'Eastside Properties', 'GreenSpace Developers', 'BuildRight Construction',
+                                'Metro Realty Group', 'Urban Development LLC', 'Premier Construction', 'Elite Properties',
+                                'Corporate Holdings', 'Real Estate', 'Retail Corp', 'Marketing Solutions Inc', 'Legal Advisory LLC'
+                              ];
+                              
+                              const filteredParties = mockContracts
+                                .filter(party => 
+                                  party.toLowerCase().includes(addExistingCollaboratorModalData.collaboratorName.toLowerCase()) &&
+                                  !allAssignees.includes(party)
+                                )
+                                .sort();
+                              
+                              return filteredParties.map((party) => (
+                                <button
+                                  key={party}
+                                  className="w-full text-left px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setAddExistingCollaboratorModalData(prev => ({ 
+                                      ...prev, 
+                                      collaboratorName: party
+                                    }));
+                                    setShowAddExistingCollaboratorNamesDropdown(false);
+                                  }}
+                                >
+                                  <TbBuilding className="w-4 h-4 flex-shrink-0" />
+                                  {party}
+                                </button>
+                              ));
+                            })()}
+                            
+                            {/* No Matches Message */}
+                            {(() => {
+                              const allAssigneesFiltered = allAssignees.filter(assignee => 
+                                assignee.toLowerCase().includes(addExistingCollaboratorModalData.collaboratorName.toLowerCase())
+                              );
+                              const mockContracts = [
+                                'Robert Chen', 'Eastside Properties', 'GreenSpace Developers', 'BuildRight Construction',
+                                'Metro Realty Group', 'Urban Development LLC', 'Premier Construction', 'Elite Properties',
+                                'Corporate Holdings', 'Real Estate', 'Retail Corp', 'Marketing Solutions Inc', 'Legal Advisory LLC'
+                              ];
+                              const filteredParties = mockContracts.filter(party => 
+                                party.toLowerCase().includes(addExistingCollaboratorModalData.collaboratorName.toLowerCase()) &&
+                                !allAssignees.includes(party)
+                              );
+                              
+                              return allAssigneesFiltered.length === 0 && filteredParties.length === 0 && addExistingCollaboratorModalData.collaboratorName.length > 0 ? (
+                                <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
+                                  No matches found
+                                </div>
+                              ) : null;
+                            })()}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                        Group
+                      </label>
+                      <div className="relative" ref={addExistingCollaboratorGroupDropdownRef}>
+                        <input
+                          type="text"
+                          className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white pr-10 cursor-pointer caret-transparent"
+                          placeholder="Select group..."
+                          style={{ fontFamily: 'Avenir, sans-serif' }}
+                          value={addExistingCollaboratorModalData.group}
+                          readOnly
+                          onClick={() => {
+                            setShowAddExistingCollaboratorGroupDropdown(!showAddExistingCollaboratorGroupDropdown);
+                            setShowAddExistingCollaboratorNamesDropdown(false);
+                          }}
+                        />
+                        <TbChevronDown className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
+                        
+                        {/* Groups Dropdown */}
+                        {showAddExistingCollaboratorGroupDropdown && (
+                          <div className="absolute left-0 mt-1 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 py-0.5 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:hidden">
+                            {groupsData.length > 0 ? (
+                              groupsData.map((group) => (
+                                <button
+                                  key={group.id}
+                                  className="w-full text-left px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setAddExistingCollaboratorModalData(prev => ({ 
+                                      ...prev, 
+                                      group: group.name
+                                    }));
+                                    setShowAddExistingCollaboratorGroupDropdown(false);
+                                  }}
+                                >
+                                  <TbUsersGroup className="w-4 h-4 flex-shrink-0" />
+                                  {group.name}
+                                </button>
+                              ))
+                            ) : (
+                              <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
+                                No groups available
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Column */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                      Email Address <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white dark:bg-gray-900 dark:text-white"
+                      placeholder="Enter email address..."
+                      style={{ fontFamily: 'Avenir, sans-serif' }}
+                      value={addExistingCollaboratorModalData.email || ''}
+                      onChange={e => {
+                        setAddExistingCollaboratorModalData(prev => ({ ...prev, email: e.target.value }));
+                        setDuplicateExistingCollaboratorError(null);
+                      }}
+                    />
+                  </div>
+                </div>
+
+
+                {/* Error Message */}
+                {duplicateExistingCollaboratorError && (
+                  <div className="text-red-600 text-xs mt-2" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                    {duplicateExistingCollaboratorError}
+                  </div>
+                )}
+
+                {/* Added Collaborators Display */}
+                <div className="pt-2 min-h-[160px]">
+                  {addedExistingCollaborators.length > 0 && (
+                    <div className="flex items-center gap-2 mb-4 ml-3">
+                      <TbUsers className="h-5 w-5 text-gray-700 dark:text-gray-300" />
+                      <span className="text-xs font-semibold text-gray-700 dark:text-gray-300" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                        Added Collaborators ({addedExistingCollaborators.length})
+                      </span>
+                    </div>
+                  )}
+                  
+                  {addedExistingCollaborators.length > 0 ? (
+                    <div className="space-y-4">
+                      {(() => {
+                        // Group collaborators by their assigned groups
+                        const groupedCollaborators = addedExistingCollaborators.reduce((groups, collaborator) => {
+                          const groupName = collaborator.group || 'No Group';
+                          if (!groups[groupName]) {
+                            groups[groupName] = [];
+                          }
+                          groups[groupName].push(collaborator);
+                          return groups;
+                        }, {} as Record<string, typeof addedExistingCollaborators>);
+
+                        const groupNames = Object.keys(groupedCollaborators);
+                        
+                        return (
+                          <div className="space-y-4">
+                            {/* Display groups in 3-column layout */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ml-4">
+                              {groupNames.map((groupName, groupIndex) => {
+                                const collaborators = groupedCollaborators[groupName];
+                                return (
+                                  <div key={groupName} className="space-y-2">
+                                    {/* Group header */}
+                                    <div className="flex items-center gap-2">
+                                      <TbUsersGroup className="w-4 h-4 text-gray-500" />
+                                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400" style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                        {groupName}
+                                      </span>
+                                    </div>
+                                    
+                                    {/* Collaborators under this group */}
+                                    <div className="flex flex-wrap gap-1 ml-1">
+                                      {collaborators.map((collaborator: any, idx: number) => {
+                                        const colorScheme = getCollaboratorBadgeColor(idx);
+                                        return (
+                                          <div 
+                                            key={idx} 
+                                            className={`h-10 w-10 rounded-lg ${colorScheme.bg} flex items-center justify-center border-2 ${colorScheme.border} relative group`}
+                                          >
+                                            <span className={`text-sm font-semibold ${colorScheme.text}`} style={{ fontFamily: 'Avenir, sans-serif' }}>
+                                              {getInitials(collaborator.name)}
+                                            </span>
+                                            
+                                            {/* X button for removal - only visible on hover */}
+                                            <button 
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setAddedExistingCollaborators(prev => prev.filter((_, i) => i !== idx));
+                                              }}
+                                              className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                                            >
+                                              <TbX className="w-3 h-3" />
+                                            </button>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 pb-8 text-gray-500 dark:text-gray-400 cursor-default select-none">
+                      <TbUsers size={26} className="mx-auto mb-2 text-primary" />
+                      <p className="text-sm" style={{ fontFamily: 'Avenir, sans-serif' }}>No collaborators yet</p>
+                      <p className="text-xs" style={{ fontFamily: 'Avenir, sans-serif' }}>Add a collaborator by filling in the details above and clicking the "Add Collaborator" button</p>
+                    </div>
+                  )}
+                </div>
+              </form>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex justify-between items-center p-6 bg-white dark:bg-gray-800">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setShowAddExistingCollaboratorModal(false);
+                    setAddExistingCollaboratorModalData({
+                      organizationId: '',
+                      collaboratorName: '',
+                      group: '',
+                      email: ''
+                    });
+                    setShowAddExistingCollaboratorNamesDropdown(false);
+                    setShowAddExistingCollaboratorGroupDropdown(false);
+                    setAddedExistingCollaborators([]);
+                    setDuplicateExistingCollaboratorError(null);
+                  }}
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold"
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                >
+                  Cancel
+                </button>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const collaborator = {
+                      name: addExistingCollaboratorModalData.collaboratorName,
+                      email: addExistingCollaboratorModalData.email || '',
+                      group: addExistingCollaboratorModalData.group
+                    };
+                    
+                    // Check for duplicates
+                    const isDuplicateName = addedExistingCollaborators.some(c => 
+                      c.name.toLowerCase() === collaborator.name.toLowerCase()
+                    );
+                    const isDuplicateEmail = addedExistingCollaborators.some(c => 
+                      c.email.toLowerCase() === collaborator.email.toLowerCase()
+                    );
+                    
+                    if (isDuplicateName || isDuplicateEmail) {
+                      setDuplicateExistingCollaboratorError('Collaborator already added');
+                      return;
+                    }
+                    
+                    if (!collaborator.name.trim() || !collaborator.email.trim()) {
+                      setDuplicateExistingCollaboratorError('Name and email are required');
+                      return;
+                    }
+                    
+                    // Add collaborator
+                    setAddedExistingCollaborators(prev => [...prev, {
+                      ...collaborator,
+                      isEditingEmail: false
+                    }]);
+                    
+                    // Reset form
+                    setAddExistingCollaboratorModalData(prev => ({
+                      ...prev,
+                      collaboratorName: '',
+                      email: '',
+                      group: ''
+                    }));
+                    setDuplicateExistingCollaboratorError(null);
+                  }}
+                  className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                >
+                  <TbUserPlus className="w-4 h-4 mr-2" />
+                  Add Collaborator
+                </button>
+                <button
+                  onClick={() => {
+                    // Handle form submission here
+                    console.log('Add Existing Collaborators submitted:', { 
+                      organizationId: addExistingCollaboratorModalData.organizationId,
+                      collaborators: addedExistingCollaborators 
+                    });
+                    
+                    // Close modal and reset
+                    setShowAddExistingCollaboratorModal(false);
+                    setAddExistingCollaboratorModalData({
+                      organizationId: '',
+                      collaboratorName: '',
+                      group: '',
+                      email: ''
+                    });
+                    setShowAddExistingCollaboratorNamesDropdown(false);
+                    setShowAddExistingCollaboratorGroupDropdown(false);
+                    setAddedExistingCollaborators([]);
+                    setDuplicateExistingCollaboratorError(null);
+                  }}
+                  disabled={addedExistingCollaborators.length < 1}
+                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ fontFamily: 'Avenir, sans-serif' }}
+                >
+                  Share
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Toast Notifications */}
       <Toaster />
     </div>
