@@ -29,7 +29,8 @@ import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import Link from '@tiptap/extension-link';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
-import { lowlight } from 'lowlight';
+import { createLowlight } from 'lowlight';
+const lowlight = createLowlight();
 import Strike from '@tiptap/extension-strike';
 
 // Add date formatting utilities

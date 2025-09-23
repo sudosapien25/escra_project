@@ -1,6 +1,6 @@
 # Multi-stage build for security and smaller image size
 # Stage 1: Dependencies
-FROM node:22-alpine AS deps
+FROM node:23-alpine AS deps
 # Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
@@ -9,16 +9,18 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 
 # Install dependencies with npm ci for faster, more reliable builds
-RUN npm ci --only=production && \
+# Using legacy-peer-deps due to React 19 and other major version updates
+RUN npm ci --only=production --legacy-peer-deps && \
     npm cache clean --force
 
 # Stage 2: Builder
-FROM node:22-alpine AS builder
+FROM node:23-alpine AS builder
 WORKDIR /app
 
 # Copy package files and install all dependencies (including dev)
 COPY package.json package-lock.json* ./
-RUN npm ci && \
+# Using legacy-peer-deps due to React 19 and other major version updates
+RUN npm ci --legacy-peer-deps && \
     npm cache clean --force
 
 # Copy source code
@@ -29,7 +31,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 # Stage 3: Runner (production)
-FROM node:22-alpine AS runner
+FROM node:23-alpine AS runner
 WORKDIR /app
 
 # Create non-root user for security
