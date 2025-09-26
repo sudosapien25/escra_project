@@ -1,36 +1,28 @@
-import { mockContracts } from '../data/mockContracts';
+import { contractApi, ContractFilters, CreateContractData, UpdateContractData } from './api/contractApi';
 
 export class ContractService {
-  static async getContracts() {
-    return mockContracts;
+  static async getContracts(filters?: ContractFilters) {
+    const response = await contractApi.getContracts(filters);
+    return response.contracts;
   }
 
   static async getContract(id: string) {
-    const contract = mockContracts.find(c => c.id === id);
-    if (!contract) {
-      throw new Error('Contract not found');
-    }
-    return contract;
+    return await contractApi.getContract(id);
   }
 
-  static async createContract(contractData: any) {
-    const newContract = {
-      id: `CNT-${Date.now().toString().slice(-6)}`,
-      ...contractData
-    };
-    return newContract;
+  static async createContract(contractData: CreateContractData) {
+    return await contractApi.createContract(contractData);
   }
 
-  static async updateContract(id: string, updates: any) {
-    const contract = mockContracts.find(c => c.id === id);
-    if (!contract) {
-      throw new Error('Contract not found');
-    }
-    return { ...contract, ...updates };
+  static async updateContract(id: string, updates: UpdateContractData) {
+    return await contractApi.updateContract(id, updates);
   }
 
   static async deleteContract(id: string) {
-    // Mock implementation
-    return;
+    return await contractApi.deleteContract(id);
+  }
+
+  static async searchContracts(query: string) {
+    return await contractApi.searchContracts(query);
   }
 } 

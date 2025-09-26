@@ -9,18 +9,17 @@ export interface LoginCredentials {
 export interface RegisterData {
   email: string;
   password: string;
-  full_name: string;
-  company?: string;
-  phone?: string;
+  firstName: string;
+  lastName: string;
+  role?: string;
 }
 
 export interface User {
   id: string;
   email: string;
-  full_name: string;
-  company?: string;
-  phone?: string;
-  is_admin: boolean;
+  firstName: string;
+  lastName: string;
+  role: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -28,7 +27,6 @@ export interface User {
 
 export interface AuthResponse {
   access_token: string;
-  refresh_token: string;
   token_type: string;
   user: User;
 }
@@ -41,11 +39,13 @@ export interface ApiError {
 class AuthService {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
+      console.log('Login request credentials:', credentials);
       const response = await api.post<AuthResponse>('/api/auth/login', credentials);
-      const { access_token, refresh_token, user } = response.data;
+      console.log('Login response:', response.data);
+      const { access_token, user } = response.data;
 
       // Store tokens and user info
-      apiClient.updateTokens(access_token, refresh_token);
+      apiClient.updateTokens(access_token, '');
       if (typeof window !== 'undefined') {
         localStorage.setItem('user', JSON.stringify(user));
       }
@@ -53,6 +53,7 @@ class AuthService {
       return response.data;
     } catch (error) {
       const axiosError = error as AxiosError<ApiError>;
+      console.error('Login error details:', axiosError.response?.data);
       throw new Error(axiosError.response?.data?.detail || 'Login failed');
     }
   }
@@ -60,10 +61,10 @@ class AuthService {
   async register(data: RegisterData): Promise<AuthResponse> {
     try {
       const response = await api.post<AuthResponse>('/api/auth/register', data);
-      const { access_token, refresh_token, user } = response.data;
+      const { access_token, user } = response.data;
 
       // Store tokens and user info
-      apiClient.updateTokens(access_token, refresh_token);
+      apiClient.updateTokens(access_token, '');
       if (typeof window !== 'undefined') {
         localStorage.setItem('user', JSON.stringify(user));
       }
@@ -124,27 +125,7 @@ class AuthService {
   }
 
   async refreshToken(): Promise<string> {
-    const refreshToken = typeof window !== 'undefined'
-      ? localStorage.getItem('refresh_token')
-      : null;
-
-    if (!refreshToken) {
-      throw new Error('No refresh token available');
-    }
-
-    try {
-      const response = await api.post<AuthResponse>('/api/auth/refresh', {
-        refresh_token: refreshToken
-      });
-
-      const { access_token, refresh_token: newRefreshToken } = response.data;
-      apiClient.updateTokens(access_token, newRefreshToken);
-
-      return access_token;
-    } catch (error) {
-      const axiosError = error as AxiosError<ApiError>;
-      throw new Error(axiosError.response?.data?.detail || 'Failed to refresh token');
-    }
+    throw new Error('Refresh token not supported in current implementation');
   }
 
   isAuthenticated(): boolean {
@@ -167,7 +148,7 @@ class AuthService {
 
   isAdmin(): boolean {
     const user = this.getUser();
-    return user?.is_admin || false;
+    return user?.role === 'admin' || false;
   }
 }
 

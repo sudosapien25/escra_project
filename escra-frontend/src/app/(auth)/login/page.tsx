@@ -318,7 +318,7 @@ function AuthPageContent() {
     if (Object.keys(errors).length === 0) {
       try {
         setIsLoading(true);
-        await login(email, password);
+        await login({ email, password });
         
         // Show toast on login page
         console.log('Showing login success toast...');
@@ -372,13 +372,53 @@ function AuthPageContent() {
     return errors;
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('handleRegister called', { regEmail, regPassword, regName, regSurname });
     const errors = validateRegister();
     setRegErrors(errors);
+    console.log('Validation errors:', errors);
     if (Object.keys(errors).length === 0) {
-      // TODO: register logic
-      router.push('/onboarding');
+      setIsLoading(true);
+      console.log('Calling registration API...');
+      try {
+        const response = await fetch('http://192.168.222.44:8000/api/auth/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: regEmail,
+            password: regPassword,
+            firstName: regName,
+            lastName: regSurname,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || 'Registration failed');
+        }
+
+        const data = await response.json();
+
+        toast({
+          title: 'Account created successfully!',
+          description: 'Please sign in with your credentials.',
+        });
+
+        setTab('login');
+        setEmail(regEmail);
+      } catch (error: any) {
+        console.error('Registration error:', error);
+        toast({
+          title: 'Registration failed',
+          description: error.message || 'An error occurred during registration',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 

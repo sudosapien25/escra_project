@@ -6,7 +6,6 @@ import { FaCheck } from 'react-icons/fa';
 import { TbSettingsCog, TbFlag, TbFlagCheck, TbFlagOff, TbActivityHeartbeat, TbNotification, TbChevronDown, TbReload, TbDotsVertical, TbChevronLeft, TbChevronRight, TbSearch, TbArchive, TbArchiveOff, TbTrash, TbMailOpened, TbMail, TbFlagExclamation, TbFileSearch } from 'react-icons/tb';
 import clsx from 'clsx';
 import { useToast } from '@/components/ui/use-toast';
-import { mockContracts } from '@/data/mockContracts';
 
 const notificationTabs = [
   { key: 'all', label: 'All' },
@@ -39,7 +38,7 @@ function NotificationPageContent() {
   const [showContractDropdown, setShowContractDropdown] = useState(false);
   const [selectedContracts, setSelectedContracts] = useState<string[]>([]);
   const [contractSearch, setContractSearch] = useState('');
-  const [contracts, setContracts] = useState(mockContracts);
+  const [contracts, setContracts] = useState<any[]>([]);
 
   // Function to mark notifications as important
   const markAsImportant = (notificationIds: string[]) => {

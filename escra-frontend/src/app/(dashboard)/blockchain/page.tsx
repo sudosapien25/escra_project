@@ -12,7 +12,6 @@ import { GrMoney } from 'react-icons/gr';
 import { Logo } from '@/components/common/Logo';
 import NewContractModal from '@/components/common/NewContractModal';
 import { MdOutlineAddToPhotos, MdOutlineUpdate } from 'react-icons/md';
-import { mockContracts } from '@/data/mockContracts';
 import Image from 'next/image';
 import { LuSquareArrowOutUpRight, LuFileTerminal, LuBookText } from 'react-icons/lu';
 import { TbClockPin, TbShieldLock, TbDropletFilled, TbReportSearch, TbHistory, TbHistoryOff, TbClockEdit, TbClockExclamation, TbTopologyBus, TbSearch, TbFileSearch, TbLayoutGrid, TbFilePlus, TbChevronDown, TbSquarePlus } from 'react-icons/tb';
@@ -57,23 +56,6 @@ const getStatusBadgeStyle = (status: string) => {
     default: return 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400 border border-gray-800 dark:border-gray-800';
   }
 };
-
-const contracts = mockContracts.map(contract => ({
-  title: contract.title,
-  version: 'v1.0.0',
-  badges: [
-    { label: contract.status === 'Complete' ? 'MainNet' : 'TestNet', color: contract.status === 'Complete' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border border-green-800 dark:border-green-400' : 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400 border border-gray-800 dark:border-gray-400' },
-    { 
-      label: contract.status, 
-      color: getStatusBadgeStyle(contract.status)
-    },
-  ],
-  id: contract.id,
-  description: `${contract.type} contract between ${contract.parties}`,
-  deployed: contract.updated,
-  transactions: Math.floor(Math.random() * 200) + 20, // Random number between 20 and 220 for demo
-  status: contract.status,
-}));
 
 const activityData = [
   {
@@ -252,8 +234,7 @@ export default function BlockchainPage() {
   const [selectedContracts, setSelectedContracts] = useState<string[]>([]);
   const [openContractDropdown, setOpenContractDropdown] = useState(false);
   const [contractSearch, setContractSearch] = useState('');
-  // Contracts state that includes both mock contracts and newly created contracts
-  const [contracts, setContracts] = useState(mockContracts);
+  const [contracts, setContracts] = useState<any[]>([]);
   const statusDropdownRef = useRef<HTMLButtonElement>(null);
   const contractButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -461,12 +442,10 @@ export default function BlockchainPage() {
             setContracts(transformedContracts);
           }
         } else {
-          console.error('Failed to load enhanced contracts');
-          // Keep the initial mockContracts that are already loaded
+          console.error('Failed to load contracts');
         }
       } catch (error) {
-        console.error('Error loading enhanced contracts:', error);
-        // Keep the initial mockContracts that are already loaded
+        console.error('Error loading contracts:', error);
       }
     };
 

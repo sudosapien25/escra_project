@@ -11,7 +11,6 @@ import { LuCalendarFold, LuCalendarClock, LuPen, LuHardHat, LuHandshake } from '
 import { BiDotsHorizontal, BiCommentAdd } from 'react-icons/bi';
 import { TbWorldDollar, TbEdit, TbClockUp, TbCubeSend, TbClockPin, TbFilePlus, TbScript, TbCoins, TbFileText, TbClockEdit, TbUpload, TbDownload, TbSearch, TbFileSearch, TbLibrary, TbCalendarClock, TbLayoutGrid, TbMessage2Plus, TbChevronDown, TbEraser, TbTrash, TbChevronsLeft, TbChevronsRight, TbBusinessplan, TbSquareCheck, TbSquareChevronLeft, TbSquareChevronRight, TbUserPlus, TbUserShare, TbUserMinus, TbUserSearch, TbUsersPlus, TbUsers, TbUsersGroup, TbCheck, TbMailShare, TbBuildingCommunity, TbWorld, TbBarrierBlock, TbBriefcase, TbScale, TbBallAmericanFootball, TbTool, TbStethoscope, TbHome2, TbBuilding, TbBuildingSkyscraper, TbPhoto, TbBuildingFactory2, TbBuildingCarousel, TbUser, TbTemplate, TbHomeDollar, TbHomeRibbon, TbReceiptTax, TbBuildingWarehouse, TbBuildingBridge, TbBuildings, TbFileStar, TbTrophy, TbUserCog, TbForklift, TbArrowsShuffle2, TbAffiliate, TbUserShield, TbArrowsJoin, TbBuildingBank, TbAnalyze, TbLicense, TbClipboardSearch, TbVinyl, TbBooks, TbDevicesShare, TbChairDirector, TbFileSpark, TbAward, TbAd2, TbCopyright } from 'react-icons/tb';
 import { Logo } from '@/components/common/Logo';
-import { mockContracts } from '@/data/mockContracts';
 import { useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -525,25 +524,21 @@ const ContractsPage: React.FC = () => {
         if (savedContracts) {
           const parsedContracts = JSON.parse(savedContracts);
           console.log('Loading saved contracts from localStorage:', parsedContracts.length, parsedContracts);
-          return [...mockContracts, ...parsedContracts];
+          return parsedContracts;
         }
       } catch (error) {
         console.error('Error loading saved contracts from localStorage:', error);
       }
     }
-    return mockContracts;
+    return [];
   });
 
   // Save contracts to localStorage whenever contracts array changes
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
-        // Filter out mock contracts and save only user-created contracts
-        const userCreatedContracts = contracts.filter(contract => 
-          !mockContracts.some(mockContract => mockContract.id === contract.id)
-        );
-        localStorage.setItem('savedContracts', JSON.stringify(userCreatedContracts));
-        console.log('Saved contracts to localStorage:', userCreatedContracts.length, userCreatedContracts);
+        localStorage.setItem('savedContracts', JSON.stringify(contracts));
+        console.log('Saved contracts to localStorage:', contracts.length, contracts);
       } catch (error) {
         console.error('Error saving contracts to localStorage:', error);
       }
@@ -8734,8 +8729,8 @@ const ContractsPage: React.FC = () => {
                         </div>
                         All
                       </button>
-                      {mockContracts
-                        .filter(contract => 
+                      {contracts
+                        .filter(contract =>
                           contract.id.toLowerCase().includes(contractSearch.toLowerCase()) ||
                           contract.title.toLowerCase().includes(contractSearch.toLowerCase())
                         )

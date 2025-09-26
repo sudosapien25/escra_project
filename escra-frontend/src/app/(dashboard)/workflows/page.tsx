@@ -1,7 +1,6 @@
 'use client';
 import React, { useRef, useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { mockContracts } from '@/data/mockContracts';
 import { Task } from '@/types/task';
 import { useSearchParams, useRouter } from 'next/navigation';
 
@@ -133,8 +132,7 @@ export default function WorkflowsPage() {
   const [editedContractName, setEditedContractName] = React.useState('');
   const [editedDueDate, setEditedDueDate] = React.useState('');
   const [editedAssignee, setEditedAssignee] = React.useState('');
-  // Contracts state that includes both mock contracts and newly created contracts
-  const [contracts, setContracts] = useState(mockContracts);
+  const [contracts, setContracts] = useState<any[]>([]);
   
   const [contractSearch, setContractSearch] = useState('');
   const [showContractDropdown, setShowContractDropdown] = useState(false);
@@ -485,12 +483,10 @@ export default function WorkflowsPage() {
             setContracts(data.contracts);
           }
         } else {
-          console.error('Failed to load enhanced contracts');
-          // Keep the initial mockContracts that are already loaded
+          console.error('Failed to load contracts');
         }
       } catch (error) {
-        console.error('Error loading enhanced contracts:', error);
-        // Keep the initial mockContracts that are already loaded
+        console.error('Error loading contracts:', error);
       }
     };
 

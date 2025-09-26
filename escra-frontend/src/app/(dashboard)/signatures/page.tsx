@@ -23,7 +23,6 @@ import { HiOutlineChevronDoubleLeft, HiOutlineChevronDoubleRight } from 'react-i
 import { MdOutlineLightMode, MdOutlineDarkMode } from 'react-icons/md';
 import { FaDochub } from 'react-icons/fa6';
 import { SiAdobe } from 'react-icons/si';
-import { mockContracts } from '@/data/mockContracts';
 import { useAssigneeStore } from '@/data/assigneeStore';
 import { useDocumentStore } from '@/data/documentNameStore';
 import { useAuth } from '@/context/AuthContext';
@@ -31,7 +30,7 @@ import { useNotifications } from '@/context/NotificationContext';
 import { useToast } from '@/components/ui/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Logo } from '@/components/common/Logo';
-import { SignatureDocument, mockSignatures } from '@/data/mockSignatures';
+import { SignatureDocument } from '@/types/signature';
 import { SignatureModal, SignatureValue } from '@/components/common/SignatureModal';
 import { SignatureConfirmationModal } from '@/components/common/SignatureConfirmationModal';
 import { DocumentPreparationModal } from '@/components/DocumentPreparationModal';
@@ -146,8 +145,7 @@ export default function SignaturesPage() {
   const [showContractDropdown, setShowContractDropdown] = useState(false);
   const [selectedContracts, setSelectedContracts] = useState<string[]>([]);
   const [contractSearch, setContractSearch] = useState('');
-  // Contracts state that includes both mock contracts and newly created contracts
-  const [contracts, setContracts] = useState(mockContracts);
+  const [contracts, setContracts] = useState<any[]>([]);
   const contractDropdownRef = useRef<HTMLDivElement>(null);
   // State for dynamic recipient cards
   type Recipient = {
@@ -328,7 +326,7 @@ export default function SignaturesPage() {
   ];
 
   // State for signatures data
-  const [signaturesData, setSignaturesData] = useState<SignatureDocument[]>(mockSignatures);
+  const [signaturesData, setSignaturesData] = useState<SignatureDocument[]>([]);
   
   // State for form fields
   const [dueDate, setDueDate] = useState('');
@@ -358,12 +356,10 @@ export default function SignaturesPage() {
             setContracts(data.contracts);
           }
         } else {
-          console.error('Failed to load enhanced contracts');
-          // Keep the initial mockContracts that are already loaded
+          console.error('Failed to load contracts');
         }
       } catch (error) {
-        console.error('Error loading enhanced contracts:', error);
-        // Keep the initial mockContracts that are already loaded
+        console.error('Error loading contracts:', error);
       }
     };
 
@@ -398,17 +394,14 @@ export default function SignaturesPage() {
         const response = await fetch('/api/signatures');
         if (response.ok) {
           const data = await response.json();
-          // Only update if we got valid data that's different from initial mockSignatures
-          if (data.signatures && data.signatures.length > 0) {
+          if (data.signatures) {
             setSignaturesData(data.signatures);
           }
         } else {
-          console.error('Failed to load enhanced signatures');
-          // Keep the initial mockSignatures that are already loaded
+          console.error('Failed to load signatures');
         }
       } catch (error) {
-        console.error('Error loading enhanced signatures:', error);
-        // Keep the initial mockSignatures that are already loaded
+        console.error('Error loading signatures:', error);
       }
     };
 
@@ -922,8 +915,7 @@ export default function SignaturesPage() {
   // Get stored documents and convert them to Document interface (same source as contracts page)
   const storedDocuments = getAllDocuments();
   const convertedStoredDocuments = storedDocuments.map(storedDoc => {
-    // Use the stored contractName if available, otherwise try to find it in mockContracts
-    const contractTitle = storedDoc.contractName || mockContracts.find(c => c.id === storedDoc.contractId)?.title || 'Unknown Contract';
+    const contractTitle = storedDoc.contractName || contracts.find(c => c.id === storedDoc.contractId)?.title || 'Unknown Contract';
     return convertStoredToDocument(storedDoc, contractTitle);
   });
 
@@ -1758,9 +1750,8 @@ export default function SignaturesPage() {
         console.log('Error fetching contract data:', error);
       }
       
-      // Fallback to mockContracts if API fails
-      const contract = mockContracts.find(c => c.id === document.contractId);
-      console.log('Fallback to mockContracts:', contract);
+      const contract = contracts.find(c => c.id === document.contractId);
+      console.log('Looking up contract:', contract);
       
       if (contract) {
         createCollaboratorsFromBasicContract(contract, isDocuSign);
@@ -4476,7 +4467,7 @@ export default function SignaturesPage() {
                                       <div className="text-xs text-gray-500">{file.type} &bull; {(file.size / 1024 / 1024).toFixed(1)} MB</div>
                                       {associatedContract && (
                                         <div className="text-xs text-primary font-medium mt-1">
-                                          {mockContracts.find(c => c.id === associatedContract)?.id} - {mockContracts.find(c => c.id === associatedContract)?.title || associatedContract}
+                                          {contracts.find(c => c.id === associatedContract)?.id} - {contracts.find(c => c.id === associatedContract)?.title || associatedContract}
                                         </div>
                                       )}
                                       {associatedAssignee && (
@@ -5420,7 +5411,7 @@ export default function SignaturesPage() {
                                       <div className="text-xs text-gray-500">{file.type} &bull; {(file.size / 1024 / 1024).toFixed(1)} MB</div>
                                       {associatedContract && (
                                         <div className="text-xs text-primary font-medium mt-1">
-                                          {mockContracts.find(c => c.id === associatedContract)?.id} - {mockContracts.find(c => c.id === associatedContract)?.title || associatedContract}
+                                          {contracts.find(c => c.id === associatedContract)?.id} - {contracts.find(c => c.id === associatedContract)?.title || associatedContract}
                                         </div>
                                       )}
                                       {associatedAssignee && (
@@ -5865,8 +5856,8 @@ export default function SignaturesPage() {
                           </div>
                           {/* Scrollable Contracts List */}
                           <div className="max-h-40 overflow-y-auto [&::-webkit-scrollbar]:hidden">
-                            {mockContracts
-                              .filter(contract => 
+                            {contracts
+                              .filter(contract =>
                                 contract.id.toLowerCase().includes(modalContractSearch.toLowerCase()) ||
                                 contract.title.toLowerCase().includes(modalContractSearch.toLowerCase())
                               )

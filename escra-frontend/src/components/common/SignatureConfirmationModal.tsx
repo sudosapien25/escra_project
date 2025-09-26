@@ -1,6 +1,6 @@
 import React from 'react';
 import { TbPencilShare } from 'react-icons/tb';
-import { SignatureDocument } from '@/data/mockSignatures';
+import { SignatureDocument } from '@/types/signature';
 
 // Types for signature values
 export interface SignatureValue {

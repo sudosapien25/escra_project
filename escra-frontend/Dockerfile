@@ -26,6 +26,10 @@ RUN npm ci --legacy-peer-deps && \
 # Copy source code
 COPY . .
 
+# Build arguments for Next.js public env vars
+ARG NEXT_PUBLIC_API_URL=http://localhost:8000
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+
 # Build the application
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
